@@ -52,25 +52,29 @@ fn app() -> Html {
     };
 
     let on_submit: Callback<SubmitEvent> = {
-        let input_value: UseStateHandle<String> = input_value.clone();
-        let path_value: UseStateHandle<Option<[[String; 8]; 5]>> = path_value.clone();
+        let input_value = input_value.clone();
+        let path_value = path_value.clone();
+        let error = error.clone(); // Clone the `error` handle
+    
         Callback::from(move |e: SubmitEvent| {
             e.prevent_default(); // Prevent the default form submission behavior
             log::info!("User input: {}", *input_value);
-
+    
             match get_schedule(&input_value) {
                 Ok(schedule) => {
                     let path: [[String; 8]; 5] = generate_path(&schedule);
-
+    
                     log::info!("Parsed schedule: {:?}", schedule);
                     log::info!("Generated path: {:?}", path);
-
+    
                     path_value.set(Some(path));
                 }
-                Err(err) => error.set(Some(err.to_string())),
+                Err(err) => error.set(Some(err.to_string())), // Use the cloned handle here
             };
         })
     };
+    
+    
 
     html! {
         <form onsubmit={on_submit}>
