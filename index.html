@@ -7,35 +7,19 @@
     <base href="/" />
 
     <!-- Preload and modulepreload -->
-    <link rel="modulepreload" href="imsa-map-efa97f215df6fc8d.js" crossorigin="anonymous" integrity="sha384-EU4hDEvUbZFHHwxpPZJ7MC+vEXYb2xRxMi9ep0ofzIlJdvGum7FjlXOkPVQBaryF">
-    <link rel="preload" href="imsa-map-efa97f215df6fc8d_bg.wasm" crossorigin="anonymous" integrity="sha384-9e0wY30kGsf4sK4bKTY7hB3qerahPYclIqcswMrbunlITniNVckU7LJe/CB0vzKy" as="fetch" type="application/wasm">
-
-<link rel="modulepreload" href="1337isnot1337.github.io/imsa-map-13c053fdbe21b10.js" crossorigin=anonymous integrity="sha384-MNz/JuwfvPUaowxv3wCPlF4JwjJbzOwSJJ1XC1hhLPstOhB5gdLvetzmZCv5i/rP">
-<link rel="preload" href="1337isnot1337.github.io/imsa-map-13c053fdbe21b10_bg.wasm" crossorigin=anonymous integrity="sha384-XVD78hPX665Km1vw6By2+mLkFxr42B61koPhsARWqv5Tv31c+oeLnfqwEsO1ZfGT" as="fetch" type="application/wasm"></head>
+    <link rel="modulepreload" href="imsa-map-d0f819793dfd23c7.js" crossorigin="anonymous">
+    <link rel="preload" href="imsa-map-d0f819793dfd23c7_bg.wasm" crossorigin="anonymous" as="fetch" type="application/wasm">
+</head>
 <body>
     <div id="root"></div>
 
     <!-- Script to load the WebAssembly module -->
-    <script type="module" nonce="Zpzh5YgBH0Sto7kwzbEg1g==">
-        import init, * as bindings from './imsa-map-efa97f215df6fc8d.js';
-        const wasm = await init('./imsa-map-efa97f215df6fc8d_bg.wasm');
-
+    <script type="module">
+        import init, * as bindings from './imsa-map-d0f819793dfd23c7.js';
+        const wasm = await init('./imsa-map-d0f819793dfd23c7_bg.wasm');
         window.wasmBindings = bindings;
-
         dispatchEvent(new CustomEvent("TrunkApplicationStarted", { detail: { wasm } }));
     </script>
-
-<script type="module" nonce="YaM5v0mHz/Bc2mDfyepIBA==">
-import init, * as bindings from '1337isnot1337.github.io/imsa-map-13c053fdbe21b10.js';
-const wasm = await init('1337isnot1337.github.io/imsa-map-13c053fdbe21b10_bg.wasm');
-
-
-window.wasmBindings = bindings;
-
-
-dispatchEvent(new CustomEvent("TrunkApplicationStarted", {detail: {wasm}}));
-
-</script></body>
+</body>
 </html>
-
 
