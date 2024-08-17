@@ -108,14 +108,19 @@ fn parse_day_char(ch: char) -> Day {
 fn parse_mods(mod_str: &str) -> Vec<u8> {
     let mut mods = vec![];
     for part in mod_str.split('-') {
-        let start = part.chars().next().unwrap().to_digit(10).unwrap();
-        let end = part.chars().last().unwrap().to_digit(10).unwrap();
-        for m in start..=end {
-            mods.push(u8::try_from(m).unwrap());
+        if let Some(start_char) = part.chars().next() {
+            if let Some(end_char) = part.chars().last() {
+                if let (Some(start), Some(end)) = (start_char.to_digit(10), end_char.to_digit(10)) {
+                    for m in start..=end {
+                        mods.push(u8::try_from(m).unwrap());
+                    }
+                }
+            }
         }
     }
     mods
 }
+
 
 fn sort_by_day(schedule_info: &ScheduleInfo) -> Vec<Class> {
     schedule_info
