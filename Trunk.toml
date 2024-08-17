@@ -1,0 +1,6 @@
+[build]
+release = true
+
+[[triggers]]
+trigger = "index.html"
+
