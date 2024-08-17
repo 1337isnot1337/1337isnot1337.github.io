@@ -3,4 +3,6 @@ release = true
 
 [[triggers]]
 trigger = "index.html"
+[output]
+public_url = "/"
 
