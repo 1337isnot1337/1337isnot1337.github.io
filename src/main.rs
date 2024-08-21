@@ -1,4 +1,4 @@
-use path::*;
+use path::{generate_path, get_schedule};
 use yew::prelude::*;
 mod path;
 
@@ -41,6 +41,7 @@ fn app() -> Html {
     let path_value: UseStateHandle<Option<[[String; 8]; 5]>> =
         use_state(|| None::<[[String; 8]; 5]>);
     let error: UseStateHandle<Option<String>> = use_state(|| None);
+
     let on_input: Callback<InputEvent> = {
         let input_value: UseStateHandle<String> = input_value.clone();
         Callback::from(move |e: InputEvent| {
@@ -55,27 +56,26 @@ fn app() -> Html {
         let input_value = input_value.clone();
         let path_value = path_value.clone();
         let error = error.clone(); // Clone the `error` handle
-    
+
         Callback::from(move |e: SubmitEvent| {
             e.prevent_default(); // Prevent the default form submission behavior
             log::info!("User input: {}", *input_value);
-    
+
             match get_schedule(&input_value) {
                 Ok(schedule) => {
                     let path: [[String; 8]; 5] = generate_path(&schedule);
-    
+
                     log::info!("Parsed schedule: {:?}", schedule);
                     log::info!("Generated path: {:?}", path);
-    
+
                     path_value.set(Some(path));
                 }
                 Err(err) => error.set(Some(err.to_string())), // Use the cloned handle here
             };
         })
     };
-    
-    
 
+    // HTML part starts here
     html! {
         <form onsubmit={on_submit}>
             <textarea placeholder="Enter schedule..." rows="20" cols="120" oninput={on_input} />
@@ -101,7 +101,6 @@ fn app() -> Html {
                 Some(error_val) => html! {<div> {format!("Error: {error_val}")}</div>},
                 None => html! {<div> {format!("No error")}</div>},
             }}
-
         </form>
     }
 }
