@@ -275,10 +275,32 @@ const server = http.createServer((req,res) => {
    await page.evaluate(() => document.fonts.ready);
    assert.ok(await page.locator('#conway-title').evaluate(title=>title.getBoundingClientRect().top >= document.querySelector('.modal-top').getBoundingClientRect().bottom-1), `${name}: deep-linked heading clears sticky reader controls`);
    await page.screenshot({path:`test-results/${name}-rook-reader.png`});
+   assert.equal(await page.locator('.rook-graph-frame').getAttribute('data-view'),'graph');
+   assert.equal(await page.locator('.rook-graph-edges path').count(),18);
+   assert.ok(await page.locator('.rook-graph-frame').evaluate(frame=>{
+    const svg=frame.querySelector('svg'),matrix=svg.getScreenCTM();
+    const nodes=[...frame.querySelectorAll('button')].map(button=>({name:button.textContent,rect:button.getBoundingClientRect()}));
+    return [...svg.querySelectorAll('path')].every(path=>{
+     const length=path.getTotalLength();
+     for(let i=0;i<=200;i++){
+      const point=path.getPointAtLength(length*i/200),x=point.x*matrix.a+point.y*matrix.c+matrix.e,y=point.x*matrix.b+point.y*matrix.d+matrix.f;
+      for(const node of nodes){if(node.name===path.dataset.from||node.name===path.dataset.to)continue;
+       if(Math.hypot(x-node.rect.x-node.rect.width/2,y-node.rect.y-node.rect.height/2)<=node.rect.width/2+1.2)return false;
+      }
+     }return true;
+    });
+   }),`${name}: edges clear nonendpoint vertices`);
    await page.locator('[data-rook-pair="A1,B1"]').click();
    assert.match(await page.locator('#rook-caption').textContent(), /1 shared neighbor: C1/);
    await page.locator('[data-rook-pair="A1,B2"]').click();
    assert.match(await page.locator('#rook-caption').textContent(), /2 shared neighbors: A2, B1/);
+   assert.equal(await page.locator('.rook-graph-edges .is-incident').count(),8);
+   await page.locator('.rook-graph-frame').screenshot({path:`test-results/${name}-rook-graph.png`});
+   await page.locator('[data-rook-view="board"]').click();
+   assert.equal(await page.locator('.rook-graph-edges').isVisible(),false);
+   assert.equal(await page.locator('#rook-board [aria-pressed="true"]').count(),2);
+   await page.locator('.rook-graph-frame').screenshot({path:`test-results/${name}-rook-board.png`});
+   await page.locator('[data-rook-view="graph"]').click();
    await page.locator('#conway .toy').screenshot({path:`test-results/${name}-rook.png`});
    const missing = await page.goto(base + '/a-missing-page-for-testing');
    assert.equal(missing.status(),404);
@@ -532,6 +554,7 @@ const server = http.createServer((req,res) => {
   await plain.locator('#conway').screenshot({path:'test-results/no-script-reading.png'});
   await plain.goto(base + '/#cpu');
   assert.equal(await plain.locator('#cpu-trace').getAttribute('data-time'),'190');
+  assert.ok(await plain.locator('#cpu-trace').isVisible(),'static processor trace remains visible without JavaScript');
   assert.equal(await plain.locator('.trace-controls').isVisible(),false);
   assert.match(await plain.locator('#trace-summary').textContent(),/195 ns/);
   await plain.goto(base + '/#flyover');
@@ -547,6 +570,15 @@ const server = http.createServer((req,res) => {
   await plain.close();
   console.log('no JavaScript: catalogue and project reading passed');
 
+  const graphFallback=await browser.newPage({viewport:{width:320,height:740},reducedMotion:'reduce'});
+  await graphFallback.route('**/rook-graph.js*',route=>route.abort());
+  await graphFallback.goto(base+'/#conway');
+  await graphFallback.locator('dialog[open]').waitFor();
+  assert.equal(await graphFallback.locator('.rook-view-controls').isVisible(),false);
+  assert.equal(await graphFallback.locator('#rook-board button').count(),9);
+  await graphFallback.locator('#rook-board button').first().click();
+  assert.equal(await graphFallback.locator('#rook-board .neighbor').count(),4);
+  await graphFallback.close();
   const fallback = await browser.newPage({viewport:{width:390,height:844},reducedMotion:'reduce'});
   await fallback.route('**/vendor/swiper-bundle.min.js',route=>route.abort());
   const fallbackErrors=[];
@@ -586,7 +618,8 @@ const server = http.createServer((req,res) => {
   assert.equal(await reading.locator('.project-details .detail:visible').count(),6);
   assert.equal(await reading.locator('.shelf-controls').isVisible(),false);
   assert.equal(await reading.locator('#factor-form').isVisible(),false);
-  assert.equal(await reading.locator('#cpu .toy:visible').count(),0);
+  assert.equal(await reading.locator('#cpu .predictor:visible').count(),0);
+  assert.ok(await reading.locator('#cpu-trace').isVisible(),'independent processor trace remains available when main enhancement fails');
   assert.equal(await reading.locator('#flyover audio:visible').count(),1);
   assert.ok((await reading.locator('#recording').getAttribute('src')).endsWith('livermore.mp3'));
   await reading.locator('#recording').click({position:{x:20,y:16}});

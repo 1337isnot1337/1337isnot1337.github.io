@@ -1331,7 +1331,7 @@ html {
 .script-unavailable .shelf-controls,
 .script-unavailable #factor-form,
 .script-unavailable .war,
-.script-unavailable #cpu .toy,
+.script-unavailable #cpu .predictor,
 .script-unavailable #conway .toy { display: none; }
 
 /* Save the open project as a readable note, not a clipped overlay on the shelf. */

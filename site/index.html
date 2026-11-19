@@ -35,7 +35,7 @@
       crossorigin
     />
     <link rel="stylesheet" href="vendor/swiper-bundle.min.css" />
-    <link rel="stylesheet" href="shelf.css?v=20" />
+    <link rel="stylesheet" href="shelf.css?v=21" />
     <link rel="stylesheet" href="welcome.css?v=1" />
     <link rel="stylesheet" href="workbench.css?v=6" />
     <link rel="stylesheet" href="notebook.css?v=2" />
@@ -44,9 +44,10 @@
     <script defer src="workbench.js?v=5"></script>
     <link rel="stylesheet" href="cpu-trace.css?v=1" />
     <link rel="stylesheet" href="firmware-note.css?v=1" />
+    <link rel="stylesheet" href="rook-graph.css?v=1" />
     <script defer src="cpu-trace.js?v=1"></script>
     <script defer src="vendor/swiper-bundle.min.js"></script>
-    <script defer src="shelf.js?v=25" onerror="
+    <script defer src="shelf.js?v=26" onerror="
       const restoreReading = () => {
         document.documentElement.classList.add('script-unavailable');
         document.querySelector('.shelf-heading p').textContent = 'The interactive shelf could not load. You can still read the project notes below.';
@@ -58,12 +59,13 @@
       if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', restoreReading, {once: true});
       else restoreReading();
     "></script>
+    <script defer src="rook-graph.js?v=1"></script>
     <noscript
       ><style>
         .shelf-controls,
         #factor-form,
         .war,
-        #cpu .toy,
+        #cpu .predictor,
         #conway .toy {
           display: none;
         }
@@ -1042,22 +1044,27 @@
           </p>
           <div class="toy">
             <p>
-              Choose a square. A rook can reach any other square in the same row
-              or column in one move. Or compare a pair: which squares can
-              <em>both</em> rooks reach?
+              A rook connects positions in the same row or column. Choose one
+              position, or compare a pair: which neighbors do <em>both</em> share?
             </p>
             <div class="outcomes rook-presets" role="group" aria-label="Compare rook positions">
               <button type="button" data-rook-pair="A1,B1">Same row</button>
               <button type="button" data-rook-pair="A1,B2">Different row + column</button>
             </div>
+<div class="rook-view-controls" role="group" aria-label="View the same nine positions" hidden>
+  <button type="button" data-rook-view="graph" aria-pressed="true">Graph</button>
+  <button type="button" data-rook-view="board" aria-pressed="false">Board</button>
+</div>
+<p class="rook-graph-count" hidden>9 vertices · 18 edges · 4 neighbors each</p>
             <div
               id="rook-board"
               class="rook-board"
               role="group"
               aria-label="Choose a rook position"
             ></div>
+            <p class="rook-graph-key" hidden>Crossing lines are not extra vertices.</p>
             <output id="rook-caption" aria-live="polite"></output>
-            <small>Dark squares are selected; lavender squares are shared
+            <small>Dark positions are selected; lavender positions are shared
               neighbors when comparing a pair. This nine-vertex grid shows the
               counting rule, not a 99-vertex solution: each square has four
               neighbors, not fourteen.</small>
