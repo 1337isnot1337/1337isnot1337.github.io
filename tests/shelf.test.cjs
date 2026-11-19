@@ -275,3 +275,16 @@ test('binary register shows the actual fixed type bit and weighted address', () 
   assert.equal(p.d.querySelector('#binary-sum').textContent,'');
   p.dom.window.close();
 });
+
+
+test('shared pages request the same version of the shelf stylesheet', () => {
+  const stylesheet = path => {
+    const dom=new JSDOM(fs.readFileSync('site/'+path,'utf8'),{url:'https://1337isnot1337.github.io/'+path});
+    const href=[...dom.window.document.querySelectorAll('link[rel="stylesheet"]')].find(link=>link.href.includes('/shelf.css')).href;
+    dom.window.close();
+    return href;
+  };
+  const expected=stylesheet('index.html');
+  assert.ok(new URL(expected).searchParams.get('v'));
+  for(const path of ['404.html','imsa-map/index.html']) assert.equal(stylesheet(path),expected);
+});
