@@ -787,8 +787,17 @@ filterBar.addEventListener("click", (event) => {
   filterCatalogue();
 });
 more.addEventListener("click", () => {
+  const firstNewProject = !expanded
+    ? entries.find((entry) => entry.hidden)?.querySelector("a")
+    : null;
   expanded = !expanded;
   filterCatalogue();
+  // Continue reading where the compact list ended instead of leaving keyboard
+  // focus below all 25 newly revealed links.
+  if (firstNewProject) {
+    firstNewProject.focus({ preventScroll: true });
+    firstNewProject.scrollIntoView({ block: "nearest" });
+  }
   if (!expanded)
     document
       .querySelector("#catalogue-title")

@@ -141,6 +141,19 @@ const server = http.createServer((req,res) => {
    await page.locator('dialog').waitFor({state:'hidden'});
    // Native dialog close events are queued after the open attribute clears.
    await page.waitForFunction(() => !document.body.classList.contains('modal-open'));
+   const catalogueLinks = page.locator('.catalogue-list li a');
+   await page.locator('#more-projects').focus();
+   await page.locator('#more-projects').press('Enter');
+   assert.equal(await catalogueLinks.nth(6).evaluate(el => el === document.activeElement),true,
+     `${name}: expansion continues at first new project`);
+   assert.ok(await catalogueLinks.nth(6).evaluate(el => {
+    const r=el.getBoundingClientRect(); return r.top>=0 && r.bottom<=innerHeight;
+   }), `${name}: newly focused project is visible`);
+   await page.keyboard.press('Tab');
+   assert.equal(await catalogueLinks.nth(7).evaluate(el => el === document.activeElement),true,
+     `${name}: Tab continues through expanded projects`);
+   await page.screenshot({path:`test-results/${name}-catalogue-expanded.png`});
+   await page.locator('#more-projects').click();
    await page.locator('#find-project').fill('erdos');
    assert.equal(await page.locator('#result-count').textContent(),'1 project');
    await page.locator('#find-project').fill('not-a-project');

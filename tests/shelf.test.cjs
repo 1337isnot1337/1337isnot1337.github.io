@@ -302,3 +302,20 @@ test('rook project names its specific result without claiming the open problem i
   assert.match(article.textContent,/unrefereed proof/);
   assert.equal(article.querySelector('a[href$="grid_intersections.md"]').textContent,'at most 120 induced 3 × 3 rook grids');
 });
+
+
+test('expanding the catalogue continues at the first newly revealed project', () => {
+  const p = page();
+  const entries = [...p.d.querySelectorAll('.catalogue-list li')];
+  const firstNewProject = entries.find(entry => entry.hidden).querySelector('a');
+  p.d.querySelector('#more-projects').focus();
+  p.click('#more-projects');
+  assert.equal(p.d.activeElement, firstNewProject);
+  assert.equal(firstNewProject.closest('li').hidden, false);
+  assert.equal(p.d.querySelector('#more-projects').getAttribute('aria-expanded'), 'true');
+  p.click('#more-projects');
+  assert.equal(entries.filter(entry => !entry.hidden).length, 6);
+  p.click('#more-projects');
+  assert.equal(p.d.activeElement, firstNewProject);
+  p.dom.window.close();
+});
