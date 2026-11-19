@@ -4,10 +4,11 @@ const fs = require('node:fs');
 const { JSDOM } = require('jsdom');
 const html = fs.readFileSync('site/index.html', 'utf8');
 const script = fs.readFileSync('site/shelf.js', 'utf8');
-function page() {
+function page(setup = () => {}) {
   const dom = new JSDOM(html, { runScripts: 'outside-only', url: 'https://1337isnot1337.github.io/', pretendToBeVisual: true });
   dom.window.matchMedia = () => ({ matches: true, addEventListener() {} });
   dom.window.HTMLElement.prototype.scrollIntoView = () => {};
+  setup(dom.window);
   dom.window.eval(script);
   const d = dom.window.document;
   return { dom, d, click: id => d.querySelector(id).click(), input(id, value) {
@@ -166,5 +167,39 @@ test('audio comparison seeks explicitly and explains playback failures', async (
   assert.equal(audio.currentTime,10);
   assert.equal(p.d.querySelector('#audio-status').hidden,false);
   assert.match(p.d.querySelector('#audio-status').textContent,/Try the audio player/);
+  p.dom.window.close();
+});
+
+test('shelf arrows preserve modified browser shortcuts and still turn plain arrows', () => {
+  let shelf;
+  const p = page(window => {
+    window.Swiper = class {
+      constructor(carousel, options) {
+        this.slides = [...carousel.querySelectorAll('.swiper-slide')];
+        this.realIndex = options.initialSlide;
+        this.activeIndex = options.initialSlide;
+        shelf = this;
+      }
+      slideToLoop(index) { this.realIndex = this.activeIndex = index; }
+    };
+  });
+  const target = p.d.querySelector('#next');
+  const initial = shelf.realIndex;
+  for (const modifier of ['altKey', 'ctrlKey', 'metaKey', 'shiftKey']) {
+    for (const key of ['ArrowLeft', 'ArrowRight']) {
+      const event = new p.dom.window.KeyboardEvent('keydown', {
+        key, [modifier]: true, bubbles: true, cancelable: true,
+      });
+      target.dispatchEvent(event);
+      assert.equal(event.defaultPrevented, false, `${modifier}+${key} must retain native behavior`);
+      assert.equal(shelf.realIndex, initial, `${modifier}+${key} must not rotate the shelf`);
+    }
+  }
+  for (const [key, index] of [['ArrowRight', initial + 1], ['ArrowLeft', initial]]) {
+    const event = new p.dom.window.KeyboardEvent('keydown', { key, bubbles: true, cancelable: true });
+    target.dispatchEvent(event);
+    assert.equal(event.defaultPrevented, true);
+    assert.equal(shelf.realIndex, index);
+  }
   p.dom.window.close();
 });

@@ -186,7 +186,14 @@ if (window.Swiper) {
     .querySelector("#next")
     .addEventListener("click", () => stepPrint(1));
   document.querySelector(".shop").addEventListener("keydown", (event) => {
-    if (projectIndex.open || !["ArrowLeft", "ArrowRight"].includes(event.key))
+    if (
+      projectIndex.open ||
+      event.altKey ||
+      event.ctrlKey ||
+      event.metaKey ||
+      event.shiftKey ||
+      !["ArrowLeft", "ArrowRight"].includes(event.key)
+    )
       return;
     event.preventDefault();
     stepPrint(event.key === "ArrowLeft" ? -1 : 1);
