@@ -556,7 +556,8 @@ h1 {
   border-radius: 4px;
   padding: 8px;
 }
-.toy output {
+.toy output,
+.toy #forecast {
   display: block;
   font: 15px/1.45 var(--mono);
   margin-top: 12px;

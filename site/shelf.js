@@ -528,7 +528,7 @@ for (const button of document.querySelectorAll("[data-taken]")) {
       ". " + (predictedTaken === taken ? "Correct." : "Missed this one.");
     counter = Math.max(0, Math.min(3, counter + (taken ? 1 : -1)));
     track.style.setProperty("--state", counter);
-    document.querySelector("#forecast").value =
+    document.querySelector("#forecast").textContent =
       counter.toString(2).padStart(2, "0") + " · " + predictions[counter];
   });
 }
@@ -536,7 +536,7 @@ for (const button of document.querySelectorAll("[data-taken]")) {
 document.querySelector("#reset-predictor").addEventListener("click", () => {
   counter = 1;
   track.style.setProperty("--state", counter);
-  document.querySelector("#forecast").value = "01 · " + predictions[counter];
+  document.querySelector("#forecast").textContent = "01 · " + predictions[counter];
   document.querySelector("#prediction-result").textContent =
     "Reset to 01. Try a few taken jumps, then switch.";
 });

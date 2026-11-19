@@ -126,6 +126,9 @@ const server = http.createServer((req,res) => {
    await page.locator('dialog[open]').waitFor();
    await page.locator('[data-taken="true"]').click();
    assert.match(await page.locator('#prediction-result').textContent(),/Predicted not taken.*Missed/);
+   assert.equal(await page.locator('#prediction-status').getAttribute('role'),'status');
+   assert.equal(await page.locator('#prediction-status').getAttribute('aria-atomic'),'true');
+   assert.match(await page.locator('#prediction-status').textContent(),/10.*Weakly predicts taken[\s\S]*Predicted not taken/);
    await page.locator('#reset-predictor').click();
    assert.match(await page.locator('#forecast').textContent(),/^01/);
    await page.screenshot({path:`test-results/${name}-predictor.png`,fullPage:true});

@@ -61,13 +61,13 @@ test('branch predictor reports its pre-update guess and saturates at both ends',
   const p = page();
   p.click('[data-taken="true"]');
   assert.match(p.d.querySelector('#prediction-result').textContent, /Predicted not taken.*Missed/);
-  assert.match(p.d.querySelector('#forecast').value, /^10/);
+  assert.match(p.d.querySelector('#forecast').textContent, /^10/);
   for (let i = 0; i < 8; i++) p.click('[data-taken="true"]');
-  assert.match(p.d.querySelector('#forecast').value, /^11/);
+  assert.match(p.d.querySelector('#forecast').textContent, /^11/);
   for (let i = 0; i < 8; i++) p.click('[data-taken="false"]');
-  assert.match(p.d.querySelector('#forecast').value, /^00/);
+  assert.match(p.d.querySelector('#forecast').textContent, /^00/);
   p.click('#reset-predictor');
-  assert.match(p.d.querySelector('#forecast').value, /^01/);
+  assert.match(p.d.querySelector('#forecast').textContent, /^01/);
   p.dom.window.close();
 });
 test('factorization, instruction encoding, and rook neighbors handle boundaries', () => {
@@ -229,5 +229,25 @@ test('factor ledger shows actual divisions and clears old workings', () => {
       assert.match(p.d.querySelector('#factor-ending').textContent,/already prime/);
     }
   }
+  p.dom.window.close();
+});
+
+test('predictor announces the outcome and next state together without nested live regions', () => {
+  const p = page();
+  const status = p.d.querySelector('#prediction-status');
+  assert.equal(status.getAttribute('role'), 'status');
+  assert.equal(status.getAttribute('aria-live'), 'polite');
+  assert.equal(status.getAttribute('aria-atomic'), 'true');
+  assert.equal(status.querySelectorAll('output, [role="status"], [aria-live]').length, 0);
+  p.click('[data-taken="true"]');
+  assert.match(status.textContent, /10 · Weakly predicts taken/);
+  assert.match(status.textContent, /Predicted not taken; actual jump taken.*Missed this one/s);
+  p.click('[data-taken="true"]');
+  assert.match(status.textContent, /11 · Strongly predicts taken/);
+  assert.match(status.textContent, /Predicted taken; actual jump taken.*Correct/s);
+  p.click('#reset-predictor');
+  assert.match(status.textContent, /01 · Weakly predicts not taken/);
+  assert.match(status.textContent, /Reset to 01/);
+  assert.doesNotMatch(status.textContent, /Correct|Missed/);
   p.dom.window.close();
 });
