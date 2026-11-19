@@ -40,9 +40,15 @@ const server = http.createServer((req,res) => {
    await page.screenshot({path:`test-results/${name}-shelf.png`,fullPage:true});
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth <= innerWidth), `${name}: horizontal page overflow`);
    // Cross the loop seam in both directions, including normal-motion desktop.
+   const printOrder = ['schedule','conway','conjectures','flyover','factoring','cpu'];
+   let printIndex = 3;
    for (const direction of ['#next','#prev']) {
     for (let i=0;i<7;i++) {
+     printIndex = (printIndex + (direction === '#next' ? 1 : -1) + printOrder.length) % printOrder.length;
      await page.locator(direction).click();
+     // Swiper schedules loop moves on a frame even at reduced-motion speed 0.
+     // Wait for the requested visible state, not merely an idle animation flag.
+     await page.waitForFunction(href => document.querySelector('#open-print').getAttribute('href') === href, '#' + printOrder[printIndex]);
      await page.waitForFunction(() => !document.querySelector('.swiper').swiper.animating);
     }
    }
