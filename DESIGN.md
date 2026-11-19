@@ -176,3 +176,7 @@ The existing hand inspector pairs each starting rank with the rank now in that p
 ## Impeccable polish: a clearer path through the work
 
 The sound sheet has one recording-notes entry in its project header; the location-search disclosure is its next action, with the existing example page and pinned historical source kept inside. The bio no longer repeats the same DOPPLERGEIST/proof description already given in the workbench. Both engineering note rows span the catalogue when either opens, avoiding a blank half-row without changing DOM or keyboard order; the compact two-column index returns when both close. This refines the existing visual world rather than adding sections or changing factual claims.
+
+## Keep the generated room list
+
+The schedule tool offers local copy and print/save-PDF actions only after successful parsing. Plain text retains every semester, letter day and numbered period from the actual WASM output. Clipboard denial reveals selected text for manual copying, with no false success message; editing the input disables export until resubmission. No schedule is transmitted or stored by the tool. Print retains its existing clean room-list layout and omits controls, pasted input and clipboard fallback. A smaller input area brings results into view sooner, while phone day rows use the full available width.

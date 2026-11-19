@@ -354,14 +354,29 @@ const server = http.createServer((req,res) => {
    await page.screenshot({path:`test-results/${name}-404.png`,fullPage:true});
    await page.goto(base + '/imsa-map/?example=1');
    await page.getByRole('heading',{name:'S1 room list'}).waitFor();
+   await page.getByRole('button',{name:'Copy room list',exact:true}).waitFor();
    await page.evaluate(() => document.fonts.ready);
+   assert.equal(await page.locator('.schedule-actions').evaluate(node=>node.nextElementSibling.className),'schedule-results');
+   await page.evaluate(()=>Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async()=>{throw new Error('Simulated denied clipboard');}}}));
+   await page.getByRole('button',{name:'Copy room list',exact:true}).click();
+   const manualCopy=page.getByRole('textbox',{name:'Room list to copy manually'});
+   await manualCopy.waitFor();
+   assert.match(await manualCopy.inputValue(),/S1 room list/);
+   assert.match(await manualCopy.inputValue(),/A day\n1\. Free period\n2\. A113/);
+   assert.match(await manualCopy.inputValue(),/I day\n1\. Free period\n2\. Free period\n3\. B204/);
+
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth <= innerWidth), `${name}: schedule overflow`);
    await page.screenshot({path:`test-results/${name}-schedule.png`,fullPage:true});
    const row = (period,term,room) => `${period}\t${term}\tMath\tMath\tExample\t${room}\tstart\tend`;
    const field = page.getByRole('textbox',{name:'PowerSchool schedule'});
    await field.fill('Schedule\nHeader\n' + row('2-4(A,C-D)','S1','A113') + '\n' + row('3(A)','S2','B204') + '\n' + row('1(A)','S2',''));
+   assert.equal(await page.getByRole('button',{name:'Copy room list',exact:true}).isEnabled(),false);
+   assert.equal(await page.getByRole('button',{name:'Print / save PDF',exact:true}).isEnabled(),false);
+   assert.equal(await manualCopy.isVisible(),false);
    await page.getByRole('button',{name:'Submit',exact:true}).click();
    await page.getByRole('heading',{name:'S2 room list'}).waitFor();
+   assert.equal(await page.getByRole('button',{name:'Copy room list',exact:true}).isEnabled(),true);
+
    const terms = page.locator('.schedule-results > section');
    assert.equal(await terms.count(),2);
    assert.deepEqual(await terms.nth(0).locator('h3').allTextContents(),['A day','B day','I day','C day','D day']);
@@ -372,6 +387,7 @@ const server = http.createServer((req,res) => {
     await page.setViewportSize({width:816,height:1056});
     await page.emulateMedia({media:'print'});
     assert.equal(await field.isVisible(),false,'printed room list omits pasted source');
+    assert.equal(await page.locator('.schedule-actions').isVisible(),false,'print omits export controls and manual clipboard fallback');
     assert.equal(await page.getByRole('button',{name:'Submit',exact:true}).isVisible(),false);
     assert.equal(await page.locator('.schedule-days:visible').count(),2);
     const positions = await terms.nth(0).locator('.schedule-days > section').evaluateAll(nodes=>nodes.map(node=>node.getBoundingClientRect().top));
@@ -387,8 +403,13 @@ const server = http.createServer((req,res) => {
    await page.getByRole('alert').waitFor();
    assert.equal(await terms.count(),0);
    await field.fill(row('1(I)','S2','C105'));
+   assert.equal(await page.getByRole('button',{name:'Copy room list',exact:true}).isEnabled(),false);
+   assert.equal(await page.getByRole('button',{name:'Print / save PDF',exact:true}).isEnabled(),false);
+   assert.equal(await manualCopy.isVisible(),false);
    await page.getByRole('button',{name:'Submit',exact:true}).click();
    await page.getByRole('heading',{name:'S2 room list'}).waitFor();
+   assert.equal(await page.getByRole('button',{name:'Copy room list',exact:true}).isEnabled(),true);
+
    assert.equal(await page.getByRole('alert').count(),0);
    if (fs.existsSync(path.join(root,'solved-conjectures/index.html'))) {
     const collection = await page.goto(base + '/solved-conjectures/');

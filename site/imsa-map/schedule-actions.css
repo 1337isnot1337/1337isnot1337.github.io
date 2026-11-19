@@ -1,0 +1,17 @@
+/* The output remains a plain room list, with local actions beside it. */
+.schedule-actions { display:flex; flex-wrap:wrap; align-items:center; gap:8px 12px; margin-top:28px; padding-top:20px; border-top:1px solid var(--hair); }
+.schedule-actions button { margin:0; min-height:44px; font:inherit; cursor:pointer; }
+.schedule-actions button:hover:not(:disabled) { background:var(--lavender, #eee4ef); }
+.schedule-actions button:disabled { opacity:.55; cursor:default; }
+.schedule-actions p { flex-basis:100%; font-size:14px; margin:0; }
+.schedule-actions textarea { flex-basis:100%; }
+.schedule-actions + .schedule-results { margin-top:24px; }
+.schedule-days li { overflow-wrap:anywhere; }
+@media screen and (max-width:600px) {
+  body .schedule-days { grid-template-columns:1fr; gap:12px; }
+  .schedule-days section { display:grid; grid-template-columns:74px minmax(0,1fr); gap:12px; }
+  .schedule-days h3 { margin:0; font-size:18px; }
+  .schedule-days ol { margin:0; }
+  .schedule-actions button { flex:1 1 140px; }
+}
+@media print { .schedule-actions { display:none !important; } }

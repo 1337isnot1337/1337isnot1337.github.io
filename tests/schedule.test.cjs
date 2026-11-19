@@ -6,7 +6,7 @@ const { JSDOM } = require('jsdom');
 const pause = () => new Promise(resolve => setTimeout(resolve, 25));
 
 test('published WASM separates terms, expands periods and recovers from invalid input', async () => {
-  const dom = new JSDOM('<body></body>', { url: 'https://example.test', pretendToBeVisual: true });
+  const dom = new JSDOM('<body></body>', { url: 'https://example.test', pretendToBeVisual: true, runScripts: 'outside-only' });
   for (const key of ['window', 'document', 'navigator', 'Window', 'Document', 'Element', 'Node', 'HTMLElement', 'HTMLInputElement', 'HTMLTextAreaElement', 'Event']) {
     Object.defineProperty(globalThis, key, { value: dom.window[key], configurable: true });
   }
@@ -19,6 +19,8 @@ test('published WASM separates terms, expands periods and recovers from invalid 
   await pause();
   const field = document.querySelector('textarea');
   assert.ok(field);
+  dom.window.eval(fs.readFileSync(path.join(dir, "schedule-actions.js"), "utf8"));
+  assert.equal(document.querySelector(".schedule-actions"), null, "no exports before successful parsing");
   async function submit(value) {
     field.value = value;
     field.dispatchEvent(new window.Event('input', { bubbles: true }));
@@ -58,6 +60,31 @@ test('published WASM separates terms, expands periods and recovers from invalid 
     for (const period of [1, 4, 5, 6, 7, 8]) assert.equal(periods[period - 1], 'Free period');
   }
   example.window.close();
+  const actions = document.querySelector('.schedule-actions');
+  assert.ok(actions);
+  const [copy, print] = actions.querySelectorAll('button');
+  assert.equal(actions.nextElementSibling, document.querySelector('.schedule-results'));
+  let copied = '', prints = 0;
+  Object.defineProperty(window.navigator, 'clipboard', {configurable:true, value:{writeText: async value => {copied=value;}}});
+  window.print = () => { prints++; };
+  copy.click(); await pause();
+  assert.match(copied, /^S1 room list\n\nA day\n1\. Free period\n2\. A113/);
+  assert.match(copied, /I day\n1\. Free period\n2\. Free period\n3\. B204/);
+  assert.match(actions.textContent, /Room list copied/);
+  print.click(); assert.equal(prints, 1);
+  window.navigator.clipboard.writeText = async () => { throw new Error('denied'); };
+  copy.click(); await pause();
+  const manual = actions.querySelector('textarea');
+  assert.equal(manual.hidden, false);
+  assert.equal(manual.value, copied);
+  assert.equal(document.activeElement, manual);
+  assert.equal(manual.selectionEnd, copied.length);
+  field.dispatchEvent(new window.Event('input', {bubbles:true}));
+  assert.equal(copy.disabled, true); assert.equal(print.disabled, true);
+  assert.equal(manual.hidden, true); assert.equal(manual.value, '');
+  assert.match(actions.textContent, /Submit again/);
+  print.click(); assert.equal(prints, 1);
+
 
   await submit('Schedule\nHeader\n' + row('2-4(A,C-D)', 'S1', 'A113') + '\n' + row('3(A)', 'S2', 'B204'));
   assert.equal(document.querySelectorAll('.schedule-results > section').length, 2);
@@ -68,6 +95,7 @@ test('published WASM separates terms, expands periods and recovers from invalid 
   await submit('Schedule\nHeader\n' + row('4-2(A)', 'S1', 'A113'));
   assert.match(document.querySelector('[role="alert"]').textContent, /forwards/);
   assert.equal(document.querySelector('.schedule-results'), null);
+  assert.equal(document.querySelector('.schedule-actions'), null);
   await submit('Schedule\nHeader\n' + row('1(I)', 'S2', 'C105'));
   assert.equal(document.querySelector('[role="alert"]'), null);
   assert.match(document.querySelector('.schedule-results').textContent, /C105/);
@@ -88,6 +116,7 @@ test('published WASM separates terms, expands periods and recovers from invalid 
     await submit(row('1-3(A,C-D)', 'S1', first) + '\n' + row('2(C)', 'S1', second));
     assert.match(document.querySelector('[role="alert"]').textContent, /Conflicting rooms/);
     assert.equal(document.querySelector('.schedule-results'), null);
+  assert.equal(document.querySelector('.schedule-actions'), null);
   }
   await submit(row('1(A)', 'S1', 'A101') + '\n' + row('1(A)', 'S1', ' A101 '));
   assert.equal(document.querySelector('[role="alert"]'), null);
