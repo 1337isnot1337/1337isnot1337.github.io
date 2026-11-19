@@ -18,13 +18,6 @@ const articles = new Map(
   [...catalog.children].map((article) => [article.id, article]),
 );
 const shop = document.querySelector(".shop");
-for (const link of projectIndex.querySelectorAll("a[data-project]")) {
-  const art = prints
-    .find((print) => print.dataset.project === link.dataset.project)
-    .querySelector("img")
-    .cloneNode();
-  link.prepend(art);
-}
 let opener = null;
 let activeArticle = null;
 let returningToShelf = false;

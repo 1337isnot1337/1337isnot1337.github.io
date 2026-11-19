@@ -95,3 +95,15 @@ test('missing-page recovery and schedule loading work before JavaScript', () => 
   assert.ok(schedule.querySelector('#schedule-loading[role="status"]'));
   assert.ok(schedule.querySelector('noscript'));
 });
+
+test('illustrated contents explains each experiment without JavaScript', () => {
+  const d = new JSDOM(html).window.document;
+  const entries = [...d.querySelectorAll('.index a[data-project]')];
+  assert.equal(entries.length, 6);
+  for (const entry of entries) {
+    assert.ok(entry.querySelector('strong').textContent.length > 3);
+    assert.ok(entry.querySelector('small').textContent.length > 12);
+    assert.equal(entry.querySelector('img').alt, '');
+    assert.ok(fs.existsSync('site/' + entry.querySelector('img').getAttribute('src')));
+  }
+});

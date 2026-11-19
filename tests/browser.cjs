@@ -39,6 +39,15 @@ const server = http.createServer((req,res) => {
    await page.evaluate(() => document.fonts.ready);
    await page.screenshot({path:`test-results/${name}-shelf.png`,fullPage:true});
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth <= innerWidth), `${name}: horizontal page overflow`);
+   await page.locator('.index summary').click();
+   await page.locator('.index[open]').waitFor();
+   assert.equal(await page.locator('.index a img').count(),6);
+   assert.ok(await page.locator('.index ul').evaluate(el => {
+    const r=el.getBoundingClientRect(); return r.left>=0 && r.right<=innerWidth && r.bottom<=innerHeight;
+   }), `${name}: print index escapes viewport`);
+   await page.screenshot({path:`test-results/${name}-index.png`,fullPage:true});
+   await page.locator('.index summary').press('Escape');
+   assert.equal(await page.locator('.index').getAttribute('open'),null);
    // Cross the loop seam in both directions, including normal-motion desktop.
    const printOrder = ['schedule','conway','conjectures','flyover','factoring','cpu'];
    let printIndex = 3;

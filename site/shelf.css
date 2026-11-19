@@ -805,8 +805,9 @@ body.modal-open {
   transform: translateY(2px);
 }
 .index ul {
-  min-width: 228px;
-  max-height: min(75vh, 390px);
+  width: min(300px, 92vw);
+  min-width: 0;
+  max-height: min(470px, calc(100dvh - 145px));
   overflow: auto;
   border-radius: 3px;
 }
@@ -818,11 +819,16 @@ body.modal-open {
   font-size: 14px;
 }
 .index a img {
-  width: 27px;
-  height: 33px;
+  width: 38px;
+  height: 48px;
+  flex-shrink: 0;
   object-fit: cover;
   box-shadow: 0 1px 2px #462b352a;
 }
+.index a span { min-width: 0; }
+.index a strong { display: block; font-size: 15px; font-weight: 650; }
+.index a small { display: block; color: var(--muted); font-size: 12px; line-height: 1.4; margin-top: 2px; }
+.index li + li { border-top: 1px solid #bdabba55; }
 .index a[aria-current="true"] {
   background: #f2e6ea;
 }

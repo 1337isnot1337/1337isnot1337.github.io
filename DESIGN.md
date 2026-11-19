@@ -1,6 +1,6 @@
 ---
 name: Cinna Davis · Project shelf
-description: Five illustrated project prints rest on a wooden ledge above a short introduction and a taped note.
+description: Six illustrated project prints rest on a wooden ledge above a short introduction and a taped note.
 colors:
   ink: "#422c41"
   muted: "#665364"
@@ -50,7 +50,7 @@ components:
 
 ## Overview
 
-Five illustrated prints give visitors a way into Cinna’s work. Each print has a subject, title and an experiment to open. Most of the page stays quiet. A wooden ledge grounds the artwork, and a small taped note holds Cinna’s personal interests.
+Six illustrated prints give visitors a way into Cinna’s work. Each print has a subject, title and an experiment to open. Most of the page stays quiet. A wooden ledge grounds the artwork, and a small taped note holds Cinna’s personal interests.
 
 ## Colors
 
@@ -74,7 +74,7 @@ Portrait prints have straight edges. The main action and project index have pill
 
 ## Components
 
-- **Shelf.** The self-hosted Swiper 14.4.0 bundle adapts the Coverflow demonstration. Drag, swipe, arrows and keyboard navigation move between prints. Reduced-motion preferences set the transition duration to zero. The project index provides a direct route to every entry. The MIT license ships with the vendor files. [Swiper Coverflow demo](https://swiperjs.com/demos#effect-coverflow)
+- **Shelf.** The self-hosted Swiper 14.4.0 bundle adapts the Coverflow demonstration. Drag, swipe, arrows and keyboard navigation move between prints. Reduced-motion preferences set the transition duration to zero. The project index is an illustrated contents sheet: a miniature print, its title, and a short description of what visitors can try. The artwork and descriptions remain available without JavaScript. The MIT license ships with the vendor files. [Swiper Coverflow demo](https://swiperjs.com/demos#effect-coverflow)
 - **Project artwork.** The six generated illustrations in `site/assets/prints/` serve as print covers and dialog artwork. Captions are selectable HTML. The social preview, `site/assets/project-shelf.jpg`, shows the composed shelf.
 - **Catalogue.** The searchable project index separates mathematics, software, collaborations, and side projects. Entry links point to the work or to a concrete contribution.
 - **Experiments.** Each project hash opens its corresponding detail panel. Visitors can scrub the flyover spectrogram, deal the repeating War game from Solved conjectures, factor an integer, train a branch-table counter, encode a Hack instruction, open the schedule tool, or move a rook. Reader arrows turn between prints. Without the modal enhancement, the project links lead to inline articles.
