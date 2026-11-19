@@ -120,3 +120,9 @@ The research catalogue keeps its Newsreader proof text, native MathML and Geist 
 ## Mobile experiment-first reading
 
 Every desk sheet has one consistent DOM order: project heading, real artifact and controls, then explanation and sources. Narrow screens follow that order directly, bringing the experiment into the first view instead of putting 640–790px of introduction ahead of it. The desktop grid keeps the heading and explanation on the left and artifact on the right. No visual-only `order` swaps, duplicate descriptions or collapsed caveats are used. Keyboard focus from a shelf action reaches the chosen heading, then the experiment's first control. Tests preserve the unrefereed and worked-example qualifications and verify artifact placement at narrow widths.
+
+## Specific research depth
+
+The factoring reader states the actual smallest-prime-factor time bound in native MathML and identifies input length in bits. It distinguishes the asymptotic result from measured speed and from the separate trial-division toy. The theorem link is pinned to the public repository revision that states this endpoint. DOPPLERGEIST's explanation now names its recording-time prerequisite rather than suggesting arbitrary audio alone is sufficient for historical matching. The robotics notebook links to the official 2026 season page; no rights-reserved team photo is copied or embedded.
+
+Sources: [factoring endpoint](https://github.com/1337isnot1337/integer-factoring/blob/44b2624874b99164269ddd155ac591d0ec83645a/README.md#main-theorem-logarithmic-saving-exponent-12), [recording-time requirements](https://github.com/1337isnot1337/DOPPLERGEIST/blob/250df50211ff78a868e94234aed3a671a6bfa2ca/README.md#can-i-geolocate-an-mp3-recording), [official Titan Robotics current-season page](https://titanrobotics2022.com/robot/current-season/).

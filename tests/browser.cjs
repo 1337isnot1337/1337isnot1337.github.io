@@ -243,6 +243,9 @@ const server = http.createServer((req,res) => {
    assert.equal(await page.locator('#factor-steps li').count(),5);
    assert.match(await page.locator('#factor-ending').textContent(),/13 is prime/);
    await page.locator('#factor-form').screenshot({path:`test-results/${name}-factoring.png`});
+   assert.equal(await page.locator('#factoring .research-bound math').count(),1);
+   assert.ok(await page.locator('#factoring').evaluate(el=>el.scrollWidth<=el.clientWidth+1),`${name}: native factoring bound fits reader`);
+   await page.locator('#factoring .research-bound').screenshot({path:`test-results/${name}-factoring-bound.png`});
    await page.goto(base + '/#conway');
    await page.locator('dialog[open]').waitFor();
    await page.evaluate(() => document.fonts.ready);

@@ -1385,3 +1385,11 @@ html {
     font: 11px var(--mono);
   }
 }
+
+/* State the actual research endpoint separately from the small trial-division toy. */
+.research-bound{margin:24px 0 28px;padding:18px 20px;border-left:3px solid var(--berry);background:#f2eaf0;min-width:0}
+.research-bound math{font-size:clamp(20px,3vw,28px);margin:0 0 16px}
+.research-bound figcaption{font-size:12px;line-height:1.6;color:var(--muted)}
+.research-bound figcaption a{display:inline-block;margin-left:8px}
+@media(max-width:380px){.research-bound{padding-inline:12px}.research-bound figcaption a{display:block;margin-left:0;margin-top:4px}}
+@media print{.research-bound{background:transparent;break-inside:avoid}}

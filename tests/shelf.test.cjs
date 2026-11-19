@@ -319,3 +319,16 @@ test('expanding the catalogue continues at the first newly revealed project', ()
   assert.equal(p.d.activeElement, firstNewProject);
   p.dom.window.close();
 });
+test('research readers state the actual bound and recording prerequisites with scoped sources', () => {
+  const d = new JSDOM(html).window.document;
+  assert.match(d.querySelector('#flyover > p').textContent, /justified UTC start time or a bounded time window/);
+  assert.match(d.querySelector('#factoring > p').textContent, /smallest prime factor/);
+  const bound=d.querySelector('#factoring .research-bound');
+  assert.equal(bound.querySelector('math').namespaceURI,'http://www.w3.org/1998/Math/MathML');
+  assert.equal(bound.querySelector('mfrac > mi').textContent,'n');
+  assert.equal(bound.querySelector('msqrt').textContent,'logn');
+  assert.match(bound.querySelector('figcaption').textContent,/Asymptotic worst-case time, not a measured speedup/);
+  assert.ok(bound.querySelector('a').href.includes('/44b2624874b99164269ddd155ac591d0ec83645a/README.md'));
+  assert.equal(d.querySelector('.notebook-season a').href,'https://titanrobotics2022.com/robot/current-season/');
+  assert.equal(d.querySelectorAll('img[src*="titanrobotics2022.com"]').length,0,'official robot photo is linked, not republished');
+});

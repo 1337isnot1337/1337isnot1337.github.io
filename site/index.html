@@ -35,10 +35,10 @@
       crossorigin
     />
     <link rel="stylesheet" href="vendor/swiper-bundle.min.css" />
-    <link rel="stylesheet" href="shelf.css?v=19" />
+    <link rel="stylesheet" href="shelf.css?v=20" />
     <link rel="stylesheet" href="welcome.css?v=1" />
     <link rel="stylesheet" href="workbench.css?v=4" />
-    <link rel="stylesheet" href="notebook.css?v=1" />
+    <link rel="stylesheet" href="notebook.css?v=2" />
     <link rel="stylesheet" href="numberline.css?v=1" />
     <script defer src="numberline.js?v=1"></script>
     <script defer src="workbench.js?v=3"></script>
@@ -675,6 +675,7 @@
 }</code></pre>
         <a href="https://github.com/titan2022/FRC-2026-JAVA/blob/275a9639b7a768b2026bf9e56adfdf6069d0093e/src/main/java/frc/robot/subsystems/base/VoltageControlledBase.java">From my intake subsystem contribution</a>
       </figure>
+      <p class="notebook-season"><a href="https://titanrobotics2022.com/robot/current-season/">Meet Timmy, our 2026 robot ↗</a></p>
     </article>
     <article class="notebook-page notebook-physics" aria-labelledby="physics-story-title">
       <h3 id="physics-story-title">Looking for<br> a rare signal.</h3>
@@ -802,8 +803,8 @@
           </div>
           <p>
             Can a recording tell you where the microphone was? DOPPLERGEIST
-            follows the change in pitch as a plane passes overhead and compares
-            it with historical flight tracks.
+            compares an aircraft’s changing pitch with historical flight tracks.
+            Matching needs a justified UTC start time or a bounded time window.
           </p>
           <figure class="player">
             <p class="spectrum-label">Frequency ↑ <span>100–400 Hz</span></p>
@@ -877,10 +878,18 @@
             <h2 id="factoring-title">Integer factoring</h2>
           </div>
           <p>
-            I work on how much time a deterministic algorithm needs to factor an
-            integer. The repository includes a Lean proof of a running-time
-            bound. Try a small example of factorization here.
+            I work on deterministic integer factoring. The repository gives this
+            Lean-verified bound for finding the smallest prime factor of an
+            <i>n</i>-bit integer.
           </p>
+          <figure class="research-bound">
+            <math display="block" xmlns="http://www.w3.org/1998/Math/MathML" aria-label="T of n equals exponential of big O of n divided by the square root of log n">
+              <mrow><mi>T</mi><mo stretchy="false">(</mo><mi>n</mi><mo stretchy="false">)</mo><mo>=</mo><mi mathvariant="normal">exp</mi><mo>(</mo><mi>O</mi><mo>(</mo><mfrac><mi>n</mi><msqrt><mrow><mi mathvariant="normal">log</mi><mspace width="0.15em"/><mi>n</mi></mrow></msqrt></mfrac><mo>)</mo><mo>)</mo></mrow>
+            </math>
+            <figcaption>Asymptotic worst-case time, not a measured speedup.
+              <a href="https://github.com/1337isnot1337/integer-factoring/blob/44b2624874b99164269ddd155ac591d0ec83645a/README.md#main-theorem-logarithmic-saving-exponent-12">Theorem and scope</a>
+            </figcaption>
+          </figure>
           <form id="factor-form" class="toy">
             <label for="composite">Pick a whole number from 2 to 999,999</label>
             <div class="input-row">
