@@ -133,3 +133,16 @@ test('shelf handoff selects the matching sheet and focuses its heading without s
  }
  p.dom.window.close();
 });
+
+test('each desk sheet reads heading, artifact, then explanation in the DOM',()=>{
+ const p=desk();
+ for(const panel of p.d.querySelectorAll('[data-desk-panel]')){
+  assert.deepEqual([...panel.children].map(el=>el.classList.contains('desk-intro')?'heading':el.classList.contains('desk-artifact')?'artifact':el.classList.contains('desk-copy')?'explanation':'unexpected'),['heading','artifact','explanation']);
+  assert.ok(panel.querySelector('.desk-intro h3'));
+  assert.ok(panel.querySelector('.desk-artifact'));
+  assert.ok(panel.querySelector('.desk-copy p'));
+ }
+ assert.match(p.d.querySelector('.desk-numbers .desk-copy').textContent,/not a proof of the general theorem/);
+ assert.match(p.d.querySelector('.desk-cards .desk-copy').textContent,/unrefereed; Lean status is recorded per result/);
+ p.dom.window.close();
+});

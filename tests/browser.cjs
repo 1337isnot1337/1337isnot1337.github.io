@@ -90,6 +90,9 @@ const server = http.createServer((req,res) => {
       assert.equal(await page.locator('dialog[open]').count(),0);
       assert.equal(await page.locator(`[data-desk="${mapped}"]`).getAttribute('aria-pressed'),'true');
       assert.equal(await page.evaluate(name=>document.activeElement===document.querySelector(`[data-desk-panel="${name}"] h3`),mapped),true);
+      await page.keyboard.press('Tab');
+      const firstControl={sound:'#desk-play-recording',cards:'#desk-deal-one',bits:'.desk-bit-row button[data-bit="14"]'}[mapped];
+      assert.equal(await page.locator(firstControl).evaluate(el=>el===document.activeElement),true, 'heading leads directly into the experiment by keyboard');
      }
     }
    }
@@ -175,6 +178,15 @@ const server = http.createServer((req,res) => {
    await page.screenshot({path:`test-results/${name}-desk-bits.png`});
    await page.locator('[data-desk="numbers"]').click();
    assert.equal(await page.locator('#desk-number-density').textContent(),'3/7');
+   if(width<=680){
+    for(const sheet of ['sound','cards','bits','numbers']){
+     await page.locator(`[data-desk="${sheet}"]`).click();
+     const positions=await page.locator(`[data-desk-panel="${sheet}"]`).evaluate(panel=>({artifact:panel.querySelector('.desk-artifact').getBoundingClientRect().top,explanation:panel.querySelector('.desk-copy').getBoundingClientRect().top,desk:document.querySelector('#desk').getBoundingClientRect().top}));
+     assert.ok(positions.artifact<positions.explanation,`${name}: experiment comes before explanation`);
+     assert.ok(positions.artifact-positions.desk<600,`${name}: experiment is not buried below introductory prose`);
+    }
+    await page.locator('[data-desk="numbers"]').click();
+   }
    await page.locator('[data-residue="5"]').click();
    assert.match(await page.locator('#desk-number-explanation').textContent(),/5 and 7 are 2 apart/);
    assert.equal(await page.locator('#desk-number-status').getAttribute('data-valid'),'false');
