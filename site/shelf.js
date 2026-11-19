@@ -32,7 +32,8 @@ function stopCoast() {
   cancelAnimationFrame(coastFrame);
   coastFrame = 0;
 }
-if (window.Swiper) {
+function startShelf() {
+  if (shelf || !window.Swiper || document.documentElement.dataset.view === "desk") return;
   // A wide shelf shows five prints at once. A second run gives Swiper room to
   // move paper around the back without exposing an empty end of the ledge.
   const track = carousel.querySelector(".swiper-wrapper");
@@ -209,9 +210,16 @@ if (window.Swiper) {
         .querySelector(".print")
         .focus({ preventScroll: true });
   });
-} else {
-  document.querySelector(".shelf-controls").hidden = true;
 }
+startShelf();
+document.addEventListener("portfolio-view", () => {
+  stopCoast();
+  if (document.documentElement.dataset.view === "shelf") {
+    if (shelf) shelf.update();
+    else startShelf();
+  }
+});
+if (!window.Swiper) document.querySelector(".shelf-controls").hidden = true;
 
 function loadArticleMedia(article) {
   for (const media of article.querySelectorAll('audio[data-src]')) {
@@ -292,7 +300,7 @@ function returnToShelf() {
       "",
       location.pathname + location.search + "#projects",
     );
-    displayFromHash();
+    window.dispatchEvent(new Event("hashchange"));
   }
 }
 if (typeof dialog.showModal === "function") {
@@ -318,10 +326,10 @@ if (typeof dialog.showModal === "function") {
     }
     opener = projectIndex.contains(link)
       ? projectIndex.querySelector("summary")
-      : link;
+      : link.dataset.originObject ? document.querySelector('[data-object="'+link.dataset.originObject+'"]') : link;
     projectIndex.open = false;
     const id = link.dataset.project;
-    history.pushState({ fromShelf: true }, "", "#" + id);
+    history.pushState({ fromShelf: true, view: document.documentElement.dataset.view }, "", "#" + id);
     displayFromHash();
   });
   let printReaderState = null;

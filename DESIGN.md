@@ -50,7 +50,7 @@ components:
 
 ## Overview
 
-A large personal greeting introduces Cinna before the six illustrated prints. Each print has a subject, title and experiment to open. Beneath the ledge, visitors can look around a furnished writing desk and pick up its contents. The oscilloscope opens the workbench, the folder opens the catalogue, the clothbound notebook opens personal stories and the letters open a postcard. Books on the hutch link to proofs and research notes. A cassette opens “Off the clock.”
+Visitors arrive at Cinna’s writing desk and can pick up its contents. The Boring mode switch leads to the shelf of six illustrated projects, each with an experiment and project notes. The oscilloscope opens the workbench, the folder opens the catalogue, the clothbound notebook opens personal stories and the letters open a postcard. Books on the hutch link to proofs and research notes. A cassette opens “Off the clock.”
 
 ## Colors
 
@@ -93,9 +93,11 @@ Each print has a small folded corner clipped into the paper. Hover deepens the s
 
 The scene at `#studio` uses self-hosted Three.js r180. `site/desk-model.js` builds the desk and hutch from geometry, with separate moving parts for the drawer, notebook cover and file flap. Brass fittings, woven bookcloth and a glass oscilloscope screen reflect the room’s lighting differently. The desktop, trim and floor use `site/assets/furniture/grain.webp`, a scanned wood-grain texture derived from Poly Haven’s CC0 Wood Table 001. The varnish uses the corresponding displacement and roughness scans. The blotter uses a scan of pebbled leather. Glazed ceramic and brass reflect a reduced HDR panorama of an artist’s workshop. [Leather](https://polyhaven.com/a/brown_leather) · [Workshop lighting](https://polyhaven.com/a/artist_workshop) · [Source asset](https://polyhaven.com/a/wood_table_001) · [License](https://polyhaven.com/license)
 
-The scene stays in the viewport as the visitor scrolls from the hutch toward the writing surface. A horizontal drag orbits the camera within a limited arc. At 660px and below, and on tall viewports up to a 6:5 aspect ratio, the geometry uses a narrower desk and rearranges the objects. A ray cast selects the nearest model part, and the matching keyboard-accessible HTML targets track their objects as the camera moves. The same named destination links work over a wood-textured fallback when WebGL is unavailable. A mouse click on the desk captures a calico paw cursor where Pointer Lock is available. Escape releases it. Object names are printed on the props, and keyboard focus outlines their positions. If canvas or WebGL is blocked, a short graphics notice appears with the usable links. The lamp switches on a warm point light. Pulling the drawer reveals a postcard the visitor can take.
+The desk fills the first viewport. A horizontal drag orbits within a limited arc. Tall screens have a narrower hutch and a different arrangement of the same objects. A ray selects the visible surface under the pencil nib. Keyboard targets follow the props around the desk. A blocked graphics context displays a notice and a list of destinations. Software rendering uses simpler materials and a compositor preview while dragging. A prefiltered copy of the workshop panorama provides reflections on accelerated devices.
 
-Selecting a room opens a paper reader over the furniture. The reader rail and stable hashes connect experiments, the file catalogue, notebook leaves and Letters. Returning to the desk restores the originating control and scroll position when the reader was opened from a desk object. Reduced motion fixes the scroll camera, suppresses pointer parallax and applies the drawer and cover positions immediately. The explicit drag and keyboard controls remain available. Room changes, leaf turns and the postcard turn skip their entrance animations under reduced motion.
+The prints and framed photo enlarge into two-sided cards with original SVG doodles on their backs. The plant opens a botanical study. Either pencil, the cup and the blotter share a sheet of scratch paper. The lamp switches on a warm light. The drawer opens to reveal a postcard.
+
+The desk becomes inert while someone reads an experiment, the catalogue, a notebook leaf or Letters. Putting it back restores focus to the originating object. Reduced motion applies cover and drawer positions immediately and skips paper entrance animations.
 
 ## Open workbench
 

@@ -1,6 +1,6 @@
-# Cinna Davis’s project shelf
+# Cinna Davis’s desk
 
-[Browse the shelf](https://1337isnot1337.github.io/)
+[Visit the desk](https://1337isnot1337.github.io/) · [Browse the project shelf](https://1337isnot1337.github.io/#projects)
 
 The homepage, interactive project examples, and self-hosted assets are in `site/`. To preview them locally, run:
 

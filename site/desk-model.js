@@ -3,7 +3,7 @@ import * as T from './vendor/three/three.module.min.js';
 import { mergeGeometries } from './vendor/three/BufferGeometryUtils.js';
 import { RoundedBoxGeometry } from './vendor/three/RoundedBoxGeometry.js';
 
-export function furnish(scene, narrow, repaint) {
+export function furnish(scene, narrow, repaint, software=false) {
   const width = narrow ? 5.6 : 9.6;
   const half = width / 2;
   const world = new T.Group();
@@ -62,15 +62,19 @@ export function furnish(scene, narrow, repaint) {
     c.height=Math.max(32,Math.round(c.width*h/w));
     const ctx=c.getContext('2d');ctx.scale(c.width/w,c.height/h);paint(ctx,w,h);
     const tex=new T.CanvasTexture(c);tex.colorSpace=T.SRGBColorSpace;tex.anisotropy=4;
-    const m=mesh(parent,new T.PlaneGeometry(w,h),new T.MeshStandardMaterial({map:tex,transparent:true,alphaTest:.05,roughness:.9,side:T.DoubleSide}),x,y,z);
+    const material=new T.MeshStandardMaterial({map:tex,transparent:true,alphaTest:.12,roughness:.94,
+      depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2});
+    const m=mesh(parent,new T.PlaneGeometry(w,h),material,x,y,z);
     m.castShadow=false;if(flat)m.rotation.x=-Math.PI/2;return m;
   }
   function letter(p,label,w,h,x,y,z,options={}) {
     return drawn(p,w,h,(c,a,b)=>{
       if(options.paper){c.fillStyle=options.paper;c.fillRect(0,0,a,b);}
       c.fillStyle=options.ink||'#3c3326';c.textAlign='center';c.textBaseline='middle';
-      c.font=(options.italic?'italic ':'')+(options.bold?'bold ':'')+(b*.70)+'px '+(options.font||'Georgia');
-      c.fillText(label,a/2,b*.51,a*.94);
+      c.resetTransform();
+      const {width,height}=c.canvas;
+      c.font=(options.italic?'italic ':'')+(options.bold?'bold ':'')+Math.round(height*.78)+'px '+(options.font||'Georgia');
+      c.fillText(label,width/2,height*.53,width*.94);
     },x,y,z,options.flat);
   }
   function illustration(p,uri,w,h,x,y,z,flat=false) {
@@ -82,8 +86,8 @@ export function furnish(scene, narrow, repaint) {
   }
   const woodMap=photo('assets/furniture/grain.webp',()=>{floorMap.needsUpdate=true;});
   woodMap.wrapS=woodMap.wrapT=T.RepeatWrapping;
-  const relief=loader.load('assets/furniture/grain-relief.webp',repaint);
-  relief.wrapS=relief.wrapT=T.RepeatWrapping;relief.anisotropy=4;
+  const relief=software?null:loader.load('assets/furniture/grain-relief.webp',repaint);
+  if(relief){relief.wrapS=relief.wrapT=T.RepeatWrapping;relief.anisotropy=4;}
   const wood=new T.MeshStandardMaterial({
     map:woodMap,roughnessMap:relief,bumpMap:relief,bumpScale:.016,roughness:.91,color:0xe0c6ab
   });
@@ -166,27 +170,28 @@ export function furnish(scene, narrow, repaint) {
   shelfLabel(shelfBooks,-half+.44+(total-1)*.16,'Solved conjectures',narrow?1.48:1.84);
   shelfLabel(archive,half-(narrow?1.0:2.02),'Research notes',narrow?1.25:1.54);
   // Pinned prints tuck behind the work surface.
-  const pinX=narrow?.59:.23;const pinboard=group(world,pinX,.69,-2.04);
+  const pinX=narrow?.59:.23;const pinboard=tag(group(world,pinX,.69,-2.04),'pinboard',[0,-.14,.09],.14,.30);
   box(pinboard,narrow?1.27:2.17,1.10,.09,trim,0,0,0,.025);
   box(pinboard,narrow?1.17:2.06,1.01,.04,finish(0xb88959),0,0,.061);
   for(const [i,uri] of ['flyover','conway'].entries()){
-    const g=group(pinboard,(i-.5)*(narrow?.46:.78),i?.06:-.04,.096);g.rotation.z=i?-.11:.080;
-    box(g,.46,.71,.018,paper);illustration(g,'assets/prints/'+uri+'.webp',.40,.51,0,.041,.014);
+    const g=tag(group(pinboard,(i-.5)*(narrow?.53:.78),i?.06:-.04,.096),uri+'-print',[0,.04,.01],.46,.69);g.rotation.z=i?-.11:.080;
+    box(g,.46,.71,.018,paper);illustration(g,'assets/furniture/prints/'+uri+'.webp',.40,.51,0,.041,.014);
     bead(g,0,.30,.024,.032,.032,.025,brass);
   }
   // Stitched green leather blotter with a fine inset line.
   const matWidth=width*.75;
-  box(world,matWidth,.034,2.84,finish(0x726347),-.04,.015,.46,.016);
+  const pad=tag(group(world,0,0,0),'blotter',[0,.043,1.13],.75,.38);
+  box(pad,matWidth,.034,2.84,finish(0x726347),-.04,.015,.46,.016);
   const hide=loader.load('assets/furniture/blotter.webp',repaint);
   hide.wrapS=hide.wrapT=T.RepeatWrapping;hide.repeat.set(matWidth/1.5,2.8/1.5);hide.anisotropy=4;
   const blotter=new T.MeshStandardMaterial({color:0x697a67,map:hide,bumpMap:hide,bumpScale:.012,roughness:.83,roughnessMap:hide});
-  box(world,matWidth-.038,.015,2.80,blotter,-.04,.036,.46,.007);
-  drawn(world,matWidth-.12,2.70,(c,w,h)=>{
+  box(pad,matWidth-.038,.015,2.80,blotter,-.04,.036,.46,.007);
+  drawn(pad,matWidth-.12,2.70,(c,w,h)=>{
     c.strokeStyle='#b6a482';c.lineWidth=.010;c.setLineDash([.029,.019]);
     c.beginPath();c.roundRect(.025,.025,w-.05,h-.05,.09);c.stroke();
   },-.04,.046,.46,true);
   // Metal oscilloscope with a glass graticule, waveform, knobs and coiled probe.
-  const scope=tag(group(world,narrow?-1.56:-2.84,.054,-.71),'scope',[0,.53,.32],1.26,.85);
+  const scope=tag(group(world,narrow?-1.65:-2.84,.054,-1.16),'scope',[0,.53,.32],1.26,.85);
   scope.rotation.y=.13;const scale=narrow?.78:1;scope.scale.setScalar(scale);
   box(scope,1.69,.98,.89,finish(0x738e83,.5),0,.55,0,.095);
   for(const x of [-.62,.62])box(scope,.19,.095,.54,finish(0x393934),x,.075,.01,.025);
@@ -210,14 +215,14 @@ export function furnish(scene, narrow, repaint) {
   letter(scope,'EXPERIMENTS',1.09,.15,-.17,.176,.499,{bold:true,ink:'#31382e',font:'sans-serif'});
   wire(scope,[[.57,.23,.52],[.76,.065,.75],[.62,.03,1.03],[.34,.026,.98],[.12,.029,1.13]],.021,finish(0x9b493c));
   // A real three-sided manila folder. Its front cover pivots around the paper fold.
-  const file=tag(group(world,narrow?-.91:-1.42,.061,.62),'file',[0,.09,0],1.91,1.30);
+  const file=tag(group(world,narrow?-.88:-1.38,.061,.88),'file',[0,.09,0],1.91,1.30);
   file.rotation.y=-.18;file.scale.setScalar(narrow?.87:1.08);
   const stock=finish(0xd7a862,.88), front=finish(0xe5b878,.84);
   box(file,1.96,.021,1.36,stock,0,.015,0,.009);
   box(file,.71,.02,.16,stock,-.52,.017,-.70,.009);
   for(let i=0;i<4;i++){const page=box(file,1.79,.012,1.29,paper,(i%2)*.028,.038+i*.015,-.035-i*.017,.005);page.rotation.y=.02*i;}
   letter(file,'PROJECT INDEX',1,.15,0,.10,-.50,{flat:true,bold:true});
-  const flap=group(file,0,.105,-.58);
+  const flap=group(file,0,.142,-.58);
   box(flap,1.96,.022,1.24,front,0,0,.62,.01);
   letter(flap,'Project files',1.58,.34,.01,.014,.54,{flat:true,ink:'#42362e',italic:true});
   letter(file,'INDEX',.50,.11,-.52,.030,-.71,{flat:true,bold:true});
@@ -249,7 +254,7 @@ export function furnish(scene, narrow, repaint) {
     for(let i=0;i<3;i++){c.beginPath();c.moveTo(.13,.063+i*.04);c.bezierCurveTo(.23,i*.04,.29,.14+i*.04,w,.05+i*.04);c.stroke();}
   },.34,.118,-.252,true);
   // Two actual cassette reels sit behind the transparent window.
-  const tape=tag(group(world,narrow?-.76:-.24,.063,1.70),'tape',[0,.09,0],1.01,.60);
+  const tape=tag(group(world,narrow?-.15:-.02,.063,1.78),'tape',[0,.09,0],1.01,.60);
   tape.rotation.y=.19;tape.scale.setScalar(narrow?.80:1);
   box(tape,1.04,.083,.64,finish(0x65617b),0,.05,0,.032);
   box(tape,.92,.012,.39,finish(0xd4b5bb),0,.098,-.049,.005);
@@ -270,8 +275,8 @@ export function furnish(scene, narrow, repaint) {
     leafTone.push(.72+vein+.08*(1-t),.80+vein*.8,.56+vein*.8);
   }
   leafShape.setAttribute('color',new T.Float32BufferAttribute(leafTone,3));leafShape.computeVertexNormals();
-  const pot=group(world,narrow?-half+.47:-half+.80,1.53,-1.47);
-  if(narrow)pot.position.set(-half+.37,.057,-1.59);
+  const pot=tag(group(world,0,1.53,-1.47),'plant',[0,.36,0],.58,.65);
+  if(narrow){pot.position.set(-.49,1.53,-1.48);pot.scale.setScalar(.65);}
   else pot.position.x=.03;
   cylinder(pot,.28,.20,.41,finish(0xaf7559),0,.205,0);cylinder(pot,.294,.29,.063,finish(0xc28a6d),0,.40,0);
   cylinder(pot,.245,.24,.019,finish(0x493e30),0,.433,0);
@@ -310,19 +315,21 @@ export function furnish(scene, narrow, repaint) {
   const toggle=cylinder(lamp,.045,.051,.075,brassDark,.22,.117,.08,14);toggle.rotation.z=-.25;
   // Pencils lie against the blotter, and a personal photograph sits on the shelf.
   for(let i=0;i<2;i++){
-    const p=group(world,narrow?1.95:3.68,.028,.30+i*.20);p.rotation.y=.14+i*.12;
+    const p=tag(group(world,(narrow?1.83:3.61)+i*.14,.053,.30+i*.11),i?'pencil':'rose-pencil',[0,0,0],.09,.50);p.rotation.y=.14+i*.075;
     const stick=cylinder(p,.032,.032,1.07,finish(i?0xc18e55:0x925b65),0,0,0,6);stick.rotation.x=Math.PI/2;
     const tip=cylinder(p,.031,0,.13,cream,0,0,-.60,6);tip.rotation.x=Math.PI/2;
   }
-  const frame=group(world,narrow?.04:1.22,1.55,-1.60);frame.rotation.x=-.12;frame.rotation.y=-.10;
+  const frame=tag(group(world,narrow?.96:1.22,1.55,-1.49),'robot-photo',[0,.40,.06],.64,.76);frame.rotation.x=-.12;frame.rotation.y=-.10;
   box(frame,.69,.80,.08,trim,0,.40,0,.024);box(frame,.61,.71,.025,cream,0,.40,.05);
-  illustration(frame,'assets/studio/roller.webp',.52,.53,0,.421,.068);
+  illustration(frame,'assets/furniture/prints/roller.webp',.52,.53,0,.421,.068);
   // Make a real material sample for the folder's contents.
   drawn(file,1.69,1.18,(c,w,h)=>{
     c.fillStyle='#eee4ce';c.fillRect(0,0,w,h);c.strokeStyle='#b9c4b9';c.lineWidth=.0025;
     for(let i=1;i<18;i++){c.beginPath();c.moveTo(0,i*.075);c.lineTo(w,i*.075);c.stroke();}
-    c.fillStyle='#4d5053';c.font='italic .081px Georgia';c.fillText('Notes on a three-player game',.10,.18);
-    c.font='.052px monospace';c.fillText('A     B     C',.13,.37);c.fillText('15    10     4',.13,.51);c.fillText('turn 0  →  turn 90',.13,.68);
+    c.fillStyle='#4d5053';c.resetTransform();
+    const sx=c.canvas.width/w,sy=c.canvas.height/h;
+    c.font='italic '+Math.round(.081*sy)+'px Georgia';c.fillText('Notes on a three-player game',.10*sx,.18*sy);
+    c.font=Math.round(.052*sy)+'px monospace';c.fillText('A     B     C',.13*sx,.37*sy);c.fillText('15    10     4',.13*sx,.51*sy);c.fillText('turn 0  →  turn 90',.13*sx,.68*sy);
   },.015,.102,-.105,true);
   // Linen cover tooling and ribbon, brass binding clip, individual postage and wax.
   drawn(cover,1.09,1.45,(c,w,h)=>{
@@ -333,7 +340,7 @@ export function furnish(scene, narrow, repaint) {
   box(file,.30,.075,.14,finish(0x463f3c,.46,.25),-.47,.095,-.60,.018);
   wire(file,[[-.56,.13,-.62],[-.56,.16,-.77],[-.39,.16,-.77],[-.39,.13,-.62]],.012,brass);
   const stamp=group(letters,.44,.107,-.285);
-  box(stamp,.205,.009,.215,cream);illustration(stamp,'assets/prints/flyover.webp',.167,.182,0,.006,0,true);
+  box(stamp,.205,.009,.215,cream);illustration(stamp,'assets/furniture/prints/flyover.webp',.167,.182,0,.006,0,true);
   const seal=cylinder(letters,.079,.082,.009,finish(0xbb7971,.53),0,.130,-.026,18);
   letter(letters,'✿',.108,.10,0,.139,-.026,{flat:true,ink:'#7d3f40'});
   // Engraved instrument markings and the recessed carry handle.
@@ -348,7 +355,7 @@ export function furnish(scene, narrow, repaint) {
     tick.rotation.z=a-Math.PI/2;
   }
   // A small ceramic pencil cup lives beside the lamp.
-  const mug=group(world,half-(narrow?.37:.56),.06,-.57);
+  const mug=tag(group(world,half-(narrow?.37:.56),.06,-.57),'cup',[0,.26,0],.34,.52);
   const glaze=finish(0x93aa99,.24,.09);
   turned(mug,[[.108,0],[.127,.012],[.139,.05],[.164,.32],[.17,.362],[.166,.376],[.147,.376],[.143,.35]],glaze,0,0,0);
   wire(mug,[[.14,.30,0],[.235,.30,.008],[.249,.20,.02],[.205,.111,.02],[.136,.12,0]],.025,glaze);
@@ -416,7 +423,8 @@ export function furnish(scene, narrow, repaint) {
   }
   // Combine rigid geometry between joints; hinges, drawer travel and picking remain independent.
   const rigid=new Set([world,flap,cover,...[...targets.values()].map(item=>item.root)]);
-  const batches=new Map(),source=new Set(),solidVariants=new Map();
+  const batches=new Map(),source=new Set(),solidVariants=new Map(),fastMaterials=new Map();
+  const occluders=[];
   // One draw can paint several solid colors on the same rigid part.
   function batchMaterial(mat) {
     if(mat.map || mat.vertexColors || mat===bulbGlass || mat.transparent)return mat;
@@ -432,6 +440,10 @@ export function furnish(scene, narrow, repaint) {
   world.traverse(m=>{
     if(!m.isMesh)return;
     let parent=m.parent;while(!rigid.has(parent))parent=parent.parent;
+    if(parent===world){
+      if(!m.geometry.boundingBox)m.geometry.computeBoundingBox();
+      occluders.push(m.geometry.boundingBox.clone().applyMatrix4(m.matrixWorld));
+    }
     const mat=batchMaterial(m.material);
     const key=parent.id+'/'+mat.id+'/'+m.castShadow;
     if(!batches.has(key))batches.set(key,{parent,mat,cast:m.castShadow,meshes:[]});
@@ -451,8 +463,19 @@ export function furnish(scene, narrow, repaint) {
     });
     const combined=mergeGeometries(parts);parts.forEach(g=>g.dispose());
     meshes.forEach(m=>m.removeFromParent());
-    const done=mesh(parent,combined,mat);done.castShadow=cast;
+    let surface=mat;
+    if(software){
+      if(!fastMaterials.has(mat))fastMaterials.set(mat,new T.MeshLambertMaterial({
+        color:mat.color,map:mat.map,side:mat.side,vertexColors:mat.vertexColors,transparent:mat.transparent,
+        depthWrite:mat.depthWrite,alphaTest:mat.alphaTest,polygonOffset:mat.polygonOffset,
+        polygonOffsetFactor:mat.polygonOffsetFactor,polygonOffsetUnits:mat.polygonOffsetUnits,
+        emissive:mat.emissive,emissiveIntensity:mat.emissiveIntensity
+      }));
+      surface=fastMaterials.get(mat);
+    }
+    const done=mesh(parent,combined,surface);done.castShadow=cast;
+    combined.computeBoundingBox();combined.computeBoundingSphere();
   }
   source.forEach(g=>g.dispose());
-  return {world,targets,drawer,flap,cover,lamp,bulbGlass,contactMap};
+  return {world,targets,occluders,drawer,flap,cover,lamp,bulbGlass:fastMaterials.get(bulbGlass)||bulbGlass,contactMap};
 }

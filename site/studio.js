@@ -12,12 +12,23 @@
   const stage = overview.querySelector(".desktop-picture");
   let opener = null;
   let returnY = null;
-  let liftTimer = 0;
+  const switcher=document.querySelector(".mode-switch");
+  const page=document.documentElement;
   let sceneNearby=false, sceneStarted=false;
+  function setView(view) {
+    const changed=page.dataset.view!==view;
+    page.dataset.view=view;
+    switcher.hash=view==="desk" ? "#projects" : "#studio";
+    const back=rail.querySelector(".back-to-desk");
+    back.hash=view==="desk" ? "#studio" : "#projects";
+    back.querySelector("span").textContent=view==="desk" ? "Put it back" : "Back to shelf";
+    if(changed)document.dispatchEvent(new Event("portfolio-view"));
+  }
+  setView(page.dataset.view||"desk");
   function showFurniture() {
-    if (!sceneNearby || sceneStarted || studio.dataset.open || document.querySelector(".open-project[open]")) return;
+    if (page.dataset.view!=="desk" || !sceneNearby || sceneStarted || studio.dataset.open || document.querySelector(".open-project[open]")) return;
     sceneStarted=true;
-    import("./furniture.js?v=5").then(module => module.mountFurniture(stage)).catch(() => {
+    import("./furniture.js?v=7").then(module => module.mountFurniture(stage)).catch(() => {
       stage.querySelector(".graphics-warning").hidden = false;
     });
   }
@@ -95,6 +106,7 @@
     current = room;
     for (const panel of rooms) panel.hidden = panel !== room;
     reader.hidden = !room;
+    overview.inert = Boolean(room);
     studio.dispatchEvent(new CustomEvent("desk-room", {detail: room?.id}));
     rail.hidden = !room;
     if (room) studio.dataset.open = room.id;
@@ -114,7 +126,7 @@
     if (move) {
       const turning = activeLeaf && previous === notebook;
       const focus = turning ? activeLeaf.querySelector("h3") : room?.querySelector("h2")
-        || opener || overview.querySelector("h2");
+        || opener || overview.querySelector("#studio-title");
       if (!focus.matches("a,button")) focus.tabIndex = -1;
       focus.focus({preventScroll:true});
       if (turning) bookmarks.scrollIntoView({behavior:"instant",block:"start"});
@@ -130,8 +142,10 @@
     }
   }
   function readAddress(move) {
-    clearTimeout(liftTimer);
     const target = document.getElementById(location.hash.slice(1));
+    if(!location.hash || location.hash==="#studio")setView("desk");
+    else if(location.hash==="#projects")setView("shelf");
+    else if(history.state?.view)setView(history.state.view);
     if (target && studio.contains(target)) reveal(target, move);
     else if (!target || target.id === "projects") reveal(studio, Boolean(move && current && returnY !== null));
     // A project reader floats above the open object until its Back button is used.
@@ -139,22 +153,25 @@
   document.addEventListener("click", event => {
     const link = event.target.closest("a");
     if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey
-        || event.altKey || event.shiftKey || !link?.getAttribute("href")?.startsWith("#")) return;
+        || event.altKey || event.shiftKey || !link?.hash || link.origin!==location.origin
+        || link.pathname!==location.pathname || link.search!==location.search) return;
     const target = document.getElementById(link.hash.slice(1));
+    if(link.hash==="#projects" || link.hash==="#studio"){
+      event.preventDefault();
+      if(location.hash!==link.hash)history.pushState(null,"",link.hash);
+      setView(link.hash==="#studio" ? "desk" : "shelf");
+      const focus=link.classList.contains("back-to-desk") && page.dataset.view==="desk" && opener ? opener : switcher;
+      reveal(studio);returnY=null;opener=null;
+      window.scrollTo({top:0,behavior:"instant"});
+      focus.focus({preventScroll:true});
+      return;
+    }
     if (!target || !studio.contains(target) || link.matches(".desk-permalink")) return;
     event.preventDefault();
-    clearTimeout(liftTimer);
-    if (location.hash !== link.hash) history.pushState(null, "", link.hash);
-    if (overview.contains(link) && link.dataset.object) {
+    if (location.hash !== link.hash) history.pushState({view:page.dataset.view}, "", link.hash);
+    if ((overview.contains(link) && link.dataset.object) || link.dataset.originObject) {
       returnY = window.scrollY;
-      opener = link;
-      const position = Math.max(0, -studio.getBoundingClientRect().top);
-      studio.style.setProperty("--opening", Math.round(Math.min(overview.offsetHeight * .66, position + innerHeight * .24)) + "px");
-      if (stage.classList.contains("is-rendered") && !reducedMotion.matches) {
-        studio.dispatchEvent(new CustomEvent("desk-room", {detail:target.closest("[data-room]")?.id}));
-        liftTimer = setTimeout(() => reveal(target, true), 270);
-        return;
-      }
+      opener = link.dataset.originObject ? overview.querySelector('[data-object="'+link.dataset.originObject+'"]') : link;
     }
     reveal(target, true);
   });

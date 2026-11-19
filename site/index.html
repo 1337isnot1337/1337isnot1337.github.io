@@ -39,7 +39,7 @@
     />
     <link rel="stylesheet" href="vendor/swiper-bundle.min.css" />
     <link rel="stylesheet" href="shelf.css?v=25" />
-    <link rel="stylesheet" href="welcome.css?v=1" />
+    <link rel="stylesheet" href="welcome.css?v=desk-1" />
     <link rel="stylesheet" href="workbench.css?v=6" />
     <link rel="stylesheet" href="notebook.css?v=4" />
     <link rel="stylesheet" href="numberline.css?v=1" />
@@ -53,7 +53,7 @@
     <link rel="stylesheet" href="incident-note.css?v=2" />
     <script defer src="cpu-trace.js?v=1"></script>
     <script defer src="vendor/swiper-bundle.min.js"></script>
-    <script defer src="shelf.js?v=30" onerror="
+    <script defer src="shelf.js?v=31" onerror="
       const restoreReading = () => {
         document.documentElement.classList.add('script-unavailable');
         document.querySelector('.shelf-heading p').textContent = 'The interactive shelf could not load. You can still read the project notes below.';
@@ -66,8 +66,10 @@
       else restoreReading();
     "></script>
     <script defer src="rook-graph.js?v=1"></script>
-    <link rel="stylesheet" href="studio.css?v=5" />
-    <script defer src="studio.js?v=5"></script>
+    <script>document.documentElement.dataset.view = /^(#projects|#flyover|#cpu|#schedule|#conjectures|#factoring|#conway)$/.test(location.hash) ? "shelf" : "desk";</script>
+    <link rel="stylesheet" href="studio.css?v=6" />
+    <script defer src="studio.js?v=6" onerror="delete document.documentElement.dataset.view"></script>
+    <script defer src="desk-keepsakes.js?v=1"></script>
     <noscript
       ><style>
         .shelf-controls,
@@ -87,210 +89,18 @@
       <div class="page-width mast-inner">
         <a class="byline" href="./">Cinna Davis</a>
         <nav aria-label="Main">
-          <a href="#studio">Desk</a><a href="#catalogue">Catalogue</a><a href="#about">About me</a
+          <a class="mode-switch" href="#projects"><span class="mode-desk">Boring mode</span><span class="mode-shelf">Back to desk</span></a><a href="#catalogue">Catalogue</a><a href="#about">About me</a
           ><a href="#elsewhere">Elsewhere</a>
         </nav>
       </div>
     </header>
     <main>
-      <section class="shop" id="projects" aria-labelledby="shelf-title">
-        <div class="welcome page-width">
-          <h1>Hi, I’m Cinna.</h1>
-          <div class="welcome-note">
-            <p>I build software, work on mathematical proofs, and lead programming
-              for Titan Robotics. This is a little home for what I’m making.</p>
-            <a href="#desk">Try something on the desk</a>
-            <a href="#about">A bit about me</a>
-          </div>
-        </div>
-        <div class="shelf-heading page-width">
-          <div>
-            <h2 id="shelf-title">The project shelf</h2>
-            <p>Slide along the shelf. Pick a print to try it.</p>
-          </div>
-          <details class="index">
-            <summary>Print index</summary>
-            <ul>
-              <li>
-                <a data-project="conjectures" href="#conjectures">
-                  <img src="assets/prints/conjectures.webp" alt="" width="38" height="48" loading="lazy" />
-                  <span><strong>Solved conjectures</strong><small>Deal a game that repeats forever</small></span>
-                </a>
-              </li>
-              <li>
-                <a data-project="flyover" href="#flyover">
-                  <img src="assets/prints/flyover.webp" alt="" width="38" height="48" loading="lazy" />
-                  <span><strong>DOPPLERGEIST</strong><small>Hear the pitch of a passing plane</small></span>
-                </a>
-              </li>
-              <li>
-                <a data-project="factoring" href="#factoring">
-                  <img src="assets/prints/factoring-bead.webp" alt="" width="38" height="48" loading="lazy" />
-                  <span><strong>Integer factoring</strong><small>Split a number into its primes</small></span>
-                </a>
-              </li>
-              <li>
-                <a data-project="cpu" href="#cpu">
-                  <img src="assets/prints/cpu-switch.webp" alt="" width="38" height="48" loading="lazy" />
-                  <span><strong>The Hack CPU</strong><small>Teach a tiny counter to predict</small></span>
-                </a>
-              </li>
-              <li>
-                <a data-project="schedule" href="#schedule">
-                  <img src="assets/prints/schedule.webp" alt="" width="38" height="48" loading="lazy" />
-                  <span><strong>Schedule map</strong><small>Turn a timetable into room lists</small></span>
-                </a>
-              </li>
-              <li>
-                <a data-project="conway" href="#conway">
-                  <img src="assets/prints/conway.webp" alt="" width="38" height="48" loading="lazy" />
-                  <span><strong>Conway’s 99-graph</strong><small>Explore the neighbors of a rook</small></span>
-                </a>
-              </li>
-            </ul>
-          </details>
-        </div>
-        <div class="display-case">
-          <div
-            class="swiper"
-            role="region"
-            aria-roledescription="carousel"
-            aria-label="Illustrated project prints"
-          >
-            <div class="swiper-wrapper">
-              <div class="swiper-slide">
-                <a
-                  href="#schedule"
-                  class="print print-schedule"
-                  data-project="schedule"
-                  aria-label="Schedule map — Try a schedule"
-                  ><span class="print-sheet"><img
-                    width="640"
-                    height="800"
-                    draggable="false"
-                    src="assets/prints/schedule.webp"
-                    alt=""
-                  /><span class="print-foot"
-                    ><span class="print-type">Campus software</span
-                    ><strong>Schedule map</strong></span
-                  ></span></a
-                >
-              </div>
-              <div class="swiper-slide">
-                <a
-                  href="#conway"
-                  class="print print-conway"
-                  data-project="conway"
-                  aria-label="Conway’s 99-graph — Move a rook"
-                  ><span class="print-sheet"><img
-                    width="640"
-                    height="800"
-                    draggable="false"
-                    src="assets/prints/conway.webp"
-                    alt=""
-                  /><span class="print-foot"
-                    ><span class="print-type">Graph theory</span
-                    ><strong>Conway’s 99-graph</strong></span
-                  ></span></a
-                >
-              </div>
-              <div class="swiper-slide">
-                <a
-                  class="print print-conjectures"
-                  href="#conjectures"
-                  data-project="conjectures"
-                  aria-label="Solved conjectures — Deal a round of War"
-                  ><span class="print-sheet"><img
-                    width="840"
-                    height="1050"
-                    src="assets/prints/conjectures.webp"
-                    alt=""
-                    draggable="false"
-                  /><span class="print-foot"
-                    ><span class="print-type">Combinatorics</span
-                    ><strong>Solved conjectures</strong></span
-                  ></span></a
-                >
-              </div>
-              <div class="swiper-slide">
-                <a
-                  href="#flyover"
-                  class="print print-flyover"
-                  data-project="flyover"
-                  aria-label="DOPPLERGEIST — Listen to a flyover"
-                  ><span class="print-sheet"><img
-                    width="640"
-                    height="800"
-                    draggable="false"
-                    src="assets/prints/flyover.webp"
-                    fetchpriority="high"
-                    alt=""
-                  /><span class="print-foot"
-                    ><span class="print-type">Aircraft audio</span
-                    ><strong>DOPPLERGEIST</strong></span
-                  ></span></a
-                >
-              </div>
-              <div class="swiper-slide">
-                <a
-                  href="#factoring"
-                  class="print print-factoring"
-                  data-project="factoring"
-                  aria-label="Integer factoring — Split a number"
-                  ><span class="print-sheet"><img
-                    width="640"
-                    height="800"
-                    draggable="false"
-                    src="assets/prints/factoring-bead.webp"
-                    alt=""
-                  /><span class="print-foot"
-                    ><span class="print-type">Algorithms</span
-                    ><strong>Integer factoring</strong></span
-                  ></span></a
-                >
-              </div>
-              <div class="swiper-slide">
-                <a
-                  href="#cpu"
-                  class="print print-cpu"
-                  data-project="cpu"
-                  aria-label="The Hack CPU — Train a branch predictor"
-                  ><span class="print-sheet"><img
-                    width="640"
-                    height="800"
-                    draggable="false"
-                    src="assets/prints/cpu-switch.webp"
-                    alt=""
-                  /><span class="print-foot"
-                    ><span class="print-type">Hardware</span
-                    ><strong>The Hack CPU</strong></span
-                  ></span></a
-                >
-              </div>
-            </div>
-          </div>
-          <div class="ledge" aria-hidden="true"></div>
-        </div>
-        <div class="shelf-controls">
-          <span
-            class="visually-hidden"
-            id="shelf-status"
-            aria-live="polite"
-          ></span
-          ><button type="button" id="prev" aria-label="Previous print">←</button
-          ><a id="open-print" data-project="flyover" href="#flyover"
-            >Listen to a flyover</a
-          ><button type="button" id="next" aria-label="Next print">→</button>
-        </div>
-      </section>
-
       <div class="stationery" id="studio">
         <section class="desk-overview" aria-labelledby="studio-title">
-          <h2 id="studio-title" class="visually-hidden" tabindex="-1">Cinna’s desk</h2>
+          <h1 id="studio-title" class="visually-hidden" tabindex="-1">Cinna Davis’s desk</h1>
           <div class="desktop-picture">
             <canvas class="furniture-canvas" aria-hidden="true"></canvas>
             <div class="hutch-fallback" aria-hidden="true"></div>
-            <a class="shelf-return" href="#projects">↑ Project shelf</a>
             <nav class="desk-objects" aria-label="Objects on the desk">
               <a class="object-proof" data-object="proof" data-project="conjectures" href="#conjectures"><span>Proofs &amp; counterexamples</span></a>
               <a class="object-archive" data-object="archive" href="/research-notes/"><span>Research notes</span></a>
@@ -299,11 +109,19 @@
               <a class="object-book" data-object="book" href="#about"><span>My notebook</span></a>
               <a class="object-tape" data-object="tape" href="#off-the-clock"><span>Off the clock</span></a>
               <a class="object-letters" data-object="letters" href="#elsewhere"><span>Letters</span></a>
+              <button type="button" data-object="flyover-print" data-keepsake aria-haspopup="dialog" hidden><span>DOPPLERGEIST photograph</span></button>
+              <button type="button" data-object="conway-print" data-keepsake aria-haspopup="dialog" hidden><span>Conway graph print</span></button>
+              <button type="button" data-object="robot-photo" data-keepsake aria-haspopup="dialog" hidden><span>Titan Robotics photograph</span></button>
+              <button type="button" data-object="plant" data-keepsake aria-haspopup="dialog" hidden><span>Potted plant</span></button>
+              <button type="button" data-object="pinboard" data-keepsake aria-haspopup="dialog" hidden><span>Pinboard photographs</span></button>
+              <button type="button" data-object="pencil" data-keepsake aria-haspopup="dialog" hidden><span>Graphite pencil</span></button>
+              <button type="button" data-object="rose-pencil" data-keepsake aria-haspopup="dialog" hidden><span>Rose pencil</span></button>
+              <button type="button" data-object="cup" data-keepsake aria-haspopup="dialog" hidden><span>Pencil cup</span></button>
+              <button type="button" data-object="blotter" data-keepsake aria-haspopup="dialog" hidden><span>Drawing mat</span></button>
               <button type="button" class="object-lamp" data-object="lamp" aria-pressed="false" hidden><span>Desk lamp</span></button>
               <button type="button" class="object-drawer" data-object="drawer" aria-expanded="false" aria-controls="drawer-letter" hidden><span>Desk drawer</span></button>
               <a id="drawer-letter" class="postcat" data-object="keepsake" href="#elsewhere" hidden><span>Take the postcard</span></a>
             </nav>
-            <div class="desk-paw" aria-hidden="true"><i></i></div>
             <p class="graphics-warning" role="status" hidden>The 3D desk needs canvas and WebGL. Enable graphics acceleration in your browser to see it.</p>
             <noscript><p class="graphics-warning">Enable JavaScript, canvas and WebGL to see the 3D desk.</p></noscript>
           </div>
@@ -852,6 +670,196 @@
         </div>
       </div>
 
+      <section class="shop" id="projects" aria-labelledby="shelf-title">
+        <div class="welcome page-width">
+          <h2 class="shelf-greeting">Hi, I’m Cinna.</h2>
+          <div class="welcome-note">
+            <p>I build software, work on mathematical proofs, and lead programming
+              for Titan Robotics. This is a little home for what I’m making.</p>
+            <a href="#desk">Try something on the desk</a>
+            <a href="#about">A bit about me</a>
+          </div>
+        </div>
+        <div class="shelf-heading page-width">
+          <div>
+            <h2 id="shelf-title">The project shelf</h2>
+            <p>Slide along the shelf. Pick a print to try it.</p>
+          </div>
+          <details class="index">
+            <summary>Print index</summary>
+            <ul>
+              <li>
+                <a data-project="conjectures" href="#conjectures">
+                  <img src="assets/prints/conjectures.webp" alt="" width="38" height="48" loading="lazy" />
+                  <span><strong>Solved conjectures</strong><small>Deal a game that repeats forever</small></span>
+                </a>
+              </li>
+              <li>
+                <a data-project="flyover" href="#flyover">
+                  <img src="assets/prints/flyover.webp" alt="" width="38" height="48" loading="lazy" />
+                  <span><strong>DOPPLERGEIST</strong><small>Hear the pitch of a passing plane</small></span>
+                </a>
+              </li>
+              <li>
+                <a data-project="factoring" href="#factoring">
+                  <img src="assets/prints/factoring-bead.webp" alt="" width="38" height="48" loading="lazy" />
+                  <span><strong>Integer factoring</strong><small>Split a number into its primes</small></span>
+                </a>
+              </li>
+              <li>
+                <a data-project="cpu" href="#cpu">
+                  <img src="assets/prints/cpu-switch.webp" alt="" width="38" height="48" loading="lazy" />
+                  <span><strong>The Hack CPU</strong><small>Teach a tiny counter to predict</small></span>
+                </a>
+              </li>
+              <li>
+                <a data-project="schedule" href="#schedule">
+                  <img src="assets/prints/schedule.webp" alt="" width="38" height="48" loading="lazy" />
+                  <span><strong>Schedule map</strong><small>Turn a timetable into room lists</small></span>
+                </a>
+              </li>
+              <li>
+                <a data-project="conway" href="#conway">
+                  <img src="assets/prints/conway.webp" alt="" width="38" height="48" loading="lazy" />
+                  <span><strong>Conway’s 99-graph</strong><small>Explore the neighbors of a rook</small></span>
+                </a>
+              </li>
+            </ul>
+          </details>
+        </div>
+        <div class="display-case">
+          <div
+            class="swiper"
+            role="region"
+            aria-roledescription="carousel"
+            aria-label="Illustrated project prints"
+          >
+            <div class="swiper-wrapper">
+              <div class="swiper-slide">
+                <a
+                  href="#schedule"
+                  class="print print-schedule"
+                  data-project="schedule"
+                  aria-label="Schedule map — Try a schedule"
+                  ><span class="print-sheet"><img loading="lazy"
+                    width="640"
+                    height="800"
+                    draggable="false"
+                    src="assets/prints/schedule.webp"
+                    alt=""
+                  /><span class="print-foot"
+                    ><span class="print-type">Campus software</span
+                    ><strong>Schedule map</strong></span
+                  ></span></a
+                >
+              </div>
+              <div class="swiper-slide">
+                <a
+                  href="#conway"
+                  class="print print-conway"
+                  data-project="conway"
+                  aria-label="Conway’s 99-graph — Move a rook"
+                  ><span class="print-sheet"><img loading="lazy"
+                    width="640"
+                    height="800"
+                    draggable="false"
+                    src="assets/prints/conway.webp"
+                    alt=""
+                  /><span class="print-foot"
+                    ><span class="print-type">Graph theory</span
+                    ><strong>Conway’s 99-graph</strong></span
+                  ></span></a
+                >
+              </div>
+              <div class="swiper-slide">
+                <a
+                  class="print print-conjectures"
+                  href="#conjectures"
+                  data-project="conjectures"
+                  aria-label="Solved conjectures — Deal a round of War"
+                  ><span class="print-sheet"><img loading="lazy"
+                    width="840"
+                    height="1050"
+                    src="assets/prints/conjectures.webp"
+                    alt=""
+                    draggable="false"
+                  /><span class="print-foot"
+                    ><span class="print-type">Combinatorics</span
+                    ><strong>Solved conjectures</strong></span
+                  ></span></a
+                >
+              </div>
+              <div class="swiper-slide">
+                <a
+                  href="#flyover"
+                  class="print print-flyover"
+                  data-project="flyover"
+                  aria-label="DOPPLERGEIST — Listen to a flyover"
+                  ><span class="print-sheet"><img loading="lazy"
+                    width="640"
+                    height="800"
+                    draggable="false"
+                    src="assets/prints/flyover.webp"
+                    alt=""
+                  /><span class="print-foot"
+                    ><span class="print-type">Aircraft audio</span
+                    ><strong>DOPPLERGEIST</strong></span
+                  ></span></a
+                >
+              </div>
+              <div class="swiper-slide">
+                <a
+                  href="#factoring"
+                  class="print print-factoring"
+                  data-project="factoring"
+                  aria-label="Integer factoring — Split a number"
+                  ><span class="print-sheet"><img loading="lazy"
+                    width="640"
+                    height="800"
+                    draggable="false"
+                    src="assets/prints/factoring-bead.webp"
+                    alt=""
+                  /><span class="print-foot"
+                    ><span class="print-type">Algorithms</span
+                    ><strong>Integer factoring</strong></span
+                  ></span></a
+                >
+              </div>
+              <div class="swiper-slide">
+                <a
+                  href="#cpu"
+                  class="print print-cpu"
+                  data-project="cpu"
+                  aria-label="The Hack CPU — Train a branch predictor"
+                  ><span class="print-sheet"><img loading="lazy"
+                    width="640"
+                    height="800"
+                    draggable="false"
+                    src="assets/prints/cpu-switch.webp"
+                    alt=""
+                  /><span class="print-foot"
+                    ><span class="print-type">Hardware</span
+                    ><strong>The Hack CPU</strong></span
+                  ></span></a
+                >
+              </div>
+            </div>
+          </div>
+          <div class="ledge" aria-hidden="true"></div>
+        </div>
+        <div class="shelf-controls">
+          <span
+            class="visually-hidden"
+            id="shelf-status"
+            aria-live="polite"
+          ></span
+          ><button type="button" id="prev" aria-label="Previous print">←</button
+          ><a id="open-print" data-project="flyover" href="#flyover"
+            >Listen to a flyover</a
+          ><button type="button" id="next" aria-label="Next print">→</button>
+        </div>
+      </section>
+
       <div class="project-details page-width">
         <article
           class="detail"
@@ -1238,6 +1246,20 @@
       </div>
     </main>
 
+    <dialog class="pickup" aria-labelledby="pickup-title">
+      <div class="pickup-head"><h2 id="pickup-title"></h2><button type="button" class="put-down" autofocus>Put back</button></div>
+      <div class="photo-piece">
+        <button type="button" class="photo-flip" aria-label="Turn photograph over">
+          <span class="photo-front"><img loading="lazy" src="assets/furniture/prints/flyover.webp" alt="" /></span>
+          <span class="photo-back" hidden><img loading="lazy" src="assets/desk-drawings/wave.svg" alt="" /><span class="pencil-caption"></span></span>
+        </button>
+        <div class="pickup-foot"><button type="button" class="flip-control">Turn over ↻</button><a class="photo-link"></a></div>
+      </div>
+      <div class="sketch-piece" hidden>
+        <svg class="sketch-paper" viewBox="0 0 480 330" role="img" aria-label="Your sketch on the desk blotter"></svg>
+        <div class="sketch-tools" aria-label="Drawing tools"><button type="button" data-lead="graphite">Graphite</button><button type="button" data-lead="rose">Rose</button><button type="button" class="stamp-sketch">Stamp a doodle</button><button type="button" class="undo-sketch">Undo</button></div>
+      </div>
+    </dialog>
     <dialog class="open-project" aria-label="Project details">
       <div class="modal-top">
         <button type="button" id="close-dialog">Back to shelf</button>

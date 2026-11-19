@@ -1,118 +1,65 @@
-// Pointer Lock supplies deltas, so the painted paw and picking share one position.
-export function attachDeskPointer(stage, {pick, look, orbitBy}) {
-  const canvas = stage.querySelector('canvas');
-  const paw = stage.querySelector('.desk-paw');
-  const shelf = stage.querySelector('.shelf-return');
-  const controls = new Map([...stage.querySelectorAll('[data-object]')].map(el => [el.dataset.object, el]));
-  const locked = () => document.pointerLockElement === canvas;
-  const rendered = () => stage.classList.contains('is-rendered');
-  let x = 0, y = 0, hoverFrame = 0, press = null, suppressClick = false;
-  let pointerType = '', lockPending = false;
-  function clear() {
-    cancelAnimationFrame(hoverFrame);
-    hoverFrame = 0;
-    stage.classList.remove('has-paw', 'looking-around');
-    press = null;
-    look(0, 0);
+// Keep the browser cursor at its real hotspot. Only an orbit owns the pointer.
+export function attachDeskPointer(stage,{pick,orbitBy,endOrbit}) {
+  const canvas=stage.querySelector('canvas');
+  const targets=new Map([...stage.querySelectorAll('[data-object]')].map(el=>[el.dataset.object,el]));
+  let press=null, frame=0, x=0, y=0, suppress=false;
+  const active=()=>stage.classList.contains('is-rendered') && !stage.closest('.desk-overview').inert;
+  function targetAt(clientX,clientY){
+    const r=canvas.getBoundingClientRect();
+    if(clientX<r.left||clientX>=r.right||clientY<r.top||clientY>=r.bottom)return null;
+    const target=targets.get(pick((clientX-r.left)/r.width,(clientY-r.top)/r.height));
+    return target && !target.hidden ? target : null;
   }
-  function leave() {
-    lockPending = false;
-    if (locked()) document.exitPointerLock();
-    clear();
+  function leave(){
+    if(press && canvas.hasPointerCapture(press.id))canvas.releasePointerCapture(press.id);
+    if(press?.dragging)endOrbit();
+    press=null;cancelAnimationFrame(frame);frame=0;
+    delete stage.dataset.aim;stage.classList.remove('looking-around');
   }
-  function atPoint() {
-    const r = stage.getBoundingClientRect();
-    const element = document.elementFromPoint(r.left + x, r.top + y);
-    if (shelf.contains(element)) return shelf;
-    const link = element?.closest('[data-object]');
-    if (link && !link.hidden) return link;
-    const prop = controls.get(pick(x / r.width, y / r.height));
-    return prop && !prop.hidden ? prop : null;
+  function aim(e){
+    if(e.pointerType!=='mouse')return;
+    x=e.clientX;y=e.clientY;
+    if(!frame)frame=requestAnimationFrame(()=>{
+      frame=0;stage.dataset.aim=active() && targetAt(x,y) ? 'object':'desk';
+    });
   }
-  function pose() {
-    hoverFrame = 0;
-    const target = atPoint();
-    paw.dataset.pose = press?.dragging ? 'hold' : target?.dataset.object === 'lamp' ? 'light' : target ? 'reach' : 'rest';
-  }
-  function movePaw() {
-    stage.classList.add('has-paw');
-    paw.style.transform = 'translate3d(' + (x - 3) + 'px,' + (y - 3) + 'px,0)';
-    if (!hoverFrame) hoverFrame = requestAnimationFrame(pose);
-  }
-  function updatePosition(e) {
-    const r = stage.getBoundingClientRect();
-    if (locked()) {
-      x = Math.max(0, Math.min(r.width - 1, x + e.movementX));
-      y = Math.max(0, Math.min(r.height - 1, y + e.movementY));
-    } else {
-      x = e.clientX - r.left;
-      y = e.clientY - r.top;
-    }
-  }
-  stage.addEventListener('pointermove', e => {
-    if (!rendered()) return;
-    pointerType = e.pointerType;
-    updatePosition(e);
-    if (press && press.id === e.pointerId) {
-      const dx = locked() ? e.movementX : x - press.lastX;
-      press.dx += dx;
-      if (!press.dragging && Math.abs(press.dx) > 8 && Math.abs(press.dx) > Math.abs(y - press.startY)) {
-        press.dragging = true;
-        if (!locked()) stage.setPointerCapture(e.pointerId);
-        stage.classList.add('looking-around');
-        orbitBy(press.dx / stage.clientWidth);
-      } else if (press.dragging) orbitBy(dx / stage.clientWidth);
-      press.lastX = x;
-    }
-    if (pointerType !== 'mouse') return;
-    movePaw();
-    if (!press?.dragging) look(x / stage.clientWidth * 2 - 1, y / stage.clientHeight * 2 - 1);
+  stage.addEventListener('pointerdown',e=>{
+    if(!active()||!e.isPrimary||e.button!==0)return;
+    suppress=false;
+    press={id:e.pointerId,x:e.clientX,y:e.clientY,lastX:e.clientX,dragging:false};
   });
-  stage.addEventListener('pointerdown', e => {
-    if (!rendered() || !e.isPrimary || e.button !== 0) return;
-    pointerType = e.pointerType;
-    if (!locked()) updatePosition(e);
-    if (pointerType !== 'mouse') clear();
-    else movePaw();
-    suppressClick = false;
-    if (e.target.closest('.shelf-return')) return;
-    press = {id:e.pointerId, lastX:x, startY:y, dx:0, dragging:false};
-  });
-  function release(e) {
-    if (press?.id !== e.pointerId) return;
-    suppressClick = press.dragging;
-    press = null;
-    stage.classList.remove('looking-around');
-    if (stage.hasPointerCapture(e.pointerId)) stage.releasePointerCapture(e.pointerId);
-    if (stage.classList.contains('has-paw') && !hoverFrame) hoverFrame = requestAnimationFrame(pose);
-  }
-  stage.addEventListener('pointerup', release);
-  stage.addEventListener('pointercancel', e => { release(e); clear(); });
-  stage.addEventListener('dragstart', e => { if (e.target.closest('[data-object]')) e.preventDefault(); });
-  stage.addEventListener('pointerleave', () => { if (!locked() && !press?.dragging) clear(); });
-  stage.addEventListener('click', e => {
-    if (!e.detail || !rendered() || e.button !== 0) return;
-    if (suppressClick) {
-      suppressClick = false; e.preventDefault(); e.stopImmediatePropagation(); return;
+  stage.addEventListener('pointermove',e=>{
+    if(!active())return;
+    if(press?.id===e.pointerId && e.buttons){
+      const dx=e.clientX-press.x,dy=e.clientY-press.y;
+      if(!press.dragging && Math.abs(dx)>6 && Math.abs(dx)>Math.abs(dy)){
+        press.dragging=true;canvas.setPointerCapture(e.pointerId);stage.classList.add('looking-around');
+      }
+      if(press.dragging){orbitBy((e.clientX-press.lastX)/stage.clientWidth);press.lastX=e.clientX;return;}
     }
-    if (!locked()) updatePosition(e);
-    const target = e.target === canvas ? atPoint() : e.target.closest('a,button');
-    if (target?.tagName === 'A') leave();
-    else if (!locked() && pointerType === 'mouse' && e.isTrusted &&
-             matchMedia('(any-pointer:fine)').matches && canvas.requestPointerLock) {
-      lockPending = true;
-      try { canvas.requestPointerLock()?.catch(() => { lockPending = false; }); }
-      catch { lockPending = false; }
-    }
-    if (e.target === canvas && target) target.click();
-  }, true);
-  document.addEventListener('pointerlockchange', () => {
-    if (locked() && lockPending) { lockPending = false; movePaw(); }
-    else leave();
+    aim(e);
   });
-  document.addEventListener('keydown', e => { if (e.key === 'Tab' || e.key === 'Escape') leave(); });
-  document.addEventListener('visibilitychange', () => { if (document.hidden) leave(); });
-  window.addEventListener('blur', leave);
-  window.addEventListener('pagehide', leave);
+  stage.addEventListener('pointerup',e=>{
+    if(press?.id!==e.pointerId)return;
+    suppress=press.dragging;
+    leave();if(active())aim(e);
+  });
+  stage.addEventListener('pointercancel',leave);
+  stage.addEventListener('pointerleave',()=>{if(!press?.dragging)leave();});
+  stage.addEventListener('dragstart',e=>{if(active())e.preventDefault();});
+  stage.addEventListener('click',e=>{
+    if(!active() || !e.detail || e.button!==0)return;
+    const target=suppress ? null : targetAt(e.clientX,e.clientY);
+    suppress=false;
+    if(target===e.target.closest('[data-object]') && target)return;
+    e.preventDefault();e.stopImmediatePropagation();
+    if(!target)return;
+    target.focus({preventScroll:true});
+    if(e.ctrlKey||e.metaKey||e.shiftKey||e.altKey){
+      target.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true,ctrlKey:e.ctrlKey,metaKey:e.metaKey,shiftKey:e.shiftKey,altKey:e.altKey}));
+    } else target.click();
+  },true);
+  window.addEventListener('blur',leave);
+  document.addEventListener('portfolio-view',leave);
   return leave;
 }

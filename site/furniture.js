@@ -1,20 +1,19 @@
 import * as T from './vendor/three/three.module.min.js';
-import { furnish } from './desk-model.js?v=4';
+import { furnish } from './desk-model.js?v=7';
 
-import { attachDeskPointer } from './desk-pointer.js?v=4';
-import { HDRLoader } from './vendor/three/HDRLoader.js';
+import { attachDeskPointer } from './desk-pointer.js?v=7';
 
 export function mountFurniture(stage) {
   const canvas = stage.querySelector('canvas');
   if (!document.createElement('canvas').getContext('2d'))throw new Error('Canvas drawing unavailable');
-  const engine = new T.WebGLRenderer({canvas,antialias:true,alpha:false,powerPreference:'low-power'});
+  const engine = new T.WebGLRenderer({canvas,antialias:true,alpha:false,powerPreference:'default'});
   const warning=stage.querySelector('.graphics-warning');
   const unavailable=warning.textContent;
   const gl=engine.getContext();
   const debug=gl.getExtension('WEBGL_debug_renderer_info');
   const software=debug && /swiftshader|llvmpipe/i.test(gl.getParameter(debug.UNMASKED_RENDERER_WEBGL));
-  engine.setPixelRatio(Math.min(devicePixelRatio, software ? .85 : 1.7));
-  engine.shadowMap.enabled=true;
+  engine.setPixelRatio(Math.min(devicePixelRatio, software ? .85 : 1.4));
+  engine.shadowMap.enabled=!software;
   engine.shadowMap.type=software ? T.BasicShadowMap : T.PCFSoftShadowMap;
   engine.shadowMap.autoUpdate=false;
   engine.toneMapping=T.ACESFilmicToneMapping;engine.toneMappingExposure=1.03;
@@ -23,19 +22,21 @@ export function mountFurniture(stage) {
   const sky=new T.HemisphereLight(0xfff5df,0xd0bec0,1.95);scene.add(sky);
   const sun=new T.DirectionalLight(0xffedd4,2.12);
   sun.position.set(-4.7,7.7,4.6);sun.target.position.set(0,.6,-.3);sun.castShadow=true;
-  sun.shadow.mapSize.setScalar(software?768:2048);
+  sun.shadow.mapSize.setScalar(1024);
   Object.assign(sun.shadow.camera,{left:-6.7,right:6.7,top:4.8,bottom:-4.8,near:.3,far:19});
   sun.shadow.bias=-.00025;sun.shadow.normalBias=.012;sun.shadow.radius=2;
   scene.add(sun,sun.target);
   const fill=new T.DirectionalLight(0xe3ecff,.49);fill.position.set(5,3,-1);scene.add(fill);
   const bulb=new T.PointLight(0xffce8a,0,8,2);scene.add(bulb);
-  if(!software)new HDRLoader().load('assets/furniture/workshop.hdr', texture => {
-    texture.mapping=T.EquirectangularReflectionMapping;
-    scene.environment=texture;
-    scene.environmentRotation.y=1.20;
-    scene.environmentIntensity=.40;
-    redraw();
-  });
+  // The workshop panorama is already convolved for each roughness level.
+  // The atlas stores linear radiance / 16 encoded as sRGB, with row zero at the bottom.
+  let lightReady=Boolean(software);
+  if(!software)new T.TextureLoader().load('assets/furniture/workshop-light.webp', atlas => {
+    atlas.mapping=T.CubeUVReflectionMapping;atlas.colorSpace=T.SRGBColorSpace;
+    atlas.flipY=false;atlas.generateMipmaps=false;atlas.minFilter=T.LinearFilter;
+    scene.environment=atlas;scene.environmentRotation.y=1.20;scene.environmentIntensity=.40*16;
+    lightReady=true;redraw();
+  },undefined,()=>{lightReady=true;redraw();});
   const section=stage.closest('.desk-overview');
   const motion=matchMedia('(prefers-reduced-motion: reduce)');
   let narrow=false,viewWidth=0,viewHeight=0;
@@ -43,24 +44,13 @@ export function mountFurniture(stage) {
   const vector=new T.Vector3(), point=new T.Vector3(), aim=new T.Vector3();
   const ray=new T.Raycaster(),mouse=new T.Vector2();
   let model,frame=0,visible=true,dirty=true,drawerOpen=false,drawerAmount=0,opened='',fileAngle=0,bookAngle=0;
-  let pointerX=0,pointerY=0,tiltX=0,tiltY=0;
-  let timeline=0,lastTime=0,lampOn=false;
+  const hitGroups=new Map(),bounds=new T.Box3(),intersection=new T.Vector3();
+  let lastTime=0,lampOn=false;
   let orbit=0, contextLost=false;
-  let qualityTimer=0;
+  let orbitPreview=0;
   function redraw() {
     dirty=true;
     if (visible && !contextLost && !frame) frame=requestAnimationFrame(paint);
-  }
-  // Lower the fragment workload during movement on a software renderer, then restore detail.
-  function navigating() {
-    if(software && !motion.matches){
-      if(!qualityTimer)engine.setPixelRatio(Math.min(devicePixelRatio,.48));
-      clearTimeout(qualityTimer);
-      qualityTimer=setTimeout(()=>{
-        qualityTimer=0;engine.setPixelRatio(Math.min(devicePixelRatio,.85));redraw();
-      },400);
-    }
-    redraw();
   }
   function rebuild() {
     if(model){
@@ -69,7 +59,16 @@ export function mountFurniture(stage) {
       model.world.traverse(m=>{if(m.isMesh){geometries.add(m.geometry);materials.add(m.material);for(const value of Object.values(m.material))if(value?.isTexture)textures.add(value);}});
       textures.forEach(t=>t.dispose());materials.forEach(m=>m.dispose());geometries.forEach(g=>g.dispose());
     }
-    model=furnish(scene,narrow,redraw);
+    model=furnish(scene,narrow,redraw,software);hitGroups.clear();
+    model.world.traverse(mesh=>{
+      if(!mesh.isMesh)return;
+      let owner=mesh.parent;
+      while(owner && !owner.userData.pick)owner=owner.parent;
+      if(!owner)return;
+      const id=owner.userData.pick;
+      if(!hitGroups.has(id))hitGroups.set(id,{meshes:[],box:new T.Box3()});
+      hitGroups.get(id).meshes.push(mesh);
+    });
     model.bulbGlass.emissiveIntensity=lampOn?2.2:.08;
     model.lamp.localToWorld(bulb.position.set(-.24,1.13,.24));engine.shadowMap.needsUpdate=true;
   }
@@ -101,9 +100,10 @@ export function mountFurniture(stage) {
       el.toggleAttribute('data-outside',x<10||x>width-10||y<12||y>height-10);
     }
   }
+  let boundedModel=null;
   function paint(time) {
     frame=0;
-    if(!visible||contextLost||!dirty||!layout())return;
+    if(!visible||contextLost||!dirty||!layout()||!lightReady)return;
     dirty=false;
     const dt=Math.min(.06,Math.max(.016,(time-lastTime)/1000));lastTime=time;
     const amount=(motion.matches||software)?1:1-Math.exp(-dt*12);
@@ -111,44 +111,61 @@ export function mountFurniture(stage) {
     const prevDrawer=drawerAmount,prevFile=fileAngle,prevBook=bookAngle;
     drawerAmount=target(drawerAmount,Number(drawerOpen));fileAngle=target(fileAngle,opened==='catalogue'?1:0);bookAngle=target(bookAngle,opened==='about'?1:0);
     model.drawer.position.z=2.17+drawerAmount*1.53;
-    model.flap.rotation.x=-fileAngle*2.10;model.cover.rotation.z=bookAngle*2.40;
+    model.flap.rotation.x=-fileAngle*1.22;model.cover.rotation.z=bookAngle*2.40;
     if((prevDrawer!==drawerAmount && (drawerAmount===0||drawerAmount===1)) ||
        (prevFile!==fileAngle && (fileAngle===0||fileAngle===1)) ||
        (prevBook!==bookAngle && (bookAngle===0||bookAngle===1)))engine.shadowMap.needsUpdate=true;
-    const rect=section.getBoundingClientRect();
-    const progress=motion.matches?.40:T.MathUtils.clamp(-rect.top/Math.max(1,rect.height-stage.clientHeight),0,1);
-    timeline=progress*progress*(3-2*progress);
-    tiltX=target(tiltX,motion.matches?0:pointerX);tiltY=target(tiltY,motion.matches?0:pointerY);
     const phone=narrow;
-    camera.position.set((phone?.36:.82)*(1-timeline)+tiltX*.15,
-      (phone?3.95:3.82)+timeline*.68+tiltY*.09,
-      (phone?6.30:6.64)-timeline*.48+drawerAmount*.92);
-    aim.set((phone?0:.025)+tiltX*.07,(phone?.66:1.03)-timeline*(phone?.78:1.02)-drawerAmount*.24,.02+timeline*.53+drawerAmount*.66);
+    camera.position.set(phone?.22:.70, (phone?4.19:4.06), (phone?6.13:6.47)+drawerAmount*.92);
+    aim.set(phone?0:.025,(phone?.40:.67)-drawerAmount*.24,.21+drawerAmount*.66);
     const reach=camera.position.z-aim.z;
     camera.position.x+=Math.sin(orbit)*reach;
     camera.position.z-=reach*(1-Math.cos(orbit));
     camera.lookAt(aim);engine.render(scene,camera);projectTargets();
+    if(!stage.classList.contains('is-rendered') || prevDrawer!==drawerAmount || prevFile!==fileAngle || prevBook!==bookAngle || model!==boundedModel){
+      for(const group of hitGroups.values()){
+        group.box.makeEmpty();
+        for(const mesh of group.meshes)group.box.union(bounds.copy(mesh.geometry.boundingBox).applyMatrix4(mesh.matrixWorld));
+      }
+      boundedModel=model;
+    }
     if(!stage.classList.contains('is-rendered')){
       stage.classList.add('is-rendered');
       if(software)warning.textContent='The desk is using software rendering. Enable graphics acceleration for smoother movement.';
       warning.hidden=!software;
       lamp.hidden=false;drawer.hidden=false;keepsake.hidden=!drawerOpen;
     }
-    if(drawerAmount!==Number(drawerOpen)||fileAngle!==(opened==='catalogue'?1:0)||bookAngle!==(opened==='about'?1:0)||Math.abs(tiltX-pointerX)>.005||Math.abs(tiltY-pointerY)>.005)redraw();
+    if(drawerAmount!==Number(drawerOpen)||fileAngle!==(opened==='catalogue'?1:0)||bookAngle!==(opened==='about'?1:0))redraw();
   }
   const leaveDesk=attachDeskPointer(stage,{
     pick(x,y) {
       mouse.set(x*2-1,1-y*2);
       ray.setFromCamera(mouse,camera);
-      const first=ray.intersectObject(model.world,true)[0];
-      for(let m=first?.object;m;m=m.parent)if(m.userData.pick)return m.userData.pick;
-      return '';
+      const hits=[];
+      for(const [id,{meshes,box}] of hitGroups){
+        if(!links.get(id).hidden && ray.ray.intersectsBox(box))ray.intersectObjects(meshes,false,hits);
+      }
+      if(!hits.length)return '';
+      const first=hits[0];
+      for(const box of model.occluders){
+        if(ray.ray.intersectBox(box,intersection) && ray.ray.origin.distanceTo(intersection)<first.distance-.012)return '';
+      }
+      let owner=first.object;
+      while(!owner.userData.pick)owner=owner.parent;
+      return owner.userData.pick;
     },
-    look(x,y) {
-      if(software || motion.matches || (x===pointerX && y===pointerY))return;
-      pointerX=x;pointerY=y;redraw();
+    orbitBy(delta) {
+      const next=T.MathUtils.clamp(orbit-delta*.87,-.33,.33);
+      if(software){
+        // Keep slow CPU rasterizers off the pointer path. The compositor previews the pan.
+        orbitPreview+=next-orbit;
+        canvas.style.transform='scale(1.045) translateX('+(-orbitPreview*3.2)+'%)';
+      } else redraw();
+      orbit=next;
     },
-    orbitBy(delta) {orbit=T.MathUtils.clamp(orbit-delta*.87,-.33,.33);navigating();}
+    endOrbit() {
+      if(software){orbitPreview=0;canvas.style.transform='';redraw();}
+    }
   });
   const lamp=links.get('lamp');
   lamp.addEventListener('click',()=>{
@@ -165,23 +182,12 @@ export function mountFurniture(stage) {
     if(drawerOpen&&drawer.matches(':focus-visible'))keepsake.focus({preventScroll:true});
   });
   section.closest('#studio').addEventListener('desk-room',e=>{opened=e.detail||'';if(opened)leaveDesk();redraw();});
-  let lastProgress=-1;
-  window.addEventListener('scroll',()=>{
-    if(document.pointerLockElement===canvas){
-      const r=stage.getBoundingClientRect();
-      if(r.bottom<innerHeight-2 || r.top>2)leaveDesk();
-    }
-    if(!visible||motion.matches||opened||document.querySelector('.open-project[open]'))return;
-    const r=section.getBoundingClientRect();
-    const fraction=T.MathUtils.clamp(-r.top/Math.max(1,r.height-stage.clientHeight),0,1);
-    if(Math.abs(fraction-lastProgress)>.001){lastProgress=fraction;navigating();}
-  },{passive:true});
   if('IntersectionObserver' in window)new IntersectionObserver(([entry])=>{
     visible=entry.isIntersecting;if(visible)redraw();else leaveDesk();
   }).observe(stage);
   if('ResizeObserver' in window)new ResizeObserver(redraw).observe(stage);
   window.addEventListener('resize',redraw);
-  motion.addEventListener('change',()=>{pointerX=pointerY=0;redraw();});
+  motion.addEventListener('change',redraw);
   canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();contextLost=true;leaveDesk();warning.textContent=unavailable;warning.hidden=false;stage.classList.remove('is-rendered');links.forEach(el=>el.removeAttribute('data-outside'));drawer.hidden=true;keepsake.hidden=true;lamp.hidden=true;});
   canvas.addEventListener('webglcontextrestored',()=>{contextLost=false;engine.shadowMap.needsUpdate=true;redraw();});
   redraw();

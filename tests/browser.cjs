@@ -57,8 +57,12 @@ const server = http.createServer((req,res) => {
       errors.push(`Failed resource ${request.url()}: ${request.failure()?.errorText}`);
    });
    await page.goto(base);
+   assert.equal(await page.locator('html').getAttribute('data-view'),'desk');
+   assert.equal(await page.locator('.shop').isVisible(),false);
+   await page.locator('.mode-switch').click();
    await page.locator('.swiper-initialized').waitFor();
-   await page.evaluate(() => document.fonts.load("600 16px 'DM Sans'", 'Erdős'));
+   assert.equal(await page.locator('.desktop-picture').isVisible(),false);
+   await page.evaluate(() => Promise.all(["DM Sans", "Bricolage Grotesque"].map(family=>document.fonts.load("600 16px '"+family+"'", "Erdős"))));
    await page.evaluate(() => document.fonts.ready);
    assert.ok(await page.evaluate(()=>(()=>{const faces=[...document.fonts].filter(font=>font.family.includes('DM Sans'));return faces.length===2 && faces.every(font=>font.weight==='100 1000' && font.status==='loaded');})()), 'DM Sans uses real variable weights');
    assert.ok(await page.evaluate(()=>{const faces=[...document.fonts].filter(font=>font.family.includes('Bricolage'));return faces.length===2 && faces.every(font=>font.status==='loaded');}), 'headline glyphs load in the correct family');
@@ -67,7 +71,7 @@ const server = http.createServer((req,res) => {
    assert.equal(await page.locator("#desk-audio").getAttribute("src"),null);
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth <= innerWidth), `${name}: horizontal page overflow`);
    assert.deepEqual(mapRequests,[],`${name}: closed map must not request image`);
-   await page.locator('#studio').evaluate(el=>el.scrollIntoView({behavior:'instant'}));
+   await page.locator('.mode-switch').click();
    await page.locator('.object-scope').click();
    await page.locator('#desk-map summary').click();
    await page.waitForFunction(()=>{const img=document.querySelector('#desk-map-image img');return img?.complete && img.naturalWidth>0;});
@@ -100,6 +104,7 @@ const server = http.createServer((req,res) => {
 
    await incidentSummary.press('Enter');
    assert.equal(await page.locator('.incident-note').getAttribute('open'),null);
+   await page.locator('.mode-switch').click();
    await page.locator('.index summary').click();
    await page.locator('.index[open]').waitFor();
    assert.equal(await page.locator('.index a img').count(),6);
@@ -205,11 +210,11 @@ const server = http.createServer((req,res) => {
    assert.match(await page.locator('#war-report').textContent(), /Turn 90.*game repeats/);
    await page.locator('.war-cycle').screenshot({path:`test-results/${name}-cycle.png`});
    await page.locator('#close-dialog').click();
-   await page.locator('dialog').waitFor({state:'hidden'});
+   await page.locator('.open-project').waitFor({state:'hidden'});
    await page.goForward();
    await page.locator('dialog[open]').waitFor();
    await page.keyboard.press('Escape');
-   await page.locator('dialog').waitFor({state:'hidden'});
+   await page.locator('.open-project').waitFor({state:'hidden'});
    // Native dialog close events are queued after the open attribute clears.
    await page.waitForFunction(() => !document.body.classList.contains('modal-open'));
    await page.locator('#desk-play-recording').click();
@@ -284,12 +289,11 @@ const server = http.createServer((req,res) => {
    await page.locator('#leaf-next').click();
    assert.ok(await page.locator('#about-physics').isVisible());
    assert.ok(page.url().endsWith('#about-physics'));
-   await page.locator('.desk-rail a[href="#studio"]').click();
+   await page.locator('.back-to-desk').click();
+   if(await page.locator('html').getAttribute('data-view')==='shelf')await page.locator('.mode-switch').click();
    if (name === 'mobile' && await page.locator('.object-drawer').isVisible()) {
     await page.locator('.object-drawer').click();
-    // This narrow viewport still uses a desktop mouse. Release it before targeting a DOM link.
-    await page.keyboard.press('Escape');
-    await page.waitForFunction(()=>!document.pointerLockElement);
+    assert.equal(await page.evaluate(()=>document.pointerLockElement),null);
     await page.locator('.postcat').click();
    } else await page.locator('.object-letters').click();
    await page.locator('#flip-post').click();
@@ -479,7 +483,7 @@ const server = http.createServer((req,res) => {
       return type.includes('webgl') ? null : getContext.call(this,type,...rest);
     };
   });
-  await shelfMouse.goto(base);
+  await shelfMouse.goto(base+'/#projects');
   const centerPrint=shelfMouse.locator('.swiper-slide-active .print');
   await centerPrint.scrollIntoViewIfNeeded();
   const paper=await centerPrint.boundingBox();
@@ -493,8 +497,58 @@ const server = http.createServer((req,res) => {
   await shelfMouse.mouse.up();
   assert.notEqual(await centerPrint.getAttribute('data-project'),'flyover','mouse drag moves through the shelf');
   assert.equal(await shelfMouse.locator('dialog[open]').count(),0,'releasing a drag keeps the reader closed');
-  await shelfMouse.locator('#studio').evaluate(el=>el.scrollIntoView({behavior:'instant'}));
+  assert.equal(await shelfMouse.evaluate(()=>performance.getEntriesByType('resource').some(r=>r.name.includes('/vendor/three/'))),false,
+    'direct shelf visits do not download the 3D engine');
+  await shelfMouse.locator('.mode-switch').click();
   await shelfMouse.locator('.graphics-warning:visible').waitFor();
+  const pickup=shelfMouse.locator('.pickup');
+  const backs=new Set();
+  for(const object of ['robot-photo','flyover-print','conway-print','plant','pinboard']){
+    await shelfMouse.locator('[data-object="'+object+'"]').click();
+    await pickup.locator('.photo-front img').evaluate(img=>img.decode());
+    await pickup.locator('.flip-control').click();
+    const art=pickup.locator('.photo-back img');
+    await art.evaluate(img=>img.decode());
+    backs.add(await art.getAttribute('src'));
+    await pickup.locator('.photo-flip').click();
+    assert.equal(await pickup.locator('.photo-front').isVisible(),true);
+    await pickup.locator('.put-down').click();
+  }
+  assert.equal(backs.size,5,'five pickups reveal five different illustrated backs');
+  // Include the instrument cable and open flap in the clearance test at every degree of travel.
+  const clearance=await shelfMouse.evaluate(async()=>{
+    const T=await import('/vendor/three/three.module.min.js');
+    const {furnish}=await import('/desk-model.js');
+    return [false,true].map(narrow=>{
+      const model=furnish(new T.Scene(),narrow,()=>{},true);
+      const scope=new T.Box3().setFromObject(model.targets.get('scope').root,true);
+      for(let step=0;step<=70;step++){
+        model.flap.rotation.x=-step*Math.PI/180;
+        if(new T.Box3().setFromObject(model.flap,true).intersectsBox(scope))return false;
+      }
+      return true;
+    });
+  });
+  assert.deepEqual(clearance,[true,true],'folder clears the entire oscilloscope in both layouts');
+  await shelfMouse.locator('[data-object="robot-photo"]').click();
+  await pickup.locator('.photo-link').click();
+  await shelfMouse.locator('#about:visible').waitFor();
+  assert.equal(await shelfMouse.locator('.desk-overview').evaluate(el=>el.inert),true);
+  await shelfMouse.locator('.back-to-desk').click();
+  assert.equal(await shelfMouse.evaluate(()=>document.activeElement.dataset.object),'robot-photo');
+  await shelfMouse.locator('[data-object="rose-pencil"]').click();
+  assert.equal(await pickup.locator('[data-lead="rose"]').getAttribute('aria-pressed'),'true');
+  const pad=await pickup.locator('.sketch-paper').boundingBox();
+  await shelfMouse.mouse.move(pad.x+35,pad.y+35);await shelfMouse.mouse.down();
+  await shelfMouse.mouse.move(pad.x+85,pad.y+70,{steps:4});await shelfMouse.mouse.up();
+  assert.equal(await pickup.locator('.sketch-paper path').count(),1);
+  await shelfMouse.keyboard.press('Escape');
+  await shelfMouse.locator('[data-object="blotter"]').click();
+  await pickup.locator('.stamp-sketch').click();await pickup.locator('.undo-sketch').click();
+  assert.equal(await pickup.locator('.sketch-paper path').count(),1,'putting down a pencil preserves the drawing');
+  await pickup.locator('.undo-sketch').click();
+  assert.equal(await pickup.locator('.undo-sketch').isDisabled(),true);
+  await pickup.locator('.put-down').click();
   await shelfMouse.locator('.object-file').click();
   await shelfMouse.locator('#catalogue:visible').waitFor();
   await shelfMouse.goto(base+'/#elsewhere');
@@ -548,7 +602,7 @@ const server = http.createServer((req,res) => {
   await linkedDesk.locator('#desk-war .desk-project').click();
   await linkedDesk.locator('dialog[open] #conjectures').waitFor();
   await linkedDesk.locator('#close-dialog').click();
-  await linkedDesk.waitForFunction(()=>!document.querySelector('dialog').open);
+  await linkedDesk.waitForFunction(()=>!document.querySelector('.open-project').open);
   assert.ok(linkedDesk.url().endsWith('#desk-war'));
   assert.ok(await linkedDesk.locator('#desk-war').isVisible());
   await linkedDesk.reload();
@@ -574,11 +628,10 @@ const server = http.createServer((req,res) => {
   await soundRecovery.close();
   const historySound = await browser.newPage();
   await historySound.goto(base+'/#desk');
-  await historySound.locator('.index summary').click();
-  await historySound.locator('.index a[data-project="cpu"]').click();
+  await historySound.locator('[data-desk-panel="sound"] .desk-project').click();
   await historySound.locator('dialog[open]').waitFor();
   await historySound.locator('#close-dialog').click();
-  await historySound.locator('dialog').waitFor({state:'hidden'});
+  await historySound.locator('.open-project').waitFor({state:'hidden'});
   await historySound.locator('#desk-play-recording').click();
   await historySound.waitForFunction(()=>!document.querySelector('#desk-audio').paused);
   await historySound.goForward();
@@ -596,14 +649,14 @@ const server = http.createServer((req,res) => {
    await printable.emulateMedia({media:'print'});
    assert.equal(await printable.locator('body > main').isVisible(),false,'printed reader omits background page');
    assert.equal(await printable.locator('.modal-top').isVisible(),false,'printed reader omits navigation');
-   assert.ok(await printable.locator('dialog').evaluate(el=>el.scrollHeight<=el.clientHeight+1),`${project}: print reader is not clipped`);
+   assert.ok(await printable.locator('.open-project').evaluate(el=>el.scrollHeight<=el.clientHeight+1),`${project}: print reader is not clipped`);
    if (engineName === 'chromium') await printable.pdf({path:`test-results/project-${project}-${printWidth}-print.pdf`,format:'Letter'});
    await printable.evaluate(()=>window.dispatchEvent(new Event('afterprint')));
    await printable.emulateMedia({media:'screen'});
-   assert.equal(await printable.locator('dialog').evaluate(el=>el.matches(':modal')),true,'reader returns to modal after printing');
+   assert.equal(await printable.locator('.open-project').evaluate(el=>el.matches(':modal')),true,'reader returns to modal after printing');
    assert.equal(await printable.locator('dialog .outbound').evaluate(el=>el===document.activeElement),true,'printing preserves reader focus');
    if(printWidth===390) {
-    const restored=await printable.locator('dialog').boundingBox();
+    const restored=await printable.locator('.open-project').boundingBox();
     assert.ok(Math.abs(restored.width-390)<1 && Math.abs(restored.height-800)<1,'phone reader restores full viewport after printing');
    }
   }
@@ -611,7 +664,7 @@ const server = http.createServer((req,res) => {
   const touch = await browser.newPage({viewport:{width:390,height:844},hasTouch:true,isMobile:true,deviceScaleFactor:2,reducedMotion:'no-preference'});
   const touchErrors=[];
   touch.on('pageerror',error=>touchErrors.push(error.message));
-  await touch.goto(base);
+  await touch.goto(base+'/#projects');
   await touch.locator('.swiper-initialized').waitFor();
   const cdp=await touch.context().newCDPSession(touch);
   const box=await touch.locator('.swiper').boundingBox();
@@ -654,14 +707,14 @@ const server = http.createServer((req,res) => {
     await spaced.evaluate(id=>{location.hash=id;},id);
     await spaced.locator('dialog[open]').waitFor();
     await spaced.locator(`dialog #${id}`).waitFor();
-    assert.ok(await spaced.locator('dialog').evaluate(el=>el.scrollWidth <= el.clientWidth+1), `text spacing: ${id} reader overflow`);
+    assert.ok(await spaced.locator('.open-project').evaluate(el=>el.scrollWidth <= el.clientWidth+1), `text spacing: ${id} reader overflow`);
     assert.ok(await spaced.locator('.turn-prints').evaluate(el=>{
       const [previous,count,next]=[...el.children].map(node=>node.getBoundingClientRect());
       return previous.width>=40 && next.width>=40 && count.left-previous.right>=7 && next.left-count.right>=7;
     }), 'reader arrows retain room for focus rings and page counter');
     await spaced.locator('#close-dialog').focus();
     await spaced.keyboard.press('Tab');
-    assert.ok(await spaced.evaluate(()=>document.querySelector('dialog').contains(document.activeElement)), 'keyboard focus must remain in modal');
+    assert.ok(await spaced.evaluate(()=>document.querySelector('.open-project').contains(document.activeElement)), 'keyboard focus must remain in modal');
   }
   await spaced.screenshot({path:'test-results/text-spacing-reader.png',fullPage:true});
   await spaced.close();
@@ -745,6 +798,7 @@ const server = http.createServer((req,res) => {
   assert.equal(await noDesk.locator('.desk-tabs').isVisible(),false);
   assert.equal(await noDesk.locator('[data-desk-panel]:visible').count(),4);
   assert.equal(await noDesk.locator('#open-print').textContent(),'Listen to a flyover');
+  await noDesk.locator('.mode-switch').click();
   await noDesk.locator('#open-print').click();
   await noDesk.locator('dialog[open] #flyover').waitFor();
   await noDesk.close();
