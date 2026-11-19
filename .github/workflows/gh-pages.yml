@@ -38,19 +38,30 @@ jobs:
           fetch-depth: 0
           path: _sources/solved-conjectures
           persist-credentials: false
+      - name: Read the reviewed catalogue snapshot revision
+        id: snapshot
+        run: |
+          python3 -c 'import json, os; c=json.load(open("scripts/catalogue_snapshot.json")); open(os.environ["GITHUB_OUTPUT"], "a").write("sha=" + c["source_commit"] + "\n")'
+      - name: Check out the immutable catalogue snapshot
+        uses: actions/checkout@v7
+        with:
+          repository: 1337isnot1337/solved-conjectures
+          ref: ${{ steps.snapshot.outputs.sha }}
+          fetch-depth: 0
+          path: _sources/catalogue-snapshot
+          persist-credentials: false
       - name: Install the Markdown renderer
         run: |
           sudo apt-get update
           sudo apt-get install --yes --no-install-recommends pandoc
       - name: Build and check the research catalogue
         run: |
-          PYTHONDONTWRITEBYTECODE=1 python3 tests/catalogue_compat_test.py _sources/solved-conjectures
-          PYTHONDONTWRITEBYTECODE=1 python3 scripts/build_catalogue.py \
+          PYTHONDONTWRITEBYTECODE=1 python3 tests/catalogue_release_test.py
+          PYTHONDONTWRITEBYTECODE=1 python3 scripts/release_catalogue.py \
             --source _sources/solved-conjectures \
+            --fallback-source _sources/catalogue-snapshot \
             --output "$GITHUB_WORKSPACE/site/solved-conjectures" \
             --base-url https://1337isnot1337.github.io/solved-conjectures/
-          python3 _sources/solved-conjectures/scripts/check_site.py \
-            "$GITHUB_WORKSPACE/site/solved-conjectures"
       - name: Install Chromium
         run: npx playwright install chromium
       - name: Check browser system dependencies

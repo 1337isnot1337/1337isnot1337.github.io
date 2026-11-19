@@ -7,7 +7,7 @@ const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
 const root = path.resolve('site');
-const types = { '.html':'text/html', '.js':'text/javascript', '.css':'text/css', '.wasm':'application/wasm', '.webp':'image/webp', '.woff2':'font/woff2', '.mp3':'audio/mpeg' };
+const types = { '.svg':'image/svg+xml', '.png':'image/png', '.jpg':'image/jpeg', '.json':'application/json', '.pdf':'application/pdf', '.html':'text/html', '.js':'text/javascript', '.css':'text/css', '.wasm':'application/wasm', '.webp':'image/webp', '.woff2':'font/woff2', '.mp3':'audio/mpeg' };
 const server = http.createServer((req,res) => {
   const pathname = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
   let file = path.resolve(root, '.' + pathname);
@@ -222,6 +222,26 @@ const server = http.createServer((req,res) => {
     const collection = await page.goto(base + '/solved-conjectures/');
     assert.equal(collection.status(),200);
     assert.ok(await page.locator('h1').count());
+    assert.ok(await page.locator('.brand img').evaluate(image=>image.complete && image.naturalWidth>0),'catalogue brand asset decodes');
+    const provenanceFile = path.join(root,'solved-conjectures/catalogue-provenance.json');
+    if (fs.existsSync(provenanceFile)) {
+     const provenance = JSON.parse(fs.readFileSync(provenanceFile,'utf8'));
+     if (provenance.mode === 'snapshot') {
+      await page.locator('.catalogue-snapshot').waitFor();
+      assert.ok((await page.locator('.catalogue-snapshot').textContent()).includes(provenance.rendered_source.commit.slice(0,7)));
+      assert.ok((await page.title()).startsWith('Snapshot '));
+      assert.ok((await page.locator('meta[name="description"]').getAttribute('content')).startsWith('Catalogue snapshot ('));
+      assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),`${name}: snapshot notice fits viewport`);
+      await page.screenshot({path:`test-results/${name}-catalogue-snapshot.png`});
+      await page.goto(base + '/solved-conjectures/results/frankl-generator-families/');
+      await page.locator('.catalogue-snapshot').waitFor();
+      const sourceLink=page.getByRole('link',{name:'View source',exact:true});
+      assert.ok((await sourceLink.getAttribute('href')).includes('/blob/' + provenance.rendered_source.commit + '/'));
+      await page.screenshot({path:`test-results/${name}-snapshot-result.png`});
+     } else {
+      assert.equal(await page.locator('.catalogue-snapshot').count(),0);
+     }
+    }
    }
    assert.deepEqual(errors,[],`${name}: uncaught browser errors`);
    await page.close();
