@@ -50,7 +50,7 @@ components:
 
 ## Overview
 
-Visitors arrive at Cinna’s writing desk and can pick up its contents. The floating shelf icon for Boring mode leads to the shelf of six illustrated projects, each with an experiment and project notes. The oscilloscope opens the workbench, the folder opens the catalogue, the clothbound notebook opens personal stories and the letters open Cinna’s social profiles. Books on the hutch link to proofs and research notes. The cassette can be turned in the hand before reading its liner notes.
+Visitors arrive at Cinna’s writing desk and can pick up its contents. The floating Boring mode button leads to the shelf of six illustrated projects, each with an experiment and project notes. The oscilloscope opens the workbench, the folder opens the catalogue, the clothbound notebook opens personal stories and the letters open Cinna’s social profiles. Books on the hutch link to proofs and research notes. The cassette can be turned in the hand before reading its liner notes.
 
 ## Colors
 
@@ -81,7 +81,7 @@ Each print has a small folded corner clipped into the paper. Hover deepens the s
 - **War trace.** Three hand-size traces are computed from the actual 90-turn deal. A keyboard-accessible scrubber inspects the full card order at each turn. Solid, dashed and dotted lines distinguish players without relying on color. The caption distinguishes matching hand sizes from a complete repeated state.
 - **Binary register.** An optional worksheet inside the CPU encoder lays out all sixteen bits, marks the fixed instruction bit, and highlights the address’s ones. Its place-value sum is computed from the same bits as the instruction output.
 - **Recording.** The DOPPLERGEIST panel pairs the spectrogram with its native audio player and a moving cursor. Both assets derive from Praveen Pathak’s credited flyover recording. [Dataset](https://doi.org/10.5281/zenodo.23424278) · [License](https://creativecommons.org/licenses/by/4.0/) · [Audio and figure notes](https://1337isnot1337.github.io/DOPPLERGEIST/site-media/livermore-r04-source.txt)
-- **Letters.** The Letters room holds the three social addresses. The two-sided illustrated postcard lives inside the desk drawer. Turning it over reveals up to five distinct stops from this browser-tab visit. The latest stop with artwork supplies the stamp. Saving the card exports its front and back together in a 1200 × 1600 PNG.
+- **Letters.** The three profile logos sit in the bottom-left corner. The Letters room lists their addresses in text. The two-sided illustrated postcard lives inside the desk drawer. Turning it over reveals up to five distinct stops from this browser-tab visit. The latest stop with artwork supplies the stamp. Saving the card exports its front and back together in a 1200 × 1600 PNG.
 
 ## Do's and Don'ts
 

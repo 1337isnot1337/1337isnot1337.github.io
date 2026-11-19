@@ -60,7 +60,11 @@ const server = http.createServer((req,res) => {
    assert.equal(await page.locator('html').getAttribute('data-view'),'desk');
    assert.equal(await page.locator('.shop').isVisible(),false);
    assert.equal(await page.locator('.mast').isVisible(),false);
-   assert.equal(await page.locator('.desk-profiles a:visible').count(),3);
+   assert.equal(await page.locator('.mode-switch span:visible').innerText(),'Boring mode');
+   const social=page.locator('.desk-profiles a:visible');
+   assert.deepEqual(await social.evaluateAll(links=>links.map(a=>[a.getAttribute('aria-label'),a.textContent.trim()])),
+     [['GitHub',''],['LinkedIn',''],['X','']]);
+   assert.equal(await page.locator('svg use[href^="#brand-"]').count(),3);
    if(name==='desktop'){
     await page.waitForFunction(()=>document.querySelector('.desktop-picture').classList.contains('is-rendered') || !document.querySelector('.graphics-warning').hidden);
     if(await page.locator('.is-rendered').count()){
