@@ -49,7 +49,15 @@ jobs:
             --base-url https://1337isnot1337.github.io/solved-conjectures/
           python3 _sources/solved-conjectures/scripts/check_site.py \
             "$GITHUB_WORKSPACE/site/solved-conjectures"
-      - run: npx playwright install --with-deps chromium
+      - name: Install Chromium
+        run: npx playwright install chromium
+      - name: Check browser system dependencies
+        run: |
+          # Hosted Ubuntu already supplies most libraries. Only use the package
+          # mirror when a real launch needs it; all browser tests still follow.
+          if ! node -e 'require("playwright").chromium.launch().then(browser => browser.close()).catch(error => { console.error(error); process.exit(1); })'; then
+            npx playwright install-deps chromium
+          fi
       - run: npm run test:browser
       - uses: actions/upload-artifact@v4
         if: always()
