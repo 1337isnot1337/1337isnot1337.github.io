@@ -102,6 +102,14 @@ const server = http.createServer((req,res) => {
    await page.locator('#reset-predictor').click();
    assert.match(await page.locator('#forecast').textContent(),/^01/);
    await page.screenshot({path:`test-results/${name}-predictor.png`,fullPage:true});
+   await page.goto(base + '/#factoring');
+   await page.locator('dialog[open]').waitFor();
+   await page.locator('#composite').fill('30030');
+   await page.getByRole('button',{name:'Factor it',exact:true}).click();
+   await page.getByText('See the divisions',{exact:true}).click();
+   assert.equal(await page.locator('#factor-steps li').count(),5);
+   assert.match(await page.locator('#factor-ending').textContent(),/13 is prime/);
+   await page.locator('#factor-form').screenshot({path:`test-results/${name}-factoring.png`});
    await page.goto(base + '/#conway');
    await page.locator('dialog[open]').waitFor();
    await page.locator('[data-rook-pair="A1,B1"]').click();

@@ -211,3 +211,23 @@ test('shelf arrows preserve modified browser shortcuts and still turn plain arro
   }
   p.dom.window.close();
 });
+
+test('factor ledger shows actual divisions and clears old workings', () => {
+  const p=page();
+  for (const n of [221,64,30030,999999,97,2]) {
+    p.input('#composite',n);p.click('#factor-form button');
+    let remainder=n;
+    for (const row of p.d.querySelectorAll('#factor-steps li')) {
+      const [a,op,b]=[...row.children].map(e=>e.textContent);
+      const divisor=Number(op.match(/\d+/)[0]);
+      assert.equal(Number(a),remainder);
+      assert.equal(Number(a)/divisor,Number(b));
+      remainder=Number(b);
+    }
+    if (n===97 || n===2) {
+      assert.equal(p.d.querySelectorAll('#factor-steps li').length,0);
+      assert.match(p.d.querySelector('#factor-ending').textContent,/already prime/);
+    }
+  }
+  p.dom.window.close();
+});

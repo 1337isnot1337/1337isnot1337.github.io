@@ -480,13 +480,29 @@ document.querySelector("#factor-form").addEventListener("submit", (event) => {
   }
   let remainder = value;
   const factors = [];
+  const steps = [];
+  const ledger = document.querySelector('#factor-steps');
+  ledger.replaceChildren();
   for (let divisor = 2; divisor * divisor <= remainder; divisor++) {
     while (remainder % divisor === 0) {
       factors.push(divisor);
+      steps.push([remainder, divisor, remainder / divisor]);
       remainder /= divisor;
     }
   }
   if (remainder > 1) factors.push(remainder);
+  for (const [before, divisor, after] of steps) {
+    const row = document.createElement('li');
+    for (const [tag, value] of [['span', before], ['span', `÷ ${divisor} →`], ['strong', after]]) {
+      const cell = document.createElement(tag);
+      cell.textContent = value;
+      row.append(cell);
+    }
+    ledger.append(row);
+  }
+  document.querySelector('#factor-ending').textContent =
+    factors.length === 1 ? `${value} is already prime.` :
+    remainder > 1 ? `${remainder} is prime, so it is the last factor.` : 'Nothing left to split.';
   document.querySelector("#factors").value =
     factors.length === 1
       ? value + " is prime."
