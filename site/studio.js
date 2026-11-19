@@ -17,7 +17,7 @@
   function showFurniture() {
     if (!sceneNearby || sceneStarted || studio.dataset.open || document.querySelector(".open-project[open]")) return;
     sceneStarted=true;
-    import("./furniture.js?v=4").then(module => module.mountFurniture(stage)).catch(() => {
+    import("./furniture.js?v=5").then(module => module.mountFurniture(stage)).catch(() => {
       stage.querySelector(".graphics-warning").hidden = false;
     });
   }

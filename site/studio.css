@@ -44,6 +44,7 @@
 }
 .shelf-return { top:14px; left:clamp(12px,2vw,30px); text-underline-offset:3px; }
 .graphics-warning { left:50%; top:12%; transform:translateX(-50%); width:max-content; max-width:90%; margin:0; }
+.is-rendered .graphics-warning { top:auto; bottom:12px; font-size:12px; }
 .desk-paw { display:none; }
 .is-rendered.has-paw, .is-rendered.has-paw * { cursor:none; }
 .is-rendered.has-paw .desk-paw {

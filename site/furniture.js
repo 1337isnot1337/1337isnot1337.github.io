@@ -8,12 +8,14 @@ export function mountFurniture(stage) {
   const canvas = stage.querySelector('canvas');
   if (!document.createElement('canvas').getContext('2d'))throw new Error('Canvas drawing unavailable');
   const engine = new T.WebGLRenderer({canvas,antialias:true,alpha:false,powerPreference:'low-power'});
+  const warning=stage.querySelector('.graphics-warning');
+  const unavailable=warning.textContent;
   const gl=engine.getContext();
   const debug=gl.getExtension('WEBGL_debug_renderer_info');
   const software=debug && /swiftshader|llvmpipe/i.test(gl.getParameter(debug.UNMASKED_RENDERER_WEBGL));
   engine.setPixelRatio(Math.min(devicePixelRatio, software ? .85 : 1.7));
   engine.shadowMap.enabled=true;
-  engine.shadowMap.type=T.PCFSoftShadowMap;
+  engine.shadowMap.type=software ? T.BasicShadowMap : T.PCFSoftShadowMap;
   engine.shadowMap.autoUpdate=false;
   engine.toneMapping=T.ACESFilmicToneMapping;engine.toneMappingExposure=1.03;
   const scene=new T.Scene();scene.background=new T.Color(0xc7bc9e);
@@ -27,7 +29,7 @@ export function mountFurniture(stage) {
   scene.add(sun,sun.target);
   const fill=new T.DirectionalLight(0xe3ecff,.49);fill.position.set(5,3,-1);scene.add(fill);
   const bulb=new T.PointLight(0xffce8a,0,8,2);scene.add(bulb);
-  new HDRLoader().load('assets/furniture/workshop.hdr', texture => {
+  if(!software)new HDRLoader().load('assets/furniture/workshop.hdr', texture => {
     texture.mapping=T.EquirectangularReflectionMapping;
     scene.environment=texture;
     scene.environmentRotation.y=1.20;
@@ -56,7 +58,7 @@ export function mountFurniture(stage) {
       clearTimeout(qualityTimer);
       qualityTimer=setTimeout(()=>{
         qualityTimer=0;engine.setPixelRatio(Math.min(devicePixelRatio,.85));redraw();
-      },180);
+      },400);
     }
     redraw();
   }
@@ -127,7 +129,9 @@ export function mountFurniture(stage) {
     camera.position.z-=reach*(1-Math.cos(orbit));
     camera.lookAt(aim);engine.render(scene,camera);projectTargets();
     if(!stage.classList.contains('is-rendered')){
-      stage.classList.add('is-rendered');stage.querySelector('.graphics-warning').hidden=true;
+      stage.classList.add('is-rendered');
+      if(software)warning.textContent='The desk is using software rendering. Enable graphics acceleration for smoother movement.';
+      warning.hidden=!software;
       lamp.hidden=false;drawer.hidden=false;keepsake.hidden=!drawerOpen;
     }
     if(drawerAmount!==Number(drawerOpen)||fileAngle!==(opened==='catalogue'?1:0)||bookAngle!==(opened==='about'?1:0)||Math.abs(tiltX-pointerX)>.005||Math.abs(tiltY-pointerY)>.005)redraw();
@@ -178,7 +182,7 @@ export function mountFurniture(stage) {
   if('ResizeObserver' in window)new ResizeObserver(redraw).observe(stage);
   window.addEventListener('resize',redraw);
   motion.addEventListener('change',()=>{pointerX=pointerY=0;redraw();});
-  canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();contextLost=true;leaveDesk();stage.querySelector('.graphics-warning').hidden=false;stage.classList.remove('is-rendered');links.forEach(el=>el.removeAttribute('data-outside'));drawer.hidden=true;keepsake.hidden=true;lamp.hidden=true;});
+  canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();contextLost=true;leaveDesk();warning.textContent=unavailable;warning.hidden=false;stage.classList.remove('is-rendered');links.forEach(el=>el.removeAttribute('data-outside'));drawer.hidden=true;keepsake.hidden=true;lamp.hidden=true;});
   canvas.addEventListener('webglcontextrestored',()=>{contextLost=false;engine.shadowMap.needsUpdate=true;redraw();});
   redraw();
 }
