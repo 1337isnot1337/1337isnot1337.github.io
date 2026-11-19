@@ -46,6 +46,7 @@
     <link rel="stylesheet" href="firmware-note.css?v=1" />
     <link rel="stylesheet" href="rook-graph.css?v=1" />
     <link rel="stylesheet" href="schedule-example.css?v=1" />
+    <link rel="stylesheet" href="incident-note.css?v=1" />
     <script defer src="cpu-trace.js?v=1"></script>
     <script defer src="vendor/swiper-bundle.min.js"></script>
     <script defer src="shelf.js?v=26" onerror="
@@ -417,14 +418,33 @@
   </div>
 </details>
           </li>
-          <li data-category="Software">
-            <a href="https://github.com/1337isnot1337/incidentmesh"
-              ><strong>IncidentMesh</strong
-              ><span
-                >An incident-response prototype: AI agents investigate in
-                parallel, and outdated response plans are rejected.</span
-              ></a
-            >
+          <li data-category="Software" class="incident-project">
+<a href="https://github.com/1337isnot1337/incidentmesh"><strong>IncidentMesh</strong><span>An incident-response prototype: AI agents investigate in parallel, and outdated response plans are rejected.</span></a>
+<details class="incident-note">
+  <summary>Same plan, different timing</summary>
+  <div class="incident-note-body">
+    <p>A plan can become outdated while it is being written. This replay keeps the plan and eventual evidence fixed, but changes when other investigators report.</p>
+    <div class="incident-ledger">
+      <div class="incident-lane" data-incident-arm="concurrent" data-policy-reason="stale-plan" data-action="request_corroboration">
+        <h3>Evidence arrives during planning</h3>
+        <div class="incident-revisions"><span>Plan uses revision <b data-revision="plan">1</b></span><span>At the action check <b data-revision="boundary">3</b></span></div>
+        <p class="incident-verdict">Outdated plan rejected</p>
+        <p>The proposed probe is replaced with a request for corroborating evidence.</p>
+        <code>request_corroboration</code>
+      </div>
+      <div class="incident-lane" data-incident-arm="sequential" data-policy-reason="fresh-bounded-evidence" data-action="targeted_canary_probe">
+        <h3>Evidence arrives after the check</h3>
+        <div class="incident-revisions"><span>Plan uses revision <b data-revision="plan">1</b></span><span>At the action check <b data-revision="boundary">1</b></span></div>
+        <p class="incident-verdict">Fresh proposal-only probe allowed</p>
+        <p>The same probe passes first. The same conflicting evidence arrives later.</p>
+        <code>targeted_canary_probe</code>
+      </div>
+    </div>
+    <p class="incident-replan" data-incident-replan><b>Fresh does not mean approved.</b> A new plan at revision 3 reaches the check at revision 3 and is still blocked by conflicting evidence.</p>
+    <p class="incident-scope">Deterministic prototype replay, with hypotheses frozen from a historical model run. The probe is proposal-only: no production changes, and no rollback authorized. This is not a speed comparison.</p>
+    <a class="incident-source" href="https://github.com/1337isnot1337/incidentmesh/blob/7bb27809e5a5278963a7186ebe3604246cbfbc9f/docs/evidence/stale-plan-ablation.md">Read the replay and its limits ↗</a>
+  </div>
+</details>
           </li>
           <li data-category="Mathematics">
             <a href="https://github.com/1337isnot1337/erdos-99"

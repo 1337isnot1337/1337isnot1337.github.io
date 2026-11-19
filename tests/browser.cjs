@@ -81,6 +81,16 @@ const server = http.createServer((req,res) => {
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
    await page.locator('.firmware-note').screenshot({path:`test-results/${name}-firmware-note.png`});
    await page.locator('.firmware-note summary').click();
+   const incidentSummary=page.locator('.incident-note summary');
+   await incidentSummary.focus();
+   await incidentSummary.press('Enter');
+   assert.equal(await page.locator('.incident-note').getAttribute('open'),'');
+   assert.equal(await page.locator('.incident-lane').count(),2);
+   assert.match(await page.locator('.incident-scope').textContent(),/no production changes/);
+   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth), `${name}: incident case-note overflow`);
+   await page.locator('.incident-note').screenshot({path:`test-results/${name}-incident-note.png`});
+   await incidentSummary.press('Enter');
+   assert.equal(await page.locator('.incident-note').getAttribute('open'),null);
    await page.locator('.index summary').click();
    await page.locator('.index[open]').waitFor();
    assert.equal(await page.locator('.index a img').count(),6);
@@ -553,6 +563,10 @@ const server = http.createServer((req,res) => {
   assert.ok(await plain.locator('.firmware-order').isVisible());
   assert.match(await plain.locator('.firmware-limit').textContent(),/not a BIOS flash/);
   await plain.locator('.firmware-note summary').click();
+  await plain.locator('.incident-note summary').click();
+  assert.ok(await plain.locator('.incident-ledger').isVisible());
+  assert.match(await plain.locator('.incident-scope').textContent(),/proposal.only/);
+  await plain.locator('.incident-note summary').click();
   assert.equal(await plain.locator('.catalogue-list li:visible').count(),31);
   assert.equal(await plain.locator('.project-details .detail:visible').count(),6);
   assert.equal(await plain.locator('.shelf-controls').isVisible(),false);
