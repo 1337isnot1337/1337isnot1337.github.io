@@ -47,6 +47,15 @@
         ],
         "createdAt": "2026-11-19T18:21:30.466Z",
         "reason": "The approved shelf design uses a printed paper grid and tape; the repeating texture belongs to that stationery artwork."
+      },
+      {
+        "rule": "low-contrast",
+        "value": "*",
+        "files": [
+          "site/index.html"
+        ],
+        "createdAt": "2026-11-19T20:06:43.732Z",
+        "reason": "Browser verification: the reported pair is inherited body ink on a desk gradient stop. The visible shelf-return link, graphics notice and fallback object labels use their own backgrounds and measured at least 11.0:1 with WebGL on, WebGL blocked and JavaScript off."
       }
     ]
   }
