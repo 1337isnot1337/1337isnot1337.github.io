@@ -185,7 +185,7 @@ def add_breadcrumb_schema(output):
             if parent and parent.get("canonical") and parent["canonical"] != url:
                 crumbs.append((parent["title"].split(" | ")[0], parent["canonical"]))
         crumbs.append((item["title"].split(" | ")[0], url))
-        script = re.search(r'<script type="application/ld\\+json">(.*?)</script>', (output / filename).read_text(), re.S)
+        script = re.search(r'<script type="application/ld\+json">(.*?)</script>', (output / filename).read_text(), re.S)
         if script is None:
             raise ValueError(f"Missing JSON-LD in {filename}")
         page_path = output / filename
