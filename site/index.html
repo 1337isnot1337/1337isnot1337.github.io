@@ -38,7 +38,7 @@
       crossorigin
     />
     <link rel="stylesheet" href="vendor/swiper-bundle.min.css" />
-    <link rel="stylesheet" href="shelf.css?v=24" />
+    <link rel="stylesheet" href="shelf.css?v=25" />
     <link rel="stylesheet" href="welcome.css?v=1" />
     <link rel="stylesheet" href="workbench.css?v=6" />
     <link rel="stylesheet" href="notebook.css?v=4" />
@@ -53,7 +53,7 @@
     <link rel="stylesheet" href="incident-note.css?v=2" />
     <script defer src="cpu-trace.js?v=1"></script>
     <script defer src="vendor/swiper-bundle.min.js"></script>
-    <script defer src="shelf.js?v=29" onerror="
+    <script defer src="shelf.js?v=30" onerror="
       const restoreReading = () => {
         document.documentElement.classList.add('script-unavailable');
         document.querySelector('.shelf-heading p').textContent = 'The interactive shelf could not load. You can still read the project notes below.';
@@ -66,8 +66,8 @@
       else restoreReading();
     "></script>
     <script defer src="rook-graph.js?v=1"></script>
-    <link rel="stylesheet" href="studio.css?v=3" />
-    <script defer src="studio.js?v=3"></script>
+    <link rel="stylesheet" href="studio.css?v=4" />
+    <script defer src="studio.js?v=4"></script>
     <noscript
       ><style>
         .shelf-controls,
@@ -164,7 +164,7 @@
                   class="print print-schedule"
                   data-project="schedule"
                   aria-label="Schedule map — Try a schedule"
-                  ><img
+                  ><span class="print-sheet"><img
                     width="640"
                     height="800"
                     draggable="false"
@@ -173,7 +173,7 @@
                   /><span class="print-foot"
                     ><span class="print-type">Campus software</span
                     ><strong>Schedule map</strong></span
-                  ></a
+                  ></span></a
                 >
               </div>
               <div class="swiper-slide">
@@ -182,7 +182,7 @@
                   class="print print-conway"
                   data-project="conway"
                   aria-label="Conway’s 99-graph — Move a rook"
-                  ><img
+                  ><span class="print-sheet"><img
                     width="640"
                     height="800"
                     draggable="false"
@@ -191,7 +191,7 @@
                   /><span class="print-foot"
                     ><span class="print-type">Graph theory</span
                     ><strong>Conway’s 99-graph</strong></span
-                  ></a
+                  ></span></a
                 >
               </div>
               <div class="swiper-slide">
@@ -200,7 +200,7 @@
                   href="#conjectures"
                   data-project="conjectures"
                   aria-label="Solved conjectures — Deal a round of War"
-                  ><img
+                  ><span class="print-sheet"><img
                     width="840"
                     height="1050"
                     src="assets/prints/conjectures.webp"
@@ -209,7 +209,7 @@
                   /><span class="print-foot"
                     ><span class="print-type">Combinatorics</span
                     ><strong>Solved conjectures</strong></span
-                  ></a
+                  ></span></a
                 >
               </div>
               <div class="swiper-slide">
@@ -218,7 +218,7 @@
                   class="print print-flyover"
                   data-project="flyover"
                   aria-label="DOPPLERGEIST — Listen to a flyover"
-                  ><img
+                  ><span class="print-sheet"><img
                     width="640"
                     height="800"
                     draggable="false"
@@ -228,7 +228,7 @@
                   /><span class="print-foot"
                     ><span class="print-type">Aircraft audio</span
                     ><strong>DOPPLERGEIST</strong></span
-                  ></a
+                  ></span></a
                 >
               </div>
               <div class="swiper-slide">
@@ -237,7 +237,7 @@
                   class="print print-factoring"
                   data-project="factoring"
                   aria-label="Integer factoring — Split a number"
-                  ><img
+                  ><span class="print-sheet"><img
                     width="640"
                     height="800"
                     draggable="false"
@@ -246,7 +246,7 @@
                   /><span class="print-foot"
                     ><span class="print-type">Algorithms</span
                     ><strong>Integer factoring</strong></span
-                  ></a
+                  ></span></a
                 >
               </div>
               <div class="swiper-slide">
@@ -255,7 +255,7 @@
                   class="print print-cpu"
                   data-project="cpu"
                   aria-label="The Hack CPU — Train a branch predictor"
-                  ><img
+                  ><span class="print-sheet"><img
                     width="640"
                     height="800"
                     draggable="false"
@@ -264,7 +264,7 @@
                   /><span class="print-foot"
                     ><span class="print-type">Hardware</span
                     ><strong>The Hack CPU</strong></span
-                  ></a
+                  ></span></a
                 >
               </div>
             </div>
@@ -299,11 +299,13 @@
               <a class="object-book" data-object="book" href="#about"><span>My notebook</span></a>
               <a class="object-tape" data-object="tape" href="#off-the-clock"><span>Off the clock</span></a>
               <a class="object-letters" data-object="letters" href="#elsewhere"><span>Letters</span></a>
-              <button type="button" class="object-lamp" data-object="lamp" aria-pressed="false" hidden><span>Turn on the lamp</span></button>
-              <button type="button" class="object-drawer" data-object="drawer" aria-expanded="false" aria-controls="drawer-letter" hidden><span>Pull the drawer</span></button>
+              <button type="button" class="object-lamp" data-object="lamp" aria-pressed="false" hidden><span>Desk lamp</span></button>
+              <button type="button" class="object-drawer" data-object="drawer" aria-expanded="false" aria-controls="drawer-letter" hidden><span>Desk drawer</span></button>
               <a id="drawer-letter" class="postcat" data-object="keepsake" href="#elsewhere" hidden><span>Take the postcard</span></a>
             </nav>
-            <p class="desk-instruction">Scroll down · Drag to look around · Tap an object</p>
+            <div class="desk-paw" aria-hidden="true"><i></i></div>
+            <p class="graphics-warning" role="status" hidden>The 3D desk needs canvas and WebGL. Enable graphics acceleration in your browser to see it.</p>
+            <noscript><p class="graphics-warning">Enable JavaScript, canvas and WebGL to see the 3D desk.</p></noscript>
           </div>
         </section>
         <div class="desk-reading">

@@ -287,6 +287,9 @@ const server = http.createServer((req,res) => {
    await page.locator('.desk-rail a[href="#studio"]').click();
    if (name === 'mobile' && await page.locator('.object-drawer').isVisible()) {
     await page.locator('.object-drawer').click();
+    // This narrow viewport still uses a desktop mouse. Release it before targeting a DOM link.
+    await page.keyboard.press('Escape');
+    await page.waitForFunction(()=>!document.pointerLockElement);
     await page.locator('.postcat').click();
    } else await page.locator('.object-letters').click();
    await page.locator('#flip-post').click();
@@ -469,6 +472,40 @@ const server = http.createServer((req,res) => {
    await page.close();
    console.log(`${name}: layout and interactions passed`);
   }
+  const shelfMouse=await browser.newPage({viewport:{width:1280,height:850}});
+  await shelfMouse.addInitScript(()=>{
+    const getContext=HTMLCanvasElement.prototype.getContext;
+    HTMLCanvasElement.prototype.getContext=function(type,...rest){
+      return type.includes('webgl') ? null : getContext.call(this,type,...rest);
+    };
+  });
+  await shelfMouse.goto(base);
+  const centerPrint=shelfMouse.locator('.swiper-slide-active .print');
+  await centerPrint.scrollIntoViewIfNeeded();
+  const paper=await centerPrint.boundingBox();
+  await centerPrint.hover();
+  await shelfMouse.waitForTimeout(250);
+  assert.deepEqual(await centerPrint.boundingBox(),paper,'hover keeps the printed edge under the pointer');
+  const row=Math.round(paper.y+paper.height/2);
+  await shelfMouse.mouse.move(930,row);
+  await shelfMouse.mouse.down();
+  await shelfMouse.mouse.move(260,row,{steps:18});
+  await shelfMouse.mouse.up();
+  assert.notEqual(await centerPrint.getAttribute('data-project'),'flyover','mouse drag moves through the shelf');
+  assert.equal(await shelfMouse.locator('dialog[open]').count(),0,'releasing a drag keeps the reader closed');
+  await shelfMouse.locator('#studio').evaluate(el=>el.scrollIntoView({behavior:'instant'}));
+  await shelfMouse.locator('.graphics-warning:visible').waitFor();
+  await shelfMouse.locator('.object-file').click();
+  await shelfMouse.locator('#catalogue:visible').waitFor();
+  await shelfMouse.goto(base+'/#elsewhere');
+  await shelfMouse.evaluate(()=>sessionStorage.setItem('cinna-postcard',JSON.stringify(['catalogue','desk','flyover','conjectures'])));
+  await shelfMouse.reload();
+  await shelfMouse.locator('#flip-post').click();
+  assert.deepEqual(await shelfMouse.locator('#post-route li').allTextContents(),
+    ['The project files','The workbench','DOPPLERGEIST','Solved conjectures','Letters'],
+    'saved visits use the project titles on the postcard');
+  await shelfMouse.close();
+
   // Playwright exposes real touch-drag injection through Chromium's CDP only.
   // Every project reader exposes its own repository before any scrolling.
   const destinations = {
@@ -632,6 +669,7 @@ const server = http.createServer((req,res) => {
 
   const plain = await browser.newPage({viewport:{width:390,height:844},javaScriptEnabled:false});
   await plain.goto(base);
+  assert.ok(await plain.locator('noscript .graphics-warning').isVisible());
   await plain.locator('#desk-map summary').click();
   assert.ok(await plain.locator('#desk-map .desk-map-links a').first().isVisible());
   assert.match(await plain.locator('#desk-map').textContent(),/inconclusive/);

@@ -17,15 +17,19 @@
   function showFurniture() {
     if (!sceneNearby || sceneStarted || studio.dataset.open || document.querySelector(".open-project[open]")) return;
     sceneStarted=true;
-    import("./furniture.js").then(module => module.mountFurniture(stage)).catch(() => {
-      // The named links also work on the CSS desk without WebGL.
+    import("./furniture.js?v=4").then(module => module.mountFurniture(stage)).catch(() => {
+      stage.querySelector(".graphics-warning").hidden = false;
     });
   }
-  const activateScene = new IntersectionObserver(([entry]) => {
-    sceneNearby=entry.isIntersecting;
+  if ("IntersectionObserver" in window) {
+    new IntersectionObserver(([entry]) => {
+      sceneNearby=entry.isIntersecting;
+      showFurniture();
+    }, {rootMargin:"140px"}).observe(overview);
+  } else {
+    sceneNearby=true;
     showFurniture();
-  }, {rootMargin:"140px"});
-  activateScene.observe(overview);
+  }
   document.querySelector(".open-project")?.addEventListener("close",showFurniture);
 
   const stops = new Map([
@@ -37,7 +41,7 @@
   const stampImages = new Map();
   for (const link of document.querySelectorAll(".index a[data-project]")) {
     const id = link.dataset.project;
-    stops.set(id, link.textContent.trim());
+    stops.set(id, link.querySelector("strong").textContent.trim());
     const art = document.querySelector('.print[data-project="' + id + '"] img');
     if (art) stampImages.set(id, art.getAttribute("src"));
   }

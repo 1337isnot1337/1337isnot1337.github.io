@@ -38,7 +38,8 @@ if (window.Swiper) {
   const track = carousel.querySelector(".swiper-wrapper");
   for (const slide of [...track.children]) track.append(slide.cloneNode(true));
   let blurTimer;
-  let caughtGlide = false;
+  let suppressShelfClick = false;
+  let selectedSlide = null;
   function showMotion(duration) {
     if (!duration || reducedMotion.matches) return;
     carousel.classList.add("moving");
@@ -108,7 +109,7 @@ if (window.Swiper) {
     },
     on: {
       touchStart(instance) {
-        caughtGlide = Boolean(coastFrame);
+        suppressShelfClick = Boolean(coastFrame);
         stopCoast();
         instance.touchEventsData.velocities.length = 0;
       },
@@ -128,6 +129,7 @@ if (window.Swiper) {
         if (instance.initialized) showMotion(Math.min(duration * 0.55, 320));
       },
       sliderFirstMove() {
+        suppressShelfClick = true;
         carousel.classList.add("handling");
       },
       touchEnd(instance, event) {
@@ -140,8 +142,10 @@ if (window.Swiper) {
         const print = prints[instance.realIndex % prints.length];
         const key = print.dataset.project;
         const activeSlide = instance.slides[instance.activeIndex];
+        if (activeSlide === selectedSlide) return;
+        selectedSlide = activeSlide;
         activeSlide.removeAttribute("aria-hidden");
-        if (carousel.contains(document.activeElement)) {
+        if (!carousel.classList.contains('handling') && carousel.contains(document.activeElement) && document.activeElement.matches(':focus-visible')) {
           activeSlide.querySelector(".print").focus({ preventScroll: true });
         }
         for (const [i, slide] of instance.slides.entries()) {
@@ -164,12 +168,12 @@ if (window.Swiper) {
       },
     },
   });
-  // The first tap on a moving print catches the shelf. A fresh tap opens it.
+  // Consume the click generated on release after a drag or a tap that stops a glide.
   carousel.addEventListener("click", (event) => {
-    if (caughtGlide && event.detail > 0) {
+    if (suppressShelfClick && event.detail > 0) {
       event.preventDefault();
       event.stopPropagation();
-      caughtGlide = false;
+      suppressShelfClick = false;
     }
   }, true);
   reducedMotion.addEventListener("change", () => {
@@ -207,30 +211,6 @@ if (window.Swiper) {
   });
 } else {
   document.querySelector(".shelf-controls").hidden = true;
-}
-
-const hoverPointer = window.matchMedia("(hover: hover) and (pointer: fine)");
-for (const print of carousel.querySelectorAll(".print")) {
-  print.addEventListener("pointermove", (event) => {
-    if (
-      reducedMotion.matches ||
-      !hoverPointer.matches ||
-      event.buttons ||
-      event.pointerType === "touch"
-    )
-      return;
-    const box = print.parentElement.getBoundingClientRect();
-    const x = Math.max(
-      -1,
-      Math.min(1, (2 * (event.clientX - box.left)) / box.width - 1),
-    );
-    print.style.setProperty("--lean", (x * 4).toFixed(2) + "deg");
-    print.style.setProperty("--shadow-x", (3 - x * 4).toFixed(1) + "px");
-  });
-  print.addEventListener("pointerleave", () => {
-    print.style.removeProperty("--lean");
-    print.style.removeProperty("--shadow-x");
-  });
 }
 
 function loadArticleMedia(article) {
@@ -322,7 +302,7 @@ if (typeof dialog.showModal === "function") {
   document.addEventListener("click", (event) => {
     const link = event.target.closest("a[data-project]");
     if (
-      !link ||
+      !link || event.defaultPrevented ||
       event.ctrlKey ||
       event.metaKey ||
       event.shiftKey ||

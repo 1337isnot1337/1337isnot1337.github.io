@@ -266,14 +266,25 @@ h1 {
   position: relative;
   width: 100%;
   text-decoration: none;
-  background: var(--stock);
-  border: 1px solid #70554540;
-  box-shadow:
-    4px 6px 11px #432b342b,
-    1px 2px 1px #6e53554d;
-  transform-origin: center bottom;
-  transition: transform 0.24s ease;
+  --fold: 11px;
+  filter: drop-shadow(2px 4px 4px #432b343b);
   user-select: none;
+}
+.print-sheet {
+  position: relative;
+  display: block;
+  background: var(--stock);
+  clip-path: polygon(0 0, calc(100% - var(--fold)) 0, 100% var(--fold), 100% 100%, 0 100%);
+}
+.print-sheet::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto auto;
+  width: var(--fold);
+  height: var(--fold);
+  background: linear-gradient(135deg, var(--stock) 35%, color-mix(in srgb, var(--stock) 72%, #83605b));
+  box-shadow: -1px 1px 2px #442e3466;
+  pointer-events: none;
 }
 .print img {
   width: 100%;
@@ -322,10 +333,6 @@ h1 {
   letter-spacing: -0.055em;
   line-height: 1.12;
   margin-top: 4px;
-}
-.swiper-slide-active .print:hover,
-.print:focus-visible {
-  transform: translateY(-5px) rotate(-1deg);
 }
 .ledge {
   position: absolute;
@@ -760,43 +767,10 @@ body.modal-open {
   --stock: #f2dce0;
   --title: #562d49;
 }
-.print {
-  transition:
-    transform 0.19s ease-out,
-    box-shadow 0.19s ease-out;
-}
-.print::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 17px;
-  height: 17px;
-  pointer-events: none;
-  transform: scale(0);
-  transform-origin: top right;
-  background: linear-gradient(
-    45deg,
-    #916d6b55,
-    var(--stock) 48%,
-    #fff7 49%,
-    transparent 52%
-  );
-  transition: transform 0.16s;
-}
-.print:focus-visible::after {
-  transform: scale(1);
-}
+/* Swiper moves the slide. Hover only changes its ink and shadow, keeping the hit area still. */
 @media (hover: hover) and (pointer: fine) {
-  .swiper:not(.handling) .print:hover {
-    transform: perspective(820px) translateY(-7px) rotateY(var(--lean, 0deg))
-      rotate(-0.45deg);
-    box-shadow:
-      var(--shadow-x, 4px) 11px 16px #472d3733,
-      1px 2px 2px #6b4b5245;
-  }
-  .swiper:not(.handling) .print:hover::after {
-    transform: scale(1);
+  .swiper:not(.handling) .print:is(:hover,:focus-visible) {
+    filter: drop-shadow(2px 5px 5px #422a3459);
   }
   .favorites {
     transition: transform 0.25s;
@@ -993,9 +967,6 @@ body.modal-open {
   background: #f0dfe7;
 }
 @media (prefers-reduced-motion: reduce) {
-  .print:hover,
-  .swiper:not(.handling) .print:hover,
-  .print:focus-visible,
   .favorites:hover,
   .favorites:focus-within {
     transform: none;
