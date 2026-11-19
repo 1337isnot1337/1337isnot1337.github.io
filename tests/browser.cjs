@@ -181,5 +181,36 @@ const server = http.createServer((req,res) => {
    await page.close();
    console.log(`${name}: layout and interactions passed`);
   }
+  const plain = await browser.newPage({viewport:{width:390,height:844},javaScriptEnabled:false});
+  await plain.goto(base);
+  assert.equal(await plain.locator('.catalogue-list li:visible').count(),31);
+  assert.equal(await plain.locator('.project-details .detail:visible').count(),6);
+  assert.equal(await plain.locator('.shelf-controls').isVisible(),false);
+  assert.equal(await plain.locator('#factor-form').isVisible(),false);
+  await plain.locator('.index summary').click();
+  await plain.locator('.index a[data-project="conway"]').click();
+  await plain.locator('#conway-title').waitFor();
+  assert.ok(plain.url().endsWith('#conway'));
+  await plain.locator('#conway').screenshot({path:'test-results/no-script-reading.png'});
+  await plain.close();
+  console.log('no JavaScript: catalogue and project reading passed');
+
+  const fallback = await browser.newPage({viewport:{width:390,height:844},reducedMotion:'reduce'});
+  await fallback.route('**/vendor/swiper-bundle.min.js',route=>route.abort());
+  const fallbackErrors=[];
+  fallback.on('pageerror',error=>fallbackErrors.push(error.message));
+  await fallback.goto(base + '/#factoring');
+  await fallback.locator('dialog[open]').waitFor();
+  await fallback.locator('#composite').fill('221');
+  await fallback.getByRole('button',{name:'Factor it',exact:true}).click();
+  assert.equal(await fallback.locator('#factors').textContent(),'221 = 13 × 17');
+  await fallback.locator('#close-dialog').click();
+  await fallback.waitForFunction(()=>!document.body.classList.contains('modal-open'));
+  assert.equal(await fallback.locator('.shelf-controls').isVisible(),false);
+  assert.equal(await fallback.locator('.swiper-initialized').count(),0);
+  assert.deepEqual(fallbackErrors,[]);
+  await fallback.screenshot({path:'test-results/no-carousel-library.png',fullPage:true});
+  await fallback.close();
+  console.log('missing carousel library: native shelf and experiments passed');
  } finally {await browser.close();server.close();}
 })().catch(e=>{console.error(e);server.close();process.exitCode=1;});
