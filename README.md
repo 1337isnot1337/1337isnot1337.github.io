@@ -1,8 +1,8 @@
-# Cinna Davis’s field notebook
+# Cinna Davis’s project shelf
 
-[Open the notebook](https://1337isnot1337.github.io/)
+[Browse the shelf](https://1337isnot1337.github.io/)
 
-The homepage, plotter, audio player, and self-hosted assets are in `site/`. To preview them locally, run:
+The homepage, interactive project examples, and self-hosted assets are in `site/`. To preview them locally, run:
 
 ```sh
 python3 -m http.server --directory site
@@ -15,4 +15,4 @@ cargo build --locked --release --target wasm32-unknown-unknown
 wasm-bindgen --target web --no-typescript --out-name schedule --out-dir site/imsa-map target/wasm32-unknown-unknown/release/imsa-map.wasm
 ```
 
-The knot artwork is rendered from parametric torus curves. The fallback trefoil, downloadable prints, and sharing image come from the same renderer. The flyover and spectrogram are from the [DOPPLERGEIST Livermore example](https://1337isnot1337.github.io/DOPPLERGEIST/). The recording is by Praveen Pathak ([dataset](https://doi.org/10.5281/zenodo.23424278), [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)). Font licenses are in `site/assets/fonts/`.
+The shelf adapts the [Swiper Coverflow demo](https://github.com/nolimits4web/swiper/blob/master/demos/240-effect-coverflow.html). Swiper 14.4.0 runs from `site/vendor/` under the included MIT license. The five poster illustrations were generated for this site. The demos and links behind them describe the actual projects. The flyover and spectrogram are from the [DOPPLERGEIST Livermore example](https://1337isnot1337.github.io/DOPPLERGEIST/). The recording is by Praveen Pathak ([dataset](https://doi.org/10.5281/zenodo.23424278), [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)). Font licenses are in `site/assets/fonts/`.

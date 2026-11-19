@@ -1,209 +1,205 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-19T04:52:56.578253+00:00",
-  "title": "Cinna Davis — Field Notebook",
+  "generatedAt": "2026-11-19T05:11:12.192567+00:00",
+  "title": "Cinna Davis · Project shelf",
   "extensions": {
     "colorMeta": {
-      "lime": {
-        "displayName": "Lime",
-        "role": "primary",
-        "canonical": "#c3f184",
-        "tonalRamp": [
-          "oklch(15% 0.1458 127.8)",
-          "oklch(26% 0.1458 127.8)",
-          "oklch(38% 0.1458 127.8)",
-          "oklch(49% 0.1458 127.8)",
-          "oklch(61% 0.1458 127.8)",
-          "oklch(72% 0.1458 127.8)",
-          "oklch(84% 0.1458 127.8)",
-          "oklch(95% 0.1458 127.8)"
-        ]
-      },
-      "dark": {
-        "displayName": "Dark",
-        "role": "neutral",
-        "canonical": "#151917",
-        "tonalRamp": [
-          "oklch(15% 0.0072 164.2)",
-          "oklch(26% 0.0072 164.2)",
-          "oklch(38% 0.0072 164.2)",
-          "oklch(49% 0.0072 164.2)",
-          "oklch(61% 0.0072 164.2)",
-          "oklch(72% 0.0072 164.2)",
-          "oklch(84% 0.0072 164.2)",
-          "oklch(95% 0.0072 164.2)"
-        ]
-      },
-      "screen": {
-        "displayName": "Screen",
-        "role": "neutral",
-        "canonical": "#141916",
-        "tonalRamp": [
-          "oklch(15% 0.0096 159.1)",
-          "oklch(26% 0.0096 159.1)",
-          "oklch(38% 0.0096 159.1)",
-          "oklch(49% 0.0096 159.1)",
-          "oklch(61% 0.0096 159.1)",
-          "oklch(72% 0.0096 159.1)",
-          "oklch(84% 0.0096 159.1)",
-          "oklch(95% 0.0096 159.1)"
-        ]
-      },
-      "paper": {
-        "displayName": "Paper",
-        "role": "neutral",
-        "canonical": "#f4f1e8",
-        "tonalRamp": [
-          "oklch(15% 0.0124 91.5)",
-          "oklch(26% 0.0124 91.5)",
-          "oklch(38% 0.0124 91.5)",
-          "oklch(49% 0.0124 91.5)",
-          "oklch(61% 0.0124 91.5)",
-          "oklch(72% 0.0124 91.5)",
-          "oklch(84% 0.0124 91.5)",
-          "oklch(95% 0.0124 91.5)"
-        ]
-      },
       "ink": {
         "displayName": "Ink",
-        "role": "neutral",
-        "canonical": "#202720",
+        "canonical": "#422c41",
+        "role": "primary",
         "tonalRamp": [
-          "oklch(15% 0.0163 145.1)",
-          "oklch(26% 0.0163 145.1)",
-          "oklch(38% 0.0163 145.1)",
-          "oklch(49% 0.0163 145.1)",
-          "oklch(61% 0.0163 145.1)",
-          "oklch(72% 0.0163 145.1)",
-          "oklch(84% 0.0163 145.1)",
-          "oklch(95% 0.0163 145.1)"
+          "oklch(15% 0.0470 328.1)",
+          "oklch(26% 0.0470 328.1)",
+          "oklch(38% 0.0470 328.1)",
+          "oklch(49% 0.0470 328.1)",
+          "oklch(61% 0.0470 328.1)",
+          "oklch(72% 0.0470 328.1)",
+          "oklch(84% 0.0470 328.1)",
+          "oklch(95% 0.0470 328.1)"
         ]
       },
       "muted": {
         "displayName": "Muted",
+        "canonical": "#665364",
         "role": "neutral",
-        "canonical": "#b5beb2",
         "tonalRamp": [
-          "oklch(15% 0.0194 137.8)",
-          "oklch(26% 0.0194 137.8)",
-          "oklch(38% 0.0194 137.8)",
-          "oklch(49% 0.0194 137.8)",
-          "oklch(61% 0.0194 137.8)",
-          "oklch(72% 0.0194 137.8)",
-          "oklch(84% 0.0194 137.8)",
-          "oklch(95% 0.0194 137.8)"
+          "oklch(15% 0.0362 329.6)",
+          "oklch(26% 0.0362 329.6)",
+          "oklch(38% 0.0362 329.6)",
+          "oklch(49% 0.0362 329.6)",
+          "oklch(61% 0.0362 329.6)",
+          "oklch(72% 0.0362 329.6)",
+          "oklch(84% 0.0362 329.6)",
+          "oklch(95% 0.0362 329.6)"
         ]
       },
-      "rule": {
-        "displayName": "Rule",
-        "role": "neutral",
-        "canonical": "#444b42",
+      "berry": {
+        "displayName": "Berry",
+        "canonical": "#7d3251",
+        "role": "secondary",
         "tonalRamp": [
-          "oklch(15% 0.0174 138.7)",
-          "oklch(26% 0.0174 138.7)",
-          "oklch(38% 0.0174 138.7)",
-          "oklch(49% 0.0174 138.7)",
-          "oklch(61% 0.0174 138.7)",
-          "oklch(72% 0.0174 138.7)",
-          "oklch(84% 0.0174 138.7)",
-          "oklch(95% 0.0174 138.7)"
+          "oklch(15% 0.1096 356.9)",
+          "oklch(26% 0.1096 356.9)",
+          "oklch(38% 0.1096 356.9)",
+          "oklch(49% 0.1096 356.9)",
+          "oklch(61% 0.1096 356.9)",
+          "oklch(72% 0.1096 356.9)",
+          "oklch(84% 0.1096 356.9)",
+          "oklch(95% 0.1096 356.9)"
         ]
       },
-      "light-rule": {
-        "displayName": "Light Rule",
+      "paper": {
+        "displayName": "Paper",
+        "canonical": "#fffbf6",
         "role": "neutral",
-        "canonical": "#c4c7b8",
         "tonalRamp": [
-          "oklch(15% 0.0208 116.0)",
-          "oklch(26% 0.0208 116.0)",
-          "oklch(38% 0.0208 116.0)",
-          "oklch(49% 0.0208 116.0)",
-          "oklch(61% 0.0208 116.0)",
-          "oklch(72% 0.0208 116.0)",
-          "oklch(84% 0.0208 116.0)",
-          "oklch(95% 0.0208 116.0)"
+          "oklch(15% 0.0079 73.7)",
+          "oklch(26% 0.0079 73.7)",
+          "oklch(38% 0.0079 73.7)",
+          "oklch(49% 0.0079 73.7)",
+          "oklch(61% 0.0079 73.7)",
+          "oklch(72% 0.0079 73.7)",
+          "oklch(84% 0.0079 73.7)",
+          "oklch(95% 0.0079 73.7)"
+        ]
+      },
+      "hair": {
+        "displayName": "Hair",
+        "canonical": "#bdabba",
+        "role": "neutral",
+        "tonalRamp": [
+          "oklch(15% 0.0292 331.3)",
+          "oklch(26% 0.0292 331.3)",
+          "oklch(38% 0.0292 331.3)",
+          "oklch(49% 0.0292 331.3)",
+          "oklch(61% 0.0292 331.3)",
+          "oklch(72% 0.0292 331.3)",
+          "oklch(84% 0.0292 331.3)",
+          "oklch(95% 0.0292 331.3)"
+        ]
+      },
+      "wall": {
+        "displayName": "Wall",
+        "canonical": "#eee4eb",
+        "role": "neutral",
+        "tonalRamp": [
+          "oklch(15% 0.0142 336.2)",
+          "oklch(26% 0.0142 336.2)",
+          "oklch(38% 0.0142 336.2)",
+          "oklch(49% 0.0142 336.2)",
+          "oklch(61% 0.0142 336.2)",
+          "oklch(72% 0.0142 336.2)",
+          "oklch(84% 0.0142 336.2)",
+          "oklch(95% 0.0142 336.2)"
+        ]
+      },
+      "note": {
+        "displayName": "Note",
+        "canonical": "#f4e7d4",
+        "role": "neutral",
+        "tonalRamp": [
+          "oklch(15% 0.0289 77.5)",
+          "oklch(26% 0.0289 77.5)",
+          "oklch(38% 0.0289 77.5)",
+          "oklch(49% 0.0289 77.5)",
+          "oklch(61% 0.0289 77.5)",
+          "oklch(72% 0.0289 77.5)",
+          "oklch(84% 0.0289 77.5)",
+          "oklch(95% 0.0289 77.5)"
         ]
       }
     },
     "typographyMeta": {
-      "display": {
-        "displayName": "Barlow Condensed"
+      "headline": {
+        "displayName": "Bricolage Grotesque"
       },
-      "signature": {
-        "displayName": "Instrument Serif italic"
+      "section": {
+        "displayName": "Bricolage Grotesque"
       },
       "body": {
         "displayName": "DM Sans"
       },
-      "label": {
+      "caption": {
         "displayName": "IBM Plex Mono"
       }
     },
+    "shadows": [
+      {
+        "name": "Print edge",
+        "value": "4px 6px 11px #432b342b, 1px 2px 1px #6e53554d",
+        "purpose": "Shows the prints standing on the ledge."
+      }
+    ],
     "motion": [
       {
-        "name": "Project link hover",
-        "value": "transform .16s",
-        "purpose": "Moves the project arrow on hover. Reduced motion turns transitions off."
+        "name": "Coverflow",
+        "value": "380ms",
+        "purpose": "Centers the selected print. Reduced motion sets the duration to zero."
       }
     ],
     "breakpoints": [
+      {
+        "name": "Narrow",
+        "value": "380px"
+      },
       {
         "name": "Mobile",
         "value": "680px"
       },
       {
-        "name": "Tablet",
+        "name": "Shelf spacing",
         "value": "900px"
       },
       {
-        "name": "Wide plot",
-        "value": "1650px"
+        "name": "Wide shelf",
+        "value": "1550px"
       }
     ]
   },
   "components": [
     {
-      "name": "Explore my work",
+      "name": "Experiment action",
       "kind": "button",
-      "refersTo": "primary-link",
-      "description": "Explore my work",
-      "html": "<a class=\"ds-explore\" href=\"#work\">Explore my work ↓</a>",
-      "css": ".ds-explore{display:inline-block;background:var(--lime,#c3f184);color:var(--dark,#151917);padding:12px 18px;font: bold 14px Body,Arial,sans-serif;text-decoration:none}.ds-explore:hover{background:#daffae} :focus-visible{outline:3px solid #df8b36;outline-offset:4px}"
+      "refersTo": "project-action",
+      "description": "Opens the experiment for the selected print.",
+      "html": "<a class=\"ds-action\" href=\"#factoring\">Split a number</a>",
+      "css": ".ds-action{display:inline-flex;align-items:center;min-height:40px;background:var(--ink,#422c41);color:#fffaf7;padding:10px 19px;font:620 14px/1.15 Bricolage,sans-serif;border-radius:24px;text-decoration:none}.ds-action:hover{background:#68425d} :focus-visible{outline:3px solid #6b3986;outline-offset:3px}"
     },
     {
-      "name": "Specimen selector",
-      "kind": "button",
-      "refersTo": "plot-control",
-      "description": "Specimen selector",
-      "html": "<button aria-label=\"Next knot\" class=\"ds-next\">Next</button>",
-      "css": ".ds-next{width:38px;height:36px;border:1px solid #607058;background:var(--screen,#141916);color:#dce5d6;cursor:pointer}.ds-next:hover{background:var(--lime,#c3f184);color:var(--ink,#202720)} :focus-visible{outline:3px solid #df8b36;outline-offset:4px}"
-    },
-    {
-      "name": "Source evidence",
+      "name": "Project index",
       "kind": "nav",
-      "refersTo": "source-link",
-      "description": "Source evidence",
-      "html": "<a class=\"ds-source\" href=\"#work\">Explore the experiment</a>",
-      "css": ".ds-source{display:inline-block;color:var(--ink,#202720);font:bold 14px Body,Arial,sans-serif;text-decoration:none;border-bottom:1px solid;padding:4px 0}.ds-source:hover{color:#526531} :focus-visible{outline:3px solid #df8b36;outline-offset:4px}"
+      "refersTo": "project-index",
+      "description": "Direct navigation to every print.",
+      "html": "<details class=\"ds-index\"><summary>Project index</summary><a href=\"#conway\">Conway’s 99-graph</a></details>",
+      "css": ".ds-index summary{display:inline-block;cursor:pointer;background:#fffaf4a8;border:1px solid #a48b9c;border-radius:24px;padding:8px 15px;font:13px DM,sans-serif}.ds-index summary:hover{background:#f9dfe6}.ds-index a{display:block;padding:7px 10px} :focus-visible{outline:3px solid #6b3986;outline-offset:3px}"
+    },
+    {
+      "name": "Project panel",
+      "kind": "card",
+      "refersTo": "detail-panel",
+      "description": "Contains the selected print’s explanation and controls.",
+      "html": "<section class=\"ds-panel\"><strong>Integer factoring</strong><p>Split a number into primes.</p></section>",
+      "css": ".ds-panel{padding:24px;color:var(--ink,#422c41);background:var(--paper,#fffbf6);border:1px solid #7a6376;border-radius:6px;font:16px/1.5 DM,sans-serif}.ds-panel strong{font:650 24px/1.1 Bricolage,sans-serif} :focus-visible{outline:3px solid #6b3986;outline-offset:3px}"
     }
   ],
   "narrative": {
-    "northStar": "Field notebook",
-    "overview": "The graphite cover holds an instrument that responds to the reader. The pale pages pair each project with evidence the reader can inspect.",
+    "northStar": "Project shelf",
+    "overview": "Five project illustrations rest on a wooden ledge. The center print opens into its experiment. A taped note lists personal interests.",
     "keyCharacteristics": [
-      "Phosphor mesh on graphite",
-      "Warm paper project pages",
-      "Italic specimen names"
+      "Illustrated prints",
+      "Soft plum ink and ivory stock",
+      "Taped interests note"
     ],
     "rules": [
       {
-        "name": "Instrument instructions",
-        "body": "Keep instructions and controls clear of the mesh.",
+        "name": "Print selection",
+        "body": "Give every print its own text title, action and address.",
         "section": "components"
       }
     ],
     "dos": [
-      "Pair field evidence with its source and credit."
+      "Keep the experiment action specific to the selected print."
     ],
     "donts": []
   }

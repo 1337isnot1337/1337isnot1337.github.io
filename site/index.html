@@ -2,283 +2,429 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#151917" />
-    <title>Cinna Davis — Field Notebook</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#f9f4f0" />
+    <title>Cinna Davis · Project shelf</title>
     <meta
       name="description"
-      content="Cinna Davis’s field notebook. Explore aircraft audio, computational mathematics, particle physics, and a few things you can try in your browser."
+      content="Browse Cinna Davis’s illustrated shelf of projects in mathematics, sound, software, and hardware."
     />
     <link rel="canonical" href="https://1337isnot1337.github.io/" />
-    <meta property="og:title" content="Cinna Davis — Field Notebook" />
+    <meta property="og:title" content="Cinna Davis · Project shelf" />
     <meta
       property="og:description"
-      content="Turn a mathematical knot, listen to an aircraft flyover, and explore my research and software."
+      content="Pick a print. Listen to an aircraft, factor an integer, or explore a rook graph."
     />
-    <meta property="og:type" content="website" />
     <meta
       property="og:image"
-      content="https://1337isnot1337.github.io/assets/notebook-cover.jpg"
+      content="https://1337isnot1337.github.io/assets/project-shelf.jpg"
     />
     <meta name="twitter:card" content="summary_large_image" />
-    <link rel="icon" href="assets/mark.svg" />
+    <link rel="icon" href="assets/prints/favicon.png" />
     <link
       rel="preload"
-      href="assets/fonts/display.woff2"
+      href="assets/fonts/bricolage.woff2"
       as="font"
       type="font/woff2"
       crossorigin
     />
-    <link
-      rel="preload"
-      href="assets/fonts/italic.woff2"
-      as="font"
-      type="font/woff2"
-      crossorigin
-    />
-    <link rel="stylesheet" href="notebook.css" />
-    <script defer src="plotter.js"></script>
-    <script defer src="notebook.js"></script>
+    <link rel="stylesheet" href="vendor/swiper-bundle.min.css" />
+    <link rel="stylesheet" href="shelf.css" />
+    <script defer src="vendor/swiper-bundle.min.js"></script>
+    <script defer src="shelf.js"></script>
+    <noscript
+      ><style>
+        .shelf-controls,
+        #factor-form,
+        #cpu .toy,
+        #conway .toy {
+          display: none;
+        }
+      </style></noscript
+    >
   </head>
-  <body id="top">
-    <a class="skip" href="#main">Skip to content</a>
-    <header class="wrap masthead">
-      <a class="brand" href="#top" aria-label="Cinna Davis, homepage"
-        ><img alt="" src="assets/mark.svg" width="32" height="32" /><strong
-          >C.D.</strong
-        ><span class="brand-rule"></span><span>Field notebook</span></a
-      >
-      <nav aria-label="Main navigation">
-        <a href="#work">Work</a><a href="#about">About</a
-        ><a class="nav-external" href="https://github.com/1337isnot1337"
-          >GitHub <span aria-hidden="true">↗</span></a
-        >
-      </nav>
-    </header>
-    <main id="main">
-      <div class="cover">
-        <section class="wrap hero" aria-label="Introduction">
-          <div class="intro">
-            <p class="location tiny">
-              <span class="locator" aria-hidden="true"></span>Aurora, Illinois
-            </p>
-            <h1 aria-label="Cinna Davis">
-              Cinna<br /><i>Davis</i><span class="period">.</span>
-            </h1>
-            <p class="intro-copy">
-              I’m a student at the Illinois Mathematics and Science Academy. I
-              write proofs, build tools, and listen for airplanes.
-            </p>
-            <a class="button" href="#work"
-              >Explore my work <span aria-hidden="true">↓</span></a
-            >
-          </div>
-          <figure class="instrument">
-            <div class="instrument-head tiny">
-              <span><b class="light"></b>Knot plotter</span
-              ><span>Fig. <b id="plot-count">01 / 03</b></span>
-            </div>
-            <div class="plot-stage">
-              <img
-                class="plot-poster"
-                src="assets/trefoil.webp"
-                alt=""
-                aria-hidden="true"
-              />
-              <canvas
-                id="plot"
-                tabindex="0"
-                aria-label="Three-dimensional torus knot. Drag or use the arrow keys to rotate."
-                aria-describedby="plot-description"
-                >A plotted torus knot.</canvas
-              >
-              <span class="cross nw" aria-hidden="true">+</span
-              ><span class="cross ne" aria-hidden="true">+</span
-              ><span class="cross sw" aria-hidden="true">+</span
-              ><span class="cross se" aria-hidden="true">+</span>
-            </div>
-            <figcaption>
-              <div class="specimen-name">
-                <span class="tiny">Torus knot</span
-                ><strong id="plot-name" aria-live="polite">Trefoil</strong>
-              </div>
-              <div class="knot-controls">
-                <button id="prev-plot" aria-label="Previous knot">←</button
-                ><button id="next-plot" aria-label="Next knot">→</button>
-              </div>
-            </figcaption>
-            <div class="instrument-tools">
-              <span class="tiny">Drag to rotate</span
-              ><button class="tiny" id="save-print" type="button">
-                Save print ↓
-              </button>
-            </div>
-            <span class="sr" id="plot-description"
-              >A closed curve wound around a torus.</span
-            >
-          </figure>
-        </section>
+  <body>
+    <a href="#projects" class="skip">Skip to projects</a>
+    <header class="mast">
+      <div class="page-width mast-inner">
+        <a class="byline" href="./">Cinna Davis</a>
+        <nav aria-label="Main">
+          <a href="#projects">Projects</a><a href="#about">About me</a
+          ><a href="#elsewhere">Elsewhere</a>
+        </nav>
       </div>
-      <div class="paper">
-        <section id="work" class="wrap work" aria-labelledby="work-title">
-          <div class="section-head">
-            <h2 id="work-title">Selected <i>work.</i></h2>
-            <span class="tiny index-label">Research &amp; software</span>
+    </header>
+    <main>
+      <section class="shop" id="projects" aria-labelledby="shelf-title">
+        <div class="shelf-heading page-width">
+          <div>
+            <h1 id="shelf-title">The project shelf</h1>
+            <p>Pick a print to open one of my experiments.</p>
           </div>
-          <article class="feature">
-            <div class="recording">
-              <div class="tape-label tiny">
-                <span>Field recording</span><span>Livermore, CA</span>
+          <details class="index">
+            <summary>Project index</summary>
+            <ul>
+              <li>
+                <a href="#flyover" data-project="flyover">Dopplergeist</a>
+              </li>
+              <li>
+                <a href="#factoring" data-project="factoring"
+                  >Integer factoring</a
+                >
+              </li>
+              <li><a href="#cpu" data-project="cpu">The Hack CPU</a></li>
+              <li>
+                <a href="#schedule" data-project="schedule">Schedule map</a>
+              </li>
+              <li>
+                <a href="#conway" data-project="conway">Conway’s 99-graph</a>
+              </li>
+            </ul>
+          </details>
+        </div>
+        <div class="display-case">
+          <div class="swiper" aria-label="Illustrated project prints">
+            <div class="swiper-wrapper">
+              <div class="swiper-slide">
+                <a
+                  href="#schedule"
+                  class="print print-schedule"
+                  data-project="schedule"
+                  aria-label="Schedule map — Try a schedule"
+                  ><img
+                    width="640"
+                    height="800"
+                    draggable="false"
+                    src="assets/prints/schedule.webp"
+                    alt=""
+                  /><span class="print-foot"
+                    ><span class="print-type">Campus software</span
+                    ><strong>Schedule map</strong></span
+                  ></a
+                >
               </div>
-              <div class="spectrum">
-                <img
-                  src="assets/livermore.webp"
-                  width="1600"
-                  height="550"
-                  alt="Parallel frequency bands fall in pitch as a plane passes the microphone."
-                /><span class="playhead" hidden></span>
+              <div class="swiper-slide">
+                <a
+                  href="#conway"
+                  class="print print-conway"
+                  data-project="conway"
+                  aria-label="Conway’s 99-graph — Move a rook"
+                  ><img
+                    width="640"
+                    height="800"
+                    draggable="false"
+                    src="assets/prints/conway.webp"
+                    alt=""
+                  /><span class="print-foot"
+                    ><span class="print-type">Graph theory</span
+                    ><strong>Conway’s 99-graph</strong></span
+                  ></a
+                >
               </div>
-              <div class="audio-bar">
-                <button id="listen" type="button" hidden>
-                  <span id="audio-symbol" aria-hidden="true">▶</span
-                  ><span id="audio-label">Play flyover</span>
-                </button>
-                <time id="elapsed">0:00 / 1:25</time>
+              <div class="swiper-slide">
+                <a
+                  href="#flyover"
+                  class="print print-flyover"
+                  data-project="flyover"
+                  aria-label="Dopplergeist — Listen to a flyover"
+                  ><img
+                    width="640"
+                    height="800"
+                    draggable="false"
+                    src="assets/prints/flyover.webp"
+                    alt=""
+                  /><span class="print-foot"
+                    ><span class="print-type">Aircraft audio</span
+                    ><strong>Dopplergeist</strong></span
+                  ></a
+                >
               </div>
-              <audio
-                controls
-                preload="none"
-                id="flyover"
-                aria-label="Livermore flyover recording"
-                src="assets/livermore.mp3"
-              ></audio>
+              <div class="swiper-slide">
+                <a
+                  href="#factoring"
+                  class="print print-factoring"
+                  data-project="factoring"
+                  aria-label="Integer factoring — Split a number"
+                  ><img
+                    width="640"
+                    height="800"
+                    draggable="false"
+                    src="assets/prints/factoring.webp"
+                    alt=""
+                  /><span class="print-foot"
+                    ><span class="print-type">Algorithms</span
+                    ><strong>Integer factoring</strong></span
+                  ></a
+                >
+              </div>
+              <div class="swiper-slide">
+                <a
+                  href="#cpu"
+                  class="print print-cpu"
+                  data-project="cpu"
+                  aria-label="The Hack CPU — Encode an instruction"
+                  ><img
+                    width="640"
+                    height="800"
+                    draggable="false"
+                    src="assets/prints/cpu.webp"
+                    alt=""
+                  /><span class="print-foot"
+                    ><span class="print-type">Hardware</span
+                    ><strong>The Hack CPU</strong></span
+                  ></a
+                >
+              </div>
             </div>
-            <div class="feature-text">
-              <p class="tiny topic">
-                <span class="line"></span>Signal processing
-              </p>
-              <h3>DOPPLERGEIST</h3>
-              <p>
-                Can you locate a microphone by listening to a plane fly past?
-                DOPPLERGEIST compares the changing pitch in a recording with
-                historical flight tracks to estimate where the sound was
-                recorded.
-              </p>
-              <a class="text-link" href="/DOPPLERGEIST/"
-                >Explore the experiment <span aria-hidden="true">↗</span></a
-              >
-            </div>
-          </article>
-          <p class="credit">
-            Recording by
-            <a href="https://doi.org/10.5281/zenodo.23424278">Praveen Pathak</a>
-            ·
-            <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>
-            ·
-            <a href="/DOPPLERGEIST/site-media/livermore-r04-source.txt"
-              >Audio and figure notes</a
-            >
+          </div>
+          <div class="ledge" aria-hidden="true"></div>
+        </div>
+        <div class="shelf-controls">
+          <span
+            class="visually-hidden"
+            id="shelf-status"
+            aria-live="polite"
+          ></span
+          ><button type="button" id="prev" aria-label="Previous print">←</button
+          ><a id="open-print" data-project="flyover" href="#flyover"
+            >Listen to a flyover</a
+          ><button type="button" id="next" aria-label="Next print">→</button>
+        </div>
+      </section>
+      <section class="personal page-width" id="about">
+        <div class="intro">
+          <h2>A little about me</h2>
+          <p>
+            I’m Cinna. I study mathematics and computer science at IMSA. I’ve
+            programmed for our FIRST Robotics team, played varsity Scholastic
+            Bowl, and helped teach Elements of Computing Systems.
           </p>
-          <div class="entries">
-            <a
-              class="entry"
-              href="https://github.com/1337isnot1337/integer-factoring"
-              ><span class="glyph factor" aria-hidden="true">×</span>
-              <div>
-                <span class="tiny">Algorithms · Lean</span>
-                <h3>Integer factoring</h3>
-                <p>
-                  A deterministic factoring bound with a proof you can check in
-                  Lean.
-                </p>
-              </div>
-              <span class="arrow" aria-hidden="true">↗</span></a
-            >
-            <a class="entry" href="https://github.com/1337isnot1337/conway-99"
-              ><span class="glyph graph" aria-hidden="true">⬡</span>
-              <div>
-                <span class="tiny">Graph theory</span>
-                <h3>Conway’s 99-graph</h3>
-                <p>
-                  What would a graph on 99 vertices have to look like to satisfy
-                  Conway’s rules?
-                </p>
-              </div>
-              <span class="arrow" aria-hidden="true">↗</span></a
-            >
-            <a class="entry" href="/imsa-map/"
-              ><span class="glyph map" aria-hidden="true">⌁</span>
-              <div>
-                <span class="tiny">Campus tool · Rust</span>
-                <h3>IMSA schedule map</h3>
-                <p>
-                  Paste a class schedule to see your room assignments across the
-                  school week.
-                </p>
-              </div>
-              <span class="arrow" aria-hidden="true">↗</span></a
-            >
-            <a
-              class="entry"
-              href="https://github.com/1337isnot1337/nand2tetris-verilog-improved"
-              ><span class="glyph chip" aria-hidden="true">▤</span>
-              <div>
-                <span class="tiny">Hardware · SystemVerilog</span>
-                <h3>Inside a Hack CPU</h3>
-                <p>
-                  A two-stage pipeline and a branch predictor for my computing
-                  systems capstone.
-                </p>
-              </div>
-              <span class="arrow" aria-hidden="true">↗</span></a
-            >
-          </div>
-        </section>
-        <section class="about" id="about" aria-labelledby="about-title">
-          <div class="wrap about-inner">
-            <div>
-              <p class="tiny">About me</p>
-              <h2 id="about-title">Behind the<br /><i>notebook.</i></h2>
-            </div>
-            <div class="about-copy">
-              <p>
-                My work at IMSA takes me from abstract graphs to particle
-                collisions. With Nathan Catlett, I studied how to estimate the
-                background in a search for a doubly charged Higgs boson, where
-                simulated collisions get scarce at high masses.
-              </p>
-              <a
-                class="text-link"
-                href="https://digitalcommons.imsa.edu/sir_presentations/2026/session2/5/"
-                >Read our research abstract <span aria-hidden="true">↗</span></a
+          <p>
+            I also work on particle physics. Nathan Catlett and I studied how to
+            estimate the background in a search for a doubly charged Higgs boson
+            when simulations run thin at high masses.
+          </p>
+          <a
+            class="inline-link"
+            href="https://digitalcommons.imsa.edu/sir_presentations/2026/session2/5/"
+            >Our research abstract</a
+          >
+        </div>
+        <aside class="favorites">
+          <h2>Off the clock</h2>
+          <p>
+            I’m into ALIEN STAGE and the Avatar universe. These are on my shelf,
+            too.
+          </p>
+          <ul>
+            <li>
+              <a href="https://www.youtube.com/watch?v=vYikmsPVq_c"
+                >ALIEN STAGE</a
               >
-              <p>
-                I’ve also programmed with IMSA’s FIRST Robotics team, played
-                varsity Scholastic Bowl, and helped teach Elements of Computing
-                Systems. The Hack CPU above grew out of that same classroom.
-              </p>
-            </div>
+            </li>
+            <li>
+              <a
+                href="https://www.paramountpressexpress.com/nickelodeon/shows/avatar-the-last-airbender/"
+                >Avatar: The Last Airbender</a
+              >
+            </li>
+            <li>
+              <a href="https://www.paramountpressexpress.com/nickelodeon/shows/the-legend-of-korra/"
+                >The Legend of Korra</a
+              >
+            </li>
+            <li>
+              <a href="https://www.paramountpressexpress.com/paramount-plus/shows/avatar-seven-havens/"
+                >Avatar: Seven Havens</a
+              >
+            </li>
+          </ul>
+        </aside>
+      </section>
+      <div class="project-details page-width">
+        <article class="detail" id="flyover" aria-labelledby="flyover-title">
+          <div class="detail-heading">
+            <p>Aircraft audio</p>
+            <h2 id="flyover-title">Dopplergeist</h2>
           </div>
-        </section>
+          <p>
+            Can a recording tell you where the microphone was? DOPPLERGEIST
+            follows the change in pitch as a plane passes overhead and compares
+            it with historical flight tracks.
+          </p>
+          <figure class="player">
+            <div class="spectrum">
+              <img
+                width="1600"
+                height="550"
+                src="assets/livermore.webp"
+                alt="The recorded aircraft’s harmonics slope down as its pitch falls."
+              /><span class="playhead" hidden></span>
+            </div>
+            <audio
+              id="recording"
+              controls
+              preload="none"
+              src="assets/livermore.mp3"
+              aria-label="Aircraft flyover"
+            ></audio>
+            <figcaption>
+              Flyover recorded by
+              <a href="https://doi.org/10.5281/zenodo.23424278"
+                >Praveen Pathak</a
+              >
+              ·
+              <a href="https://creativecommons.org/licenses/by/4.0/"
+                >CC BY 4.0</a
+              >
+              ·
+              <a href="/DOPPLERGEIST/site-media/livermore-r04-source.txt"
+                >Figure and audio credits</a
+              >
+            </figcaption>
+          </figure>
+          <a class="outbound" href="/DOPPLERGEIST/">Open DOPPLERGEIST</a>
+        </article>
+        <article
+          class="detail"
+          id="factoring"
+          aria-labelledby="factoring-title"
+        >
+          <div class="detail-heading">
+            <p>Algorithms</p>
+            <h2 id="factoring-title">Integer factoring</h2>
+          </div>
+          <p>
+            I work on how much time a deterministic algorithm needs to factor an
+            integer. The repository includes a Lean proof of a running-time
+            bound. Try a small example of factorization here.
+          </p>
+          <form id="factor-form" class="toy">
+            <label for="composite">Pick a whole number from 2 to 999,999</label>
+            <div class="input-row">
+              <input
+                id="composite"
+                type="number"
+                min="2"
+                max="999999"
+                step="1"
+                value="221"
+                required
+              /><button type="submit">Factor it</button>
+            </div>
+            <output id="factors" for="composite" aria-live="polite"
+              >221 = 13 × 17</output
+            >
+          </form>
+          <a
+            class="outbound"
+            href="https://github.com/1337isnot1337/integer-factoring"
+            >Read the proof</a
+          >
+        </article>
+        <article class="detail" id="cpu" aria-labelledby="cpu-title">
+          <div class="detail-heading">
+            <p>Hardware</p>
+            <h2 id="cpu-title">The Hack CPU</h2>
+          </div>
+          <p>
+            For my computing systems capstone, I extended the Hack CPU with a
+            two-stage pipeline, a global-history branch predictor, and fused
+            instructions. Start with one instruction the original Hack machine
+            understands.
+          </p>
+          <div class="toy">
+            <label for="address">Set the address in a Hack A-instruction</label>
+            <div class="input-row">
+              <span aria-hidden="true">@</span
+              ><input
+                id="address"
+                type="number"
+                min="0"
+                max="32767"
+                step="1"
+                value="42"
+                required
+              />
+            </div>
+            <output id="instruction" for="address" aria-live="polite"
+              >0000 0000 0010 1010</output
+            ><small
+              >The first bit is 0. The remaining 15 bits hold the
+              address.</small
+            >
+          </div>
+          <a
+            class="outbound"
+            href="https://github.com/1337isnot1337/nand2tetris-verilog-improved"
+            >See the processor</a
+          >
+        </article>
+        <article class="detail" id="schedule" aria-labelledby="schedule-title">
+          <div class="detail-heading">
+            <p>Campus software</p>
+            <h2 id="schedule-title">Schedule map</h2>
+          </div>
+          <p>
+            A school schedule is easier to read when you can see which room you
+            need for each class period. I built a Rust tool that turns an IMSA
+            schedule into a day-by-day room list.
+          </p>
+          <div class="toy">
+            <p>
+              Open a sample week to see how classes repeat on letter days. You
+              can replace it with your own schedule.
+            </p>
+            <a class="inline-link" href="/imsa-map/?example=1"
+              >Load the example week</a
+            >
+          </div>
+          <a class="outbound" href="/imsa-map/">Open the schedule tool</a>
+        </article>
+        <article class="detail" id="conway" aria-labelledby="conway-title">
+          <div class="detail-heading">
+            <p>Graph theory</p>
+            <h2 id="conway-title">Conway’s 99-graph</h2>
+          </div>
+          <p>
+            Does a graph with 99 vertices satisfy Conway’s neighbor-count rules?
+            The question is open. My research looks at structures that would
+            have to fit inside such a graph, including 3 × 3 rook grids.
+          </p>
+          <div class="toy">
+            <p>
+              Choose a square. A rook can reach any other square in the same row
+              or column in one move.
+            </p>
+            <div
+              id="rook-board"
+              class="rook-board"
+              role="group"
+              aria-label="Choose a rook position"
+            ></div>
+            <output id="rook-caption" aria-live="polite"></output>
+          </div>
+          <a class="outbound" href="https://github.com/1337isnot1337/conway-99"
+            >Explore the research</a
+          >
+        </article>
       </div>
     </main>
-    <footer>
-      <div class="wrap foot">
-        <a class="brand" href="#top"
-          ><img alt="" src="assets/mark.svg" width="30" height="30" /><strong
-            >Cinna Davis</strong
-          ></a
-        >
+    <footer id="elsewhere">
+      <div class="page-width footer-inner">
+        <h2>Elsewhere</h2>
         <nav aria-label="Social profiles">
-          <a href="https://x.com/1337isnot1337"
-            >X <span aria-hidden="true">↗</span></a
-          ><a href="https://www.linkedin.com/in/cinna-davis/"
-            >LinkedIn <span aria-hidden="true">↗</span></a
-          ><a href="https://github.com/1337isnot1337"
-            >GitHub <span aria-hidden="true">↗</span></a
-          >
+          <a href="https://x.com/1337isnot1337">X</a
+          ><a href="https://www.linkedin.com/in/cinna-davis/">LinkedIn</a
+          ><a href="https://github.com/1337isnot1337">GitHub</a>
         </nav>
       </div>
     </footer>
+    <dialog class="open-project" aria-label="Project details">
+      <div class="modal-top">
+        <button type="button" id="close-dialog">Back to shelf</button>
+      </div>
+      <div id="detail-slot"></div>
+    </dialog>
   </body>
 </html>

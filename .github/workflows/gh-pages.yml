@@ -1,4 +1,4 @@
-name: Publish field notebook
+name: Publish project shelf
 on:
   push:
     branches: [main]

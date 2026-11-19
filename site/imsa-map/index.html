@@ -4,8 +4,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>IMSA schedule map · Cinna Davis</title>
-    <link rel="icon" href="../assets/mark.svg" />
-    <link rel="stylesheet" href="../notebook.css" />
+    <link rel="icon" href="../assets/prints/favicon.png" />
+    <link rel="stylesheet" href="../shelf.css" />
     <style>
       body {
         background: var(--paper);
@@ -27,7 +27,7 @@
       button {
         margin: 12px 0;
         padding: 10px 22px;
-        background: var(--lime);
+        background: var(--paper);
         border: 1px solid var(--ink);
       }
       form p {
@@ -46,11 +46,22 @@
       import init from "./schedule.js";
       const header = document.createElement("header");
       header.innerHTML =
-        '<a href="/">← Cinna Davis’s field notebook</a><h1>IMSA schedule map</h1><p>Paste your PowerSchool schedule with the semester and column headings on the first two lines. Keep the tab-separated class rows intact.</p>';
+        '<a href="/">← Cinna Davis’s project shelf</a><h1>IMSA schedule map</h1><p>Paste your PowerSchool schedule with the semester and column headings on the first two lines. Keep the tab-separated class rows intact.</p>';
       try {
         await init();
         requestAnimationFrame(() => {
           document.body.prepend(header);
+          if (new URLSearchParams(location.search).get("example") === "1") {
+            const field = document.querySelector("textarea");
+            field.value = [
+              "Sample week",
+              "Period / Term / Course / Title / Teacher / Room / Start / End",
+              "2(A,C-D)\tS1\tMAT101\tMathematics\tExample\tA113\t08/19/2024\t01/19/2025",
+              "3(B,I)\tS1\tPHY101\tPhysics\tExample\tB204\t08/19/2024\t01/19/2025",
+            ].join("\n");
+            field.dispatchEvent(new Event("input", { bubbles: true }));
+            requestAnimationFrame(() => field.form.requestSubmit());
+          }
           document
             .querySelector("textarea")
             ?.setAttribute("aria-label", "PowerSchool schedule");
@@ -64,7 +75,7 @@
     </script>
     <noscript
       >JavaScript is required to run the schedule tool.
-      <a href="/">Return to the notebook</a></noscript
+      <a href="/">Return to the shelf</a></noscript
     >
   </body>
 </html>
