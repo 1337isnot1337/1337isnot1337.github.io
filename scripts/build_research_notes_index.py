@@ -121,7 +121,7 @@ def render(entries: list[dict]) -> str:
   <meta property="og:title" content="{escape(TITLE, quote=True)}">
   <meta property="og:description" content="{escape(DESCRIPTION, quote=True)}">
   <link rel="icon" href="/assets/prints/favicon.png">
-  <link rel="stylesheet" href="/shelf.css?v=23">
+  <link rel="stylesheet" href="/shelf.css?v=24">
   <link rel="stylesheet" href="/projects/project-pages.css?v=1">
   <link rel="stylesheet" href="/research-notes/notes.css?v=1">
   <script type="application/ld+json">{structured}</script>
