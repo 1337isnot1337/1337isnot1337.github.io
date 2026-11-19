@@ -1,0 +1,25 @@
+/* The same proposal at two evidence-revision boundaries. No runtime replay. */
+.incident-note { padding: 0 4px 14px; }
+.incident-note > summary { width: fit-content; font-size: 13px; line-height: 1.6; color: #7d3251; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.incident-note > summary:focus-visible { outline: 2px solid #7d3251; outline-offset: 4px; }
+.catalogue-list > li:has(.incident-note[open]) { grid-column: 1 / -1; }
+.incident-note-body { max-width: 900px; padding: 24px 28px; margin-top: 18px; background: #eee7ee; font-size: 14px; line-height: 1.65; }
+.incident-note-body > p { margin: 0 0 18px; max-width: 72ch; }
+.incident-ledger { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin: 24px 0; border-block: 1px solid #bfadbd; }
+.incident-lane { min-width: 0; padding: 18px 0; }
+.incident-lane h3 { margin: 0 0 16px; font: 600 19px/1.3 var(--headline); letter-spacing: -.02em; }
+.incident-revisions { display: grid; gap: 7px; padding-bottom: 14px; margin-bottom: 14px; border-bottom: 1px dashed #bfadbd; }
+.incident-revisions > span { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; font-size: 12px; color: var(--muted); }
+.incident-revisions b { font: 16px/1.5 var(--mono); color: var(--ink); }
+.incident-lane p { margin: 0 0 10px; font-size: 13px; }
+.incident-lane .incident-verdict { font-weight: 600; color: #6f3554; }
+.incident-lane > code { font: 11px/1.6 var(--mono); overflow-wrap: anywhere; color: var(--muted); }
+.incident-replan b { font-weight: 600; }
+.incident-note-body .incident-scope { font-size: 12px; color: var(--muted); }
+.catalogue-list a.incident-source { display: inline-block; padding: 0; color: #7d3251; font-size: 12px; text-decoration: underline; text-underline-offset: 3px; }
+@media(max-width:680px) {
+  .incident-note { padding-inline: 1px; }
+  .incident-note-body { padding: 18px 14px; }
+  .incident-ledger { grid-template-columns: 1fr; gap: 0; }
+  .incident-lane + .incident-lane { border-top: 1px solid #bfadbd; }
+}
