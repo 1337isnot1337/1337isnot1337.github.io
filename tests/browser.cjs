@@ -198,6 +198,10 @@ const server = http.createServer((req,res) => {
     await spaced.locator('dialog[open]').waitFor();
     await spaced.locator(`dialog #${id}`).waitFor();
     assert.ok(await spaced.locator('dialog').evaluate(el=>el.scrollWidth <= el.clientWidth+1), `text spacing: ${id} reader overflow`);
+    assert.ok(await spaced.locator('.turn-prints').evaluate(el=>{
+      const [previous,count,next]=[...el.children].map(node=>node.getBoundingClientRect());
+      return previous.width>=40 && next.width>=40 && count.left-previous.right>=7 && next.left-count.right>=7;
+    }), 'reader arrows retain room for focus rings and page counter');
     await spaced.locator('#close-dialog').focus();
     await spaced.keyboard.press('Tab');
     assert.ok(await spaced.evaluate(()=>document.querySelector('dialog').contains(document.activeElement)), 'keyboard focus must remain in modal');

@@ -848,6 +848,8 @@ body.modal-open {
 }
 .modal-top {
   justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
   position: sticky;
   top: 0;
   z-index: 2;
@@ -855,7 +857,9 @@ body.modal-open {
 .turn-prints {
   display: flex;
   align-items: center;
-  gap: 5px;
+  flex-shrink: 0;
+  margin-left: auto;
+  gap: 8px;
 }
 .turn-prints span {
   font: 12px var(--mono);
@@ -863,6 +867,7 @@ body.modal-open {
   white-space: nowrap;
 }
 .turn-prints button {
+  flex-shrink: 0;
   width: 40px;
   min-height: 37px;
   border: 1px solid transparent;
