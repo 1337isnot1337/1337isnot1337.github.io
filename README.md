@@ -39,4 +39,4 @@ DOM tests do not replace visual or browser-history checks.
 For the browser suite, run `npx playwright install chromium` once, then
 `npm run test:browser`. It uses a temporary local server and captures the shelf,
 reader, missing-page recovery, and schedule at desktop, mobile, and narrow-mobile
-widths. It also checks reading with JavaScript disabled and working experiments when the carousel library is unavailable. CI keeps those screenshots in the `browser-checks` artifact for seven days.
+widths. It also checks touch swiping with normal motion, increased text spacing, reading with JavaScript disabled, and working experiments when the carousel library is unavailable. The unopened flyover must not request its spectrogram or audio; opening it loads the image, while a native no-script image keeps the recording readable without JavaScript. CI keeps those screenshots in the `browser-checks` artifact for seven days.
