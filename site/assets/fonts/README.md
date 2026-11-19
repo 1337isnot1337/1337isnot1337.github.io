@@ -9,3 +9,5 @@ DM Sans 4.004 uses its real 100–1000 weight axis. The two unmodified WOFF2 sub
 - [Upstream license](https://github.com/google/fonts/blob/main/ofl/dmsans/OFL.txt)
 
 The stylesheet declares each subset’s supported Unicode range. Font requests stay on this site; visitors do not contact Google Fonts.
+
+Bricolage Grotesque 1.001 retains its existing main font. The matching [Latin Extended WOFF2](https://fonts.gstatic.com/s/bricolagegrotesque/v9/3y9K6as8bTXq_nANBjzKo3IeZx8z6up5BeSl9D4dj_x9PpZBMlGGInHEVA.woff2) supplies extended letters in headings at weights 200–800 and optical sizes 12–96. Its [upstream license](https://github.com/google/fonts/blob/main/ofl/bricolagegrotesque/OFL.txt) matches the bundled license.
