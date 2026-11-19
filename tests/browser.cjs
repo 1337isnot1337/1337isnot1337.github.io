@@ -310,6 +310,8 @@ const server = http.createServer((req,res) => {
    assert.match(await scheduleExample.textContent(),/Example data, not my class schedule/);
    assert.ok(await scheduleExample.evaluate(node => node.scrollWidth <= node.clientWidth), `${name}: schedule example overflow`);
    await scheduleExample.screenshot({path:`test-results/${name}-schedule-example.png`});
+   await scheduleExample.locator(".schedule-example-input").screenshot({path:`test-results/${name}-schedule-input.png`});
+   await scheduleExample.locator(".schedule-example-output").screenshot({path:`test-results/${name}-schedule-output.png`});
    const missing = await page.goto(base + '/a-missing-page-for-testing');
    assert.equal(missing.status(),404);
    await page.getByRole('heading',{name:'Nothing at this address.'}).waitFor();
