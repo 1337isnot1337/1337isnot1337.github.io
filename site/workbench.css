@@ -54,3 +54,9 @@
 #desk-audio { display: block; width: 100%; margin: 0 0 18px; }
 #desk-audio-status { font-size: 13px; line-height: 1.5; margin: 0 0 14px; color: var(--berry); }
 @media print { .desk-listen, #desk-audio, #desk-audio-status, .desk-playhead { display: none !important; } }
+
+/* The same print accompanies the project from the shelf to its open spread. */
+.desk-project{display:inline-flex;align-items:center;gap:12px;margin-bottom:24px;font-size:13px;line-height:1.4;text-decoration:none}
+.desk-project img{width:32px;height:40px;object-fit:cover;transform:rotate(-4deg);box-shadow:0 2px 4px #422c4126}
+.desk-project small{display:block;font-size:11px;color:var(--muted);text-decoration:underline;text-underline-offset:3px;margin-top:3px}
+.desk-project:hover small{color:var(--berry)}

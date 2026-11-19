@@ -112,3 +112,24 @@ test('the inline recording and project reader never play over each other',()=>{
  assert.equal(inlinePauses,1);
  p.dom.window.close();
 });
+
+test('shelf handoff selects the matching sheet and focuses its heading without starting audio',()=>{
+ const p=desk();
+ p.dom.window.matchMedia=()=>({matches:true});
+ const bench=p.d.querySelector('.workbench');let scrolled=0;
+ bench.scrollIntoView=options=>{assert.equal(options.behavior,'instant');scrolled++};
+ for(const name of ['cards','bits','sound']){
+  bench.dispatchEvent(new p.dom.window.CustomEvent('open-from-shelf',{detail:name}));
+  const panel=p.d.querySelector(`[data-desk-panel="${name}"]`);
+  assert.equal(panel.hidden,false);
+  assert.equal(p.d.activeElement,panel.querySelector('h3'));
+  assert.equal(p.d.querySelector('#desk-audio').getAttribute('src'),null);
+ }
+ assert.equal(scrolled,3);
+ for(const panel of p.d.querySelectorAll('[data-desk-panel]')){
+  const link=panel.querySelector('.desk-project');
+  assert.ok(link.href.endsWith('#'+link.dataset.project));
+  assert.ok(fs.existsSync('site/'+link.querySelector('img').getAttribute('src')));
+ }
+ p.dom.window.close();
+});

@@ -84,10 +84,22 @@ const server = http.createServer((req,res) => {
      // Wait for the requested visible state, not merely an idle animation flag.
      await page.waitForFunction(href => document.querySelector('#open-print').getAttribute('href') === href, '#' + printOrder[printIndex]);
      await page.waitForFunction(() => !document.querySelector('.swiper').swiper.animating);
+     const mapped={flyover:'sound',conjectures:'cards',cpu:'bits'}[printOrder[printIndex]];
+     if(direction==='#next' && mapped){
+      await page.locator('#open-print').click();
+      assert.equal(await page.locator('dialog[open]').count(),0);
+      assert.equal(await page.locator(`[data-desk="${mapped}"]`).getAttribute('aria-pressed'),'true');
+      assert.equal(await page.evaluate(name=>document.activeElement===document.querySelector(`[data-desk-panel="${name}"] h3`),mapped),true);
+     }
     }
    }
    assert.equal(await page.locator('#open-print').getAttribute('href'),'#flyover');
    await page.locator('#open-print').click();
+   assert.equal(await page.locator('dialog[open]').count(),0, 'shelf try-action opens the desk, not a competing reader');
+   assert.ok(page.url().endsWith('#desk'));
+   assert.equal(await page.locator('[data-desk="sound"]').getAttribute('aria-pressed'),'true');
+   assert.equal(await page.evaluate(()=>document.activeElement===document.querySelector('[data-desk-panel="sound"] h3')),true);
+   await page.locator('[data-desk-panel="sound"] .desk-project').click();
    await page.locator('dialog[open]').waitFor();
    // Reader navigation must not swallow browser shortcuts or text selection.
    for (const modifier of ['altKey','ctrlKey','metaKey','shiftKey']) {
@@ -315,7 +327,7 @@ const server = http.createServer((req,res) => {
   await soundRecovery.locator('#desk-play-recording').click();
   await soundRecovery.waitForFunction(()=>{const a=document.querySelector('#desk-audio');return !a.paused&&a.currentTime>0;});
   assert.equal(await soundRecovery.locator('#desk-audio-status').isVisible(),false);
-  await soundRecovery.locator('.desk-sound a[data-project]').click();
+  await soundRecovery.locator('.desk-sound .desk-action').click();
   await soundRecovery.locator('dialog[open]').waitFor();
   assert.equal(await soundRecovery.locator('#desk-audio').evaluate(a=>a.paused),true,'opening recording notes stops the inline player');
   await soundRecovery.close();
@@ -367,7 +379,14 @@ const server = http.createServer((req,res) => {
   await touch.waitForFunction(()=>document.querySelector('#open-print').dataset.project!=='flyover');
   assert.equal(await touch.locator('dialog[open]').count(),0,'swiping must not open a print');
   await touch.screenshot({path:'test-results/touch-shelf.png',fullPage:true});
+  const touchedProject=await touch.locator('#open-print').getAttribute('data-project');
   await touch.locator('#open-print').tap();
+  const deskPanel={flyover:'sound',conjectures:'cards',cpu:'bits'}[touchedProject];
+  if(deskPanel){
+    await touch.waitForFunction(name=>document.querySelector(`[data-desk="${name}"]`).getAttribute('aria-pressed')==='true',deskPanel);
+    assert.equal(await touch.locator('dialog[open]').count(),0);
+    await touch.locator(`[data-desk-panel="${deskPanel}"] .desk-project`).tap();
+  }
   await touch.locator('dialog[open]').waitFor();
   assert.deepEqual(touchErrors,[]);
   await touch.locator('#close-dialog').tap();
@@ -440,6 +459,17 @@ const server = http.createServer((req,res) => {
   await fallback.screenshot({path:'test-results/no-carousel-library.png',fullPage:true});
   await fallback.close();
   console.log('missing carousel library: native shelf and experiments passed');
+
+  const noDesk=await browser.newPage({viewport:{width:390,height:844},reducedMotion:'reduce'});
+  await noDesk.route('**/workbench.js*',route=>route.abort());
+  await noDesk.goto(base);
+  assert.equal(await noDesk.locator('.desk-tabs').isVisible(),false);
+  assert.equal(await noDesk.locator('[data-desk-panel]:visible').count(),4);
+  assert.equal(await noDesk.locator('#open-print').textContent(),'Listen to a flyover');
+  await noDesk.locator('#open-print').click();
+  await noDesk.locator('dialog[open] #flyover').waitFor();
+  await noDesk.close();
+  console.log('missing workbench enhancement: original shelf reader remains available');
 
   const reading = await browser.newPage({viewport:{width:390,height:844},reducedMotion:'reduce'});
   await reading.route('**/shelf.js*',route=>route.abort());

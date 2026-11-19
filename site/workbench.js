@@ -13,6 +13,15 @@
   desk.querySelector('.desk-tabs').hidden=false;
   desk.classList.add('desk-ready');
   choose('sound');
+  desk.addEventListener('open-from-shelf', event=>{
+    const panel=panels.find(panel=>panel.dataset.deskPanel===event.detail);
+    if(!panel) return;
+    choose(event.detail);
+    const heading=panel.querySelector('h3');
+    heading.tabIndex=-1;
+    heading.focus({preventScroll:true});
+    desk.scrollIntoView({block:'start',behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});
+  });
 
   const listen=desk.querySelector('.desk-listen');
   const play=desk.querySelector('#desk-play-recording');

@@ -9,6 +9,8 @@ const actions = {
   schedule: "Try a schedule",
   conway: "Move a rook",
 };
+const deskActions = { flyover: "Listen on the desk", conjectures: "Deal on the desk", cpu: "Flip address bits" };
+const deskPanels = { flyover: "sound", conjectures: "cards", cpu: "bits" };
 const dialog = document.querySelector(".open-project");
 const slot = document.querySelector("#detail-slot");
 const catalog = document.querySelector(".project-details");
@@ -155,7 +157,8 @@ if (window.Swiper) {
         }
         openButton.dataset.project = key;
         openButton.href = "#" + key;
-        openButton.textContent = actions[key];
+        openButton.textContent = (typeof dialog.showModal === "function" &&
+          document.querySelector(".workbench.desk-ready") && deskActions[key]) || actions[key];
         document.querySelector("#shelf-status").textContent =
           print.querySelector("strong").textContent;
       },
@@ -325,6 +328,12 @@ if (typeof dialog.showModal === "function") {
     )
       return;
     event.preventDefault();
+    const desk = document.querySelector(".workbench.desk-ready");
+    if (link === openButton && desk && deskPanels[link.dataset.project]) {
+      history.pushState(null, "", "#desk");
+      desk.dispatchEvent(new CustomEvent("open-from-shelf", {detail: deskPanels[link.dataset.project]}));
+      return;
+    }
     opener = projectIndex.contains(link)
       ? projectIndex.querySelector("summary")
       : link;
