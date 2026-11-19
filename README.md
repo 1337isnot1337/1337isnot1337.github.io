@@ -16,7 +16,7 @@ The website-owned `scripts/build_catalogue.py` adapter accepts explicit plain-te
 
 The root `robots.txt` points to a sitemap index covering the project shelf, schedule tool, and research catalogue. Keep those files at the domain root, not inside the catalogue's subdirectory.
 
-The existing Rust/Yew schedule tool is available at `/imsa-map/`. Its original source is in `src/` and its browser bundle is in `site/imsa-map/`. To rebuild it, install the `wasm32-unknown-unknown` Rust target and wasm-bindgen CLI 0.2.93, then run:
+The existing Rust/Yew schedule tool is available at `/imsa-map/`. After generating a room list, the browser’s Print command produces a compact five-day sheet without the pasted source or form controls. Its original source is in `src/` and its browser bundle is in `site/imsa-map/`. To rebuild it, install the `wasm32-unknown-unknown` Rust target and wasm-bindgen CLI 0.2.93, then run:
 
 ```sh
 cargo build --locked --release --target wasm32-unknown-unknown

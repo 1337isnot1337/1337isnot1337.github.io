@@ -194,6 +194,20 @@ const server = http.createServer((req,res) => {
    assert.deepEqual(await terms.nth(0).locator('h3').allTextContents(),['A day','B day','I day','C day','D day']);
    assert.deepEqual((await terms.nth(0).locator('ol').first().locator('li').allTextContents()).slice(1,4),['A113','A113','A113']);
    assert.equal((await terms.nth(1).locator('ol').first().locator('li').allTextContents())[2],'B204');
+   if (name === 'desktop') {
+    await page.setViewportSize({width:816,height:1056});
+    await page.emulateMedia({media:'print'});
+    assert.equal(await field.isVisible(),false,'printed room list omits pasted source');
+    assert.equal(await page.getByRole('button',{name:'Submit',exact:true}).isVisible(),false);
+    assert.equal(await page.locator('.schedule-days:visible').count(),2);
+    const positions = await terms.nth(0).locator('.schedule-days > section').evaluateAll(nodes=>nodes.map(node=>node.getBoundingClientRect().top));
+    assert.equal(new Set(positions).size,1,'all five day cards share one print row');
+    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'printed schedule fits the page');
+    await page.screenshot({path:'test-results/schedule-print.png',fullPage:true});
+    await page.pdf({path:'test-results/schedule-print.pdf',format:'Letter'});
+    await page.emulateMedia({media:'screen'});
+    await page.setViewportSize({width,height});
+   }
    await field.fill('Schedule\nHeader\n' + row('4-2(A)','S1','A113'));
    await page.getByRole('button',{name:'Submit',exact:true}).click();
    await page.getByRole('alert').waitFor();
