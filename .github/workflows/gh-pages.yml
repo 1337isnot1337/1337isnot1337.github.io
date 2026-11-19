@@ -3,27 +3,63 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+  schedule:
+    # Refresh the public research catalogue without cross-repository credentials.
+    - cron: '17 * * * *'
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
   group: github-pages
   cancel-in-progress: false
 
 jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Check out the project shelf
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Check out the current conjecture collection
+        uses: actions/checkout@v7
+        with:
+          repository: 1337isnot1337/solved-conjectures
+          ref: main
+          fetch-depth: 0
+          path: _sources/solved-conjectures
+          persist-credentials: false
+      - name: Install the Markdown renderer
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends pandoc
+      - name: Build and check the research catalogue
+        run: |
+          python3 _sources/solved-conjectures/scripts/build_site.py \
+            --output "$GITHUB_WORKSPACE/site/solved-conjectures" \
+            --base-url https://1337isnot1337.github.io/solved-conjectures/
+          python3 _sources/solved-conjectures/scripts/check_site.py \
+            "$GITHUB_WORKSPACE/site/solved-conjectures"
+      - name: Upload the complete website
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: site
+
   publish:
+    needs: build
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v7
       - uses: actions/configure-pages@v6
-      - uses: actions/upload-pages-artifact@v5
-        with:
-          path: site
       - uses: actions/deploy-pages@v5
         id: deploy
+
