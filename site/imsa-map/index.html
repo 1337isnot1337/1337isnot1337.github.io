@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>IMSA schedule map · Cinna Davis</title>
+    <link rel="icon" href="../assets/mark.svg" />
+    <link rel="stylesheet" href="../notebook.css" />
+    <style>
+      body {
+        background: var(--paper);
+        color: var(--ink);
+        width: min(92%, 920px);
+        margin: 40px auto;
+      }
+      h1 {
+        font-size: clamp(42px, 7vw, 78px);
+        line-height: 1;
+      }
+      textarea {
+        width: 100%;
+        min-height: 160px;
+        max-height: 45vh;
+        padding: 12px;
+        font: 14px/1.5 var(--mono);
+      }
+      button {
+        margin: 12px 0;
+        padding: 10px 22px;
+        background: var(--lime);
+        border: 1px solid var(--ink);
+      }
+      form p {
+        overflow-wrap: anywhere;
+      }
+      p {
+        margin: 12px 0;
+      }
+      a {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <script type="module">
+      import init from "./imsa-map-9c5cb3dc721fe8d4.js";
+      const header = document.createElement("header");
+      header.innerHTML =
+        '<a href="/">← Cinna Davis’s field notebook</a><h1>IMSA schedule map</h1><p>Paste your PowerSchool schedule with the semester and column headings on the first two lines. Keep the tab-separated class rows intact.</p>';
+      try {
+        await init({ module_or_path: "./imsa-map-9c5cb3dc721fe8d4_bg.wasm" });
+        requestAnimationFrame(() => {
+          document.body.prepend(header);
+          document
+            .querySelector("textarea")
+            ?.setAttribute("aria-label", "PowerSchool schedule");
+        });
+      } catch {
+        document.body.append(
+          header,
+          "The schedule tool could not load. Refresh to try again.",
+        );
+      }
+    </script>
+    <noscript
+      >JavaScript is required to run the schedule tool.
+      <a href="/">Return to the notebook</a></noscript
+    >
+  </body>
+</html>
