@@ -2,7 +2,6 @@
 .firmware-note { padding: 0 4px 14px; }
 .firmware-note > summary { width: fit-content; color: #7d3251; cursor: pointer; font-size: 13px; line-height: 1.6; text-decoration: underline; text-underline-offset: 3px; }
 .firmware-note > summary:focus-visible { outline: 2px solid #7d3251; outline-offset: 4px; }
-.catalogue-list > li:has(.firmware-note[open]) { grid-column: 1 / -1; }
 .firmware-note-body { max-width: 870px; margin-top: 18px; padding: 24px 28px; background: #f4ebe2; border-left: 2px solid #b799a9; font-size: 14px; line-height: 1.65; }
 .firmware-note-body p { margin: 0 0 16px; }
 .firmware-note-body code { font: 12px/1.6 var(--mono); }

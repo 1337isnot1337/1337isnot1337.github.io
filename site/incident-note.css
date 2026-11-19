@@ -2,7 +2,6 @@
 .incident-note { padding: 0 4px 14px; }
 .incident-note > summary { width: fit-content; font-size: 13px; line-height: 1.6; color: #7d3251; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
 .incident-note > summary:focus-visible { outline: 2px solid #7d3251; outline-offset: 4px; }
-.catalogue-list > li:has(.incident-note[open]) { grid-column: 1 / -1; }
 .incident-note-body { max-width: 900px; padding: 24px 28px; margin-top: 18px; background: #eee7ee; font-size: 14px; line-height: 1.65; }
 .incident-note-body > p { margin: 0 0 18px; max-width: 72ch; }
 .incident-ledger { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin: 24px 0; border-block: 1px solid #bfadbd; }

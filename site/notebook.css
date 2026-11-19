@@ -21,7 +21,6 @@
 .notebook-margins{display:grid;grid-template-columns:1.12fr .88fr;gap:80px;align-items:start;padding-top:48px}
 .notebook-margins h3{font:650 28px/1.12 var(--headline);letter-spacing:-.025em;margin:0 0 14px}
 .notebook-teaching p{font-size:15px;line-height:1.65;max-width:58ch;margin:0 0 15px}
-.notebook-teaching .notebook-current{font-size:13px;color:var(--muted);padding-top:12px;border-top:1px solid #d4c5cd;margin-top:24px}
 .notebook-favorites{margin-top:8px;padding:25px 28px;transform:rotate(1deg)}
 .notebook-favorites h3{font-size:28px}.notebook-favorites li a{font-size:14px;line-height:1.4;padding-block:7px}
 @media(max-width:900px){.notebook-page{padding:32px}.notebook-margins{gap:44px}.notebook-heading{gap:32px}.notebook-heading>p{max-width:35ch;font-size:14px}.notebook-abstract{padding:20px}.notebook-code pre{font-size:12px}}
