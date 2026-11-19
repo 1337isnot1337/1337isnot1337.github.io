@@ -42,8 +42,10 @@
     <link rel="stylesheet" href="numberline.css?v=1" />
     <script defer src="numberline.js?v=1"></script>
     <script defer src="workbench.js?v=4"></script>
+    <link rel="stylesheet" href="cpu-trace.css?v=1" />
+    <script defer src="cpu-trace.js?v=1"></script>
     <script defer src="vendor/swiper-bundle.min.js"></script>
-    <script defer src="shelf.js?v=23" onerror="
+    <script defer src="shelf.js?v=24" onerror="
       const restoreReading = () => {
         document.documentElement.classList.add('script-unavailable');
         document.querySelector('.shelf-heading p').textContent = 'The interactive shelf could not load. You can still read the project notes below.';
@@ -973,33 +975,20 @@
                 before seeing the next outcome. Try a few taken jumps, then switch.</p>
             </div>
           </section>
-          <div class="toy">
-            <label for="address">Set the address in a Hack A-instruction</label>
-            <div class="input-row">
-              <span aria-hidden="true">@</span
-              ><input
-                id="address"
-                type="number"
-                min="0"
-                max="32767"
-                step="1"
-                value="42"
-                required
-              />
-            </div>
-            <output id="instruction" for="address" aria-live="polite"
-              >0000 0000 0010 1010</output
-            ><small
-              >The first bit is 0. The remaining 15 bits hold the
-              address.</small
-            >
-            <details class="binary-working">
-              <summary>Read the bits</summary>
-              <p>Each 1 adds 2 raised to its bit number. Bit 15 stays 0 to mark an A-instruction.</p>
-              <div id="binary-register" aria-hidden="true"></div>
-              <p id="binary-sum">32 + 8 + 2 = 42</p>
-            </details>
-          </div>
+<section class="toy cpu-trace" id="cpu-trace" data-time="190" data-state="mispredict" aria-labelledby="cpu-trace-title">
+  <h3 id="cpu-trace-title">When the guess is wrong</h3>
+  <p>A loop subtracts 5 until D reaches zero. See how the processor recovers when it predicts one more jump.</p>
+  <div class="cpu-trace-meta"><span>Recorded RTL simulation</span><span id="trace-time">190 ns</span></div>
+  <div class="cpu-trace-lanes">
+    <div class="cpu-trace-lane" id="cpu-trace-fetch"><span class="cpu-lane-label">Fetch <small>Reading ahead</small></span><p><span id="trace-fetch-address">Address 5</span><code id="trace-fetch-instruction">D = D − A</code></p><span id="trace-fetch-note" class="cpu-lane-note">Wrong path · will be discarded</span></div>
+    <div class="cpu-trace-lane" id="cpu-trace-execute"><span class="cpu-lane-label">Execute <small>Resolving the instruction</small></span><p><span id="trace-execute-address">Address 6</span><code id="trace-execute-instruction">D;JGT</code></p><span id="trace-execute-note" class="cpu-lane-note">D is zero · do not jump</span></div>
+  </div>
+  <div class="cpu-trace-registers"><span>Register <strong>D = <span id="trace-register-d">0</span></strong></span><span>A = 5 throughout</span></div>
+  <div id="trace-explanation" role="status" aria-live="polite" aria-atomic="true"><p id="trace-prediction">Predicted next address: 5. Correct next address: 7.</p><p id="trace-summary">At the next rising edge (195 ns), fetch redirects to 7 and an inserted NOP replaces the wrong-path instruction. D stays zero.</p></div>
+  <div class="trace-controls" hidden><button type="button" id="trace-prev">Previous snapshot</button><button type="button" id="trace-next">Next snapshot</button><button type="button" id="trace-reset">Reset</button></div>
+  <p class="cpu-trace-scope">Five snapshots from the existing testbench, 170–210 ns. These are simulation timestamps, not hardware speed measurements. An inserted NOP is a pipeline bubble, not program address 0.</p>
+  <div class="cpu-trace-sources"><a href="https://github.com/1337isnot1337/nand2tetris-verilog-improved/blob/063f0c4a24cefde327ffba93678ff5586608791d/05/cpu_optimized.sv#L167-L207">Pipeline source ↗</a><a href="https://github.com/1337isnot1337/nand2tetris-verilog-improved/blob/063f0c4a24cefde327ffba93678ff5586608791d/05/mod_cpu_tests.sv#L42-L65">Test program ↗</a><a href="assets/cpu-trace/README.md">Reproduce the trace ↗</a><a href="assets/cpu-trace/trace.csv">Recorded CSV ↗</a></div>
+</section>
           <a
             class="outbound"
             href="https://github.com/1337isnot1337/nand2tetris-verilog-improved"

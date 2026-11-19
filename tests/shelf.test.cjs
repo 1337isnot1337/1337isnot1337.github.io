@@ -70,16 +70,12 @@ test('branch predictor reports its pre-update guess and saturates at both ends',
   assert.match(p.d.querySelector('#forecast').textContent, /^01/);
   p.dom.window.close();
 });
-test('factorization, instruction encoding, and rook neighbors handle boundaries', () => {
+test('factorization and rook neighbors handle boundaries', () => {
   const p = page();
   for (const [n, result] of [[2, '2 is prime.'], [221, '221 = 13 × 17'], [999999, '999999 = 3 × 3 × 3 × 7 × 11 × 13 × 37']]) {
     p.input('#composite', n); p.click('#factor-form button');
     assert.equal(p.d.querySelector('#factors').value, result);
   }
-  p.input('#address', 32767);
-  assert.equal(p.d.querySelector('#instruction').value, '0111 1111 1111 1111');
-  p.input('#address', '');
-  assert.match(p.d.querySelector('#instruction').value, /Enter a whole number/);
   for (const square of p.d.querySelectorAll('#rook-board button')) {
     square.click();
     assert.equal(p.d.querySelectorAll('#rook-board .neighbor').length, 4);
@@ -253,26 +249,6 @@ test('predictor announces the outcome and next state together without nested liv
   assert.match(status.textContent, /01 · Weakly predicts not taken/);
   assert.match(status.textContent, /Reset to 01/);
   assert.doesNotMatch(status.textContent, /Correct|Missed/);
-  p.dom.window.close();
-});
-
-
-test('binary register shows the actual fixed type bit and weighted address', () => {
-  const p=page();
-  for(const n of [0,1,42,16384,32767]) {
-    p.input('#address',n);
-    const cells=[...p.d.querySelectorAll('#binary-register .binary-cell')];
-    assert.equal(cells.length,16);
-    assert.equal(cells[0].querySelector('strong').textContent,'0');
-    assert.equal(cells[0].querySelector('small').textContent,'type');
-    assert.equal(parseInt(cells.map(el=>el.querySelector('strong').textContent).join(''),2),n);
-    const sum=p.d.querySelector('#binary-sum').textContent.split(' = ');
-    assert.equal(sum[0].split(' + ').reduce((a,b)=>a+Number(b),0),n);
-    assert.equal(Number(sum[1]),n);
-  }
-  p.input('#address','');
-  assert.equal(p.d.querySelector('#binary-register').children.length,0);
-  assert.equal(p.d.querySelector('#binary-sum').textContent,'');
   p.dom.window.close();
 });
 

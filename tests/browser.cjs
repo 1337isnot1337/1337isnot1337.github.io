@@ -241,11 +241,18 @@ const server = http.createServer((req,res) => {
    await page.locator('#reset-predictor').click();
    assert.match(await page.locator('#forecast').textContent(),/^01/);
    await page.screenshot({path:`test-results/${name}-predictor.png`,fullPage:true});
-   await page.locator('.binary-working summary').click();
-   await page.locator('#address').fill('42');
-   assert.equal(await page.locator('#binary-register .is-one').count(),3);
-   assert.equal(await page.locator('#binary-sum').textContent(),'32 + 8 + 2 = 42');
-   await page.locator('.binary-working').screenshot({path:`test-results/${name}-binary-register.png`});
+   await page.locator('#trace-next').click();
+   await page.locator('#trace-next').click();
+   assert.equal(await page.locator('#cpu-trace').getAttribute('data-time'),'190');
+   assert.match(await page.locator('#trace-prediction').textContent(),/Predicted next: 5 · Actual next: 7/);
+   await page.locator('#cpu-trace').screenshot({path:`test-results/${name}-cpu-mispredict.png`});
+   await page.locator('#trace-next').click();
+   assert.match(await page.locator('#trace-execute-address').textContent(),/Bubble/);
+   assert.equal(await page.locator('#trace-register-d').textContent(),'0');
+   await page.locator('#trace-next').click();
+   assert.equal(await page.locator('#trace-next').isDisabled(),true);
+   await page.locator('#trace-reset').click();
+   assert.equal(await page.locator('#cpu-trace').getAttribute('data-time'),'170');
    await page.goto(base + '/#factoring');
    await page.locator('dialog[open]').waitFor();
    await page.locator('#composite').fill('30030');
@@ -484,6 +491,10 @@ const server = http.createServer((req,res) => {
   await plain.locator('#conway-title').waitFor();
   assert.ok(plain.url().endsWith('#conway'));
   await plain.locator('#conway').screenshot({path:'test-results/no-script-reading.png'});
+  await plain.goto(base + '/#cpu');
+  assert.equal(await plain.locator('#cpu-trace').getAttribute('data-time'),'190');
+  assert.equal(await plain.locator('.trace-controls').isVisible(),false);
+  assert.match(await plain.locator('#trace-summary').textContent(),/195 ns/);
   await plain.goto(base + '/#flyover');
   // Navigation waits for load; direct evaluation also works with Firefox's disabled-JS context.
   assert.ok(await plain.locator('#flyover .spectrum img').evaluateAll(images=>images.some(image=>!image.hidden && image.naturalWidth>0)), 'no-script spectrogram is loaded');
