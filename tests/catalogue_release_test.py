@@ -88,6 +88,29 @@ class CatalogueRelease(unittest.TestCase):
             self.assertIn('<title>Snapshot 19 Nov 2026 · Test</title>', text)
             self.assertIn('Catalogue snapshot (19 Nov 2026, 11:00 UTC). Test description', text)
 
+    def test_current_recovery_removes_every_snapshot_annotation(self):
+        self.fail_current = True
+        self.run_release()
+        self.fail_current = False
+        provenance = self.run_release()
+        self.assertEqual(provenance['mode'], 'current')
+        for page in self.output.rglob('*.html'):
+            self.assertNotIn('catalogue-snapshot', page.read_text())
+            self.assertNotIn('Catalogue snapshot (', page.read_text())
+        self.assertEqual(json.loads((self.output / 'search.json').read_text())['source'], 'a' * 40)
+
+    def test_wrong_built_provenance_is_not_silently_fallen_back(self):
+        build = self.build
+        def mismatched(source, output, base):
+            build(source, output, base)
+            marker = output / 'build-manifest.json'
+            manifest = json.loads(marker.read_text()); manifest['source_dirty'] = True
+            marker.write_text(json.dumps(manifest))
+        with patch.object(release, 'run_builder', mismatched):
+            with self.assertRaisesRegex(ValueError, 'provenance'): self.run_release()
+        self.assertEqual(self.calls, [self.current])
+        self.assertFalse(self.output.exists())
+
     def test_invalid_fallback_preserves_previous_output(self):
         self.fail_current = self.fail_fallback = True
         self.output.mkdir(); (self.output / 'keep').write_text('previous release')
