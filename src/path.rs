@@ -23,17 +23,30 @@ pub struct ScheduleInfo {
     pub end: Vec<String>,
 }
 pub fn get_schedule(input: &str) -> Result<Vec<Class>, &str> {
-    let mut listvec: Vec<String> = input
-        .trim()
+    let lines: Vec<&str> = input
         .lines()
-        .map(std::string::ToString::to_string)
+        .filter(|line| !line.trim().is_empty())
         .collect();
-
-    if listvec.len() <= 2 {
-        return Err("Not enough arguments");
+    // Accept copied class rows with zero, one, or two heading lines. Detect
+    // class-like rows before skipping headings so valid classes never vanish.
+    // Include malformed periods here: the normal parser must report them.
+    let looks_like_class = |line: &str| {
+        let normalized = line.replace("    ", "\t");
+        let mut cells = normalized.split('\t').map(str::trim);
+        let period = cells.next().unwrap_or("");
+        period.contains('(')
+            || (normalized.contains('\t') && period.starts_with(|c: char| c.is_ascii_digit()))
+            || matches!(cells.next(), Some("S1" | "S2"))
+    };
+    let heading_count = lines
+        .iter()
+        .take(2)
+        .position(|line| looks_like_class(line))
+        .unwrap_or(2);
+    if lines.len() <= heading_count {
+        return Err("Paste at least one class row, with or without the schedule headings");
     }
-
-    listvec = listvec[2..].to_vec();
+    let listvec = &lines[heading_count..];
 
     let mut mods = Vec::new();
     let mut semester = Vec::new();
@@ -44,7 +57,7 @@ pub fn get_schedule(input: &str) -> Result<Vec<Class>, &str> {
     let mut start = Vec::new();
     let mut end = Vec::new();
 
-    for line in listvec.into_iter().filter(|line| !line.trim().is_empty()) {
+    for line in listvec {
         let line = line.replace("    ", "\t");
         let split: Vec<String> = line.split('\t').map(|s| s.trim().to_string()).collect();
         if split.len() < 8 {
@@ -81,7 +94,7 @@ pub fn get_schedule(input: &str) -> Result<Vec<Class>, &str> {
     }
 
     if mods.is_empty() {
-        return Err("Add at least one class row after the headings");
+        return Err("Add at least one class row");
     }
     Ok(sort_by_day(&ScheduleInfo {
         mods,
@@ -250,6 +263,30 @@ mod tests {
         assert_eq!(second[0][2], "B204");
         assert_eq!(second[0][1], "");
     }
+    #[test]
+    fn optional_headings_never_discard_classes() {
+        let rows = [
+            row("1(A)", "S1", "A101"),
+            row("2(A)", "S1", "A102"),
+            row("3(A)", "S1", "A103"),
+        ]
+        .join("\n");
+        for prefix in [
+            "",
+            "Headings\n",
+            "Schedule\nHeadings\n",
+            "2026-2027\nHeadings\n",
+            "\nSchedule\n\nHeadings\n",
+        ] {
+            let classes = get_schedule(&format!("{prefix}{rows}\n")).unwrap();
+            assert_eq!(classes.len(), 3);
+            let path = generate_path(&classes, &Semester::S1);
+            assert_eq!(&path[0][..3], &["A101", "A102", "A103"]);
+        }
+        assert_eq!(get_schedule(&row("1(A)", "S1", "A101")).unwrap().len(), 1);
+        assert!(get_schedule(&format!("{}\n{rows}", row("9(A)", "S1", "X"))).is_err());
+    }
+
     #[test]
     fn malformed_input_returns_errors() {
         for period in ["2(A", "2(Z)", "2(A-I)", "2-4-6(A)", "4-2(A)"] {

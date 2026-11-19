@@ -396,11 +396,21 @@ const timestamp = (time) =>
 const audioCues = document.querySelector('.audio-cues');
 const audioStatus = document.querySelector('#audio-status');
 audioCues.hidden = false;
+let audioCueRequest = 0;
 for (const cue of audioCues.querySelectorAll('button')) {
   cue.addEventListener('click', async () => {
     audioStatus.hidden = true;
     try {
-      audio.currentTime = Number(cue.dataset.audioCue);
+      const requestedTime = Number(cue.dataset.audioCue);
+      const request = ++audioCueRequest;
+      const seekWhenReady = () => {
+        if (request === audioCueRequest) audio.currentTime = requestedTime;
+      };
+      // A first click may precede metadata; do not let media initialization
+      // discard the requested offset. Play now to preserve user activation.
+      if (audio.readyState === 0)
+        audio.addEventListener('loadedmetadata', seekWhenReady, { once: true });
+      else seekWhenReady();
       await audio.play();
     } catch {
       audioStatus.hidden = false;

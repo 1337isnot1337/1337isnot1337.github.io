@@ -39,5 +39,12 @@ test('published WASM separates terms, expands periods and recovers from invalid 
   await submit('Schedule\nHeader\n' + row('1(I)', 'S2', 'C105'));
   assert.equal(document.querySelector('[role="alert"]'), null);
   assert.match(document.querySelector('.schedule-results').textContent, /C105/);
+  for (const prefix of ['', 'Headings\n', 'Schedule\nHeadings\n']) {
+    await submit(prefix + [row('1(A)', 'S1', 'A101'), row('2(A)', 'S1', 'A102'), row('3(A)', 'S1', 'A103')].join('\n'));
+    assert.equal(document.querySelector('[role="alert"]'), null);
+    assert.deepEqual([...document.querySelector('.schedule-days ol').children].slice(0, 3).map(x => x.textContent), ['A101', 'A102', 'A103']);
+  }
+  await submit(row('1(I)', 'S1', 'C105'));
+  assert.match(document.querySelector('.schedule-results').textContent, /C105/);
   dom.window.close();
 });

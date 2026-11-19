@@ -133,7 +133,7 @@ const server = http.createServer((req,res) => {
    await page.getByRole('button',{name:'Submit',exact:true}).click();
    await page.getByRole('alert').waitFor();
    assert.equal(await terms.count(),0);
-   await field.fill('Schedule\nHeader\n' + row('1(I)','S2','C105'));
+   await field.fill(row('1(I)','S2','C105'));
    await page.getByRole('button',{name:'Submit',exact:true}).click();
    await page.getByRole('heading',{name:'S2 room list'}).waitFor();
    assert.equal(await page.getByRole('alert').count(),0);
