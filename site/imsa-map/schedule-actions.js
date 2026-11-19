@@ -1,5 +1,5 @@
 /* Local-only output tools. The parser and its rendered room lists stay authoritative. */
-(() => {
+export default function attachScheduleActions() {
   const form = document.querySelector('form');
   const field = form?.querySelector('textarea');
   if (!form || !field) return;
@@ -63,4 +63,4 @@
   print.addEventListener('click', () => { if (!dirty && result()) window.print(); });
   new MutationObserver(sync).observe(form, { childList: true });
   sync();
-})();
+}

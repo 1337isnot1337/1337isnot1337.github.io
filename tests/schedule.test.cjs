@@ -19,7 +19,7 @@ test('published WASM separates terms, expands periods and recovers from invalid 
   await pause();
   const field = document.querySelector('textarea');
   assert.ok(field);
-  dom.window.eval(fs.readFileSync(path.join(dir, "schedule-actions.js"), "utf8"));
+  dom.window.eval(fs.readFileSync(path.join(dir, "schedule-actions.js"), "utf8").replace("export default function attachScheduleActions", "function attachScheduleActions") + "\nattachScheduleActions();");
   assert.equal(document.querySelector(".schedule-actions"), null, "no exports before successful parsing");
   async function submit(value) {
     field.value = value;
@@ -92,6 +92,22 @@ test('published WASM separates terms, expands periods and recovers from invalid 
   assert.deepEqual([...days[0].querySelectorAll('h3')].map(x => x.textContent), ['A day', 'B day', 'I day', 'C day', 'D day']);
   assert.deepEqual([...days[0].querySelector('ol').children].slice(1, 4).map(x => x.textContent), ['A113', 'A113', 'A113']);
   assert.equal(days[1].querySelector('ol').children[2].textContent, 'B204');
+  window.navigator.clipboard.writeText = async value => { copied = value; };
+  copy.click(); await pause();
+  assert.match(copied, /S1 room list/); assert.match(copied, /S2 room list/);
+  assert.equal((copied.match(/ day\n/g) || []).length, 10, 'all five days from both semesters copied');
+  for (const outcome of ['resolve', 'reject']) {
+    let finish;
+    window.navigator.clipboard.writeText = () => new Promise((resolve,reject)=>{finish=()=>outcome==='resolve'?resolve():reject(new Error('late denial'));});
+    copy.click();
+    field.dispatchEvent(new window.Event('input', {bubbles:true}));
+    finish(); await pause();
+    assert.match(actions.textContent, /Submit again/);
+    assert.equal(manual.hidden,true); assert.equal(manual.value,'');
+    assert.equal(copy.disabled,true);
+    field.form.dispatchEvent(new window.Event('submit',{bubbles:true,cancelable:true})); await pause();
+  }
+
   await submit('Schedule\nHeader\n' + row('4-2(A)', 'S1', 'A113'));
   assert.match(document.querySelector('[role="alert"]').textContent, /forwards/);
   assert.equal(document.querySelector('.schedule-results'), null);
