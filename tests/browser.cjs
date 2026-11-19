@@ -178,8 +178,17 @@ const server = http.createServer((req,res) => {
    await page.locator('#previous-detail').click();
    await page.locator('#repeat-war').click();
    assert.match(await page.locator('#war-report').textContent(), /Turn 90.*game repeats/);
-   await page.getByText('Look at all three hands',{exact:true}).click();
+   await page.getByText('Compare every card with the start',{exact:true}).click();
    await page.screenshot({path:`test-results/${name}-war.png`,fullPage:true});
+   await page.locator('#war-compare-six').click();
+   assert.match(await page.locator('#war-queue-comparison').textContent(),/sizes match.*order does not/);
+   assert.equal(await page.locator('.war-queue-token[data-queue="current"]:not(.is-empty)').count(),23);
+   assert.ok(await page.locator('#war-queues').evaluate(el=>el.scrollWidth<=el.clientWidth),`${name}: paired queues wrap without horizontal scrolling`);
+   await page.locator('.war-queue-hand').first().screenshot({path:`test-results/${name}-war-compare-six.png`});
+   await page.locator('#war-compare-ninety').click();
+   assert.equal(await page.locator('.war-queue-token.is-different').count(),0);
+   await page.locator('.war-queue-hand').first().screenshot({path:`test-results/${name}-war-compare-ninety.png`});
+
    await page.locator('#war-turn').press('Home');
    await page.locator('#war-turn').press('ArrowRight');
    assert.match(await page.locator('#war-report').textContent(), /Turn 1/);

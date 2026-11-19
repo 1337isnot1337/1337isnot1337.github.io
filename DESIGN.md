@@ -168,3 +168,7 @@ The data comes from `incidentmesh` at `7bb27809e5a5278963a7186ebe3604246cbfbc9f`
 ## Phone reading sheets
 
 At 680px and below, project readers fill the viewport instead of sitting in an inset dialog. Sixteen-pixel side gutters give the diagrams and recordings more room; the sticky toolbar keeps 44px navigation controls reachable and accounts for safe-area insets. Desktop retains the illustrated split-pane print. Native dialog semantics, history, focus return, and the separate print layout are unchanged.
+
+## War: a repeated state, not just repeated counts
+
+The existing hand inspector pairs each starting rank with the rank now in that position. Pairs wrap together on phones, preserving the comparison without a sideways table. A dashed border identifies differing positions, with the same distinction in text and accessible names. Inspect turn 6 shows equal hand sizes but different queues; turn 90 restores all 23 ranks in order. Both controls use the existing game computation, and the original live report remains the only announcement region. This illustrates the exact published deal, not a claim about all War games.

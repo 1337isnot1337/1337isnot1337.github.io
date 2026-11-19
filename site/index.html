@@ -45,11 +45,12 @@
     <link rel="stylesheet" href="cpu-trace.css?v=1" />
     <link rel="stylesheet" href="firmware-note.css?v=1" />
     <link rel="stylesheet" href="rook-graph.css?v=1" />
+    <link rel="stylesheet" href="war-queues.css?v=1" />
     <link rel="stylesheet" href="schedule-example.css?v=1" />
     <link rel="stylesheet" href="incident-note.css?v=1" />
     <script defer src="cpu-trace.js?v=1"></script>
     <script defer src="vendor/swiper-bundle.min.js"></script>
-    <script defer src="shelf.js?v=26" onerror="
+    <script defer src="shelf.js?v=27" onerror="
       const restoreReading = () => {
         document.documentElement.classList.add('script-unavailable');
         document.querySelector('.shelf-heading p').textContent = 'The interactive shelf could not load. You can still read the project notes below.';
@@ -818,13 +819,44 @@
               <label for="war-turn">Inspect turn <output id="war-turn-label">0</output> of 90</label>
               <input id="war-turn" type="range" min="0" max="90" value="0" step="1" />
             </figure>
-            <details class="hand-inspector">
-              <summary>Look at all three hands</summary>
-              <p>Read each queue from left to right. The next card is first;
-                won cards go at the end. A repeat means every card is back
-                in its original place, not just the three face-up cards.</p>
-              <dl id="war-queues"></dl>
-            </details>
+<details class="hand-inspector war-queue-inspector">
+  <summary>Compare every card with the start</summary>
+  <p>A repeat means the same cards in the same order, in all three hands. Equal hand sizes alone are not enough.</p>
+  <div class="war-queue-tools" hidden><button type="button" id="war-compare-six">Inspect turn 6</button><button type="button" id="war-compare-ninety">Inspect turn 90</button></div>
+  <p id="war-queue-comparison">Starting deal: every position matches.</p>
+  <small class="war-queue-legend">Start above; current below. A dashed border means that position differs from the start. Read positions left to right; the first card is next to play.</small>
+  <div id="war-queues">
+    <section class="war-queue-hand" data-war-player="A" aria-label="Player A hand comparison"><h4>Player A · 8 cards</h4><p class="war-queue-direction">Start above · Current below</p><div class="war-queue-pairs">
+      <div class="war-queue-position" data-position="1" role="group" aria-label="Position 1"><small aria-hidden="true">1</small><span class="war-queue-token" data-queue="start" aria-label="Start 15">15</span><span class="war-queue-token" data-queue="current" aria-label="Current 15">15</span></div>
+      <div class="war-queue-position" data-position="2" role="group" aria-label="Position 2"><small aria-hidden="true">2</small><span class="war-queue-token" data-queue="start" aria-label="Start 7">7</span><span class="war-queue-token" data-queue="current" aria-label="Current 7">7</span></div>
+      <div class="war-queue-position" data-position="3" role="group" aria-label="Position 3"><small aria-hidden="true">3</small><span class="war-queue-token" data-queue="start" aria-label="Start 16">16</span><span class="war-queue-token" data-queue="current" aria-label="Current 16">16</span></div>
+      <div class="war-queue-position" data-position="4" role="group" aria-label="Position 4"><small aria-hidden="true">4</small><span class="war-queue-token" data-queue="start" aria-label="Start 8">8</span><span class="war-queue-token" data-queue="current" aria-label="Current 8">8</span></div>
+      <div class="war-queue-position" data-position="5" role="group" aria-label="Position 5"><small aria-hidden="true">5</small><span class="war-queue-token" data-queue="start" aria-label="Start 1">1</span><span class="war-queue-token" data-queue="current" aria-label="Current 1">1</span></div>
+      <div class="war-queue-position" data-position="6" role="group" aria-label="Position 6"><small aria-hidden="true">6</small><span class="war-queue-token" data-queue="start" aria-label="Start 22">22</span><span class="war-queue-token" data-queue="current" aria-label="Current 22">22</span></div>
+      <div class="war-queue-position" data-position="7" role="group" aria-label="Position 7"><small aria-hidden="true">7</small><span class="war-queue-token" data-queue="start" aria-label="Start 17">17</span><span class="war-queue-token" data-queue="current" aria-label="Current 17">17</span></div>
+      <div class="war-queue-position" data-position="8" role="group" aria-label="Position 8"><small aria-hidden="true">8</small><span class="war-queue-token" data-queue="start" aria-label="Start 9">9</span><span class="war-queue-token" data-queue="current" aria-label="Current 9">9</span></div>
+    </div></section>
+    <section class="war-queue-hand" data-war-player="B" aria-label="Player B hand comparison"><h4>Player B · 8 cards</h4><p class="war-queue-direction">Start above · Current below</p><div class="war-queue-pairs">
+      <div class="war-queue-position" data-position="1" role="group" aria-label="Position 1"><small aria-hidden="true">1</small><span class="war-queue-token" data-queue="start" aria-label="Start 10">10</span><span class="war-queue-token" data-queue="current" aria-label="Current 10">10</span></div>
+      <div class="war-queue-position" data-position="2" role="group" aria-label="Position 2"><small aria-hidden="true">2</small><span class="war-queue-token" data-queue="start" aria-label="Start 2">2</span><span class="war-queue-token" data-queue="current" aria-label="Current 2">2</span></div>
+      <div class="war-queue-position" data-position="3" role="group" aria-label="Position 3"><small aria-hidden="true">3</small><span class="war-queue-token" data-queue="start" aria-label="Start 23">23</span><span class="war-queue-token" data-queue="current" aria-label="Current 23">23</span></div>
+      <div class="war-queue-position" data-position="4" role="group" aria-label="Position 4"><small aria-hidden="true">4</small><span class="war-queue-token" data-queue="start" aria-label="Start 18">18</span><span class="war-queue-token" data-queue="current" aria-label="Current 18">18</span></div>
+      <div class="war-queue-position" data-position="5" role="group" aria-label="Position 5"><small aria-hidden="true">5</small><span class="war-queue-token" data-queue="start" aria-label="Start 11">11</span><span class="war-queue-token" data-queue="current" aria-label="Current 11">11</span></div>
+      <div class="war-queue-position" data-position="6" role="group" aria-label="Position 6"><small aria-hidden="true">6</small><span class="war-queue-token" data-queue="start" aria-label="Start 19">19</span><span class="war-queue-token" data-queue="current" aria-label="Current 19">19</span></div>
+      <div class="war-queue-position" data-position="7" role="group" aria-label="Position 7"><small aria-hidden="true">7</small><span class="war-queue-token" data-queue="start" aria-label="Start 12">12</span><span class="war-queue-token" data-queue="current" aria-label="Current 12">12</span></div>
+      <div class="war-queue-position" data-position="8" role="group" aria-label="Position 8"><small aria-hidden="true">8</small><span class="war-queue-token" data-queue="start" aria-label="Start 3">3</span><span class="war-queue-token" data-queue="current" aria-label="Current 3">3</span></div>
+    </div></section>
+    <section class="war-queue-hand" data-war-player="C" aria-label="Player C hand comparison"><h4>Player C · 7 cards</h4><p class="war-queue-direction">Start above · Current below</p><div class="war-queue-pairs">
+      <div class="war-queue-position" data-position="1" role="group" aria-label="Position 1"><small aria-hidden="true">1</small><span class="war-queue-token" data-queue="start" aria-label="Start 4">4</span><span class="war-queue-token" data-queue="current" aria-label="Current 4">4</span></div>
+      <div class="war-queue-position" data-position="2" role="group" aria-label="Position 2"><small aria-hidden="true">2</small><span class="war-queue-token" data-queue="start" aria-label="Start 20">20</span><span class="war-queue-token" data-queue="current" aria-label="Current 20">20</span></div>
+      <div class="war-queue-position" data-position="3" role="group" aria-label="Position 3"><small aria-hidden="true">3</small><span class="war-queue-token" data-queue="start" aria-label="Start 13">13</span><span class="war-queue-token" data-queue="current" aria-label="Current 13">13</span></div>
+      <div class="war-queue-position" data-position="4" role="group" aria-label="Position 4"><small aria-hidden="true">4</small><span class="war-queue-token" data-queue="start" aria-label="Start 5">5</span><span class="war-queue-token" data-queue="current" aria-label="Current 5">5</span></div>
+      <div class="war-queue-position" data-position="5" role="group" aria-label="Position 5"><small aria-hidden="true">5</small><span class="war-queue-token" data-queue="start" aria-label="Start 21">21</span><span class="war-queue-token" data-queue="current" aria-label="Current 21">21</span></div>
+      <div class="war-queue-position" data-position="6" role="group" aria-label="Position 6"><small aria-hidden="true">6</small><span class="war-queue-token" data-queue="start" aria-label="Start 14">14</span><span class="war-queue-token" data-queue="current" aria-label="Current 14">14</span></div>
+      <div class="war-queue-position" data-position="7" role="group" aria-label="Position 7"><small aria-hidden="true">7</small><span class="war-queue-token" data-queue="start" aria-label="Start 6">6</span><span class="war-queue-token" data-queue="current" aria-label="Current 6">6</span></div>
+    </div></section>
+  </div>
+</details>
           </section>
           <a
             class="outbound"
