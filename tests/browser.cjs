@@ -131,6 +131,16 @@ const server = http.createServer((req,res) => {
    assert.equal(await page.evaluate(()=>document.activeElement===document.querySelector('[data-desk-panel="sound"] h3')),true);
    await page.locator('[data-desk-panel="sound"] .desk-project').click();
    await page.locator('dialog[open]').waitFor();
+   if(width<=680) {
+    const sheet=await page.locator('dialog[open]').boundingBox();
+    assert.ok(Math.abs(sheet.x)<1 && Math.abs(sheet.y)<1, `${name}: reader fills phone without outer margins`);
+    assert.ok(Math.abs(sheet.width-width)<1 && Math.abs(sheet.height-height)<1, `${name}: reader uses the full dynamic viewport`);
+    for(const id of ['close-dialog','previous-detail','next-detail']) {
+     const control=await page.locator('#'+id).boundingBox();
+     assert.ok(control.height>=44 && control.width>=44, `${name}: ${id} is a 44px touch target`);
+    }
+    assert.ok(await page.locator('#detail-slot > .detail').evaluate(el=>el.clientWidth>=innerWidth-1), `${name}: article retains full sheet width`);
+   }
    // Reader navigation must not swallow browser shortcuts or text selection.
    for (const modifier of ['altKey','ctrlKey','metaKey','shiftKey']) {
     for (const key of ['ArrowLeft','ArrowRight']) {
@@ -477,7 +487,8 @@ const server = http.createServer((req,res) => {
   await historySound.close();
   // Printing an open reader must not superimpose it on the underlying shelf.
   const printable = await browser.newPage({viewport:{width:900,height:800}});
-  for (const project of ['conway','conjectures','flyover','factoring','cpu','schedule']) {
+  for (const [project,printWidth] of [...['conway','conjectures','flyover','factoring','cpu','schedule'].map(id=>[id,900]),['cpu',390]]) {
+   await printable.setViewportSize({width:printWidth,height:800});
    await printable.goto(base + '/#' + project);
    await printable.locator('dialog[open]').waitFor();
    await printable.locator('dialog .outbound').focus();
@@ -486,11 +497,15 @@ const server = http.createServer((req,res) => {
    assert.equal(await printable.locator('body > main').isVisible(),false,'printed reader omits background page');
    assert.equal(await printable.locator('.modal-top').isVisible(),false,'printed reader omits navigation');
    assert.ok(await printable.locator('dialog').evaluate(el=>el.scrollHeight<=el.clientHeight+1),`${project}: print reader is not clipped`);
-   if (engineName === 'chromium') await printable.pdf({path:`test-results/project-${project}-print.pdf`,format:'Letter'});
+   if (engineName === 'chromium') await printable.pdf({path:`test-results/project-${project}-${printWidth}-print.pdf`,format:'Letter'});
    await printable.evaluate(()=>window.dispatchEvent(new Event('afterprint')));
    await printable.emulateMedia({media:'screen'});
    assert.equal(await printable.locator('dialog').evaluate(el=>el.matches(':modal')),true,'reader returns to modal after printing');
    assert.equal(await printable.locator('dialog .outbound').evaluate(el=>el===document.activeElement),true,'printing preserves reader focus');
+   if(printWidth===390) {
+    const restored=await printable.locator('dialog').boundingBox();
+    assert.ok(Math.abs(restored.width-390)<1 && Math.abs(restored.height-800)<1,'phone reader restores full viewport after printing');
+   }
   }
   await printable.close();
   const touch = await browser.newPage({viewport:{width:390,height:844},hasTouch:true,isMobile:true,deviceScaleFactor:2,reducedMotion:'no-preference'});
