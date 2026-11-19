@@ -116,7 +116,7 @@ const server = http.createServer((req,res) => {
    assert.equal(await page.locator('#open-print').getAttribute('href'),'#flyover');
    await page.locator('#open-print').click();
    assert.equal(await page.locator('dialog[open]').count(),0, 'shelf try-action opens the desk, not a competing reader');
-   assert.ok(page.url().endsWith('#desk'));
+   assert.ok(page.url().endsWith('#desk-sound'));
    assert.equal(await page.locator('[data-desk="sound"]').getAttribute('aria-pressed'),'true');
    assert.equal(await page.evaluate(()=>document.activeElement===document.querySelector('[data-desk-panel="sound"] h3')),true);
    await page.locator('[data-desk-panel="sound"] .desk-project').click();
@@ -376,6 +376,35 @@ const server = http.createServer((req,res) => {
    console.log(`${name}: layout and interactions passed`);
   }
   // Playwright exposes real touch-drag injection through Chromium's CDP only.
+  const linkedDesk=await browser.newPage({viewport:{width:390,height:844},reducedMotion:'reduce'});
+  for(const [id,name] of [['desk-sound','sound'],['desk-war','cards'],['desk-bits','bits'],['desk-numbers','numbers']]){
+   await linkedDesk.goto(base+'/#'+id);
+   await linkedDesk.locator('.desk-ready').waitFor();
+   assert.equal(await linkedDesk.locator(`[data-desk="${name}"]`).getAttribute('aria-pressed'),'true');
+   assert.ok(await linkedDesk.locator('#'+id).isVisible());
+   assert.equal(await linkedDesk.locator('#desk-audio').getAttribute('src'),null);
+   assert.equal(await linkedDesk.locator('dialog[open]').count(),0);
+  }
+  await linkedDesk.locator('[data-desk="cards"]').click();
+  assert.ok(linkedDesk.url().endsWith('#desk-war'));
+  await linkedDesk.locator('[data-desk="bits"]').click();
+  await linkedDesk.goBack();
+  await linkedDesk.waitForFunction(()=>document.querySelector('[data-desk="cards"]').getAttribute('aria-pressed')==='true');
+  await linkedDesk.goBack();
+  await linkedDesk.waitForFunction(()=>document.querySelector('[data-desk="numbers"]').getAttribute('aria-pressed')==='true');
+  await linkedDesk.goForward();
+  await linkedDesk.locator('#desk-war .desk-project').click();
+  await linkedDesk.locator('dialog[open] #conjectures').waitFor();
+  await linkedDesk.locator('#close-dialog').click();
+  await linkedDesk.waitForFunction(()=>!document.querySelector('dialog').open);
+  assert.ok(linkedDesk.url().endsWith('#desk-war'));
+  assert.ok(await linkedDesk.locator('#desk-war').isVisible());
+  await linkedDesk.reload();
+  assert.equal(await linkedDesk.locator('[data-desk="cards"]').getAttribute('aria-pressed'),'true');
+  await linkedDesk.screenshot({path:'test-results/direct-desk-link.png'});
+  await linkedDesk.close();
+  console.log('desk links: direct loads, reloads, history and reader return passed');
+
   if (engineName === 'chromium') {
   const soundRecovery = await browser.newPage();
   await soundRecovery.route('**/assets/livermore.mp3',route=>route.abort());
@@ -512,6 +541,9 @@ const server = http.createServer((req,res) => {
   assert.equal(await plain.locator('#flyover audio:visible').count(),1);
   assert.ok((await plain.locator('#flyover audio:visible').getAttribute('src')).endsWith('livermore.mp3'));
   await plain.locator('#flyover .player').screenshot({path:'test-results/no-script-flyover.png'});
+  await plain.goto(base+'/#desk-numbers');
+  assert.ok(await plain.locator('#desk-numbers').isVisible());
+  assert.equal(await plain.locator('#desk-numbers .desk-permalink').getAttribute('href'),'#desk-numbers');
   await plain.close();
   console.log('no JavaScript: catalogue and project reading passed');
 

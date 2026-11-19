@@ -9,14 +9,26 @@
     tabs.forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.desk===name)));
     panels.forEach(panel=>panel.hidden=panel.dataset.deskPanel!==name);
   }
-  tabs.forEach(button=>button.addEventListener('click',()=>choose(button.dataset.desk)));
+  function remember(name){
+    const panel=panels.find(panel=>panel.dataset.deskPanel===name);
+    if(panel && location.hash!=='#'+panel.id) history.pushState({desk:name},'','#'+panel.id);
+  }
+  function fromHash(){
+    const panel=panels.find(panel=>'#'+panel.id===location.hash);
+    if(panel) choose(panel.dataset.deskPanel);
+  }
+  tabs.forEach(button=>button.addEventListener('click',()=>{choose(button.dataset.desk);remember(button.dataset.desk);}));
   desk.querySelector('.desk-tabs').hidden=false;
   desk.classList.add('desk-ready');
   choose('sound');
+  fromHash();
+  window.addEventListener('popstate',fromHash);
+  window.addEventListener('hashchange',fromHash);
   desk.addEventListener('open-from-shelf', event=>{
     const panel=panels.find(panel=>panel.dataset.deskPanel===event.detail);
     if(!panel) return;
     choose(event.detail);
+    remember(event.detail);
     const heading=panel.querySelector('h3');
     heading.tabIndex=-1;
     heading.focus({preventScroll:true});

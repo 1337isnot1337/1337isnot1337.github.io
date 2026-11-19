@@ -2,8 +2,8 @@ const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const {JSDOM}=require('jsdom');
-function desk(){
- const dom=new JSDOM(fs.readFileSync('site/index.html','utf8'),{runScripts:'outside-only'});
+function desk(hash=""){
+ const dom=new JSDOM(fs.readFileSync('site/index.html','utf8'),{runScripts:'outside-only',url:'https://example.test/'+hash});
  dom.window.eval(fs.readFileSync('site/workbench.js','utf8'));
  const d=dom.window.document;
  return {dom,d,click:selector=>d.querySelector(selector).click()};
@@ -168,4 +168,19 @@ test('historical map loads only when opened and preserves uncertainty and attrib
  assert.ok(details.querySelector('a[href="assets/livermore-automatic-mp3.webp"]'));
  assert.equal(p.d.querySelector('#desk-audio').getAttribute('src'),null);
  p.dom.window.close();
+});
+
+test('each desk experiment has a persistent native link and restores from its hash',()=>{
+ for(const [name,id] of [['sound','desk-sound'],['cards','desk-war'],['bits','desk-bits'],['numbers','desk-numbers']]){
+  const p=desk('#'+id),panel=p.d.getElementById(id);
+  assert.equal(panel.dataset.deskPanel,name);assert.equal(panel.hidden,false);
+  assert.equal(p.d.querySelectorAll('[data-desk-panel]:not([hidden])').length,1);
+  assert.equal(panel.querySelector('.desk-permalink').getAttribute('href'),'#'+id);
+  assert.equal(p.d.querySelector('#desk-audio').getAttribute('src'),null);
+  const count=p.dom.window.history.length;p.click('[data-desk="'+name+'"]');assert.equal(p.dom.window.history.length,count);
+  p.click('[data-desk="'+(name==='cards'?'bits':'cards')+'"]');
+  assert.equal(p.dom.window.location.hash,name==='cards'?'#desk-bits':'#desk-war');
+  p.dom.window.close();
+ }
+ const legacy=desk('#desk');assert.equal(legacy.d.querySelector('[data-desk-panel="sound"]').hidden,false);legacy.dom.window.close();
 });

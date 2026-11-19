@@ -330,7 +330,6 @@ if (typeof dialog.showModal === "function") {
     event.preventDefault();
     const desk = document.querySelector(".workbench.desk-ready");
     if (link === openButton && desk && deskPanels[link.dataset.project]) {
-      history.pushState(null, "", "#desk");
       desk.dispatchEvent(new CustomEvent("open-from-shelf", {detail: deskPanels[link.dataset.project]}));
       return;
     }
