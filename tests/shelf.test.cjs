@@ -107,3 +107,27 @@ test('illustrated contents explains each experiment without JavaScript', () => {
     assert.ok(fs.existsSync('site/' + entry.querySelector('img').getAttribute('src')));
   }
 });
+
+test('War cycle chart and scrubber track the real 23-card deal', () => {
+  const p=page();
+  const initial=p.d.querySelector('#war-queues').textContent;
+  const traces=[...p.d.querySelectorAll('#war-lines polyline')].map(line => line.getAttribute('points').split(' '));
+  assert.equal(traces.length,3);
+  for (const trace of traces) assert.equal(trace.length,91);
+  for (let step=0;step<=90;step++) {
+    const counts=traces.map(trace => (108-Number(trace[step].split(',')[1]))/7.5);
+    assert.equal(counts.reduce((a,b)=>a+b),23);
+    assert.ok(counts.every(n=>n>0 && n<=12));
+  }
+  p.input('#war-turn',45);
+  assert.match(p.d.querySelector('#war-report').value,/Turn 45/);
+  assert.notEqual(p.d.querySelector('#war-queues').textContent,initial);
+  p.input('#war-turn',90);
+  assert.equal(p.d.querySelector('#war-queues').textContent,initial);
+  assert.match(p.d.querySelector('#war-report').value,/game repeats/);
+  p.click('#deal-war');
+  assert.equal(p.d.querySelector('#war-turn').value,'1');
+  p.click('#reset-war');
+  assert.equal(p.d.querySelector('#war-turn').value,'0');
+  p.dom.window.close();
+});

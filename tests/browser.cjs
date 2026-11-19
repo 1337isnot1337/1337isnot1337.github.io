@@ -69,6 +69,12 @@ const server = http.createServer((req,res) => {
    assert.match(await page.locator('#war-report').textContent(), /Turn 90.*game repeats/);
    await page.getByText('Look at all three hands',{exact:true}).click();
    await page.screenshot({path:`test-results/${name}-war.png`,fullPage:true});
+   await page.locator('#war-turn').press('Home');
+   await page.locator('#war-turn').press('ArrowRight');
+   assert.match(await page.locator('#war-report').textContent(), /Turn 1/);
+   await page.locator('#war-turn').press('End');
+   assert.match(await page.locator('#war-report').textContent(), /Turn 90.*game repeats/);
+   await page.locator('.war-cycle').screenshot({path:`test-results/${name}-cycle.png`});
    await page.locator('#close-dialog').click();
    await page.locator('dialog').waitFor({state:'hidden'});
    await page.goForward();

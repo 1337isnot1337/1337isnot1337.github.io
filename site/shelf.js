@@ -549,7 +549,37 @@ function dealTurn() {
   turn++;
   return "ABC"[winner];
 }
+// Trace the same deterministic deal, independently of the visitor's current turn.
+const cycleHands = initialHands.map(hand => [...hand]);
+const cycleCounts = [cycleHands.map(hand => hand.length)];
+for (let step = 0; step < 90; step++) {
+  const exposed = cycleHands.map(hand => hand.shift());
+  const winner = exposed.indexOf(Math.max(...exposed));
+  cycleHands[winner].push(...exposed.sort((a,b) => b-a));
+  cycleCounts.push(cycleHands.map(hand => hand.length));
+}
+for (let player = 0; player < 3; player++) {
+  const line = document.createElementNS('http://www.w3.org/2000/svg', 'polyline');
+  line.setAttribute('points', cycleCounts.map((counts, step) =>
+    `${30 + step * 428 / 90},${108 - counts[player] * 7.5}`).join(' '));
+  document.querySelector('#war-lines').append(line);
+}
+document.querySelector('.war-cycle').hidden = false;
+const turnSlider = document.querySelector('#war-turn');
+turnSlider.addEventListener('input', () => {
+  hands = initialHands.map(hand => [...hand]);
+  turn = 0;
+  let winner;
+  const requested = Number(turnSlider.value);
+  while (turn < requested) winner = dealTurn();
+  showDeal(winner);
+});
 function showDeal(winner) {
+  const cycleTurn = turn > 0 && turn % 90 === 0 ? 90 : turn % 90;
+  turnSlider.value = cycleTurn;
+  document.querySelector('#war-turn-label').value = cycleTurn;
+  const x = 30 + cycleTurn * 428 / 90;
+  document.querySelector('#war-cursor').setAttribute('d', `M${x} 14V113`);
   const queues = document.querySelector("#war-queues");
   queues.replaceChildren();
   hands.forEach((hand, i) => {
