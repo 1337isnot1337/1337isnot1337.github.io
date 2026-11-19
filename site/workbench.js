@@ -1,9 +1,11 @@
 (() => {
   const desk=document.querySelector('.workbench');
   if(!desk) return;
+  const audio=desk.querySelector('#desk-audio');
   const tabs=[...desk.querySelectorAll('[data-desk]')];
   const panels=[...desk.querySelectorAll('[data-desk-panel]')];
   function choose(name){
+    if(name!=='sound' && !audio.paused) audio.pause();
     tabs.forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.desk===name)));
     panels.forEach(panel=>panel.hidden=panel.dataset.deskPanel!==name);
   }
@@ -11,6 +13,51 @@
   desk.querySelector('.desk-tabs').hidden=false;
   desk.classList.add('desk-ready');
   choose('sound');
+
+  const listen=desk.querySelector('.desk-listen');
+  const play=desk.querySelector('#desk-play-recording');
+  const status=desk.querySelector('#desk-audio-status');
+  const playhead=desk.querySelector('.desk-playhead');
+  listen.hidden=false;
+  function recordingFailed(){
+    status.textContent='The recording could not start. Try again, or open the recording notes.';
+    status.hidden=false;
+    play.textContent='Try the recording again';
+    listen.hidden=false;
+  }
+  play.addEventListener('click',async()=>{
+    status.hidden=true;
+    // Even preload="none" can fetch in some engines. Do not assign a URL
+    // until the visitor actually asks to hear the recording.
+    if(!audio.getAttribute('src')) audio.src=audio.dataset.deskSrc;
+    else if(audio.error) audio.load();
+    audio.hidden=false;
+    try{
+      await audio.play();
+      // Replace the load button with native controls without dropping focus.
+      if(document.activeElement===play) audio.focus({preventScroll:true});
+      listen.hidden=true;
+    }catch(error){
+      if(error?.name!=='AbortError') recordingFailed();
+    }
+  });
+  audio.addEventListener('error',recordingFailed);
+  audio.addEventListener('timeupdate',()=>{
+    const valid=Number.isFinite(audio.duration) && audio.duration>0;
+    playhead.hidden=!valid || audio.currentTime===0;
+    if(valid) playhead.style.left=Math.min(99.8,100*audio.currentTime/audio.duration)+'%';
+  });
+  // The homepage player and the full project reader must never talk over
+  // each other. Native play does not bubble, so listen in the capture phase.
+  document.addEventListener('play',event=>{
+    if(event.target===audio){
+      const reader=document.querySelector('#recording');
+      if(reader && !reader.paused) reader.pause();
+    }else if(event.target.id==='recording' && !audio.paused) audio.pause();
+  },true);
+  document.addEventListener('click',event=>{
+    if(event.target.closest('a[data-project]') && !audio.paused) audio.pause();
+  });
 
   const initial=[[15,7,16,8,1,22,17,9],[10,2,23,18,11,19,12,3],[4,20,13,5,21,14,6]];
   let hands=initial.map(h=>[...h]),turn=0;

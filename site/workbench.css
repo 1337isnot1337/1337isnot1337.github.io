@@ -45,3 +45,12 @@
 @media print{.desk-tabs{display:none!important}.desk-sheet{box-shadow:none;break-inside:avoid}.desk-controls,.desk-register-reset{display:none!important}.workbench{padding:0}.desk-heading{margin-top:24px}}
 
 @media(max-width:680px){.desk-bit-row{grid-template-columns:repeat(8,minmax(0,1fr));column-gap:4px;row-gap:22px}.desk-bit-row>button,.desk-fixed-bit{min-height:40px;font-size:15px}.desk-bit-fallback{grid-column:2/-1;font-size:16px}.desk-tabs button{font-size:13px;padding-inline:8px}}
+/* Real sound in the working spread; no request or playback before a click. */
+.desk-spectrum { position: relative; }
+.desk-playhead { position: absolute; top: 0; bottom: 0; width: 2px; background: #fffaf2; box-shadow: 1px 0 2px #211d27; pointer-events: none; }
+.desk-listen { margin: 0 0 18px; }
+.desk-listen button { padding: 10px 17px; min-height: 44px; border: 1px solid var(--ink); border-radius: 24px; background: var(--ink); color: var(--paper); font: 600 14px var(--headline); }
+.desk-listen button:hover { background: #68425d; }
+#desk-audio { display: block; width: 100%; margin: 0 0 18px; }
+#desk-audio-status { font-size: 13px; line-height: 1.5; margin: 0 0 14px; color: var(--berry); }
+@media print { .desk-listen, #desk-audio, #desk-audio-status, .desk-playhead { display: none !important; } }

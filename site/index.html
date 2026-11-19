@@ -37,11 +37,11 @@
     <link rel="stylesheet" href="vendor/swiper-bundle.min.css" />
     <link rel="stylesheet" href="shelf.css?v=19" />
     <link rel="stylesheet" href="welcome.css?v=1" />
-    <link rel="stylesheet" href="workbench.css?v=1" />
+    <link rel="stylesheet" href="workbench.css?v=2" />
     <link rel="stylesheet" href="notebook.css?v=1" />
-    <script defer src="workbench.js?v=1"></script>
+    <script defer src="workbench.js?v=2"></script>
     <script defer src="vendor/swiper-bundle.min.js"></script>
-    <script defer src="shelf.js?v=21" onerror="
+    <script defer src="shelf.js?v=22" onerror="
       const restoreReading = () => {
         document.documentElement.classList.add('script-unavailable');
         document.querySelector('.shelf-heading p').textContent = 'The interactive shelf could not load. You can still read the project notes below.';
@@ -275,8 +275,8 @@
     <button type="button" data-desk="bits" aria-pressed="false">Flip a bit</button>
   </div>
   <article class="desk-sheet desk-sound" data-desk-panel="sound">
-    <div class="desk-copy"><h3>Where was<br> the microphone?</h3><p>A passing aircraft leaves a curve in a recording. I’m building DOPPLERGEIST to match that changing pitch against historical flight tracks.</p><a href="#flyover" data-project="flyover" class="desk-action">Listen to the recording <span aria-hidden="true">↗</span></a><a class="desk-source" href="/DOPPLERGEIST/examples.html#livermore">Read the search for this recording</a></div>
-    <figure class="desk-recording"><div class="desk-figure-heading"><span>Livermore recording</span><span>100–400 Hz</span></div><img src="assets/livermore.webp" width="1600" height="550" loading="lazy" alt="Bright harmonics bend downward in the flyover recording as the aircraft pitch falls."/><div class="desk-time"><span>0:00</span><span>Time →</span><span>1:25</span></div><figcaption><strong>Follow the bright curves.</strong> The pitch drops as the plane passes. A match is a candidate, not automatically a location.</figcaption><small>Recording: <a href="https://doi.org/10.5281/zenodo.23424278">Praveen Pathak</a> · <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a></small></figure>
+    <div class="desk-copy"><h3>Where was<br> the microphone?</h3><p>A passing aircraft leaves a curve in a recording. I’m building DOPPLERGEIST to match that changing pitch against historical flight tracks.</p><a href="#flyover" data-project="flyover" class="desk-action">Open recording notes <span aria-hidden="true">↗</span></a><a class="desk-source" href="/DOPPLERGEIST/examples.html#livermore">Read the search for this recording</a></div>
+    <figure class="desk-recording"><div class="desk-figure-heading"><span>Livermore recording</span><span>100–400 Hz</span></div><div class="desk-spectrum"><img src="assets/livermore.webp" width="1600" height="550" loading="lazy" alt="Bright harmonics bend downward in the flyover recording as the aircraft pitch falls."/><span class="desk-playhead" aria-hidden="true" hidden></span></div><div class="desk-time"><span>0:00</span><span>Time →</span><span>1:25</span></div><div class="desk-listen" hidden><button type="button" id="desk-play-recording">Play the flyover</button></div><p id="desk-audio-status" role="status" hidden></p><audio id="desk-audio" controls preload="none" data-desk-src="assets/livermore.mp3" aria-label="Livermore aircraft flyover" tabindex="0" hidden></audio><figcaption><strong>Follow the bright curves as you listen.</strong> The pitch drops as the plane passes. A match is a candidate, not automatically a location.</figcaption><small>Recording: <a href="https://doi.org/10.5281/zenodo.23424278">Praveen Pathak</a> · <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a></small></figure>
   </article>
   <article class="desk-sheet desk-cards" data-desk-panel="cards">
     <div class="desk-copy"><h3>One more round.<br> Forever.</h3><p>This three-player War deal returns to exactly the same card order after 90 turns. Nobody runs out. Then the whole game repeats.</p><p class="desk-small">It’s one example from my collection of proofs and counterexamples with GPT-6.2 Astra. The notes are unrefereed; Lean status is recorded per result.</p><a href="#conjectures" data-project="conjectures" class="desk-action">Explore the full cycle <span aria-hidden="true">↗</span></a></div>

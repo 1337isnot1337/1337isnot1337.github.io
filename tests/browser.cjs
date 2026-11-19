@@ -62,6 +62,7 @@ const server = http.createServer((req,res) => {
    assert.ok(await page.evaluate(()=>{const faces=[...document.fonts].filter(font=>font.family.includes('Bricolage'));return faces.length===2 && faces.every(font=>font.status==='loaded');}), 'headline glyphs load in the correct family');
    await page.screenshot({path:`test-results/${name}-shelf.png`,fullPage:true});
    assert.deepEqual(mediaRequests.filter(url=>url.includes(".mp3")),[],`${name}: unopened flyover must not download audio`);
+   assert.equal(await page.locator("#desk-audio").getAttribute("src"),null);
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth <= innerWidth), `${name}: horizontal page overflow`);
    await page.locator('.index summary').click();
    await page.locator('.index[open]').waitFor();
@@ -141,7 +142,14 @@ const server = http.createServer((req,res) => {
    await page.locator('dialog').waitFor({state:'hidden'});
    // Native dialog close events are queued after the open attribute clears.
    await page.waitForFunction(() => !document.body.classList.contains('modal-open'));
+   await page.locator('#desk-play-recording').click();
+   await page.waitForFunction(()=>{const a=document.querySelector('#desk-audio');return !a.paused&&a.currentTime>0&&Number.isFinite(a.duration);});
+   await page.locator('#desk-audio').evaluate(a=>{a.currentTime=40;});
+   await page.waitForFunction(()=>parseFloat(document.querySelector('.desk-playhead').style.left)>45);
+   assert.equal(await page.locator('.desk-listen').isVisible(),false,'native controls replace initial play button');
+   await page.locator('.desk-recording').screenshot({path:`test-results/${name}-desk-playing.png`});
    await page.locator('[data-desk="cards"]').click();
+   assert.equal(await page.locator('#desk-audio').evaluate(a=>a.paused),true,'leaving sound sheet pauses its recording');
    await page.locator('#desk-deal-cycle').click();
    assert.equal(await page.locator('#desk-turn').textContent(),'Turn 90 / 90');
    assert.match(await page.locator('#desk-deal-status').textContent(),/Exactly the original card order/);
@@ -287,6 +295,33 @@ const server = http.createServer((req,res) => {
   }
   // Playwright exposes real touch-drag injection through Chromium's CDP only.
   if (engineName === 'chromium') {
+  const soundRecovery = await browser.newPage();
+  await soundRecovery.route('**/assets/livermore.mp3',route=>route.abort());
+  await soundRecovery.goto(base+'/#desk');
+  await soundRecovery.locator('#desk-play-recording').click();
+  await soundRecovery.locator('#desk-audio-status').waitFor({state:'visible'});
+  assert.match(await soundRecovery.locator('#desk-audio-status').textContent(),/Try again/);
+  await soundRecovery.unroute('**/assets/livermore.mp3');
+  await soundRecovery.locator('#desk-play-recording').click();
+  await soundRecovery.waitForFunction(()=>{const a=document.querySelector('#desk-audio');return !a.paused&&a.currentTime>0;});
+  assert.equal(await soundRecovery.locator('#desk-audio-status').isVisible(),false);
+  await soundRecovery.locator('.desk-sound a[data-project]').click();
+  await soundRecovery.locator('dialog[open]').waitFor();
+  assert.equal(await soundRecovery.locator('#desk-audio').evaluate(a=>a.paused),true,'opening recording notes stops the inline player');
+  await soundRecovery.close();
+  const historySound = await browser.newPage();
+  await historySound.goto(base);
+  await historySound.locator('.index summary').click();
+  await historySound.locator('.index a[data-project="cpu"]').click();
+  await historySound.locator('dialog[open]').waitFor();
+  await historySound.locator('#close-dialog').click();
+  await historySound.locator('dialog').waitFor({state:'hidden'});
+  await historySound.locator('#desk-play-recording').click();
+  await historySound.waitForFunction(()=>!document.querySelector('#desk-audio').paused);
+  await historySound.goForward();
+  await historySound.locator('dialog[open]').waitFor();
+  assert.equal(await historySound.locator('#desk-audio').evaluate(a=>a.paused),true,'history opening a reader pauses inline audio');
+  await historySound.close();
   // Printing an open reader must not superimpose it on the underlying shelf.
   const printable = await browser.newPage({viewport:{width:900,height:800}});
   for (const project of ['conway','conjectures','flyover','factoring','cpu','schedule']) {

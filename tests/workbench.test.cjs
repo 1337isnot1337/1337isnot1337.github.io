@@ -42,7 +42,12 @@ test('workbench remains readable without JavaScript and does not preload audio',
  const dom=new JSDOM(fs.readFileSync('site/index.html','utf8'));
  const d=dom.window.document.querySelector('.workbench');
  assert.equal(d.querySelectorAll('[data-desk-panel]:not([hidden])').length,3);
- assert.equal(d.querySelectorAll('audio').length,0);
+ const audio=d.querySelector('audio');
+ assert.equal(audio.getAttribute('src'),null);
+ assert.equal(audio.hidden,true);
+ assert.equal(audio.preload,'none');
+ assert.ok(fs.existsSync('site/'+audio.dataset.deskSrc));
+ assert.equal(d.querySelector('.desk-listen').hidden,true);
  assert.equal(d.querySelector('.desk-tabs').hidden,true);
  assert.equal(d.querySelector('.desk-controls').hidden,true);
  assert.equal(d.querySelector('.desk-register-reset').hidden,true);
@@ -50,4 +55,60 @@ test('workbench remains readable without JavaScript and does not preload audio',
  assert.match(d.textContent,/unrefereed/);
  assert.ok(d.querySelector('a[href="https://creativecommons.org/licenses/by/4.0/"]'));
  dom.window.close();
+});
+
+test('in-place recording is user initiated, follows real time and stops when leaving the sheet',async()=>{
+ const p=desk(),audio=p.d.querySelector('#desk-audio');
+ let playing=false,starts=0,pauses=0;
+ Object.defineProperty(audio,'paused',{get:()=>!playing});
+ Object.defineProperty(audio,'duration',{value:85});
+ audio.play=async()=>{playing=true;starts++;audio.dispatchEvent(new p.dom.window.Event('play'));};
+ audio.pause=()=>{playing=false;pauses++;};
+ assert.equal(audio.getAttribute('src'),null);
+ p.d.querySelector('#desk-play-recording').focus();
+ p.click('#desk-play-recording');
+ await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(starts,1);
+ assert.equal(audio.getAttribute('src'),'assets/livermore.mp3');
+ assert.equal(audio.hidden,false);
+ assert.equal(p.d.activeElement,audio);
+ assert.equal(p.d.querySelector('.desk-listen').hidden,true);
+ audio.currentTime=42.5;audio.dispatchEvent(new p.dom.window.Event('timeupdate'));
+ assert.equal(p.d.querySelector('.desk-playhead').style.left,'50%');
+ assert.equal(p.d.querySelector('.desk-playhead').hidden,false);
+ p.click('[data-desk="cards"]');assert.equal(pauses,1);
+ playing=true;p.click('.desk-sound a[data-project]');assert.equal(pauses,2);
+ p.dom.window.close();
+});
+test('in-place recording failures expose a retry without treating a deliberate pause as failure',async()=>{
+ const p=desk(),audio=p.d.querySelector('#desk-audio');
+ audio.play=async()=>{throw new Error('Network unavailable');};
+ p.click('#desk-play-recording');await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(p.d.querySelector('#desk-audio-status').hidden,false);
+ assert.equal(p.d.querySelector('.desk-listen').hidden,false);
+ assert.match(p.d.querySelector('#desk-play-recording').textContent,/again/);
+ let reloads=0;
+ Object.defineProperty(audio,'error',{value:{code:2},configurable:true});
+ audio.load=()=>{reloads++;};audio.play=async()=>{};
+ p.click('#desk-play-recording');await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(reloads,1);
+ assert.equal(p.d.querySelector('#desk-audio-status').hidden,true);
+ assert.equal(p.d.querySelector('.desk-listen').hidden,true);
+ audio.play=async()=>{throw new p.dom.window.DOMException('Paused','AbortError');};
+ p.click('#desk-play-recording');await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(p.d.querySelector('#desk-audio-status').hidden,true);
+ p.dom.window.close();
+});
+
+test('the inline recording and project reader never play over each other',()=>{
+ const p=desk(),inline=p.d.querySelector('#desk-audio'),reader=p.d.querySelector('#recording');
+ let inlinePauses=0,readerPauses=0;
+ Object.defineProperty(inline,'paused',{value:false});
+ Object.defineProperty(reader,'paused',{value:false});
+ inline.pause=()=>{inlinePauses++;};reader.pause=()=>{readerPauses++;};
+ inline.dispatchEvent(new p.dom.window.Event('play'));
+ assert.equal(readerPauses,1);
+ reader.dispatchEvent(new p.dom.window.Event('play'));
+ assert.equal(inlinePauses,1);
+ p.dom.window.close();
 });

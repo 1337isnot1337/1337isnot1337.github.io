@@ -250,6 +250,8 @@ function displayFromHash() {
     if (dialog.open) dialog.close();
     return;
   }
+  const deskRecording = document.querySelector('#desk-audio');
+  if (deskRecording && !deskRecording.paused) deskRecording.pause();
   if (activeArticle === article && dialog.open) return;
   stopCoast();
   const turning = dialog.open;

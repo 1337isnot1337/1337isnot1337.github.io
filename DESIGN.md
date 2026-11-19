@@ -100,3 +100,7 @@ The homepage changes pace beneath the shelf: large editorial headings, paper tab
 The biography is an open two-page spread rather than a wall of paragraphs. Robotics is paired with an actual Java excerpt from Cinna’s merged intake-subsystem contribution; particle physics is paired with the title, authors and date of the public IMSAloquium abstract. These are source artifacts, not illustrative performance data. The code link is pinned to its original commit so the displayed excerpt remains traceable. The abstract is not presented as a downloadable paper, and no research plot is invented. Teaching and the lighter off-the-clock note retain the existing personal facts and interests. On mobile the two pages stack in reading order.
 
 Sources: [robot code at its original commit](https://github.com/titan2022/FRC-2026-JAVA/blob/275a9639b7a768b2026bf9e56adfdf6069d0093e/src/main/java/frc/robot/subsystems/base/VoltageControlledBase.java), [IMSAloquium abstract](https://digitalcommons.imsa.edu/sir_presentations/2026/session2/5/).
+
+## In-place sound
+
+The sound spread plays its recording in place. Its initial Play button assigns the MP3 URL only after activation, then gives way to accessible native audio controls. A cursor follows the actual playback time across the spectrogram. Network failure exposes a retry; leaving the sound sheet or opening a project reader pauses inline sound, including history navigation. The two players pause each other rather than mixing. The recording credit and CC BY 4.0 link remain alongside the artifact.
