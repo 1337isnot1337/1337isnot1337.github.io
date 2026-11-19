@@ -38,6 +38,7 @@
     <link rel="stylesheet" href="shelf.css?v=19" />
     <link rel="stylesheet" href="welcome.css?v=1" />
     <link rel="stylesheet" href="workbench.css?v=1" />
+    <link rel="stylesheet" href="notebook.css?v=1" />
     <script defer src="workbench.js?v=1"></script>
     <script defer src="vendor/swiper-bundle.min.js"></script>
     <script defer src="shelf.js?v=21" onerror="
@@ -607,77 +608,65 @@
           >
         </div>
       </section>
-      <section class="personal page-width" id="about">
-        <div class="intro">
-          <h2>A bit about me.</h2>
-          <p>
-            I’m building <a href="#flyover" data-project="flyover">DOPPLERGEIST</a>,
-            which matches aircraft sound with flight records to narrow down where
-            a recording was made. I also work with GPT-6.2 Astra on a
-            <a href="/solved-conjectures/">collection of mathematical proofs and
-            counterexamples</a>. The collection records which arguments have
-            been checked in Lean.
-          </p>
-          <p>
-            I’m a senior at the Illinois Mathematics and Science Academy and
-            the programming lead for Titan Robotics, FIRST Team 2022. Our team
-            of ten writes the Java code that runs the robot. I teach rookies,
-            review code, and dig through match logs when the robot does
-            something we didn’t ask it to.
-          </p>
-          <p>
-            I’m co-president of Epoch, our computer science club, where I’ve
-            taught Linux workshops. I was also a teaching assistant for Elements
-            of Computing Systems I and II. I played varsity Scholastic Bowl,
-            too. At Scobol Solo I won biology and tied for first in chemistry.
-          </p>
-          <p>
-            With Dr. Peter Dong’s group in IMSA-CMS through Fermilab, I write
-            software for a search for a doubly charged Higgs boson. An ordinary
-            collision can look like the particle we’re after. At high masses, even the
-            simulations give us very few of those lookalikes to count. Nathan
-            Catlett and I developed a way to estimate that background, and I
-            wrote most of the code for it.
-          </p>
-          <a
-            class="inline-link"
-            href="https://digitalcommons.imsa.edu/sir_presentations/2026/session2/5/"
-            >Our research abstract</a
-          >
-        </div>
-        <aside class="favorites">
-          <h2>Off the clock</h2>
-          <p>
-            I’m into ALIEN STAGE and the Avatar universe. These are on my shelf,
-            too.
-          </p>
-          <ul>
-            <li>
-              <a href="https://www.youtube.com/watch?v=vYikmsPVq_c"
-                >ALIEN STAGE</a
-              >
-            </li>
-            <li>
-              <a
-                href="https://www.paramountpressexpress.com/nickelodeon/shows/avatar-the-last-airbender/"
-                >Avatar: The Last Airbender</a
-              >
-            </li>
-            <li>
-              <a
-                href="https://www.paramountpressexpress.com/nickelodeon/shows/the-legend-of-korra/"
-                >The Legend of Korra</a
-              >
-            </li>
-            <li>
-              <a
-                href="https://www.paramountpressexpress.com/paramount-plus/shows/avatar-seven-havens/"
-                >Avatar: Seven Havens</a
-              >
-            </li>
-          </ul>
-        </aside>
-      </section>
+<section class="notebook page-width" id="about" aria-labelledby="notebook-title">
+  <header class="notebook-heading">
+    <h2 id="notebook-title">A bit about me.</h2>
+    <p>I’m a senior at the Illinois Mathematics and Science Academy. Some of my work lives in proofs and code. Some of it has to run a robot.</p>
+  </header>
+  <div class="notebook-spread">
+    <article class="notebook-page notebook-robotics" aria-labelledby="robotics-story-title">
+      <h3 id="robotics-story-title">Code that has to<br> move something.</h3>
+      <p>I lead programming for Titan Robotics, FIRST Team 2022. Our team of ten writes the robot’s Java code. I teach rookies, review code, and dig through match logs when the robot does something we didn’t ask it to.</p>
+      <figure class="notebook-code">
+        <figcaption>Run. Reverse. Stop.</figcaption>
+        <pre aria-label="Java excerpt from my intake subsystem contribution"><code><span class="code-keyword">public void</span> run() {
+  setVoltage(DEFAULT_VOLTAGE);
+}
+
+<span class="code-keyword">public void</span> reverse() {
+  setVoltage(-DEFAULT_VOLTAGE);
+}
+
+<span class="code-keyword">public void</span> stop() {
+  setVoltage(0);
+  motor.stopMotor();
+}</code></pre>
+        <a href="https://github.com/titan2022/FRC-2026-JAVA/blob/275a9639b7a768b2026bf9e56adfdf6069d0093e/src/main/java/frc/robot/subsystems/base/VoltageControlledBase.java">From my intake subsystem contribution</a>
+      </figure>
+    </article>
+    <article class="notebook-page notebook-physics" aria-labelledby="physics-story-title">
+      <h3 id="physics-story-title">Looking for<br> a rare signal.</h3>
+      <p>With Dr. Peter Dong’s group in IMSA–CMS through Fermilab, I write software for a search for a doubly charged Higgs boson.</p>
+      <p>Ordinary collisions can look like the signal. At high masses, simulations give us very few of those lookalikes to count. Nathan Catlett and I developed a way to estimate that background, and I wrote most of the code for it.</p>
+      <figure class="notebook-abstract">
+        <figcaption>Research abstract</figcaption>
+        <h4>Conservative Estimate of the Doubly Charged Higgs Boson Background Using Kernel Density</h4>
+        <p class="abstract-authors">Nathan Catlett &amp; Cinna Davis</p>
+        <p class="abstract-venue">IMSAloquium · <time datetime="2026-04-15">April 15, 2026</time></p>
+        <a href="https://digitalcommons.imsa.edu/sir_presentations/2026/session2/5/">Read the abstract</a>
+      </figure>
+    </article>
+  </div>
+  <div class="notebook-margins">
+    <div class="notebook-teaching">
+      <h3>Passing it on.</h3>
+      <p>I’m co-president of Epoch, our computer science club, where I’ve taught Linux workshops. I was also a teaching assistant for Elements of Computing Systems I and II.</p>
+      <p>I played varsity Scholastic Bowl, too. At Scobol Solo I won biology and tied for first in chemistry.</p>
+      <p class="notebook-current">I’m also building <a href="#flyover" data-project="flyover">DOPPLERGEIST</a> and working with GPT-6.2 Astra on a <a href="/solved-conjectures/">collection of mathematical proofs and counterexamples</a>. The collection records which arguments have been checked in Lean.</p>
+    </div>
+    <aside class="favorites notebook-favorites" aria-labelledby="favorites-title">
+      <h3 id="favorites-title">Off the clock</h3>
+      <p>I’m into ALIEN STAGE and the Avatar universe. These are on my shelf, too.</p>
+      <ul>
+        <li><a href="https://www.youtube.com/watch?v=vYikmsPVq_c">ALIEN STAGE</a></li>
+        <li><a href="https://www.paramountpressexpress.com/nickelodeon/shows/avatar-the-last-airbender/">Avatar: The Last Airbender</a></li>
+        <li><a href="https://www.paramountpressexpress.com/nickelodeon/shows/the-legend-of-korra/">The Legend of Korra</a></li>
+        <li><a href="https://www.paramountpressexpress.com/paramount-plus/shows/avatar-seven-havens/">Avatar: Seven Havens</a></li>
+      </ul>
+    </aside>
+  </div>
+</section>
+
       <div class="project-details page-width">
         <article
           class="detail"

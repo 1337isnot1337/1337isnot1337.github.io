@@ -173,6 +173,11 @@ const server = http.createServer((req,res) => {
    await page.locator('#find-project').fill('not-a-project');
    await page.locator('#clear-projects').click();
    assert.equal(await page.locator('#find-project').inputValue(),'');
+   await page.locator('#about').scrollIntoViewIfNeeded();
+   assert.ok(await page.locator('#about pre').evaluate(el=>el.scrollWidth<=el.clientWidth+1),`${name}: robot excerpt fits without horizontal scrolling`);
+   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),`${name}: notebook fits page`);
+   assert.equal(await page.locator('#about .favorites a').count(),4);
+   await page.locator('#about').screenshot({path:`test-results/${name}-notebook.png`});
    await page.goto(base + '/#cpu');
    await page.locator('dialog[open]').waitFor();
    await page.locator('[data-taken="true"]').click();
