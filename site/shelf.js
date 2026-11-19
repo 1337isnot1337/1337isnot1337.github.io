@@ -358,6 +358,7 @@ if (typeof dialog.showModal === "function") {
       event.altKey ||
       event.ctrlKey ||
       event.metaKey ||
+      event.shiftKey ||
       event.target.closest("input, audio, .toy")
     )
       return;

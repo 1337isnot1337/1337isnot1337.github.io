@@ -86,6 +86,22 @@ const server = http.createServer((req,res) => {
    assert.equal(await page.locator('#open-print').getAttribute('href'),'#flyover');
    await page.locator('#open-print').click();
    await page.locator('dialog[open]').waitFor();
+   // Reader navigation must not swallow browser shortcuts or text selection.
+   for (const modifier of ['altKey','ctrlKey','metaKey','shiftKey']) {
+    for (const key of ['ArrowLeft','ArrowRight']) {
+     const prevented = await page.locator('#close-dialog').evaluate((button, detail) => {
+      const event = new KeyboardEvent('keydown', {key: detail.key, [detail.modifier]: true, bubbles: true, cancelable: true});
+      button.dispatchEvent(event);
+      return event.defaultPrevented;
+     }, {modifier,key});
+     assert.equal(prevented,false, `${modifier}+${key}: reader retains native behavior`);
+     assert.ok(page.url().endsWith('#flyover'));
+    }
+   }
+   await page.locator('#close-dialog').press('ArrowRight');
+   await page.locator('dialog #factoring').waitFor();
+   await page.locator('#close-dialog').press('ArrowLeft');
+   await page.locator('dialog #flyover').waitFor();
    await page.locator('[data-audio-cue="70"]').click();
    try {
     await page.waitForFunction(() => {
