@@ -60,7 +60,9 @@
       dialog.querySelector('.sketch-piece').hidden=Boolean(photo);
       if(photo){
         const [name,src,alt,href,label]=photo;
-        title.textContent=name;front.firstElementChild.src=src;front.firstElementChild.alt=alt;
+        title.textContent=name;
+        front.firstElementChild.loading=back.firstElementChild.loading='eager';
+        front.firstElementChild.src=src;front.firstElementChild.alt=alt;
         const [art,description,caption]=surprise();
         back.firstElementChild.src='assets/desk-drawings/'+art+'.svg';
         back.firstElementChild.alt=description;back.lastElementChild.textContent=caption;
