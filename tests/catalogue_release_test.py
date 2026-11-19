@@ -240,7 +240,7 @@ class CatalogueRelease(unittest.TestCase):
             page.write_text(f'<html><head><script type="application/ld+json">{data}</script></head></html>')
         self.assertEqual(release.add_breadcrumb_schema(self.output), 3)
         proof = (self.output / "results/example/proof/index.html").read_text()
-        graph = json.loads(re.search(r'<script type="application/ld\\+json">(.*?)</script>', proof).group(1))
+        graph = json.loads(re.search(r'<script type="application/ld\+json">(.*?)</script>', proof).group(1))
         self.assertEqual(graph["@type"], "WebPage")
         self.assertEqual(graph["url"], base + "results/example/proof/")
         self.assertEqual([node["item"] for node in graph["breadcrumb"]["itemListElement"]],
