@@ -96,6 +96,8 @@
     const p=new DOMPoint(e.clientX,e.clientY).matrixTransform(sketch.getScreenCTM().inverse());
     return Math.round(p.x)+','+Math.round(p.y);
   }
+  // The stroke belongs to the paper. A browser fling can otherwise consume the next button tap.
+  sketch.addEventListener('touchstart',e=>{if(e.cancelable)e.preventDefault();},{passive:false});
   sketch.addEventListener('pointerdown',e=>{
     if(!e.isPrimary||e.button!==0)return;
     sketch.setPointerCapture(e.pointerId);

@@ -690,6 +690,18 @@ const server = http.createServer((req,res) => {
   assert.deepEqual(touchErrors,[]);
   await touch.locator('#close-dialog').tap();
   await touch.waitForFunction(()=>!document.body.classList.contains('modal-open'));
+  await touch.goto(base);
+  await touch.waitForFunction(()=>document.querySelector('.desktop-picture').classList.contains('is-rendered') || !document.querySelector('.graphics-warning').hidden);
+  const pen=await touch.locator('[data-object="pencil"]').boundingBox();
+  await touch.touchscreen.tap(pen.x+pen.width/2,pen.y+pen.height/2);
+  const sheet=await touch.locator('.pickup[open] .sketch-paper').boundingBox();
+  const strokeStart={x:sheet.x+35,y:sheet.y+36,id:1};
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[strokeStart]});
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{...strokeStart,x:strokeStart.x+36,y:strokeStart.y+18}]});
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+  assert.equal(await touch.locator('.sketch-paper path').count(),1);
+  await touch.locator('.pickup .put-down').tap();
+  await touch.locator('.pickup').waitFor({state:'hidden'});
   await touch.close();
   console.log('touch-enabled mobile: swipe, momentum and deliberate tap passed');
   } else console.log(`${engineName}: native touch-drag injection and PDF export not exercised`);

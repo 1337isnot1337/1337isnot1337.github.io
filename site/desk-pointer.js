@@ -39,6 +39,9 @@ export function attachDeskPointer(stage,{pick,orbitBy,endOrbit}) {
     }
     aim(e);
   });
+  stage.addEventListener('touchmove',e=>{
+    if(press?.dragging && e.touches.length===1 && e.cancelable)e.preventDefault();
+  },{passive:false});
   stage.addEventListener('pointerup',e=>{
     if(press?.id!==e.pointerId)return;
     suppress=press.dragging;
