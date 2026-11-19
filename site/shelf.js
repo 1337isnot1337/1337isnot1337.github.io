@@ -696,7 +696,7 @@ function compareWarQueues() {
 function showDeal(winner) {
   const cycleTurn = turn > 0 && turn % 90 === 0 ? 90 : turn % 90;
   turnSlider.value = cycleTurn;
-  document.querySelector('#war-turn-label').value = cycleTurn;
+  document.querySelector('#war-turn-label').textContent = cycleTurn;
   const x = 30 + cycleTurn * 428 / 90;
   document.querySelector('#war-cursor').setAttribute('d', `M${x} 14V113`);
   const queues = document.querySelector("#war-queues");

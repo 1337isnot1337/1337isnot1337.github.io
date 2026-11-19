@@ -330,6 +330,8 @@ test('War comparison distinguishes matching sizes from the full ordered state', 
  const read=name=>[...p.d.querySelectorAll('.war-queue-hand')].map(group=>[...group.querySelectorAll(`[data-queue="${name}"]:not(.is-empty)`)].map(el=>Number(el.textContent)));
  const initial=[[15,7,16,8,1,22,17,9],[10,2,23,18,11,19,12,3],[4,20,13,5,21,14,6]];
  assert.deepEqual(read('start'),initial);
+ assert.equal(p.d.querySelector('#war-turn-label').tagName,'SPAN');
+ assert.ok([...new JSDOM(html).window.document.querySelectorAll('.war-queue-token')].every(token=>token.getAttribute('role')==='img'));
  p.click('#war-compare-six');
  assert.equal(p.d.querySelector('#war-turn').value,'6');
  assert.deepEqual(read('current'),[[17,9,15,10,4,22,19,14],[12,3,23,16,13,18,8,5],[6,20,7,2,21,11,1]]);
