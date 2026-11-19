@@ -83,6 +83,8 @@ test('standalone page links and local assets resolve', () => {
       if (!value || value.startsWith('#') || /^(https?:|mailto:|data:)/.test(value)) continue;
       const target = value.split(/[?#]/)[0];
       const absolute = target.startsWith('/') ? target : new URL(target, origin + url).pathname;
+      // These sections are published from separate source repositories.
+      if (absolute.startsWith('/DOPPLERGEIST/') || absolute.startsWith('/solved-conjectures/')) continue;
       if (absolute.endsWith('/')) assert.ok(fs.existsSync(pageFile(absolute)), url + ' -> ' + target);
       else assert.ok(fs.existsSync(path.join(root, absolute.slice(1))), url + ' -> ' + target);
     }
