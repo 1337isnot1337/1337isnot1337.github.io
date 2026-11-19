@@ -119,6 +119,9 @@ test('War cycle chart and scrubber track the real 23-card deal', () => {
     assert.equal(counts.reduce((a,b)=>a+b),23);
     assert.ok(counts.every(n=>n>0 && n<=12));
   }
+  for (let step=6;step<=90;step++) {
+    for (const trace of traces) assert.equal(trace[step].split(',')[1],trace[step%6].split(',')[1]);
+  }
   p.input('#war-turn',45);
   assert.match(p.d.querySelector('#war-report').value,/Turn 45/);
   assert.notEqual(p.d.querySelector('#war-queues').textContent,initial);
