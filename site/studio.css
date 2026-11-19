@@ -206,8 +206,8 @@
 }
 .postcard-front { display:block; width:100%; height:auto; }
 .postcard-back {
-  min-height: 240px; aspect-ratio: 3/2; display:grid;
-  grid-template-columns: 1.22fr 1fr; gap: 5%;
+  width: 100%; min-height: 240px; aspect-ratio: 3/2; display:grid;
+  grid-template-columns: minmax(0, 1.22fr) minmax(0, 1fr); gap: 5%;
   color:#46373f;
   padding: clamp(14px,3vw,38px);
   align-content:stretch;
@@ -220,7 +220,7 @@
 .post-address { border-left:1px solid #b78e85; padding-left:12%; display:flex; flex-direction:column; justify-content:space-between; }
 .cat-stamp { margin-left:auto; width:clamp(54px,7vw,95px); height:auto; border:4px dotted #f9eed7; }
 .post-address p { font: 550 clamp(16px,2.2vw,28px)/1.3 var(--headline); padding-bottom:6px; border-bottom:1px solid #ad9b8c; }
-.post-address small { font: clamp(8px,1vw,12px) var(--mono); }
+.post-address small { font: 12px var(--mono); overflow-wrap:anywhere; }
 .post-office figcaption { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:12px; margin-top:22px; }
 .post-office figcaption>span { font:650 clamp(19px,2.1vw,25px) var(--headline); }
 .post-controls button:hover,.leaf-pager a:hover { background:#f6e1c5; }

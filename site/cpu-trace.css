@@ -20,7 +20,7 @@
 .trace-controls button { min-height: 44px; padding: 8px 12px; border: 1px solid #aa8f9f; border-radius: 3px; background: #fffbf6; color: var(--ink); font: 13px/1.4 var(--body, sans-serif); }
 .trace-controls button:disabled { opacity: .5; cursor: default; }
 .trace-controls button:focus-visible { outline: 2px solid #7d3251; outline-offset: 3px; }
-.cpu-trace > .cpu-trace-scope { margin: 18px 0 12px; font-size: 11px; line-height: 1.6; color: var(--muted); }
+.cpu-trace > .cpu-trace-scope { margin: 18px 0 12px; font-size: 12px; line-height: 1.6; color: var(--muted); }
 .cpu-trace-sources { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: 11px; }
 @media (max-width: 450px) { .cpu-trace-lane { grid-template-columns: 76px minmax(0, 1fr); gap: 8px 12px; }.cpu-trace-lane code { font-size: 15px; } }
 @media print { .trace-controls { display: none !important; } }
@@ -29,5 +29,5 @@
 .cpu-trace-registers strong { white-space: nowrap; }
 
 .trace-controls[hidden] { display: none; }
-.cpu-trace[data-state="mispredict"] #cpu-trace-fetch{border-left:3px dashed #7d3251;padding-left:12px;background:#f3e6ea}
-.cpu-trace[data-state="bubble"] #cpu-trace-execute{border-left:3px solid #9c8aa9;padding-left:12px;background:#eee7f1}
+.cpu-trace[data-state="mispredict"] #cpu-trace-fetch{border:1px dashed #7d3251;padding-inline:12px;background:#f3e6ea}
+.cpu-trace[data-state="bubble"] #cpu-trace-execute{border:1px solid #9c8aa9;padding-inline:12px;background:#eee7f1}

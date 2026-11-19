@@ -582,6 +582,7 @@ h1 {
 }
 .spectrum {
   position: relative;
+  color: var(--paper);
   background: var(--ink);
 }
 .spectrum img {
@@ -1416,7 +1417,7 @@ html {
 }
 
 /* State the actual research endpoint separately from the small trial-division toy. */
-.research-bound{margin:24px 0 28px;padding:18px 20px;border-left:3px solid var(--berry);background:#f2eaf0;min-width:0}
+.research-bound{margin:24px 0 28px;padding:18px 20px;border:1px solid var(--hair);background:#f2eaf0;min-width:0}
 .research-bound math{font-size:clamp(20px,3vw,28px);margin:0 0 16px}
 .research-bound figcaption{font-size:12px;line-height:1.6;color:var(--muted)}
 .research-bound figcaption a{display:inline-block;margin-left:8px}

@@ -287,6 +287,9 @@ const server = http.createServer((req,res) => {
    await page.locator(name === 'mobile' ? '.postcat' : '.object-letters').click();
    await page.locator('#flip-post').click();
    assert.match(await page.locator('#post-route').innerText(),/Particle physics/);
+   assert.ok(await page.locator('.postcard-back').evaluate(back =>
+     back.offsetWidth <= back.parentElement.clientWidth && document.documentElement.scrollWidth <= innerWidth
+   ), `${name}: postcard reverse stays on its paper and fits the viewport`);
    const downloaded = page.waitForEvent('download');
    await page.locator('#save-post').click();
    assert.equal((await downloaded).suggestedFilename(),'a-postcard-from-cinnas-desk.png');

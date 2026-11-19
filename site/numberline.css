@@ -11,7 +11,7 @@
 .numberline-row [data-integer].is-conflict{outline:2px dashed #9b314e;outline-offset:3px;background:#f5dbe2;color:#7b1d3a;border-color:#9b314e}
 .numberline-row button:hover{border-color:#615274;box-shadow:0 2px 6px #422c411a}
 .numberline-row button:focus-visible{outline:3px solid #6b3986;outline-offset:3px}
-.numberline-continuation{font-size:11px;line-height:1.55;color:var(--muted);margin:19px 0 22px}
+.numberline-continuation{font-size:12px;line-height:1.55;color:var(--muted);margin:19px 0 22px}
 .numberline-density{font-size:14px;line-height:1.5;margin:0 0 10px}#desk-number-density{font:500 17px var(--mono)}
 #desk-number-status{font-size:14px;line-height:1.55;margin:0 0 8px;min-height:3.1em}
 #desk-number-explanation{font-size:12px;line-height:1.55;color:var(--muted);margin:0 0 15px}
@@ -21,8 +21,8 @@
 .numberline-reason summary{font-size:12px;line-height:1.5;cursor:pointer}
 .numberline-reason p{font-size:12px;line-height:1.6;color:var(--muted);margin:12px 0 0}
 @media(max-width:850px){.numberline-paper{padding:22px 18px}.numberline-row{gap:5px}}
-@media(max-width:680px){.numberline-paper{padding:22px 16px}.numberline-row{gap:4px}.numberline-row [data-integer]{border-radius:5px;font-size:14px;height:44px}.numberline-instruction{font-size:15px}.numberline-paper .desk-figure-heading{font-size:10px;gap:6px}}
-@media(max-width:360px){.numberline-paper{padding-inline:12px}.numberline-row{gap:3px}.numberline-row [data-integer]{font-size:14px}.numberline-paper .desk-figure-heading{font-size:9px}}
+@media(max-width:680px){.numberline-paper{padding:22px 16px}.numberline-row{gap:4px}.numberline-row [data-integer]{border-radius:5px;font-size:14px;height:44px}.numberline-instruction{font-size:15px}.numberline-paper .desk-figure-heading{font-size:12px;gap:6px;flex-wrap:wrap}}
+@media(max-width:360px){.numberline-paper{padding-inline:12px}.numberline-row{gap:3px}.numberline-row [data-integer]{font-size:14px}}
 @media print{.numberline-paper{box-shadow:none}.numberline-row [data-integer].is-selected{color:var(--ink);background:#e8e5f0;outline:1px solid var(--ink)}#desk-number-reset{display:none!important}}
 
 #desk-number-status[data-valid="false"] #desk-number-explanation { color: #7b1d3a; }

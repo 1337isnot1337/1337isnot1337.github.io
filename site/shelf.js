@@ -234,7 +234,7 @@ for (const print of carousel.querySelectorAll(".print")) {
 }
 
 function loadArticleMedia(article) {
-  for (const media of article.querySelectorAll('img[data-src], audio[data-src]')) {
+  for (const media of article.querySelectorAll('audio[data-src]')) {
     media.src = media.dataset.src;
     media.hidden = false;
     delete media.dataset.src;

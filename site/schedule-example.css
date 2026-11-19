@@ -6,7 +6,7 @@
 .schedule-example-input { padding-bottom: 18px; border-bottom: 1px solid #cbb8c2; }
 .schedule-example-input > div { margin-top: 10px; }
 .schedule-example-input b { display: block; font-size: 13px; font-weight: 500; }
-.schedule-example-input span { display: block; margin-top: 2px; font: 11px/1.7 var(--mono); color: var(--muted); }
+.schedule-example-input span { display: block; margin-top: 2px; font: 12px/1.7 var(--mono); color: var(--muted); }
 .schedule-example-input code { font: inherit; color: var(--ink); }
 .schedule-example-output { margin-top: 20px; }
 .schedule-example-output > p { margin: 0 0 12px; font-size: 12px; line-height: 1.6; color: var(--muted); }
@@ -15,7 +15,7 @@
 .schedule-example-day dl { margin: 0; }
 .schedule-example-day dl > div { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
 .schedule-example-day dl > div + div { margin-top: 5px; }
-.schedule-example-day dt { flex-shrink: 0; font-size: 11px; color: var(--muted); }
+.schedule-example-day dt { flex-shrink: 0; font-size: 12px; color: var(--muted); }
 .schedule-example-day dd { margin: 0; font: 12px/1.6 var(--mono); text-align: right; }
 .schedule-example .schedule-example-privacy { margin: 18px 0 12px; padding-top: 14px; border-top: 1px solid #cbb8c2; font-size: 12px; line-height: 1.6; color: var(--muted); }
 .schedule-example > a { font-size: 13px; }

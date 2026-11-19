@@ -10,7 +10,7 @@
           "site/index.html"
         ],
         "createdAt": "2026-11-19T05:55:44.866Z",
-        "reason": "Agent verified the two divider warnings in the rendered catalogue and footer: catalogue text clears the line by 9 to 11px, footer text by 22 to 29px across phone and desktop."
+        "reason": "Rendered checks at 320px and 1366px show inset notebook text, postcard address text and modal controls. The framed desk art and spectrogram intentionally reach the frame. CPU highlight rows have 12px inline padding."
       },
       {
         "rule": "cream-palette",
@@ -29,6 +29,42 @@
         ],
         "createdAt": "2026-11-19T05:55:44.883Z",
         "reason": "DESIGN.md specifies the little strip of CSS tape on the interests note. Its cut edge is intentional stationery artwork."
+      },
+      {
+        "rule": "nested-cards",
+        "value": "*",
+        "files": [
+          "site/index.html"
+        ],
+        "createdAt": "2026-11-19T18:21:30.318Z",
+        "reason": "The three matches are the playing cards for players A, B and C in the interactive War deal."
+      },
+      {
+        "rule": "flat-type-hierarchy",
+        "value": "*",
+        "files": [
+          "site/index.html"
+        ],
+        "createdAt": "2026-11-19T18:21:30.357Z",
+        "reason": "Chromium measures the desk heading at 36px on a phone and 72px on desktop, compared with 14px and 18px introductory text. The notebook has a 33px heading and 15px paragraphs at 320px."
+      },
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "site/index.html"
+        ],
+        "createdAt": "2026-11-19T18:21:30.419Z",
+        "reason": "The muted brown drop shadow grounds the printed illustration on a light green desk surround. The dark-green element is the picture backing."
+      },
+      {
+        "rule": "repeating-stripes-gradient",
+        "value": "*",
+        "files": [
+          "site/index.html"
+        ],
+        "createdAt": "2026-11-19T18:21:30.466Z",
+        "reason": "The approved shelf design uses a printed paper grid and tape; the repeating texture belongs to that stationery artwork."
       }
     ]
   }

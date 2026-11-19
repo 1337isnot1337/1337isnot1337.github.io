@@ -19,9 +19,9 @@
 .desk-figure-heading{display:flex;justify-content:space-between;gap:12px;font:11px/1.5 var(--mono);margin-bottom:18px;color:var(--muted)}
 .desk-recording{margin:0;padding:24px;background:#fffbf6;transform:rotate(1deg);box-shadow:0 5px 14px #422c4114}
 .desk-recording img{display:block;width:100%;height:auto;aspect-ratio:1600/550;object-fit:cover;background:#211d27}
-.desk-time{display:flex;justify-content:space-between;font:10px var(--mono);margin:8px 0 24px}
+.desk-time{display:flex;justify-content:space-between;font:12px var(--mono);margin:8px 0 24px}
 .desk-recording figcaption{font-size:15px;line-height:1.6}.desk-recording figcaption strong{font-family:inherit;font-weight:650}
-.desk-recording small{display:block;font-size:10px;line-height:1.6;margin-top:16px;color:var(--muted)}
+.desk-recording small{display:block;font-size:12px;line-height:1.6;margin-top:16px;color:var(--muted)}
 .desk-playing-cards{display:flex;justify-content:center;gap:14px;padding:20px 10px 30px}
 .desk-playing-cards>div{display:flex;flex-direction:column;justify-content:space-between;align-items:center;width:30%;max-width:140px;aspect-ratio:3/4;background:#fffbf6;box-shadow:0 5px 12px #422c4114;border-radius:7px;padding:15px 6px;color:#742e49}
 .desk-playing-cards>div:first-child{transform:rotate(-7deg)}.desk-playing-cards>div:nth-child(2){color:#3e6455;transform:translateY(-8px)}.desk-playing-cards>div:last-child{color:#4a527d;transform:rotate(7deg)}
@@ -36,8 +36,8 @@
 .desk-bit-row{display:grid;grid-template-columns:repeat(16,minmax(0,1fr));gap:3px;margin:0 0 28px}
 .desk-bit-row>button,.desk-fixed-bit{position:relative;text-align:center;border:1px solid #c4d0c5;border-radius:2px;padding:9px 0;font:14px var(--mono);background:#edf1ea;color:#324b3d}
 .desk-bit-row>button[aria-pressed=true]{background:#46694f;border-color:#46694f;color:#fff}.desk-bit-row button:hover{outline:2px solid #74907b;outline-offset:1px}
-.desk-fixed-bit{color:#7e7180;background:#eee5ed;border-color:#d3c5d0}
-.desk-bit-row small{position:absolute;font-size:8px;top:100%;left:50%;transform:translateX(-50%);margin-top:4px}.desk-bit-fallback{grid-column:2/-1;font:18px var(--mono);padding:7px}
+.desk-fixed-bit{color:#604f62;background:#eee5ed;border-color:#d3c5d0}
+.desk-bit-row small{position:absolute;font-size:11px;top:100%;left:50%;transform:translateX(-50%);margin-top:4px}.desk-bit-fallback{grid-column:2/-1;font:18px var(--mono);padding:7px}
 #desk-bit-sum{font:12px/1.7 var(--mono);overflow-wrap:anywhere;min-height:3.4em}.desk-register-reset{margin-top:12px}
 @media(max-width:850px){.desk-sheet{column-gap:28px;row-gap:0;padding:35px 28px;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr)}.desk-recording{padding:18px}.desk-register{padding:22px 16px}.desk-heading p{font-size:14px;max-width:30ch}.desk-tabs button{padding:13px 19px}}
 @media(max-width:680px){.workbench{padding-block:50px}.desk-heading{display:block;margin-bottom:24px}.desk-heading p{margin-top:16px;max-width:none}.desk-heading p br{display:none}.desk-tabs{padding-left:8px;gap:4px}.desk-tabs button{padding:12px 11px;font-size:14px;flex:1}.desk-sheet{grid-template-columns:1fr;grid-template-areas:"intro" "artifact" "copy";grid-template-rows:auto;padding:30px 20px;gap:28px;min-height:0}.desk-intro h3{margin-bottom:0}.desk-intro h3{font-size:35px}.desk-intro h3 br{display:none}.desk-copy p{max-width:none;font-size:15px}.desk-copy p.desk-small{font-size:13px}.desk-recording{transform:none}.desk-register{transform:none}.desk-playing-cards{padding:16px 10px 25px}.desk-playing-cards>div{max-width:110px}.desk-heading h2{font-size:39px}.desk-address{font-size:55px}.desk-bit-row{gap:2px}.desk-bit-row>button,.desk-fixed-bit{font-size:12px;padding:9px 0}}
@@ -78,7 +78,7 @@
 .desk-map img{display:block;width:100%;height:auto;background:#fffbf6}
 .desk-map figcaption{max-width:90ch;margin-top:14px;font-size:13px;line-height:1.65}
 .desk-map-links{display:flex;flex-wrap:wrap;gap:12px 28px;font-size:14px;line-height:1.6}
-.desk-map-credit{display:block;margin-top:18px;font-size:11px;line-height:1.7;color:var(--muted)}
+.desk-map-credit{display:block;margin-top:18px;font-size:12px;line-height:1.7;color:var(--muted)}
 @media(max-width:680px){.desk-sound{grid-template-areas:"intro" "artifact" "copy" "map"}.desk-map{margin-top:0}.desk-map-body>p{font-size:14px}.desk-map-body .desk-map-lede{font-size:23px}}
 /* Each sheet is also a native destination when enhancements are unavailable. */
 .desk-sheet{scroll-margin-top:100px}
