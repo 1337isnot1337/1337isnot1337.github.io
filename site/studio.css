@@ -334,7 +334,11 @@ html:not([data-view]):not(:has(#projects:target)) .mast { display:none; }
   background:transparent; touch-action:pan-y pinch-zoom;
 }
 .object-caption h2 { pointer-events:auto; }
-@media (max-width:680px) {
+@media screen and (max-width:680px) {
+  .open-project {
+    --exposed-desk:clamp(32px,5.5svh,48px);
+    inset:var(--exposed-desk) 0 0; height:calc(100dvh - var(--exposed-desk));
+  }
   html[data-view="desk"] .studio-ready .desk-reading {
     width:calc(100% - 24px); margin:clamp(38px,6svh,54px) auto 28px; scroll-margin-top:clamp(38px,6svh,54px);
   }
