@@ -85,7 +85,7 @@
       const header = document.querySelector("header");
       try {
         const { default: init } = await import("./schedule.js");
-        await init({ module_or_path: new URL("./schedule_bg.wasm?v=92cec6492773", import.meta.url) });
+        await init({ module_or_path: new URL("./schedule_bg.wasm?v=b2b3dde654c1", import.meta.url) });
         requestAnimationFrame(() => {
           document.body.prepend(header);
           if (new URLSearchParams(location.search).get("example") === "1") {

@@ -46,6 +46,12 @@ test('published WASM separates terms, expands periods and recovers from invalid 
   }
   await submit(row('1(I)', 'S1', 'C105'));
   assert.match(document.querySelector('.schedule-results').textContent, /C105/);
+  for (const room of ['', '   ']) {
+    await submit(row('1(A)', 'S1', room));
+    const periods = document.querySelector('.schedule-days ol').children;
+    assert.equal(periods[0].textContent, 'Room not listed');
+    assert.equal(periods[1].textContent, 'Free period');
+  }
   dom.window.close();
 });
 

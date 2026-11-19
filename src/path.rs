@@ -213,16 +213,22 @@ pub fn generate_path(weekly_schedule: &[Class], semester: &Semester) -> [[String
 
         for class in weekly_schedule {
             if &class.semester == semester && class.days.contains(&letter_day) {
+                // An occupied period without a room is not a free period.
+                let room = if class.room.trim().is_empty() {
+                    "Room not listed".to_string()
+                } else {
+                    class.room.clone()
+                };
                 for mods in &class.mods {
                     match mods {
-                        1 => weekly_path[day][0].clone_from(&class.room),
-                        2 => weekly_path[day][1].clone_from(&class.room),
-                        3 => weekly_path[day][2].clone_from(&class.room),
-                        4 => weekly_path[day][3].clone_from(&class.room),
-                        5 => weekly_path[day][4].clone_from(&class.room),
-                        6 => weekly_path[day][5].clone_from(&class.room),
-                        7 => weekly_path[day][6].clone_from(&class.room),
-                        8 => weekly_path[day][7].clone_from(&class.room),
+                        1 => weekly_path[day][0].clone_from(&room),
+                        2 => weekly_path[day][1].clone_from(&room),
+                        3 => weekly_path[day][2].clone_from(&room),
+                        4 => weekly_path[day][3].clone_from(&room),
+                        5 => weekly_path[day][4].clone_from(&room),
+                        6 => weekly_path[day][5].clone_from(&room),
+                        7 => weekly_path[day][6].clone_from(&room),
+                        8 => weekly_path[day][7].clone_from(&room),
                         _ => panic!("Unexpected val --> {mods}"),
                     }
                 }
@@ -285,6 +291,16 @@ mod tests {
         }
         assert_eq!(get_schedule(&row("1(A)", "S1", "A101")).unwrap().len(), 1);
         assert!(get_schedule(&format!("{}\n{rows}", row("9(A)", "S1", "X"))).is_err());
+    }
+
+    #[test]
+    fn missing_rooms_are_not_free_periods() {
+        for room in ["", "   "] {
+            let classes = get_schedule(&row("1(A)", "S1", room)).unwrap();
+            let path = generate_path(&classes, &Semester::S1);
+            assert_eq!(path[0][0], "Room not listed");
+            assert_eq!(path[0][1], "");
+        }
     }
 
     #[test]
