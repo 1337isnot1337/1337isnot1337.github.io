@@ -62,6 +62,11 @@ jobs:
             --fallback-source _sources/catalogue-snapshot \
             --output "$GITHUB_WORKSPACE/site/solved-conjectures" \
             --base-url https://1337isnot1337.github.io/solved-conjectures/
+      - name: Generate research notes directory from the validated catalogue
+        run: |
+          PYTHONDONTWRITEBYTECODE=1 python3 scripts/build_research_notes_index.py \
+            --catalogue "$GITHUB_WORKSPACE/site/solved-conjectures" \
+            --output "$GITHUB_WORKSPACE/site/research-notes/index.html"
       - name: Install Chromium
         run: npx playwright install chromium
       - name: Check browser system dependencies
