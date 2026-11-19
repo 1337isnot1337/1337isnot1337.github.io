@@ -1274,3 +1274,10 @@ html {
 @media (max-width: 680px) {
   .chart-grid text { font-size: 24px; }
 }
+
+.spectrum-label, .spectrum-time { display: flex; justify-content: space-between; color: var(--muted); font: 11px var(--mono); }
+.spectrum-label { margin-bottom: 7px; }
+.spectrum-time { margin-top: 5px; }
+.listening-note { margin-top: 12px; font-size: 14px; }
+.audio-cues { margin: 10px 0 7px; }
+.audio-cues[hidden] { display: none; }

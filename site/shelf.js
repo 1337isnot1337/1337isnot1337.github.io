@@ -386,6 +386,21 @@ const seek = document.querySelector("#spectrum-seek");
 const hint = document.querySelector(".seek-hint");
 const timestamp = (time) =>
   Math.floor(time / 60) + ":" + String(Math.floor(time % 60)).padStart(2, "0");
+const audioCues = document.querySelector('.audio-cues');
+const audioStatus = document.querySelector('#audio-status');
+audioCues.hidden = false;
+for (const cue of audioCues.querySelectorAll('button')) {
+  cue.addEventListener('click', async () => {
+    audioStatus.hidden = true;
+    try {
+      audio.currentTime = Number(cue.dataset.audioCue);
+      await audio.play();
+    } catch {
+      audioStatus.hidden = false;
+      audioStatus.textContent = 'The recording could not start. Try the audio player below.';
+    }
+  });
+}
 let seekableCopy = null;
 function enableSeeking() {
   const ranges = audio.seekable;

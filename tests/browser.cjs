@@ -64,6 +64,13 @@ const server = http.createServer((req,res) => {
    assert.equal(await page.locator('#open-print').getAttribute('href'),'#flyover');
    await page.locator('#open-print').click();
    await page.locator('dialog[open]').waitFor();
+   await page.locator('[data-audio-cue="70"]').click();
+   await page.waitForFunction(() => {
+    const audio=document.querySelector('#recording');
+    return !audio.paused && audio.currentTime >= 70 && Number.isFinite(audio.duration);
+   });
+   assert.ok(await page.locator('#recording').evaluate(el => Math.abs(el.duration - 85.23) < 1));
+   await page.locator('.player').screenshot({path:`test-results/${name}-audio.png`});
    await page.locator('#previous-detail').click();
    await page.locator('#repeat-war').click();
    assert.match(await page.locator('#war-report').textContent(), /Turn 90.*game repeats/);

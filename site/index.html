@@ -29,9 +29,9 @@
       crossorigin
     />
     <link rel="stylesheet" href="vendor/swiper-bundle.min.css" />
-    <link rel="stylesheet" href="shelf.css?v=10" />
+    <link rel="stylesheet" href="shelf.css?v=11" />
     <script defer src="vendor/swiper-bundle.min.js"></script>
-    <script defer src="shelf.js?v=8"></script>
+    <script defer src="shelf.js?v=9"></script>
     <noscript
       ><style>
         .shelf-controls,
@@ -724,6 +724,7 @@
             it with historical flight tracks.
           </p>
           <figure class="player">
+            <p class="spectrum-label">Frequency ↑ <span>100–400 Hz</span></p>
             <div class="spectrum">
               <img
                 width="1600"
@@ -744,6 +745,14 @@
               />
               <span class="seek-hint" aria-hidden="true"></span>
             </div>
+            <div class="spectrum-time" aria-hidden="true"><span>0:00</span><span>Time →</span><span>1:25</span></div>
+            <p class="listening-note">The bright curves are tones from the aircraft. Follow them
+              from left to right: the pitch falls as it passes.</p>
+            <div class="outcomes audio-cues" role="group" aria-label="Compare the aircraft pitch" hidden>
+              <button type="button" data-audio-cue="10">Play at 0:10</button>
+              <button type="button" data-audio-cue="70">Play at 1:10</button>
+            </div>
+            <p id="audio-status" class="experiment-note" role="status" hidden></p>
             <audio
               id="recording"
               controls

@@ -149,3 +149,22 @@ test('rook comparisons show the actual common-neighbor counts', () => {
   assert.equal(p.d.querySelectorAll('#rook-board [aria-pressed="true"]').length,1);
   p.dom.window.close();
 });
+
+test('audio comparison seeks explicitly and explains playback failures', async () => {
+  const p=page();
+  const audio=p.d.querySelector('#recording');
+  let starts=0;
+  audio.play=async () => {starts++;};
+  p.click('[data-audio-cue="70"]');
+  await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(audio.currentTime,70);
+  assert.equal(starts,1);
+  assert.equal(p.d.querySelector('#audio-status').hidden,true);
+  audio.play=async () => {throw new Error('Unavailable');};
+  p.click('[data-audio-cue="10"]');
+  await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(audio.currentTime,10);
+  assert.equal(p.d.querySelector('#audio-status').hidden,false);
+  assert.match(p.d.querySelector('#audio-status').textContent,/Try the audio player/);
+  p.dom.window.close();
+});
