@@ -19,6 +19,8 @@
     const changed=page.dataset.view!==view;
     page.dataset.view=view;
     switcher.hash=view==="desk" ? "#projects" : "#studio";
+    switcher.title=view==="desk" ? "Boring mode" : "Back to the desk";
+    switcher.setAttribute("aria-label",switcher.title);
     const back=rail.querySelector(".back-to-desk");
     back.hash=view==="desk" ? "#studio" : "#projects";
     back.querySelector("span").textContent=view==="desk" ? "Put it back" : "Back to shelf";
@@ -28,7 +30,7 @@
   function showFurniture() {
     if (page.dataset.view!=="desk" || !sceneNearby || sceneStarted || studio.dataset.open || document.querySelector(".open-project[open]")) return;
     sceneStarted=true;
-    import("./furniture.js?v=8").then(module => module.mountFurniture(stage)).catch(() => {
+    import("./furniture.js?v=9").then(module => module.mountFurniture(stage)).catch(() => {
       stage.querySelector(".graphics-warning").hidden = false;
     });
   }
@@ -121,7 +123,7 @@
     }
     if (room) {
       remember(activeLeaf?.dataset.leaf || deskStops[target.dataset.deskPanel] || room.id);
-      if (room.id === "elsewhere") addressPostcard();
+
     }
     if (move) {
       const turning = activeLeaf && previous === notebook;
@@ -209,6 +211,22 @@
       {transform:"perspective(900px) rotateY(0) rotate(-1deg)",opacity:1}
     ], {duration:230, easing:"ease-out"});
   });
+  const drawer=stage.querySelector('[data-object="drawer"]');
+  const card=stage.querySelector('[data-object="keepsake"]');
+  const post=studio.querySelector('.drawer-post');
+  drawer.hidden=false;
+  drawer.addEventListener('click',()=>{
+    const open=drawer.getAttribute('aria-expanded')!=='true';
+    drawer.setAttribute('aria-expanded',String(open));card.hidden=!open;
+    stage.dispatchEvent(new Event('drawer-change'));
+    if(open && drawer.matches(':focus-visible'))card.focus({preventScroll:true});
+  });
+  card.addEventListener('click',()=>{
+    if(card.hidden || drawer.getAttribute('aria-expanded')!=='true')return;
+    addressPostcard();back.hidden=true;nightMail.hidden=false;flip.textContent='Turn it over ↻';
+    post.showModal();
+  });
+  window.addEventListener('hashchange',()=>{if(post.open)post.close();});
   const save = studio.querySelector("#save-post");
   save.addEventListener("click", async () => {
     save.disabled = true;

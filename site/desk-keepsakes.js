@@ -14,8 +14,7 @@
   const photos={
     'flyover-print':['DOPPLERGEIST','assets/prints/flyover.webp','An illustrated plane banking above a cat listening on a hillside.','#flyover','Listen to the recording'],
     'conway-print':['Conway’s 99-graph','assets/prints/conway.webp','A colorful geometric print from the graph theory shelf.','#conway','Explore the graph'],
-    'robot-photo':['In the robot shop','assets/studio/roller.webp','An intake roller, drive belt and hex key on the robot worktable.','#about','Open the robotics notebook'],
-    plant:['The windowsill cutting','assets/desk-drawings/cutting.svg','A pencil study of a leafy cutting and its terracotta pot.']
+    'robot-photo':['In the robot shop','assets/studio/roller.webp','An intake roller, drive belt and hex key on the robot worktable.','#about','Open the robotics notebook']
   };
   const doodles=[
     ['wave','A striped cat waves one paw.','oh hi. you found the back.'],
@@ -49,6 +48,7 @@
   }
   let boardIndex=0;
   for(const item of items){
+    if(item.dataset.object==='plant')continue;
     item.hidden=false;
     item.addEventListener('click',()=>{
       if(dialog.open)return;

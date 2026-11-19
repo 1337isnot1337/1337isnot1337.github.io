@@ -50,7 +50,7 @@ components:
 
 ## Overview
 
-Visitors arrive at Cinna’s writing desk and can pick up its contents. The Boring mode switch leads to the shelf of six illustrated projects, each with an experiment and project notes. The oscilloscope opens the workbench, the folder opens the catalogue, the clothbound notebook opens personal stories and the letters open a postcard. Books on the hutch link to proofs and research notes. A cassette opens “Off the clock.”
+Visitors arrive at Cinna’s writing desk and can pick up its contents. The floating shelf icon for Boring mode leads to the shelf of six illustrated projects, each with an experiment and project notes. The oscilloscope opens the workbench, the folder opens the catalogue, the clothbound notebook opens personal stories and the letters open Cinna’s social profiles. Books on the hutch link to proofs and research notes. The cassette can be turned in the hand before reading its liner notes.
 
 ## Colors
 
@@ -81,7 +81,7 @@ Each print has a small folded corner clipped into the paper. Hover deepens the s
 - **War trace.** Three hand-size traces are computed from the actual 90-turn deal. A keyboard-accessible scrubber inspects the full card order at each turn. Solid, dashed and dotted lines distinguish players without relying on color. The caption distinguishes matching hand sizes from a complete repeated state.
 - **Binary register.** An optional worksheet inside the CPU encoder lays out all sixteen bits, marks the fixed instruction bit, and highlights the address’s ones. Its place-value sum is computed from the same bits as the instruction output.
 - **Recording.** The DOPPLERGEIST panel pairs the spectrogram with its native audio player and a moving cursor. Both assets derive from Praveen Pathak’s credited flyover recording. [Dataset](https://doi.org/10.5281/zenodo.23424278) · [License](https://creativecommons.org/licenses/by/4.0/) · [Audio and figure notes](https://1337isnot1337.github.io/DOPPLERGEIST/site-media/livermore-r04-source.txt)
-- **Letters.** The social profiles share a room with a two-sided illustrated postcard. Turning it over reveals up to five distinct stops from this browser-tab visit. The latest stop with artwork supplies the stamp. Saving the card exports its front and back together in a 1200 × 1600 PNG.
+- **Letters.** The Letters room holds the three social addresses. The two-sided illustrated postcard lives inside the desk drawer. Turning it over reveals up to five distinct stops from this browser-tab visit. The latest stop with artwork supplies the stamp. Saving the card exports its front and back together in a 1200 × 1600 PNG.
 
 ## Do's and Don'ts
 
@@ -93,9 +93,9 @@ Each print has a small folded corner clipped into the paper. Hover deepens the s
 
 The scene at `#studio` uses self-hosted Three.js r180. `site/desk-model.js` builds the desk and hutch from geometry, with separate moving parts for the drawer, notebook cover and file flap. Brass fittings, woven bookcloth and a glass oscilloscope screen reflect the room’s lighting differently. The desktop, trim and floor use `site/assets/furniture/grain.webp`, a scanned wood-grain texture derived from Poly Haven’s CC0 Wood Table 001. The varnish uses the corresponding displacement and roughness scans. The blotter uses a scan of pebbled leather. Glazed ceramic and brass reflect a reduced HDR panorama of an artist’s workshop. [Leather](https://polyhaven.com/a/brown_leather) · [Workshop lighting](https://polyhaven.com/a/artist_workshop) · [Source asset](https://polyhaven.com/a/wood_table_001) · [License](https://polyhaven.com/license)
 
-The desk fills the first viewport. A horizontal drag orbits within a limited arc. Tall screens have a narrower hutch and a different arrangement of the same objects. A ray selects the visible surface under the pencil nib. Keyboard targets follow the props around the desk. A blocked graphics context displays a notice and a list of destinations. Software rendering uses simpler materials and a compositor preview while dragging. A prefiltered copy of the workshop panorama provides reflections on accelerated devices.
+The desk fills the first viewport. The mouse gently shifts the viewpoint, and a horizontal drag orbits within a limited arc. Reduced motion disables tracking. The desktop header only appears on the project shelf. Tall screens have a narrower hutch and a different arrangement of the same objects. A ray selects the visible surface under the pencil nib. Keyboard targets follow the props around the desk. A blocked graphics context displays a notice and a list of destinations. Software rendering uses simpler materials and a compositor preview while dragging. A prefiltered copy of the workshop panorama provides reflections on accelerated devices.
 
-The prints and framed photo enlarge into two-sided cards with original SVG doodles on their backs. The plant opens a botanical study. Either pencil, the cup and the blotter share a sheet of scratch paper. The lamp switches on a warm light. The drawer opens to reveal a postcard.
+The prints and framed photo enlarge into two-sided cards with original SVG doodles on their backs. The plant, both pencils, the cup and the cassette lift into a full-screen inspection view. Their actual model can be rotated with a pointer, touch or the arrow keys. Both pencils and the cup lead to the same sheet of scratch paper as the blotter. The lamp switches on a warm light. The postcard can only be taken from the open drawer.
 
 The desk becomes inert while someone reads an experiment, the catalogue, a notebook leaf or Letters. Putting it back restores focus to the originating object. Reduced motion applies cover and drawer positions immediately and skips paper entrance animations.
 

@@ -262,32 +262,67 @@ export function furnish(scene, narrow, repaint, software=false) {
   for(const x of [-.22,.22]){cylinder(tape,.068,.068,.017,cream,x,.125,-.017);cylinder(tape,.029,.029,.019,finish(0x3d3437),x,.137,-.017);}
   letter(tape,'off the clock',.82,.119,0,.109,-.178,{flat:true,italic:true});
   for(const x of [-.43,.43])for(const z of [-.23,.23])cylinder(tape,.017,.017,.009,brass,x,.099,z,8);
-  // Wheel-thrown pot with live trailing leaves at the end of the hutch.
-  const leafShape=new T.PlaneGeometry(1,1,4,10);
-  const leafVertices=leafShape.attributes.position;
-  const leafUV=leafShape.attributes.uv;
-  const leafTone=[];
-  for(let i=0;i<leafVertices.count;i++){
-    const t=leafUV.getY(i),side=leafUV.getX(i)*2-1;
-    const broad=Math.pow(Math.max(.001,Math.sin(t*Math.PI)),.75)*(1.32-.72*t);
-    leafVertices.setXYZ(i,side*broad*.124,.037*broad*(1-Math.abs(side))-.062*t*t,.32*t);
-    const vein=side===0 ? .21 : 0;
-    leafTone.push(.72+vein+.08*(1-t),.80+vein*.8,.56+vein*.8);
+  // One curved blade and a painted vein texture are shared by every leaf on the cutting.
+  const leafShape=new T.PlaneGeometry(1,1,12,20);
+  const vertices=leafShape.attributes.position,leafUV=leafShape.attributes.uv;
+  for(let i=0;i<vertices.count;i++){
+    const t=leafUV.getY(i),s=leafUV.getX(i)*2-1,edge=Math.abs(s);
+    const width=Math.pow(Math.max(.0001,Math.sin(Math.PI*t)),.67)*(1.55-.98*t);
+    const fold=.026*width*(1-edge)-.008*width*Math.sin(edge*Math.PI);
+    vertices.setXYZ(i,s*width*.123,fold-.065*t*t+.007*Math.sin(9*t+s)*edge,.34*t-.033*width*edge);
   }
-  leafShape.setAttribute('color',new T.Float32BufferAttribute(leafTone,3));leafShape.computeVertexNormals();
-  const pot=tag(group(world,0,1.53,-1.47),'plant',[0,.36,0],.58,.65);
-  if(narrow){pot.position.set(-.49,1.53,-1.48);pot.scale.setScalar(.65);}
-  else pot.position.x=.03;
-  cylinder(pot,.28,.20,.41,finish(0xaf7559),0,.205,0);cylinder(pot,.294,.29,.063,finish(0xc28a6d),0,.40,0);
-  cylinder(pot,.245,.24,.019,finish(0x493e30),0,.433,0);
+  leafShape.computeVertexNormals();
+  const blade=document.createElement('canvas');blade.width=192;blade.height=320;
+  const ink=blade.getContext('2d'),wash=ink.createLinearGradient(0,0,192,285);
+  wash.addColorStop(0,'#8f9c54');wash.addColorStop(.42,'#b6c079');wash.addColorStop(1,'#738348');
+  ink.fillStyle=wash;ink.fillRect(0,0,192,320);
+  for(let i=0;i<260;i++){
+    const x=random()*192,y=random()*320;
+    ink.fillStyle=random()>.67?'rgba(235,216,133,.17)':'rgba(58,84,46,.10)';
+    ink.beginPath();ink.ellipse(x,y,1+random()*4,3+random()*12,(x<96?1:-1)*.45,0,Math.PI*2);ink.fill();
+  }
+  for(const side of [-1,1])for(let row=0;row<11;row++){
+    const y=300-row*24;
+    ink.strokeStyle='rgba(224,224,155,.52)';ink.lineWidth=.9;
+    ink.beginPath();ink.moveTo(96,y);ink.bezierCurveTo(96+side*22,y-10,96+side*53,y-16,96+side*97,y-49);ink.stroke();
+  }
+  ink.strokeStyle='#d3d398';ink.lineWidth=2;ink.beginPath();ink.moveTo(96,319);ink.quadraticCurveTo(94,168,96,4);ink.stroke();
+  const leafMap=new T.CanvasTexture(blade);leafMap.colorSpace=T.SRGBColorSpace;
+  const glazedLeaves=[0x8ba862,0xa1b064,0x779954,0x9ba761].map(tint=>
+    new T.MeshStandardMaterial({color:tint,map:leafMap,roughness:.5,side:T.DoubleSide}));
+  const pot=tag(group(world,0,1.53,-1.47),'plant',[0,.35,0],.58,.65);
+  if(narrow){pot.position.set(-.49,1.53,-1.48);pot.scale.setScalar(.65);}else pot.position.x=.03;
+  const clayCanvas=document.createElement('canvas');clayCanvas.width=256;clayCanvas.height=128;
+  const clay=clayCanvas.getContext('2d');clay.fillStyle='#ebc5a7';clay.fillRect(0,0,256,128);
+  for(let i=0;i<3600;i++){
+    clay.fillStyle=random()>.5?'rgba(105,68,55,.22)':'rgba(255,239,209,.38)';
+    clay.fillRect(random()*256,random()*128,random()*1.9+.3,random()+.3);
+  }
+  const clayMap=new T.CanvasTexture(clayCanvas);clayMap.colorSpace=T.SRGBColorSpace;
+  const terracotta=new T.MeshStandardMaterial({color:0xd08e74,map:clayMap,roughness:.89});
+  const profile=[[0,.006],[.17,.006],[.19,.023],[.20,.06],[.268,.355],[.292,.361],[.293,.411],[.281,.422],[.251,.419],[.245,.394],[.23,.354],[.204,.20]];
+  mesh(pot,new T.LatheGeometry(profile.map(([r,h])=>new T.Vector2(r,h)),54),terracotta);
+  cylinder(pot,.039,.039,.004,finish(0x684737),0,.004,0);
+  cylinder(pot,.247,.239,.016,finish(0x493e30),0,.384,0,38);
+  for(let i=0;i<27;i++){
+    const a=random()*Math.PI*2,r=.226*Math.sqrt(random()),size=.006+random()*.009;
+    bead(pot,r*Math.cos(a),.393,r*Math.sin(a),size,size*.45,size*.7,finish(i%4===0?0xb9a68c:0x685343));
+  }
+  for(const [y,r] of [[.065,.201],[.091,.207],[.348,.267]]){
+    const ring=mesh(pot,new T.TorusGeometry(r,.0018,5,48),terracotta,0,y,0);ring.rotation.x=Math.PI/2;
+  }
+  const stem=finish(0x758149,.72);
   for(let j=0;j<5;j++){
-    const a=j*2.4,px=Math.cos(a),pz=Math.sin(a);
-    wire(pot,[[0,.43,0],[px*.12,.70,pz*.17],[px*.27,.74,pz*.31],[px*.46,.51,pz*.43]],.012,finish(0x697447));
-    for(let k=0;k<5;k++){
-      const t=(k+1)/5;
-      const leaf=finish([0x607d48,0x809651,0x536f46,0x738a52][(j+k)%4],.46);leaf.side=T.DoubleSide;leaf.vertexColors=true;
-      const l=mesh(pot,leafShape,leaf,px*(.05+t*.37),.56+.15*Math.sin(t*3)-.18*t*t,pz*t*.4);
-      l.rotation.set(.25+t*(j%2?.94:.55),a+(k%2?.66:-.62),(k%2?1:-1)*.30);
+    const a=j*2.40+.3,dx=Math.sin(a),dz=Math.cos(a),height=.66+.055*(j%3);
+    const path=new T.CatmullRomCurve3([[.044*dx,.39,.044*dz],[.105*dx,height-.06,.105*dz],[.23*dx,height,.23*dz],[.36*dx,height-.13,.37*dz]].map(v=>new T.Vector3(...v)));
+    mesh(pot,new T.TubeGeometry(path,16,.0075,6,false),stem);
+    for(let k=0;k<4;k++){
+      const t=.30+k*.23,base=path.getPoint(t),turn=a+(k%2?-.86:.82);
+      const tip=base.clone().add(new T.Vector3(.064*Math.sin(turn),.025,.064*Math.cos(turn)));
+      wire(pot,[base.toArray(),base.clone().lerp(tip,.5).add(new T.Vector3(0,.013,0)).toArray(),tip.toArray()],.0045,stem);
+      const leaf=mesh(pot,leafShape,glazedLeaves[(k+j)%4],tip.x,tip.y,tip.z);
+      leaf.rotation.set(.10+t*(.55+.17*(j%3)),turn,(k%2?1:-1)*.21,'YXZ');
+      leaf.scale.setScalar(.68+.14*(k%2)+.15*Math.sin(t*Math.PI));
     }
   }
   // A jointed task lamp, thumb screws and a domed enamel shade.

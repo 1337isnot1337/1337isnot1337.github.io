@@ -1,7 +1,8 @@
 import * as T from './vendor/three/three.module.min.js';
-import { furnish } from './desk-model.js?v=7';
+import { furnish } from './desk-model.js?v=8';
+import { inspectDeskObjects } from './desk-inspect.js?v=1';
 
-import { attachDeskPointer } from './desk-pointer.js?v=8';
+import { attachDeskPointer } from './desk-pointer.js?v=9';
 
 export function mountFurniture(stage) {
   const canvas = stage.querySelector('canvas');
@@ -43,11 +44,12 @@ export function mountFurniture(stage) {
   const links=new Map([...stage.querySelectorAll('[data-object]')].map(el=>[el.dataset.object,el]));
   const vector=new T.Vector3(), point=new T.Vector3(), aim=new T.Vector3();
   const ray=new T.Raycaster(),mouse=new T.Vector2();
-  let model,frame=0,visible=true,dirty=true,drawerOpen=false,drawerAmount=0,opened='',fileAngle=0,bookAngle=0;
+  let model,frame=0,visible=true,dirty=true,drawerOpen=stage.querySelector('[data-object="drawer"]').getAttribute('aria-expanded')==='true',drawerAmount=0,opened='',fileAngle=0,bookAngle=0;
   const hitGroups=new Map(),bounds=new T.Box3(),intersection=new T.Vector3();
   let lastTime=0,lampOn=false;
   let orbit=0, contextLost=false;
-  let orbitPreview=0;
+  let orbitPreview=0, gazeX=0, gazeY=0, targetX=0, targetY=0;
+  const inspector=inspectDeskObjects(stage,engine,scene,camera,()=>model,redraw);
   function redraw() {
     dirty=true;
     if (visible && !contextLost && !frame) frame=requestAnimationFrame(paint);
@@ -105,6 +107,7 @@ export function mountFurniture(stage) {
     frame=0;
     if(!visible||contextLost||!dirty||!layout()||!lightReady)return;
     dirty=false;
+    if(inspector.paint())return;
     const dt=Math.min(.06,Math.max(.016,(time-lastTime)/1000));lastTime=time;
     const amount=(motion.matches||software)?1:1-Math.exp(-dt*12);
     const target=(value,goal)=>Math.abs(value-goal)<.004?goal:T.MathUtils.lerp(value,goal,amount);
@@ -116,8 +119,13 @@ export function mountFurniture(stage) {
        (prevFile!==fileAngle && (fileAngle===0||fileAngle===1)) ||
        (prevBook!==bookAngle && (bookAngle===0||bookAngle===1)))engine.shadowMap.needsUpdate=true;
     const phone=narrow;
-    camera.position.set(phone?.22:.70, (phone?4.19:4.06), (phone?6.13:6.47)+drawerAmount*.92);
-    aim.set(phone?0:.025,(phone?.40:.67)-drawerAmount*.24,.21+drawerAmount*.66);
+    camera.position.set(phone?.22:.70, (phone?4.19:4.06)+drawerAmount*.12, (phone?6.13:6.47)+drawerAmount*1.52);
+    aim.set(phone?0:.025,(phone?.40:.67)-drawerAmount*.53,.21+drawerAmount*.77);
+    const ease=motion.matches?1:1-Math.exp(-dt*18);
+    gazeX=Math.abs(gazeX-targetX)<.009?targetX:T.MathUtils.lerp(gazeX,targetX,ease);
+    gazeY=Math.abs(gazeY-targetY)<.009?targetY:T.MathUtils.lerp(gazeY,targetY,ease);
+    camera.position.x+=gazeX*.30;camera.position.y-=gazeY*.17;
+    aim.x+=gazeX*.125;aim.y-=gazeY*.065;
     const reach=camera.position.z-aim.z;
     camera.position.x+=Math.sin(orbit)*reach;
     camera.position.z-=reach*(1-Math.cos(orbit));
@@ -133,11 +141,19 @@ export function mountFurniture(stage) {
       stage.classList.add('is-rendered');
       if(software)warning.textContent='The desk is using software rendering. Enable graphics acceleration for smoother movement.';
       warning.hidden=!software;
-      lamp.hidden=false;drawer.hidden=false;keepsake.hidden=!drawerOpen;
+      lamp.hidden=false;links.get('plant').hidden=false;
     }
-    if(drawerAmount!==Number(drawerOpen)||fileAngle!==(opened==='catalogue'?1:0)||bookAngle!==(opened==='about'?1:0))redraw();
+    if(gazeX!==targetX||gazeY!==targetY||drawerAmount!==Number(drawerOpen)||fileAngle!==(opened==='catalogue'?1:0)||bookAngle!==(opened==='about'?1:0))redraw();
   }
   const leaveDesk=attachDeskPointer(stage,{
+    track(x,y) {
+      if(motion.matches){x=0;y=0;}
+      if(software){
+        stage.style.setProperty('--pan-x',(x*0.6)+'%');
+        stage.style.setProperty('--pan-y',(y*0.6)+'%');
+        stage.classList.toggle('soft-pan',!motion.matches);
+      }else if(x!==targetX||y!==targetY){targetX=x;targetY=y;redraw();}
+    },
     pick(x,y) {
       mouse.set(x*2-1,1-y*2);
       ray.setFromCamera(mouse,camera);
@@ -174,12 +190,9 @@ export function mountFurniture(stage) {
     bulb.intensity=lampOn?22:0;sky.intensity=lampOn?.95:1.95;sun.intensity=lampOn?.80:2.12;
     redraw();
   });
-  const drawer=links.get('drawer'),keepsake=links.get('keepsake');
-  drawer.addEventListener('click',()=>{
-    drawerOpen=!drawerOpen;drawer.setAttribute('aria-expanded',String(drawerOpen));
-
-    keepsake.hidden=!drawerOpen;redraw();
-    if(drawerOpen&&drawer.matches(':focus-visible'))keepsake.focus({preventScroll:true});
+  const drawer=links.get('drawer');
+  stage.addEventListener('drawer-change',()=>{
+    drawerOpen=drawer.getAttribute('aria-expanded')==='true';redraw();
   });
   section.closest('#studio').addEventListener('desk-room',e=>{opened=e.detail||'';if(opened)leaveDesk();redraw();});
   if('IntersectionObserver' in window)new IntersectionObserver(([entry])=>{
@@ -188,7 +201,7 @@ export function mountFurniture(stage) {
   if('ResizeObserver' in window)new ResizeObserver(redraw).observe(stage);
   window.addEventListener('resize',redraw);
   motion.addEventListener('change',redraw);
-  canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();contextLost=true;leaveDesk();warning.textContent=unavailable;warning.hidden=false;stage.classList.remove('is-rendered');links.forEach(el=>el.removeAttribute('data-outside'));drawer.hidden=true;keepsake.hidden=true;lamp.hidden=true;});
+  canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();contextLost=true;leaveDesk();warning.textContent=unavailable;warning.hidden=false;stage.classList.remove('is-rendered');links.forEach(el=>el.removeAttribute('data-outside'));inspector.close();lamp.hidden=true;links.get('plant').hidden=true;});
   canvas.addEventListener('webglcontextrestored',()=>{contextLost=false;engine.shadowMap.needsUpdate=true;redraw();});
   redraw();
 }

@@ -1,5 +1,5 @@
 // Keep the browser cursor at its real hotspot. Only an orbit owns the pointer.
-export function attachDeskPointer(stage,{pick,orbitBy,endOrbit}) {
+export function attachDeskPointer(stage,{pick,track,orbitBy,endOrbit}) {
   const canvas=stage.querySelector('canvas');
   const targets=new Map([...stage.querySelectorAll('[data-object]')].map(el=>[el.dataset.object,el]));
   let press=null, frame=0, x=0, y=0, suppress=false;
@@ -14,13 +14,17 @@ export function attachDeskPointer(stage,{pick,orbitBy,endOrbit}) {
     if(press && canvas.hasPointerCapture(press.id))canvas.releasePointerCapture(press.id);
     if(press?.dragging)endOrbit();
     press=null;cancelAnimationFrame(frame);frame=0;
-    delete stage.dataset.aim;stage.classList.remove('looking-around');
+    delete stage.dataset.aim;stage.classList.remove('looking-around');track(0,0);
   }
   function aim(e){
     if(e.pointerType!=='mouse')return;
     x=e.clientX;y=e.clientY;
     if(!frame)frame=requestAnimationFrame(()=>{
-      frame=0;stage.dataset.aim=active() && targetAt(x,y) ? 'object':'desk';
+      frame=0;
+      if(active() && !press && !document.querySelector('dialog[open]')){
+        const r=stage.getBoundingClientRect();track((x-r.left)/r.width*2-1,(y-r.top)/r.height*2-1);
+      }
+      stage.dataset.aim=active() && targetAt(x,y) ? 'object':'desk';
     });
   }
   stage.addEventListener('pointerdown',e=>{

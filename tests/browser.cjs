@@ -59,6 +59,21 @@ const server = http.createServer((req,res) => {
    await page.goto(base);
    assert.equal(await page.locator('html').getAttribute('data-view'),'desk');
    assert.equal(await page.locator('.shop').isVisible(),false);
+   assert.equal(await page.locator('.mast').isVisible(),false);
+   assert.equal(await page.locator('.desk-profiles a:visible').count(),3);
+   if(name==='desktop'){
+    await page.waitForFunction(()=>document.querySelector('.desktop-picture').classList.contains('is-rendered') || !document.querySelector('.graphics-warning').hidden);
+    if(await page.locator('.is-rendered').count()){
+     await page.locator('[data-object="plant"]').focus();await page.keyboard.press('Enter');
+     await page.locator('.object-view[open]').waitFor();
+     await page.evaluate(()=>new Promise(done=>requestAnimationFrame(()=>requestAnimationFrame(done))));
+     const view=page.locator('.furniture-canvas'),first=await view.screenshot();
+     await page.locator('.turn-surface').press('ArrowRight');
+     await page.evaluate(()=>new Promise(done=>requestAnimationFrame(()=>requestAnimationFrame(done))));
+     assert.ok(!first.equals(await view.screenshot()),'rotating changes the rendered 3D plant');
+     await page.keyboard.press('Escape');
+    }
+   }
    await page.locator('.mode-switch').click();
    await page.locator('.swiper-initialized').waitFor();
    assert.equal(await page.locator('.desktop-picture').isVisible(),false);
@@ -291,11 +306,15 @@ const server = http.createServer((req,res) => {
    assert.ok(page.url().endsWith('#about-physics'));
    await page.locator('.back-to-desk').click();
    if(await page.locator('html').getAttribute('data-view')==='shelf')await page.locator('.mode-switch').click();
-   if (name === 'mobile' && await page.locator('.object-drawer').isVisible()) {
-    await page.locator('.object-drawer').click();
-    assert.equal(await page.evaluate(()=>document.pointerLockElement),null);
-    await page.locator('.postcat').click();
-   } else await page.locator('.object-letters').click();
+   await page.locator('.object-letters').click();
+   assert.equal(await page.locator('.address-links a:visible').count(),3);
+   assert.equal(await page.locator('#flip-post').isVisible(),false);
+   await page.locator('.back-to-desk').click();
+   await page.locator('.object-drawer').focus();
+   await page.keyboard.press('Enter');
+   assert.equal(await page.evaluate(()=>document.pointerLockElement),null);
+   await page.locator('.postcat').focus();
+   await page.keyboard.press('Enter');
    await page.locator('#flip-post').click();
    assert.match(await page.locator('#post-route').innerText(),/Particle physics/);
    assert.ok(await page.locator('.postcard-back').evaluate(back =>
@@ -304,7 +323,7 @@ const server = http.createServer((req,res) => {
    const downloaded = page.waitForEvent('download');
    await page.locator('#save-post').click();
    assert.equal((await downloaded).suggestedFilename(),'a-postcard-from-cinnas-desk.png');
-   await page.goBack();
+   await page.locator('.return-post').click();
    assert.ok(await page.locator('.desktop-picture').isVisible());
    await page.goto(base + '/#cpu');
    await page.locator('dialog[open]').waitFor();
@@ -503,7 +522,7 @@ const server = http.createServer((req,res) => {
   await shelfMouse.locator('.graphics-warning:visible').waitFor();
   const pickup=shelfMouse.locator('.pickup');
   const backs=new Set();
-  for(const object of ['robot-photo','flyover-print','conway-print','plant','pinboard']){
+  for(const object of ['robot-photo','flyover-print','conway-print','pinboard','robot-photo']){
     await shelfMouse.locator('[data-object="'+object+'"]').click();
     await pickup.locator('.photo-front img').evaluate(img=>img.decode());
     await pickup.locator('.flip-control').click();
@@ -554,6 +573,10 @@ const server = http.createServer((req,res) => {
   await shelfMouse.goto(base+'/#elsewhere');
   await shelfMouse.evaluate(()=>sessionStorage.setItem('cinna-postcard',JSON.stringify(['catalogue','desk','flyover','conjectures'])));
   await shelfMouse.reload();
+  assert.equal(await shelfMouse.locator('.drawer-post').isVisible(),false);
+  await shelfMouse.locator('.back-to-desk').click();
+  await shelfMouse.locator('[data-object="drawer"]').click();
+  await shelfMouse.locator('[data-object="keepsake"]').click();
   await shelfMouse.locator('#flip-post').click();
   assert.deepEqual(await shelfMouse.locator('#post-route li').allTextContents(),
     ['The project files','The workbench','DOPPLERGEIST','Solved conjectures','Letters'],
@@ -694,6 +717,7 @@ const server = http.createServer((req,res) => {
   await touch.waitForFunction(()=>document.querySelector('.desktop-picture').classList.contains('is-rendered') || !document.querySelector('.graphics-warning').hidden);
   const pen=await touch.locator('[data-object="pencil"]').boundingBox();
   await touch.touchscreen.tap(pen.x+pen.width/2,pen.y+pen.height/2);
+  if(await touch.locator('.object-view').isVisible())await touch.locator('.use-object').tap();
   const sheet=await touch.locator('.pickup[open] .sketch-paper').boundingBox();
   const strokeStart={x:sheet.x+35,y:sheet.y+36,id:1};
   await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[strokeStart]});
