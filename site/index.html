@@ -35,9 +35,9 @@
       crossorigin
     />
     <link rel="stylesheet" href="vendor/swiper-bundle.min.css" />
-    <link rel="stylesheet" href="shelf.css?v=16" />
+    <link rel="stylesheet" href="shelf.css?v=17" />
     <script defer src="vendor/swiper-bundle.min.js"></script>
-    <script defer src="shelf.js?v=16"></script>
+    <script defer src="shelf.js?v=18"></script>
     <noscript
       ><style>
         .shelf-controls,
@@ -766,9 +766,11 @@
               id="recording"
               controls
               preload="none"
-              src="assets/livermore.mp3"
+              data-src="assets/livermore.mp3"
+              hidden
               aria-label="Aircraft flyover"
             ></audio>
+            <noscript><audio controls preload="none" src="assets/livermore.mp3" aria-label="Aircraft flyover"></audio></noscript>
             <figcaption>
               Flyover recorded by
               <a href="https://doi.org/10.5281/zenodo.23424278"

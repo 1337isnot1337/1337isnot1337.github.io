@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>IMSA schedule map · Cinna Davis</title>
     <link rel="icon" href="../assets/prints/favicon.png" />
-    <link rel="stylesheet" href="../shelf.css" />
+    <link rel="stylesheet" href="../shelf.css?v=17" />
     <style>
       body {
         background: var(--paper);
@@ -50,6 +50,24 @@
       }
       a {
         text-decoration: underline;
+      }
+      @media print {
+        @page { size: auto; margin: 12mm; }
+        body { width: 100%; margin: 0; color: #222; background: #fff; }
+        h1 { font-size: 24pt; margin-bottom: 18pt; }
+        body:has(.schedule-results) header a,
+        body:has(.schedule-results) header p,
+        body:has(.schedule-results) form > textarea,
+        body:has(.schedule-results) form > p,
+        body:has(.schedule-results) form > button { display: none; }
+        .schedule-results { margin-top: 0; }
+        .schedule-results > section { break-inside: avoid; margin-bottom: 24pt; }
+        .schedule-results h2 { font-size: 16pt; }
+        .schedule-days { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8pt; margin-top: 10pt; }
+        .schedule-days section { background: #fff; border-color: #777; padding: 8pt; }
+        .schedule-days h3 { font-size: 12pt; }
+        .schedule-days ol { padding-left: 16pt; }
+        .schedule-days li { font-size: 10pt; padding: 3pt 0; }
       }
     </style>
   </head>

@@ -3,3 +3,9 @@
 /node_modules
 
 /test-results
+
+# Local Python catalogue checks
+__pycache__/
+
+# Built from a separate, verified research checkout
+/site/solved-conjectures/

@@ -1,11 +1,13 @@
 // Browser checks run against site/. CI runs this after the research catalogue build.
-const { chromium } = require('playwright');
+const engines = require('playwright');
+const engineName = process.env.BROWSER || 'chromium';
+if (!['chromium','webkit','firefox'].includes(engineName)) throw new Error('BROWSER must be chromium, webkit, or firefox');
 const assert = require('node:assert/strict');
 const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
 const root = path.resolve('site');
-const types = { '.html':'text/html', '.js':'text/javascript', '.css':'text/css', '.wasm':'application/wasm', '.webp':'image/webp', '.woff2':'font/woff2', '.mp3':'audio/mpeg' };
+const types = { '.svg':'image/svg+xml', '.png':'image/png', '.jpg':'image/jpeg', '.json':'application/json', '.pdf':'application/pdf', '.html':'text/html', '.js':'text/javascript', '.css':'text/css', '.wasm':'application/wasm', '.webp':'image/webp', '.woff2':'font/woff2', '.mp3':'audio/mpeg' };
 const server = http.createServer((req,res) => {
   const pathname = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
   let file = path.resolve(root, '.' + pathname);
@@ -34,7 +36,7 @@ const server = http.createServer((req,res) => {
  const partial=await fetch(base + '/assets/livermore.mp3',{headers:{Range:'bytes=0-9'}});
  assert.equal(partial.status,206);
  assert.equal((await partial.arrayBuffer()).byteLength,10);
- const browser = await chromium.launch();
+ const browser = await engines[engineName].launch(process.env.BROWSER_EXECUTABLE ? {executablePath:process.env.BROWSER_EXECUTABLE} : {});
  fs.mkdirSync('test-results', {recursive:true});
  try {
   for (const [name,width,height] of [['desktop',1440,1000],['mobile',390,844],['small-mobile',320,740]]) {
@@ -54,7 +56,10 @@ const server = http.createServer((req,res) => {
    });
    await page.goto(base);
    await page.locator('.swiper-initialized').waitFor();
+   await page.evaluate(() => document.fonts.load("600 16px 'DM Sans'", 'Erdős'));
    await page.evaluate(() => document.fonts.ready);
+   assert.ok(await page.evaluate(()=>(()=>{const faces=[...document.fonts].filter(font=>font.family.includes('DM Sans'));return faces.length===2 && faces.every(font=>font.weight==='100 1000' && font.status==='loaded');})()), 'DM Sans uses real variable weights');
+   assert.ok(await page.evaluate(()=>{const faces=[...document.fonts].filter(font=>font.family.includes('Bricolage'));return faces.length===2 && faces.every(font=>font.status==='loaded');}), 'headline glyphs load in the correct family');
    await page.screenshot({path:`test-results/${name}-shelf.png`,fullPage:true});
    assert.deepEqual(mediaRequests,[],`${name}: unopened flyover must not download media`);
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth <= innerWidth), `${name}: horizontal page overflow`);
@@ -83,6 +88,22 @@ const server = http.createServer((req,res) => {
    assert.equal(await page.locator('#open-print').getAttribute('href'),'#flyover');
    await page.locator('#open-print').click();
    await page.locator('dialog[open]').waitFor();
+   // Reader navigation must not swallow browser shortcuts or text selection.
+   for (const modifier of ['altKey','ctrlKey','metaKey','shiftKey']) {
+    for (const key of ['ArrowLeft','ArrowRight']) {
+     const prevented = await page.locator('#close-dialog').evaluate((button, detail) => {
+      const event = new KeyboardEvent('keydown', {key: detail.key, [detail.modifier]: true, bubbles: true, cancelable: true});
+      button.dispatchEvent(event);
+      return event.defaultPrevented;
+     }, {modifier,key});
+     assert.equal(prevented,false, `${modifier}+${key}: reader retains native behavior`);
+     assert.ok(page.url().endsWith('#flyover'));
+    }
+   }
+   await page.locator('#close-dialog').press('ArrowRight');
+   await page.locator('dialog #factoring').waitFor();
+   await page.locator('#close-dialog').press('ArrowLeft');
+   await page.locator('dialog #flyover').waitFor();
    await page.locator('[data-audio-cue="70"]').click();
    try {
     await page.waitForFunction(() => {
@@ -175,6 +196,20 @@ const server = http.createServer((req,res) => {
    assert.deepEqual(await terms.nth(0).locator('h3').allTextContents(),['A day','B day','I day','C day','D day']);
    assert.deepEqual((await terms.nth(0).locator('ol').first().locator('li').allTextContents()).slice(1,4),['A113','A113','A113']);
    assert.equal((await terms.nth(1).locator('ol').first().locator('li').allTextContents())[2],'B204');
+   if (name === 'desktop') {
+    await page.setViewportSize({width:816,height:1056});
+    await page.emulateMedia({media:'print'});
+    assert.equal(await field.isVisible(),false,'printed room list omits pasted source');
+    assert.equal(await page.getByRole('button',{name:'Submit',exact:true}).isVisible(),false);
+    assert.equal(await page.locator('.schedule-days:visible').count(),2);
+    const positions = await terms.nth(0).locator('.schedule-days > section').evaluateAll(nodes=>nodes.map(node=>node.getBoundingClientRect().top));
+    assert.equal(new Set(positions).size,1,'all five day cards share one print row');
+    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'printed schedule fits the page');
+    await page.screenshot({path:'test-results/schedule-print.png',fullPage:true});
+    if (engineName === 'chromium') await page.pdf({path:'test-results/schedule-print.pdf',format:'Letter'});
+    await page.emulateMedia({media:'screen'});
+    await page.setViewportSize({width,height});
+   }
    await field.fill('Schedule\nHeader\n' + row('4-2(A)','S1','A113'));
    await page.getByRole('button',{name:'Submit',exact:true}).click();
    await page.getByRole('alert').waitFor();
@@ -187,11 +222,35 @@ const server = http.createServer((req,res) => {
     const collection = await page.goto(base + '/solved-conjectures/');
     assert.equal(collection.status(),200);
     assert.ok(await page.locator('h1').count());
+    await page.evaluate(() => document.fonts.ready);
+    assert.ok(await page.locator('.brand img').evaluate(image=>image.complete && image.naturalWidth>0),'catalogue brand asset decodes');
+    const provenanceFile = path.join(root,'solved-conjectures/catalogue-provenance.json');
+    if (fs.existsSync(provenanceFile)) {
+     const provenance = JSON.parse(fs.readFileSync(provenanceFile,'utf8'));
+     if (provenance.mode === 'snapshot') {
+      await page.locator('.catalogue-snapshot').waitFor();
+      assert.ok((await page.locator('.catalogue-snapshot').textContent()).includes(provenance.rendered_source.commit.slice(0,7)));
+      assert.ok((await page.title()).startsWith('Snapshot '));
+      assert.ok((await page.locator('meta[name="description"]').getAttribute('content')).startsWith('Catalogue snapshot ('));
+      assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),`${name}: snapshot notice fits viewport`);
+      await page.screenshot({path:`test-results/${name}-catalogue-snapshot.png`});
+      await page.goto(base + '/solved-conjectures/results/frankl-generator-families/');
+      await page.evaluate(() => document.fonts.ready);
+      await page.locator('.catalogue-snapshot').waitFor();
+      const sourceLink=page.getByRole('link',{name:'View source',exact:true});
+      assert.ok((await sourceLink.getAttribute('href')).includes('/blob/' + provenance.rendered_source.commit + '/'));
+      await page.screenshot({path:`test-results/${name}-snapshot-result.png`});
+     } else {
+      assert.equal(await page.locator('.catalogue-snapshot').count(),0);
+     }
+    }
    }
    assert.deepEqual(errors,[],`${name}: uncaught browser errors`);
    await page.close();
    console.log(`${name}: layout and interactions passed`);
   }
+  // Playwright exposes real touch-drag injection through Chromium's CDP only.
+  if (engineName === 'chromium') {
   const touch = await browser.newPage({viewport:{width:390,height:844},hasTouch:true,isMobile:true,deviceScaleFactor:2,reducedMotion:'no-preference'});
   const touchErrors=[];
   touch.on('pageerror',error=>touchErrors.push(error.message));
@@ -216,6 +275,7 @@ const server = http.createServer((req,res) => {
   await touch.waitForFunction(()=>!document.body.classList.contains('modal-open'));
   await touch.close();
   console.log('touch-enabled mobile: swipe, momentum and deliberate tap passed');
+  } else console.log(`${engineName}: native touch-drag injection and PDF export not exercised`);
 
   // WCAG text-spacing overrides: content may grow vertically, never disappear.
   const spaced = await browser.newPage({viewport:{width:390,height:844},reducedMotion:'reduce'});
@@ -255,8 +315,11 @@ const server = http.createServer((req,res) => {
   assert.ok(plain.url().endsWith('#conway'));
   await plain.locator('#conway').screenshot({path:'test-results/no-script-reading.png'});
   await plain.goto(base + '/#flyover');
-  await plain.waitForFunction(()=>[...document.querySelectorAll('#flyover .spectrum img')].some(image=>!image.hidden && image.naturalWidth>0));
+  // Navigation waits for load; direct evaluation also works with Firefox's disabled-JS context.
+  assert.ok(await plain.locator('#flyover .spectrum img').evaluateAll(images=>images.some(image=>!image.hidden && image.naturalWidth>0)), 'no-script spectrogram is loaded');
   assert.equal(await plain.locator('#flyover .spectrum img:visible').count(),1);
+  assert.equal(await plain.locator('#flyover audio:visible').count(),1);
+  assert.ok((await plain.locator('#flyover audio:visible').getAttribute('src')).endsWith('livermore.mp3'));
   await plain.locator('#flyover .player').screenshot({path:'test-results/no-script-flyover.png'});
   await plain.close();
   console.log('no JavaScript: catalogue and project reading passed');

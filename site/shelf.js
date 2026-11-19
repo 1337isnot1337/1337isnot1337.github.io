@@ -231,10 +231,10 @@ for (const print of carousel.querySelectorAll(".print")) {
 }
 
 function loadArticleMedia(article) {
-  for (const image of article.querySelectorAll('img[data-src]')) {
-    image.src = image.dataset.src;
-    image.hidden = false;
-    delete image.dataset.src;
+  for (const media of article.querySelectorAll('img[data-src], audio[data-src]')) {
+    media.src = media.dataset.src;
+    media.hidden = false;
+    delete media.dataset.src;
   }
 }
 function displayFromHash() {
@@ -358,6 +358,7 @@ if (typeof dialog.showModal === "function") {
       event.altKey ||
       event.ctrlKey ||
       event.metaKey ||
+      event.shiftKey ||
       event.target.closest("input, audio, .toy")
     )
       return;
