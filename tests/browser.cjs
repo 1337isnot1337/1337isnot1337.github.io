@@ -184,6 +184,28 @@ const server = http.createServer((req,res) => {
    await page.close();
    console.log(`${name}: layout and interactions passed`);
   }
+  // WCAG text-spacing overrides: content may grow vertically, never disappear.
+  const spaced = await browser.newPage({viewport:{width:390,height:844},reducedMotion:'reduce'});
+  await spaced.goto(base);
+  await spaced.addStyleTag({content:`
+    * {line-height:1.5 !important;letter-spacing:.12em !important;word-spacing:.16em !important;}
+    p {margin-bottom:2em !important;}
+  `});
+  assert.ok(await spaced.evaluate(()=>document.documentElement.scrollWidth <= innerWidth), 'text spacing: homepage overflow');
+  await spaced.screenshot({path:'test-results/text-spacing-home.png',fullPage:true});
+  for (const id of ['conjectures','flyover','factoring','cpu','schedule','conway']) {
+    await spaced.evaluate(id=>{location.hash=id;},id);
+    await spaced.locator('dialog[open]').waitFor();
+    await spaced.locator(`dialog #${id}`).waitFor();
+    assert.ok(await spaced.locator('dialog').evaluate(el=>el.scrollWidth <= el.clientWidth+1), `text spacing: ${id} reader overflow`);
+    await spaced.locator('#close-dialog').focus();
+    await spaced.keyboard.press('Tab');
+    assert.ok(await spaced.evaluate(()=>document.querySelector('dialog').contains(document.activeElement)), 'keyboard focus must remain in modal');
+  }
+  await spaced.screenshot({path:'test-results/text-spacing-reader.png',fullPage:true});
+  await spaced.close();
+  console.log('increased text spacing: all project readers reflow without horizontal overflow');
+
   const plain = await browser.newPage({viewport:{width:390,height:844},javaScriptEnabled:false});
   await plain.goto(base);
   assert.equal(await plain.locator('.catalogue-list li:visible').count(),31);
