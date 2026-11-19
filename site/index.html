@@ -36,6 +36,9 @@
     />
     <link rel="stylesheet" href="vendor/swiper-bundle.min.css" />
     <link rel="stylesheet" href="shelf.css?v=19" />
+    <link rel="stylesheet" href="welcome.css?v=1" />
+    <link rel="stylesheet" href="workbench.css?v=1" />
+    <script defer src="workbench.js?v=1"></script>
     <script defer src="vendor/swiper-bundle.min.js"></script>
     <script defer src="shelf.js?v=21" onerror="
       const restoreReading = () => {
@@ -67,16 +70,25 @@
       <div class="page-width mast-inner">
         <a class="byline" href="./">Cinna Davis</a>
         <nav aria-label="Main">
-          <a href="#catalogue">Catalogue</a><a href="#about">About me</a
+          <a href="#desk">Desk</a><a href="#catalogue">Catalogue</a><a href="#about">About me</a
           ><a href="#elsewhere">Elsewhere</a>
         </nav>
       </div>
     </header>
     <main>
       <section class="shop" id="projects" aria-labelledby="shelf-title">
+        <div class="welcome page-width">
+          <h1>Hi, I’m Cinna.</h1>
+          <div class="welcome-note">
+            <p>I build software, work on mathematical proofs, and lead programming
+              for Titan Robotics. This is a little home for what I’m making.</p>
+            <a href="#desk">Try something on the desk</a>
+            <a href="#about">A bit about me</a>
+          </div>
+        </div>
         <div class="shelf-heading page-width">
           <div>
-            <h1 id="shelf-title">The project shelf</h1>
+            <h2 id="shelf-title">The project shelf</h2>
             <p>Slide along the shelf. Pick a print to try it.</p>
           </div>
           <details class="index">
@@ -254,6 +266,27 @@
           ><button type="button" id="next" aria-label="Next print">→</button>
         </div>
       </section>
+<section class="workbench page-width" id="desk" aria-labelledby="desk-title">
+  <header class="desk-heading"><h2 id="desk-title">Open on the desk</h2><p>A recording, a deck of cards, a handful of bits.<br> Here’s what I’m doing with them.</p></header>
+  <div class="desk-tabs" role="group" aria-label="Choose a project to explore" hidden>
+    <button type="button" data-desk="sound" aria-pressed="true">Follow a sound</button>
+    <button type="button" data-desk="cards" aria-pressed="false">Find a loop</button>
+    <button type="button" data-desk="bits" aria-pressed="false">Flip a bit</button>
+  </div>
+  <article class="desk-sheet desk-sound" data-desk-panel="sound">
+    <div class="desk-copy"><h3>Where was<br> the microphone?</h3><p>A passing aircraft leaves a curve in a recording. I’m building DOPPLERGEIST to match that changing pitch against historical flight tracks.</p><a href="#flyover" data-project="flyover" class="desk-action">Listen to the recording <span aria-hidden="true">↗</span></a><a class="desk-source" href="/DOPPLERGEIST/examples.html#livermore">Read the search for this recording</a></div>
+    <figure class="desk-recording"><div class="desk-figure-heading"><span>Livermore recording</span><span>100–400 Hz</span></div><img src="assets/livermore.webp" width="1600" height="550" loading="lazy" alt="Bright harmonics bend downward in the flyover recording as the aircraft pitch falls."/><div class="desk-time"><span>0:00</span><span>Time →</span><span>1:25</span></div><figcaption><strong>Follow the bright curves.</strong> The pitch drops as the plane passes. A match is a candidate, not automatically a location.</figcaption><small>Recording: <a href="https://doi.org/10.5281/zenodo.23424278">Praveen Pathak</a> · <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a></small></figure>
+  </article>
+  <article class="desk-sheet desk-cards" data-desk-panel="cards">
+    <div class="desk-copy"><h3>One more round.<br> Forever.</h3><p>This three-player War deal returns to exactly the same card order after 90 turns. Nobody runs out. Then the whole game repeats.</p><p class="desk-small">It’s one example from my collection of proofs and counterexamples with GPT-6.2 Astra. The notes are unrefereed; Lean status is recorded per result.</p><a href="#conjectures" data-project="conjectures" class="desk-action">Explore the full cycle <span aria-hidden="true">↗</span></a></div>
+    <div class="desk-deal"><div class="desk-figure-heading"><span>The next cards</span><span id="desk-turn">Turn 0 / 90</span></div><div class="desk-playing-cards" aria-label="Next card for each player"><div><small>Player A</small><b id="desk-card-a">15</b><span id="desk-count-a">8 cards</span></div><div><small>Player B</small><b id="desk-card-b">10</b><span id="desk-count-b">8 cards</span></div><div><small>Player C</small><b id="desk-card-c">4</b><span id="desk-count-c">7 cards</span></div></div><div class="desk-controls" hidden><button type="button" id="desk-deal-one">Deal a turn</button><button type="button" id="desk-deal-cycle">Go to turn 90</button><button type="button" id="desk-deal-reset">Reset</button></div><p id="desk-deal-status" role="status">Highest card wins. Won cards go underneath, highest first.</p><p class="desk-small">The numbers are ranks in the actual 23-card deal, not a standard 52-card deck.</p></div>
+  </article>
+  <article class="desk-sheet desk-bits" data-desk-panel="bits">
+    <div class="desk-copy"><h3>A number,<br> one switch at a time.</h3><p>I extended the Hack CPU with a two-stage pipeline, branch prediction and fused instructions.</p><p class="desk-small">Start with something smaller: the 16 bits in an A-instruction. The first bit stays zero. The other 15 hold an address.</p><a href="#cpu" data-project="cpu" class="desk-action">Try the branch predictor <span aria-hidden="true">↗</span></a></div>
+    <div class="desk-register"><div class="desk-figure-heading"><span>Hack A-instruction</span><span>15-bit address</span></div><div class="desk-address"><span>@</span><output id="desk-address-value" aria-live="off">42</output></div><p class="desk-bit-hint">Each 1 contributes its place value.</p><div class="desk-bit-row" aria-label="Address bits"><span class="desk-fixed-bit" title="Instruction bit is fixed at zero">0<small>fixed</small></span><span class="desk-bit-fallback">000 0000 0010 1010</span></div><p id="desk-bit-sum" role="status">32 + 8 + 2 = 42</p><button class="desk-register-reset" type="button" hidden>Reset to 42</button></div>
+  </article>
+</section>
+
       <section
         id="catalogue"
         class="catalogue page-width"
@@ -576,7 +609,7 @@
       </section>
       <section class="personal page-width" id="about">
         <div class="intro">
-          <h2>Hi, I’m Cinna.</h2>
+          <h2>A bit about me.</h2>
           <p>
             I’m building <a href="#flyover" data-project="flyover">DOPPLERGEIST</a>,
             which matches aircraft sound with flight records to narrow down where

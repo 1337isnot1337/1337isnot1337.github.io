@@ -1,0 +1,47 @@
+/* A working spread beneath the illustrated shelf, using the same paper and ink. */
+.workbench{padding-block:76px 64px;scroll-margin-top:32px}
+.desk-heading{display:flex;justify-content:space-between;align-items:end;gap:32px;margin-bottom:32px}
+.desk-heading h2{font:650 clamp(34px,4.6vw,62px)/1.02 var(--headline);letter-spacing:-.035em;text-wrap:balance}
+.desk-heading p{max-width:35ch;color:var(--muted);font-size:16px;line-height:1.6}
+.desk-tabs{display:flex;gap:6px;padding-left:24px;position:relative;z-index:1}
+.desk-tabs[hidden]{display:none}
+.desk-tabs button{padding:15px 24px;border:1px solid #c7b9bc;border-bottom:0;border-radius:9px 9px 0 0;background:#f0e5df;font-family:var(--headline);font-size:17px;transition:background .2s}
+.desk-tabs button[aria-pressed=true]{background:#f4e7d4;position:relative;top:1px;color:#572c3e}
+.desk-tabs button:nth-child(2)[aria-pressed=true]{background:#eee1e8}
+.desk-tabs button:nth-child(3)[aria-pressed=true]{background:#e2e9e1}
+.desk-sheet{display:grid;grid-template-columns:minmax(0,.82fr) minmax(0,1.18fr);gap:44px;align-items:center;padding:52px 44px;background:#f4e7d4;box-shadow:0 10px 26px #422c4110;min-height:455px;border-radius:3px;position:relative}
+.desk-sheet[hidden]{display:none}.workbench:not(.desk-ready) .desk-sheet+.desk-sheet{margin-top:28px}
+.desk-cards{background:#eee1e8}.desk-bits{background:#e2e9e1}
+.desk-copy h3{font:650 clamp(28px,3.15vw,45px)/1.07 var(--headline);letter-spacing:-.03em;margin:0 0 20px;text-wrap:balance}
+.desk-copy p{max-width:40ch;line-height:1.65;margin:0 0 20px}.desk-small{font-size:13px;line-height:1.55;color:var(--muted)}
+.desk-action{display:inline-flex;gap:18px;align-items:center;font-family:var(--headline);font-size:17px;font-weight:650;text-decoration-thickness:1px}
+.desk-action span{font-size:24px}.desk-source{display:block;font-size:12px;margin-top:14px;color:var(--muted)}
+.desk-figure-heading{display:flex;justify-content:space-between;gap:12px;font:11px/1.5 var(--mono);margin-bottom:18px;color:var(--muted)}
+.desk-recording{margin:0;padding:24px;background:#fffbf6;transform:rotate(1deg);box-shadow:0 5px 14px #422c4114}
+.desk-recording img{display:block;width:100%;height:auto;aspect-ratio:1600/550;object-fit:cover;background:#211d27}
+.desk-time{display:flex;justify-content:space-between;font:10px var(--mono);margin:8px 0 24px}
+.desk-recording figcaption{font-size:15px;line-height:1.6}.desk-recording figcaption strong{font-family:inherit;font-weight:650}
+.desk-recording small{display:block;font-size:10px;line-height:1.6;margin-top:16px;color:var(--muted)}
+.desk-playing-cards{display:flex;justify-content:center;gap:14px;padding:20px 10px 30px}
+.desk-playing-cards>div{display:flex;flex-direction:column;justify-content:space-between;align-items:center;width:30%;max-width:140px;aspect-ratio:3/4;background:#fffbf6;box-shadow:0 5px 12px #422c4114;border-radius:7px;padding:15px 6px;color:#742e49}
+.desk-playing-cards>div:first-child{transform:rotate(-7deg)}.desk-playing-cards>div:nth-child(2){color:#3e6455;transform:translateY(-8px)}.desk-playing-cards>div:last-child{color:#4a527d;transform:rotate(7deg)}
+.desk-playing-cards small,.desk-playing-cards span{font:11px/1.4 var(--mono)}.desk-playing-cards b{font:650 clamp(36px,4.5vw,64px)/1 var(--headline)}
+.desk-controls{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.desk-controls[hidden]{display:none}
+.desk-controls button,.desk-register-reset{background:transparent;border:1px solid #a491a0;border-radius:4px;padding:8px 12px;font-size:13px}
+.desk-controls button:hover,.desk-register-reset:hover{background:#fffbf680}
+#desk-deal-status{font-size:14px;line-height:1.5;min-height:3em;margin:14px 0 8px}
+.desk-register{padding:28px 24px;background:#fffbf6;box-shadow:0 5px 14px #422c4114;transform:rotate(-1deg)}
+.desk-address{display:flex;align-items:baseline;gap:4px;font:500 clamp(46px,6vw,82px)/1.1 var(--mono);letter-spacing:-.04em;margin:22px 0 14px}.desk-address>span{color:#74907b}
+.desk-bit-hint{font-size:13px;color:var(--muted);margin-bottom:18px}
+.desk-bit-row{display:grid;grid-template-columns:repeat(16,minmax(0,1fr));gap:3px;margin:0 0 28px}
+.desk-bit-row>button,.desk-fixed-bit{position:relative;text-align:center;border:1px solid #c4d0c5;border-radius:2px;padding:9px 0;font:14px var(--mono);background:#edf1ea;color:#324b3d}
+.desk-bit-row>button[aria-pressed=true]{background:#46694f;border-color:#46694f;color:#fff}.desk-bit-row button:hover{outline:2px solid #74907b;outline-offset:1px}
+.desk-fixed-bit{color:#7e7180;background:#eee5ed;border-color:#d3c5d0}
+.desk-bit-row small{position:absolute;font-size:8px;top:100%;left:50%;transform:translateX(-50%);margin-top:4px}.desk-bit-fallback{grid-column:2/-1;font:18px var(--mono);padding:7px}
+#desk-bit-sum{font:12px/1.7 var(--mono);overflow-wrap:anywhere;min-height:3.4em}.desk-register-reset{margin-top:12px}
+@media(max-width:850px){.desk-sheet{gap:28px;padding:35px 28px;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr)}.desk-recording{padding:18px}.desk-register{padding:22px 16px}.desk-heading p{font-size:14px;max-width:30ch}.desk-tabs button{padding:13px 19px}}
+@media(max-width:680px){.workbench{padding-block:50px}.desk-heading{display:block;margin-bottom:24px}.desk-heading p{margin-top:16px;max-width:none}.desk-heading p br{display:none}.desk-tabs{padding-left:8px;gap:4px}.desk-tabs button{padding:12px 11px;font-size:14px;flex:1}.desk-sheet{grid-template-columns:1fr;padding:30px 20px;gap:28px;min-height:0}.desk-copy h3{font-size:35px}.desk-copy h3 br{display:none}.desk-copy p{max-width:none;font-size:15px}.desk-copy p.desk-small{font-size:13px}.desk-recording{transform:none}.desk-register{transform:none}.desk-playing-cards{padding:16px 10px 25px}.desk-playing-cards>div{max-width:110px}.desk-heading h2{font-size:39px}.desk-address{font-size:55px}.desk-bit-row{gap:2px}.desk-bit-row>button,.desk-fixed-bit{font-size:12px;padding:9px 0}}
+@media(prefers-reduced-motion:reduce){.desk-tabs button{transition:none}}
+@media print{.desk-tabs{display:none!important}.desk-sheet{box-shadow:none;break-inside:avoid}.desk-controls,.desk-register-reset{display:none!important}.workbench{padding:0}.desk-heading{margin-top:24px}}
+
+@media(max-width:680px){.desk-bit-row{grid-template-columns:repeat(8,minmax(0,1fr));column-gap:4px;row-gap:22px}.desk-bit-row>button,.desk-fixed-bit{min-height:40px;font-size:15px}.desk-bit-fallback{grid-column:2/-1;font-size:16px}.desk-tabs button{font-size:13px;padding-inline:8px}}

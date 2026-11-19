@@ -61,7 +61,7 @@ const server = http.createServer((req,res) => {
    assert.ok(await page.evaluate(()=>(()=>{const faces=[...document.fonts].filter(font=>font.family.includes('DM Sans'));return faces.length===2 && faces.every(font=>font.weight==='100 1000' && font.status==='loaded');})()), 'DM Sans uses real variable weights');
    assert.ok(await page.evaluate(()=>{const faces=[...document.fonts].filter(font=>font.family.includes('Bricolage'));return faces.length===2 && faces.every(font=>font.status==='loaded');}), 'headline glyphs load in the correct family');
    await page.screenshot({path:`test-results/${name}-shelf.png`,fullPage:true});
-   assert.deepEqual(mediaRequests,[],`${name}: unopened flyover must not download media`);
+   assert.deepEqual(mediaRequests.filter(url=>url.includes(".mp3")),[],`${name}: unopened flyover must not download audio`);
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth <= innerWidth), `${name}: horizontal page overflow`);
    await page.locator('.index summary').click();
    await page.locator('.index[open]').waitFor();
@@ -141,6 +141,20 @@ const server = http.createServer((req,res) => {
    await page.locator('dialog').waitFor({state:'hidden'});
    // Native dialog close events are queued after the open attribute clears.
    await page.waitForFunction(() => !document.body.classList.contains('modal-open'));
+   await page.locator('[data-desk="cards"]').click();
+   await page.locator('#desk-deal-cycle').click();
+   assert.equal(await page.locator('#desk-turn').textContent(),'Turn 90 / 90');
+   assert.match(await page.locator('#desk-deal-status').textContent(),/Exactly the original card order/);
+   await page.screenshot({path:`test-results/${name}-desk-cards.png`});
+   await page.locator('[data-desk="bits"]').click();
+   await page.locator('.desk-bit-row [data-bit="14"]').click();
+   assert.equal(await page.locator('#desk-address-value').textContent(),'16426');
+   await page.locator('.desk-register-reset').click();
+   assert.equal(await page.locator('#desk-address-value').textContent(),'42');
+   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),`${name}: workbench fits`);
+   await page.screenshot({path:`test-results/${name}-desk-bits.png`});
+   await page.locator('[data-desk="sound"]').click();
+   await page.screenshot({path:`test-results/${name}-desk-sound.png`});
    const catalogueLinks = page.locator('.catalogue-list li a');
    await page.locator('#more-projects').focus();
    await page.locator('#more-projects').press('Enter');

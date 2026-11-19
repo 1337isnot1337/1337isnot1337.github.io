@@ -1,6 +1,6 @@
 ---
 name: Cinna Davis · Project shelf
-description: Six illustrated project prints rest on a wooden ledge above a short introduction and a taped note.
+description: A personal opening, six illustrated prints on a wooden ledge, and an open workbench of real project artifacts.
 colors:
   ink: "#422c41"
   muted: "#665364"
@@ -50,7 +50,7 @@ components:
 
 ## Overview
 
-Six illustrated prints give visitors a way into Cinna’s work. Each print has a subject, title and an experiment to open. Most of the page stays quiet. A wooden ledge grounds the artwork, and a small taped note holds Cinna’s personal interests.
+A large personal greeting introduces Cinna before the six illustrated prints. Each print has a subject, title and an experiment to open. Beneath the wooden ledge, an open paper workbench puts real project artifacts directly on the homepage: a credited aircraft spectrogram, a repeating War deal, and editable Hack address bits. The searchable catalogue and personal notes follow. The original illustration, paper colors and type families remain the visual identity.
 
 ## Colors
 
@@ -88,3 +88,9 @@ Portrait prints have straight edges. The main action and project index have pill
 - Keep the experiment action specific to the selected print.
 - Give every print a text title and a direct link.
 - Keep project thumbnails and their corresponding dialog illustrations consistent.
+
+## Open workbench
+
+The homepage changes pace beneath the shelf: large editorial headings, paper tabs, and one asymmetric working spread rather than another row of project thumbnails. Sound uses the real credited spectrogram; cards use the same actual 23-card deal as the full experiment; bits encode a real 15-bit Hack address under a fixed instruction bit. Three choices preserve their local experiment state. On narrow screens the spread stacks and the register forms two eight-bit rows with 40px-tall switches. Without JavaScript all three sheets remain readable, with controls hidden and links to the full project notes. The audio file is still fetched only when opened or played.
+
+`welcome.css` owns the opening and narrow-screen navigation; `workbench.css` and `workbench.js` own the spread. The visual addition intentionally exposes existing work rather than introducing new performance claims or unverified research results.
