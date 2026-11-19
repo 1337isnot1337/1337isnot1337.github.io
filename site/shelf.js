@@ -237,6 +237,12 @@ function loadArticleMedia(article) {
     delete media.dataset.src;
   }
 }
+function updateReaderScrollPadding() {
+  if (dialog.open) {
+    // Native hash navigation and focused elements must clear the sticky controls.
+    dialog.style.scrollPaddingTop = dialog.querySelector('.modal-top').offsetHeight + 'px';
+  }
+}
 function displayFromHash() {
   returningToShelf = false;
   const article = articles.get(location.hash.slice(1));
@@ -272,6 +278,7 @@ function displayFromHash() {
   slot.replaceChildren(art, article);
   dialog.setAttribute("aria-labelledby", article.id + "-title");
   if (!dialog.open) dialog.showModal();
+  updateReaderScrollPadding();
   document.body.classList.add("modal-open");
   dialog.scrollTop = 0;
   if (!turning || !dialog.contains(document.activeElement))
@@ -302,6 +309,8 @@ function returnToShelf() {
 }
 if (typeof dialog.showModal === "function") {
   document.body.classList.add("enhanced");
+  if (typeof ResizeObserver === 'function')
+    new ResizeObserver(updateReaderScrollPadding).observe(dialog.querySelector('.modal-top'));
   document.addEventListener("click", (event) => {
     const link = event.target.closest("a[data-project]");
     if (

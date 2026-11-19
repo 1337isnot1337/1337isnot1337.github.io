@@ -288,3 +288,17 @@ test('shared pages request the same version of the shelf stylesheet', () => {
   assert.ok(new URL(expected).searchParams.get('v'));
   for(const path of ['404.html','imsa-map/index.html']) assert.equal(stylesheet(path),expected);
 });
+
+test('schedule examples share the tool canonical and explain local processing', () => {
+  const d=new JSDOM(fs.readFileSync('site/imsa-map/index.html','utf8')).window.document;
+  assert.equal(d.querySelector('link[rel="canonical"]').href,'https://1337isnot1337.github.io/imsa-map/');
+  assert.match(d.querySelector('meta[name="description"]').content,/five-day room lists.*nothing uploaded or saved/);
+});
+
+test('rook project names its specific result without claiming the open problem is solved', () => {
+  const d=new JSDOM(html).window.document;
+  const article=d.querySelector('#conway');
+  assert.match(article.textContent,/Whether it exists is still open/);
+  assert.match(article.textContent,/unrefereed proof/);
+  assert.equal(article.querySelector('a[href$="grid_intersections.md"]').textContent,'at most 120 induced 3 × 3 rook grids');
+});

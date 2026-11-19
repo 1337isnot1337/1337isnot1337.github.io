@@ -171,6 +171,9 @@ const server = http.createServer((req,res) => {
    await page.locator('#factor-form').screenshot({path:`test-results/${name}-factoring.png`});
    await page.goto(base + '/#conway');
    await page.locator('dialog[open]').waitFor();
+   await page.evaluate(() => document.fonts.ready);
+   assert.ok(await page.locator('#conway-title').evaluate(title=>title.getBoundingClientRect().top >= document.querySelector('.modal-top').getBoundingClientRect().bottom-1), `${name}: deep-linked heading clears sticky reader controls`);
+   await page.screenshot({path:`test-results/${name}-rook-reader.png`});
    await page.locator('[data-rook-pair="A1,B1"]').click();
    assert.match(await page.locator('#rook-caption').textContent(), /1 shared neighbor: C1/);
    await page.locator('[data-rook-pair="A1,B2"]').click();
@@ -188,7 +191,7 @@ const server = http.createServer((req,res) => {
    await page.screenshot({path:`test-results/${name}-schedule.png`,fullPage:true});
    const row = (period,term,room) => `${period}\t${term}\tMath\tMath\tExample\t${room}\tstart\tend`;
    const field = page.getByRole('textbox',{name:'PowerSchool schedule'});
-   await field.fill('Schedule\nHeader\n' + row('2-4(A,C-D)','S1','A113') + '\n' + row('3(A)','S2','B204'));
+   await field.fill('Schedule\nHeader\n' + row('2-4(A,C-D)','S1','A113') + '\n' + row('3(A)','S2','B204') + '\n' + row('1(A)','S2',''));
    await page.getByRole('button',{name:'Submit',exact:true}).click();
    await page.getByRole('heading',{name:'S2 room list'}).waitFor();
    const terms = page.locator('.schedule-results > section');
@@ -196,6 +199,7 @@ const server = http.createServer((req,res) => {
    assert.deepEqual(await terms.nth(0).locator('h3').allTextContents(),['A day','B day','I day','C day','D day']);
    assert.deepEqual((await terms.nth(0).locator('ol').first().locator('li').allTextContents()).slice(1,4),['A113','A113','A113']);
    assert.equal((await terms.nth(1).locator('ol').first().locator('li').allTextContents())[2],'B204');
+   assert.equal((await terms.nth(1).locator('ol').first().locator('li').allTextContents())[0],'Room not listed');
    if (name === 'desktop') {
     await page.setViewportSize({width:816,height:1056});
     await page.emulateMedia({media:'print'});
