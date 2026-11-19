@@ -43,6 +43,7 @@
     <script defer src="numberline.js?v=1"></script>
     <script defer src="workbench.js?v=4"></script>
     <link rel="stylesheet" href="cpu-trace.css?v=1" />
+    <link rel="stylesheet" href="firmware-note.css?v=1" />
     <script defer src="cpu-trace.js?v=1"></script>
     <script defer src="vendor/swiper-bundle.min.js"></script>
     <script defer src="shelf.js?v=24" onerror="
@@ -394,6 +395,25 @@
               ></a
             >
           </li>
+          <li data-category="Software" class="firmware-project">
+<a href="https://github.com/1337isnot1337/hp-acpi-lock-order-fix"><strong>HP firmware workaround</strong><span>An experimental workaround for a firmware deadlock: two workers wait on each other’s locks.</span></a>
+<details class="firmware-note">
+  <summary>How the deadlock happens</summary>
+  <div class="firmware-note-body">
+    <p>Two workers take the same locks in opposite orders. Each can hold the lock the other needs, so both wait.</p>
+    <div class="firmware-wait" aria-label="The circular wait">
+      <div><b>Battery worker</b><span>Owns <code>GBAP</code></span><span class="firmware-arrow" aria-hidden="true">→</span><span>Waits for <code>ECMX</code></span></div>
+      <div><b>Controller worker</b><span>Owns <code>ECMX</code></span><span class="firmware-arrow" aria-hidden="true">→</span><span>Waits for <code>GBAP</code></span></div>
+    </div>
+    <p class="firmware-observation">A high load average can mean tasks waiting, not a busy CPU.</p>
+    <div class="firmware-order"><div><b>Before</b><p>In <code>_Q08</code> and <code>_Q09</code></p><code>Acquire ECMX → call GBAP</code></div><div><b>After</b><p>Move the call ahead of the lock</p><code>Call GBAP → acquire ECMX</code></div></div>
+    <p><code>GBAP</code> stays serialized: one call at a time. The builder works from the machine’s own firmware table and refuses unsupported layouts.</p>
+    <div class="firmware-checks"><b>Before accepting a build</b><p>Original methods must round-trip byte for byte. The complete corrected disassembly must match the intended change.</p></div>
+    <p class="firmware-limit">Experimental local Linux override, not a BIOS flash. A related host-specific override has booted; the public builder’s exact output and long-term prevention are not yet hardware-verified.</p>
+    <a class="firmware-source" href="https://github.com/1337isnot1337/hp-acpi-lock-order-fix/blob/0b3ce30fb568bc28e9dd84e7994e32bb977e8b25/README.md">Read the workaround and its limits ↗</a>
+  </div>
+</details>
+          </li>
           <li data-category="Software">
             <a href="https://github.com/1337isnot1337/incidentmesh"
               ><strong>IncidentMesh</strong
@@ -558,15 +578,7 @@
               ></a
             >
           </li>
-          <li data-category="Software">
-            <a href="https://github.com/1337isnot1337/hp-acpi-lock-order-fix"
-              ><strong>HP firmware workaround</strong
-              ><span
-                >An experimental Linux ACPI override for a lock-order problem on
-                affected HP machines.</span
-              ></a
-            >
-          </li>
+
           <li data-category="Software">
             <a href="https://github.com/1337isnot1337/cozi"
               ><strong>Cozi</strong

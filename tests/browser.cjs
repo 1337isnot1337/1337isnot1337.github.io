@@ -75,6 +75,12 @@ const server = http.createServer((req,res) => {
    await page.locator('#desk-map').screenshot({path:`test-results/${name}-location-search.png`});
    assert.equal(await page.locator('#desk-map a').first().getAttribute('href'),'assets/livermore-automatic-mp3.webp');
    await page.locator('#desk-map summary').click();
+   assert.ok(await page.locator('.firmware-project').isVisible());
+   await page.locator('.firmware-note summary').click();
+   assert.match(await page.locator('.firmware-limit').textContent(),/not yet hardware-verified/);
+   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+   await page.locator('.firmware-note').screenshot({path:`test-results/${name}-firmware-note.png`});
+   await page.locator('.firmware-note summary').click();
    await page.locator('.index summary').click();
    await page.locator('.index[open]').waitFor();
    assert.equal(await page.locator('.index a img').count(),6);
@@ -208,7 +214,7 @@ const server = http.createServer((req,res) => {
    await page.locator('[data-desk-panel="numbers"]').screenshot({path:`test-results/${name}-numberline.png`});
    await page.locator('[data-desk="sound"]').click();
    await page.screenshot({path:`test-results/${name}-desk-sound.png`});
-   const catalogueLinks = page.locator('.catalogue-list li a');
+   const catalogueLinks = page.locator('.catalogue-list > li > a');
    await page.locator('#more-projects').focus();
    await page.locator('#more-projects').press('Enter');
    assert.equal(await catalogueLinks.nth(6).evaluate(el => el === document.activeElement),true,
@@ -482,6 +488,10 @@ const server = http.createServer((req,res) => {
   assert.match(await plain.locator('#desk-map').textContent(),/inconclusive/);
   assert.equal(await plain.locator('#desk-map-image img').count(),0);
   await plain.locator('#desk-map summary').click();
+  await plain.locator('.firmware-note summary').click();
+  assert.ok(await plain.locator('.firmware-order').isVisible());
+  assert.match(await plain.locator('.firmware-limit').textContent(),/not a BIOS flash/);
+  await plain.locator('.firmware-note summary').click();
   assert.equal(await plain.locator('.catalogue-list li:visible').count(),31);
   assert.equal(await plain.locator('.project-details .detail:visible').count(),6);
   assert.equal(await plain.locator('.shelf-controls').isVisible(),false);

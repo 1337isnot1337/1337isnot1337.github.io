@@ -308,3 +308,19 @@ test('research readers state the actual bound and recording prerequisites with s
   assert.equal(d.querySelector('.notebook-season a').href,'https://titanrobotics2022.com/robot/current-season/');
   assert.equal(d.querySelectorAll('img[src*="titanrobotics2022.com"]').length,0,'official robot photo is linked, not republished');
 });
+
+test('firmware case note is discoverable without overstating the experimental workaround',()=>{
+ const p=page(),note=p.d.querySelector('.firmware-note');
+ assert.equal(p.d.querySelectorAll('.catalogue-list > li').length,31);
+ assert.equal(note.closest('li').hidden,false);
+ assert.equal(note.open,false);
+ assert.match(note.textContent,/GBAP.*stays serialized/s);
+ assert.match(note.textContent,/round-trip byte for byte/);
+ assert.match(note.textContent,/not a BIOS flash/);
+ assert.match(note.textContent,/exact output and long-term prevention are not yet hardware-verified/);
+ assert.equal(note.querySelector('.firmware-source').href,'https://github.com/1337isnot1337/hp-acpi-lock-order-fix/blob/0b3ce30fb568bc28e9dd84e7994e32bb977e8b25/README.md');
+ assert.deepEqual([...note.querySelectorAll('.firmware-order > div > code')].map(el=>el.textContent),['Acquire ECMX → call GBAP','Call GBAP → acquire ECMX']);
+ p.input('#find-project','deadlock');assert.equal(p.d.querySelector('#result-count').textContent,'1 project');assert.equal(note.closest('li').hidden,false);
+ p.click('#clear-projects');assert.equal(p.d.querySelector('#result-count').textContent,'6 of 31 projects');
+ p.dom.window.close();
+});
