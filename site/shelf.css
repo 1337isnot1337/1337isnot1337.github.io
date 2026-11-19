@@ -1289,3 +1289,5 @@ html {
 #factor-steps span:nth-child(2) { color: var(--muted); }
 #factor-steps strong { text-align: right; font: inherit; color: var(--berry); }
 #factor-ending { font-size: 13px; margin-top: 9px; }
+#factor-form .input-row input { flex: 1; min-width: 0; max-width: 120px; }
+#factor-form .input-row button { flex-shrink: 0; white-space: nowrap; }
