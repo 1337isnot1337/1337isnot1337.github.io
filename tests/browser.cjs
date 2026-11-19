@@ -95,6 +95,13 @@ const server = http.createServer((req,res) => {
    await page.locator('#reset-predictor').click();
    assert.match(await page.locator('#forecast').textContent(),/^01/);
    await page.screenshot({path:`test-results/${name}-predictor.png`,fullPage:true});
+   await page.goto(base + '/#conway');
+   await page.locator('dialog[open]').waitFor();
+   await page.locator('[data-rook-pair="A1,B1"]').click();
+   assert.match(await page.locator('#rook-caption').textContent(), /1 shared neighbor: C1/);
+   await page.locator('[data-rook-pair="A1,B2"]').click();
+   assert.match(await page.locator('#rook-caption').textContent(), /2 shared neighbors: A2, B1/);
+   await page.locator('#conway .toy').screenshot({path:`test-results/${name}-rook.png`});
    const missing = await page.goto(base + '/a-missing-page-for-testing');
    assert.equal(missing.status(),404);
    await page.getByRole('heading',{name:'Nothing at this address.'}).waitFor();

@@ -1261,3 +1261,8 @@ html {
 .war-cycle label { display: block; font-size: 13px; }
 .war-cycle label output { display: inline; font: inherit; }
 #war-turn { display: block; width: 100%; margin: 8px 0 0; accent-color: var(--berry); min-height: 28px; cursor: pointer; }
+
+.rook-presets { margin-top: 12px; }
+.rook-board { grid-template-columns: repeat(3, 48px); gap: 3px; }
+.rook-board button { height: 48px; }
+#rook-caption + small { margin-top: 10px; color: var(--muted); }

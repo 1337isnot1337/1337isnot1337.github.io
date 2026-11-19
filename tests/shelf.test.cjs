@@ -131,3 +131,18 @@ test('War cycle chart and scrubber track the real 23-card deal', () => {
   assert.equal(p.d.querySelector('#war-turn').value,'0');
   p.dom.window.close();
 });
+
+test('rook comparisons show the actual common-neighbor counts', () => {
+  const p=page();
+  p.click('[data-rook-pair="A1,B1"]');
+  assert.deepEqual([...p.d.querySelectorAll('#rook-board .neighbor')].map(e=>e.textContent),['C1']);
+  assert.match(p.d.querySelector('#rook-caption').value,/Adjacent.*1 shared neighbor/);
+  p.click('[data-rook-pair="A1,B2"]');
+  assert.deepEqual([...p.d.querySelectorAll('#rook-board .neighbor')].map(e=>e.textContent),['A2','B1']);
+  assert.match(p.d.querySelector('#rook-caption').value,/Nonadjacent.*2 shared neighbors/);
+  assert.equal(p.d.querySelectorAll('#rook-board [aria-pressed="true"]').length,2);
+  p.d.querySelector('#rook-board button').click();
+  assert.equal(p.d.querySelectorAll('#rook-board .neighbor').length,4);
+  assert.equal(p.d.querySelectorAll('#rook-board [aria-pressed="true"]').length,1);
+  p.dom.window.close();
+});

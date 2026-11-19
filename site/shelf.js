@@ -529,6 +529,25 @@ for (const square of squares) {
   button.addEventListener("click", () => placeRook(square));
   board.append(button);
 }
+function compareRooks(first, second) {
+  const shared = [];
+  for (const button of board.children) {
+    const square = button.textContent;
+    const selected = square === first || square === second;
+    const common = !selected && [first, second].every(position =>
+      position[0] === square[0] || position[1] === square[1]);
+    button.classList.toggle('neighbor', common);
+    button.setAttribute('aria-pressed', String(selected));
+    if (common) shared.push(square);
+  }
+  const adjacent = first[0] === second[0] || first[1] === second[1];
+  document.querySelector('#rook-caption').value =
+    `${first} + ${second} · ${adjacent ? 'Adjacent' : 'Nonadjacent'} · ` +
+    `${shared.length} shared neighbor${shared.length === 1 ? '' : 's'}: ${shared.join(', ')}.`;
+}
+for (const button of document.querySelectorAll('[data-rook-pair]')) {
+  button.addEventListener('click', () => compareRooks(...button.dataset.rookPair.split(',')));
+}
 placeRook("B2");
 
 // Distinct ranks and descending collection order from the three-player War proof.
