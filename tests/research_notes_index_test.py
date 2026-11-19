@@ -51,7 +51,7 @@ class ResearchNotesIndexTests(unittest.TestCase):
         self.assertNotIn("Excluded page", rendered)
         self.assertIn('2026-11-19', rendered)
         self.assertEqual(rendered.count('<script type="application/ld+json">'), 1)
-        data = json.loads(re.search(r'<script type="application/ld\\+json">(.*?)</script>', rendered, re.S).group(1))
+        data = json.loads(re.search(r'<script type="application/ld\+json">(.*?)</script>', rendered, re.S).group(1))
         self.assertEqual(data["@graph"][0]["@type"], "CollectionPage")
         self.assertEqual(data["@graph"][0]["url"], notes.INDEX_URL)
 
