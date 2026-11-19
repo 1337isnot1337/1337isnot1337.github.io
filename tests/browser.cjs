@@ -67,6 +67,7 @@ const server = http.createServer((req,res) => {
    assert.equal(await page.locator("#desk-audio").getAttribute("src"),null);
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth <= innerWidth), `${name}: horizontal page overflow`);
    assert.deepEqual(mapRequests,[],`${name}: closed map must not request image`);
+   await page.locator('#studio').evaluate(el=>el.scrollIntoView({behavior:'instant'}));
    await page.locator('.object-scope').click();
    await page.locator('#desk-map summary').click();
    await page.waitForFunction(()=>{const img=document.querySelector('#desk-map-image img');return img?.complete && img.naturalWidth>0;});
@@ -284,7 +285,10 @@ const server = http.createServer((req,res) => {
    assert.ok(await page.locator('#about-physics').isVisible());
    assert.ok(page.url().endsWith('#about-physics'));
    await page.locator('.desk-rail a[href="#studio"]').click();
-   await page.locator(name === 'mobile' ? '.postcat' : '.object-letters').click();
+   if (name === 'mobile' && await page.locator('.object-drawer').isVisible()) {
+    await page.locator('.object-drawer').click();
+    await page.locator('.postcat').click();
+   } else await page.locator('.object-letters').click();
    await page.locator('#flip-post').click();
    assert.match(await page.locator('#post-route').innerText(),/Particle physics/);
    assert.ok(await page.locator('.postcard-back').evaluate(back =>
@@ -466,6 +470,27 @@ const server = http.createServer((req,res) => {
    console.log(`${name}: layout and interactions passed`);
   }
   // Playwright exposes real touch-drag injection through Chromium's CDP only.
+  // Every project reader exposes its own repository before any scrolling.
+  const destinations = {
+   conjectures:'solved-conjectures',flyover:'DOPPLERGEIST',cpu:'nand2tetris-verilog-improved',
+   factoring:'integer-factoring',conway:'conway-99',schedule:'1337isnot1337.github.io/tree/main/src'
+  };
+  for(const width of [320, 1280]) {
+   const reader=await browser.newPage({viewport:{width,height:650},reducedMotion:'reduce'});
+   await reader.goto(base+'/#conjectures');
+   for(let step=0;step<6;step++) {
+    const button=reader.locator('.open-project[open] .project-repo:visible');
+    const id=await reader.locator('#detail-slot article').getAttribute('id');
+    assert.equal(await button.getAttribute('href'),'https://github.com/1337isnot1337/'+destinations[id]);
+    assert.ok(await button.evaluate(el=>{
+     const r=el.getBoundingClientRect();
+     return el.closest('dialog').scrollTop===0 && r.top>=0 && r.bottom<=innerHeight && r.height>=44
+       && el.contains(document.elementFromPoint(r.left+r.width/2,r.top+r.height/2));
+    }), id+' repository is immediately available at '+width+'px');
+    await reader.locator('#next-detail').click();
+   }
+   await reader.close();
+  }
   const linkedDesk=await browser.newPage({viewport:{width:390,height:844},reducedMotion:'reduce'});
   for(const [id,name] of [['desk-sound','sound'],['desk-war','cards'],['desk-bits','bits'],['desk-numbers','numbers']]){
    await linkedDesk.goto(base+'/#'+id);

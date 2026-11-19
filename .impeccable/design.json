@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-19T17:59:23.631370+00:00",
+  "generatedAt": "2026-11-19T19:21:15.177786+00:00",
   "title": "Cinna Davis · Project shelf",
   "extensions": {
     "colorMeta": {
@@ -139,8 +139,8 @@
       },
       {
         "name": "Room and leaf change",
-        "value": "210ms ease-out",
-        "purpose": "Moves the selected room or leaf into view after navigation. Reduced motion skips the animation."
+        "value": "230ms ease-out",
+        "purpose": "Lifts the paper reader or the selected notebook leaf into view. Reduced motion skips the animation."
       },
       {
         "name": "Postcard turn",
@@ -166,8 +166,8 @@
         "value": "1550px"
       },
       {
-        "name": "Studio portrait",
-        "value": "720px"
+        "name": "Narrow desk geometry",
+        "value": "660px"
       }
     ]
   },
@@ -199,10 +199,10 @@
   ],
   "narrative": {
     "northStar": "Project shelf",
-    "overview": "Six illustrated prints stand on a wooden ledge. A sunlit desk below opens the workbench, the project files, the personal notebook and Letters.",
+    "overview": "Six illustrated prints stand on a wooden ledge. Below them, objects on a furnished 3D desk open research, experiments, personal stories and paper readers.",
     "keyCharacteristics": [
       "Illustrated project prints",
-      "A painted desk with labelled objects",
+      "A furnished 3D desk with keyboard-accessible objects",
       "Plum ink and warm paper",
       "Illustrated notebook leaves and a two-sided postcard"
     ],

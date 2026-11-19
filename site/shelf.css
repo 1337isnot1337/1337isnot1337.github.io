@@ -1423,3 +1423,20 @@ html {
 .research-bound figcaption a{display:inline-block;margin-left:8px}
 @media(max-width:380px){.research-bound{padding-inline:12px}.research-bound figcaption a{display:block;margin-left:0;margin-top:4px}}
 @media print{.research-bound{background:transparent;break-inside:avoid}}
+
+.detail-heading .project-repo,.modal-top .project-repo {
+  display:inline-flex; align-items:center; justify-content:center; gap:.85em; min-height:48px;
+  padding:10px 20px; border-radius:5px; background:#56364e; color:#fff8ed;
+  font:650 17px/1.25 var(--headline); text-decoration:none;
+}
+.detail-heading .project-repo { margin-top:14px; }
+.project-repo:is(:hover,:focus-visible) { background:#723e5e; text-decoration:underline; text-underline-offset:3px; }
+#reader-repo { display:none; }
+@media screen and (max-width:680px) {
+  .open-project .detail-heading .project-repo { display:none; }
+  .open-project #reader-repo { display:inline-flex; flex:1 0 auto; min-height:44px; padding:8px 12px; font-size:16px; }
+  .open-project .modal-top { flex-wrap:wrap; gap:5px 8px; justify-content:space-between; }
+}
+@media screen and (max-width:475px) {
+  .open-project #reader-repo { order:3; flex-basis:100%; }
+}

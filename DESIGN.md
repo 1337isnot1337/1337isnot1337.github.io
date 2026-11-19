@@ -1,6 +1,6 @@
 ---
 name: Cinna Davis · Project shelf
-description: A personal opening, six illustrated prints on a wooden ledge, and a painted desk that opens into four rooms.
+description: A personal opening, six illustrated prints on a wooden ledge, and a 3D writing desk whose objects open experiments and paper readers.
 colors:
   ink: "#422c41"
   muted: "#665364"
@@ -50,7 +50,7 @@ components:
 
 ## Overview
 
-A large personal greeting introduces Cinna before the six illustrated prints. Each print has a subject, title and experiment to open. Beneath the ledge, the visitor chooses an object on a painted desk. The oscilloscope opens the workbench, the card box opens the project files, the clothbound book opens personal stories and the envelopes open Letters.
+A large personal greeting introduces Cinna before the six illustrated prints. Each print has a subject, title and experiment to open. Beneath the ledge, visitors can look around a furnished writing desk and pick up its contents. The oscilloscope opens the workbench, the folder opens the catalogue, the clothbound notebook opens personal stories and the letters open a postcard. Books on the hutch link to proofs and research notes. A cassette opens “Off the clock.”
 
 ## Colors
 
@@ -66,7 +66,7 @@ Text shares a centered measure of 90% up to 1120px. The shelf extends beyond tha
 
 ## Elevation & Depth
 
-A faint woven check sits behind the prints. The perspective, narrow paper edges and two soft shadows make their order legible. The wooden ledge uses layered CSS gradients. The studio map sits inside a cream picture frame. Layered paper edges distinguish the workshop and file drawer, and a slight tilt lifts the postcard from its background. Introductory prose and footer links rest directly on the page.
+A faint woven check sits behind the prints. The perspective, narrow paper edges and two soft shadows make their order legible. The wooden ledge uses layered CSS gradients. The desk uses perspective, cast shadows and material roughness to show depth. Paper readers overlay the furniture with layered edges. A slight tilt lifts the postcard from its background. Introductory prose and footer links rest directly on the page.
 
 ## Shapes
 
@@ -89,11 +89,13 @@ Portrait prints have straight edges. The main action and project index have pill
 - Give every print a text title and a direct link.
 - Keep project thumbnails and their corresponding dialog illustrations consistent.
 
-## Studio map
+## The writing desk
 
-A single sunlit desk illustration carries four text-labelled links. Each label stays in HTML so it can receive keyboard focus, change its caption and open a real address. Desktop art uses a 3:2 composition. At 720px and below, the picture switches to a 2:3 portrait composition with the same four destinations. Keep labels aligned to the depicted objects in both images. The four PNG masks in `site/assets/studio/` isolate the corresponding desktop objects for the hover lift. The paper labels remain usable with touch and reduced motion.
+The scene at `#studio` uses self-hosted Three.js r180. `site/desk-model.js` builds the desk and hutch from geometry, with separate moving parts for the drawer, notebook cover and file flap. Brass fittings, woven bookcloth and a glass oscilloscope screen reflect the room’s lighting differently. The desktop, trim and floor use `site/assets/furniture/grain.webp`, a scanned wood-grain texture derived from Poly Haven’s CC0 Wood Table 001. [Source asset](https://polyhaven.com/a/wood_table_001) · [License](https://polyhaven.com/license)
 
-The map lives at `#studio`. Following an object opens one room and reveals a shared navigation rail. Each room and notebook leaf has its own hash. Back and Forward restore the addressed view. On an explicit turn, keyboard focus moves to the new heading, or back to the corresponding object when the visitor returns to the desk. A short rise marks a room or leaf change (210ms). The postcard turn takes 230ms. Both effects respect reduced motion. Project readers can float above the current room.
+The scene stays in the viewport as the visitor scrolls from the hutch toward the writing surface. A horizontal drag orbits the camera within a limited arc. At 660px and below, and on tall viewports up to a 6:5 aspect ratio, the geometry uses a narrower desk and rearranges the objects. A ray cast selects the nearest model part, and the matching keyboard-accessible HTML targets track their objects as the camera moves. The same named destination links work over a wood-textured fallback when WebGL is unavailable. The lamp switches on a warm point light. Pulling the drawer reveals a postcard the visitor can take.
+
+Selecting a room opens a paper reader over the furniture. The reader rail and stable hashes connect experiments, the file catalogue, notebook leaves and Letters. Returning to the desk restores the originating control and scroll position when the reader was opened from a desk object. Reduced motion fixes the scroll camera, suppresses pointer parallax and applies the drawer and cover positions immediately. The explicit drag and keyboard controls remain available. Room changes, leaf turns and the postcard turn skip their entrance animations under reduced motion.
 
 ## Open workbench
 
@@ -182,3 +184,5 @@ The existing hand inspector pairs each starting rank with the rank now in that p
 ## Impeccable polish: a clearer path through the work
 
 The sound sheet has one recording-notes entry in its project header; the location-search disclosure is its next action, with the existing example page and pinned historical source kept inside. The bio no longer repeats the same DOPPLERGEIST/proof description already given in the workbench. Both engineering note rows span the catalogue when either opens, avoiding a blank half-row without changing DOM or keyboard order; the compact two-column index returns when both close. This refines the existing visual world rather than adding sections or changing factual claims.
+
+Each portfolio reader exposes an “Open GitHub repo” action directly below its title. On phones the sticky reader toolbar holds the same action. The schedule map links to its published Rust source in this repository.

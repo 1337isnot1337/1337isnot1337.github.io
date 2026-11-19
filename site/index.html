@@ -38,7 +38,7 @@
       crossorigin
     />
     <link rel="stylesheet" href="vendor/swiper-bundle.min.css" />
-    <link rel="stylesheet" href="shelf.css?v=23" />
+    <link rel="stylesheet" href="shelf.css?v=24" />
     <link rel="stylesheet" href="welcome.css?v=1" />
     <link rel="stylesheet" href="workbench.css?v=6" />
     <link rel="stylesheet" href="notebook.css?v=4" />
@@ -53,7 +53,7 @@
     <link rel="stylesheet" href="incident-note.css?v=2" />
     <script defer src="cpu-trace.js?v=1"></script>
     <script defer src="vendor/swiper-bundle.min.js"></script>
-    <script defer src="shelf.js?v=28" onerror="
+    <script defer src="shelf.js?v=29" onerror="
       const restoreReading = () => {
         document.documentElement.classList.add('script-unavailable');
         document.querySelector('.shelf-heading p').textContent = 'The interactive shelf could not load. You can still read the project notes below.';
@@ -66,8 +66,8 @@
       else restoreReading();
     "></script>
     <script defer src="rook-graph.js?v=1"></script>
-    <link rel="stylesheet" href="studio.css?v=1" />
-    <script defer src="studio.js?v=1"></script>
+    <link rel="stylesheet" href="studio.css?v=3" />
+    <script defer src="studio.js?v=3"></script>
     <noscript
       ><style>
         .shelf-controls,
@@ -286,24 +286,29 @@
 
       <div class="stationery" id="studio">
         <section class="desk-overview" aria-labelledby="studio-title">
-          <header class="studio-caption">
-            <h2 id="studio-title" tabindex="-1">On my desk.</h2>
-            <p id="object-hint">Pick something up. I left the project files in the card box and my notes in the little book.</p>
-          </header>
+          <h2 id="studio-title" class="visually-hidden" tabindex="-1">Cinna’s desk</h2>
           <div class="desktop-picture">
-            <picture><source media="(max-width: 720px)" srcset="assets/studio/desk-portrait.webp" width="720" height="1080" /><img class="desktop-art" src="assets/studio/desk.webp" srcset="assets/studio/desk-small.webp 720w, assets/studio/desk.webp 1440w" sizes="(max-width: 720px) 100vw, 75vw" width="1440" height="960" loading="lazy" alt="A sunlit green desk with a little oscilloscope, letters, a card file and a clothbound notebook." /></picture>
-            <nav class="desk-objects" aria-label="Objects on Cinna’s desk">
-              <a class="object-scope" href="#desk"><span>Try an experiment</span></a>
-              <a class="object-letters" href="#elsewhere"><span>Open the letters</span></a>
-              <a class="object-file" href="#catalogue"><span>Project files</span></a>
-              <a class="object-book" href="#about"><span>My notebook</span></a>
+            <canvas class="furniture-canvas" aria-hidden="true"></canvas>
+            <div class="hutch-fallback" aria-hidden="true"></div>
+            <a class="shelf-return" href="#projects">↑ Project shelf</a>
+            <nav class="desk-objects" aria-label="Objects on the desk">
+              <a class="object-proof" data-object="proof" data-project="conjectures" href="#conjectures"><span>Proofs &amp; counterexamples</span></a>
+              <a class="object-archive" data-object="archive" href="/research-notes/"><span>Research notes</span></a>
+              <a class="object-scope" data-object="scope" href="#desk"><span>Experiments</span></a>
+              <a class="object-file" data-object="file" href="#catalogue"><span>Project files</span></a>
+              <a class="object-book" data-object="book" href="#about"><span>My notebook</span></a>
+              <a class="object-tape" data-object="tape" href="#off-the-clock"><span>Off the clock</span></a>
+              <a class="object-letters" data-object="letters" href="#elsewhere"><span>Letters</span></a>
+              <button type="button" class="object-lamp" data-object="lamp" aria-pressed="false" hidden><span>Turn on the lamp</span></button>
+              <button type="button" class="object-drawer" data-object="drawer" aria-expanded="false" aria-controls="drawer-letter" hidden><span>Pull the drawer</span></button>
+              <a id="drawer-letter" class="postcat" data-object="keepsake" href="#elsewhere" hidden><span>Take the postcard</span></a>
             </nav>
-            <a class="postcat" href="#elsewhere" aria-label="Meet the desk cat"><span>Who’s there?</span></a>
+            <p class="desk-instruction">Scroll down · Drag to look around · Tap an object</p>
           </div>
-          <a class="shelf-return" href="#projects">↑ Back to the shelf</a>
         </section>
+        <div class="desk-reading">
         <nav class="desk-rail" aria-label="Move around the desk" hidden>
-          <a class="back-to-desk" href="#studio">← <span>Desk</span></a>
+          <a class="back-to-desk" href="#studio">← <span>Put it back</span></a>
           <a href="#desk">Experiments</a>
           <a href="#catalogue">Files</a>
           <a href="#about">Notebook</a>
@@ -842,6 +847,7 @@
     <p id="post-status" role="status"></p>
   </figure>
 </section>
+        </div>
       </div>
 
       <div class="project-details page-width">
@@ -853,6 +859,7 @@
           <div class="detail-heading">
             <p>Combinatorics</p>
             <h2 id="conjectures-title">Solved conjectures</h2>
+            <a class="project-repo" href="https://github.com/1337isnot1337/solved-conjectures">Open GitHub repo <span aria-hidden="true">↗</span></a>
           </div>
           <p>
             I curate this collection of proofs and counterexamples with GPT-6.2
@@ -965,6 +972,7 @@
           <div class="detail-heading">
             <p>Aircraft audio</p>
             <h2 id="flyover-title">DOPPLERGEIST</h2>
+            <a class="project-repo" href="https://github.com/1337isnot1337/DOPPLERGEIST">Open GitHub repo <span aria-hidden="true">↗</span></a>
           </div>
           <p>
             Can a recording tell you where the microphone was? DOPPLERGEIST
@@ -1040,6 +1048,7 @@
           <div class="detail-heading">
             <p>Algorithms</p>
             <h2 id="factoring-title">Integer factoring</h2>
+            <a class="project-repo" href="https://github.com/1337isnot1337/integer-factoring">Open GitHub repo <span aria-hidden="true">↗</span></a>
           </div>
           <p>
             I work on deterministic integer factoring. The repository gives this
@@ -1096,6 +1105,7 @@
           <div class="detail-heading">
             <p>Hardware</p>
             <h2 id="cpu-title">The Hack CPU</h2>
+            <a class="project-repo" href="https://github.com/1337isnot1337/nand2tetris-verilog-improved">Open GitHub repo <span aria-hidden="true">↗</span></a>
           </div>
           <p>
             For my computing systems capstone, I extended the Hack CPU with a
@@ -1148,6 +1158,7 @@
           <div class="detail-heading">
             <p>Campus software</p>
             <h2 id="schedule-title">Schedule map</h2>
+            <a class="project-repo" href="https://github.com/1337isnot1337/1337isnot1337.github.io/tree/main/src">Open GitHub repo <span aria-hidden="true">↗</span></a>
           </div>
           <p>
             A school schedule is easier to read when you can see which room you
@@ -1181,6 +1192,7 @@
           <div class="detail-heading">
             <p>Graph theory</p>
             <h2 id="conway-title">Conway’s 99-graph</h2>
+            <a class="project-repo" href="https://github.com/1337isnot1337/conway-99">Open GitHub repo <span aria-hidden="true">↗</span></a>
           </div>
           <p>
             Conway asked for a graph with 99 vertices and 14 neighbors per vertex.
@@ -1227,6 +1239,7 @@
     <dialog class="open-project" aria-label="Project details">
       <div class="modal-top">
         <button type="button" id="close-dialog">Back to shelf</button>
+        <a id="reader-repo" class="project-repo">Open GitHub repo <span aria-hidden="true">↗</span></a>
         <nav class="turn-prints" aria-label="Browse open prints">
           <button
             type="button"

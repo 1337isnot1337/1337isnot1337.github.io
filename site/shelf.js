@@ -275,6 +275,9 @@ function displayFromHash() {
   }
   document.querySelector("#print-position").textContent =
     index + 1 + " / " + prints.length;
+  const repo = article.querySelector(".project-repo");
+  document.querySelector("#reader-repo").href = repo.href;
+  document.querySelector("#close-dialog").textContent = opener?.closest("#studio") ? "Back to desk" : "Back to shelf";
   loadArticleMedia(article);
   const recording = article.querySelector("audio");
   if (recording) recording.preload = "metadata";

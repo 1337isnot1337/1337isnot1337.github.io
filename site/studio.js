@@ -8,12 +8,25 @@
   const leaves = [...notebook.querySelectorAll("[data-leaf]")];
   const bookmarks = notebook.querySelector(".notebook-tabs");
   const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
-  const objectHints = {
-    desk: "Switch on an experiment. Listen for a plane, deal a hand, or play with a number line.",
-    catalogue: "Pull out a file. The box holds mathematics, software and collaborations.",
-    about: "Open my notebook to robotics, physics, teaching, and the things I watch.",
-    elsewhere: "There’s something in the mail for you.",
-  };
+  const reader = studio.querySelector(".desk-reading");
+  const stage = overview.querySelector(".desktop-picture");
+  let opener = null;
+  let returnY = null;
+  let liftTimer = 0;
+  let sceneNearby=false, sceneStarted=false;
+  function showFurniture() {
+    if (!sceneNearby || sceneStarted || studio.dataset.open || document.querySelector(".open-project[open]")) return;
+    sceneStarted=true;
+    import("./furniture.js").then(module => module.mountFurniture(stage)).catch(() => {
+      // The named links also work on the CSS desk without WebGL.
+    });
+  }
+  const activateScene = new IntersectionObserver(([entry]) => {
+    sceneNearby=entry.isIntersecting;
+    showFurniture();
+  }, {rootMargin:"140px"});
+  activateScene.observe(overview);
+  document.querySelector(".open-project")?.addEventListener("close",showFurniture);
 
   const stops = new Map([
     ["desk", "The workbench"], ["catalogue", "The project files"], ["about", "Robot code"],
@@ -77,10 +90,11 @@
     const activeLeaf = room === notebook ? selectLeaf(target.closest("[data-leaf]")?.dataset.leaf) : null;
     current = room;
     for (const panel of rooms) panel.hidden = panel !== room;
-    overview.hidden = Boolean(room);
+    reader.hidden = !room;
+    studio.dispatchEvent(new CustomEvent("desk-room", {detail: room?.id}));
     rail.hidden = !room;
     if (room) studio.dataset.open = room.id;
-    else delete studio.dataset.open;
+    else { delete studio.dataset.open; showFurniture(); }
     for (const link of rail.querySelectorAll("a")) {
       if (link.hash === "#" + room?.id) link.setAttribute("aria-current", "page");
       else link.removeAttribute("aria-current");
@@ -96,21 +110,26 @@
     if (move) {
       const turning = activeLeaf && previous === notebook;
       const focus = turning ? activeLeaf.querySelector("h3") : room?.querySelector("h2")
-        || overview.querySelector('a[href="#' + previous?.id + '"]') || overview.querySelector("h2");
-      focus.tabIndex = focus.matches("a") ? 0 : -1;
+        || opener || overview.querySelector("h2");
+      if (!focus.matches("a,button")) focus.tabIndex = -1;
       focus.focus({preventScroll:true});
-      (turning ? bookmarks : studio).scrollIntoView({behavior:"instant", block:"start"});
-      if (!reducedMotion.matches) {
-        (turning ? activeLeaf : room || overview).animate([
-          {opacity:0.65, transform:"translateY(6px)"}, {opacity:1, transform:"none"}
-        ], {duration:210, easing:"ease-out"});
+      if (turning) bookmarks.scrollIntoView({behavior:"instant",block:"start"});
+      else if (room) reader.scrollIntoView({behavior:"instant",block:"start"});
+      else if (returnY !== null) window.scrollTo({top:returnY,behavior:"instant"});
+      else overview.scrollIntoView({behavior:"instant"});
+      if (!room) { opener = null; returnY = null; }
+      if (room && !reducedMotion.matches) {
+        (turning ? activeLeaf : reader).animate([
+          {opacity:.68, transform:"translateY(15px) rotate(-.35deg)"}, {opacity:1, transform:"none"}
+        ], {duration:230, easing:"ease-out"});
       }
     }
   }
   function readAddress(move) {
+    clearTimeout(liftTimer);
     const target = document.getElementById(location.hash.slice(1));
     if (target && studio.contains(target)) reveal(target, move);
-    else if (!target || target.id === "projects") reveal(studio);
+    else if (!target || target.id === "projects") reveal(studio, Boolean(move && current && returnY !== null));
     // A project reader floats above the open object until its Back button is used.
   }
   document.addEventListener("click", event => {
@@ -120,8 +139,25 @@
     const target = document.getElementById(link.hash.slice(1));
     if (!target || !studio.contains(target) || link.matches(".desk-permalink")) return;
     event.preventDefault();
+    clearTimeout(liftTimer);
     if (location.hash !== link.hash) history.pushState(null, "", link.hash);
+    if (overview.contains(link) && link.dataset.object) {
+      returnY = window.scrollY;
+      opener = link;
+      const position = Math.max(0, -studio.getBoundingClientRect().top);
+      studio.style.setProperty("--opening", Math.round(Math.min(overview.offsetHeight * .66, position + innerHeight * .24)) + "px");
+      if (stage.classList.contains("is-rendered") && !reducedMotion.matches) {
+        studio.dispatchEvent(new CustomEvent("desk-room", {detail:target.closest("[data-room]")?.id}));
+        liftTimer = setTimeout(() => reveal(target, true), 270);
+        return;
+      }
+    }
     reveal(target, true);
+  });
+  document.addEventListener("keydown", event => {
+    if (event.key === "Escape" && current && !document.querySelector(".open-project[open]") && reader.contains(document.activeElement)) {
+      event.preventDefault();rail.querySelector(".back-to-desk").click();
+    }
   });
   window.addEventListener("popstate", () => readAddress(true));
   window.addEventListener("hashchange", () => readAddress(false));
@@ -138,17 +174,6 @@
   new MutationObserver(() => {
     if (dialog.open) remember(dialog.querySelector("article")?.id);
   }).observe(dialog, {attributes:true, attributeFilter:["open", "aria-labelledby"]});
-
-  const hint = overview.querySelector("#object-hint");
-  const defaultHint = hint.textContent;
-  for (const link of overview.querySelectorAll(".desk-objects a")) {
-    const describe = () => { hint.textContent = objectHints[link.hash.slice(1)]; };
-    const restore = () => { hint.textContent = defaultHint; };
-    link.addEventListener("focus", describe);
-    link.addEventListener("blur", restore);
-    link.addEventListener("pointerenter", event => { if (event.pointerType !== "touch") describe(); });
-    link.addEventListener("pointerleave", restore);
-  }
 
   const postcard = studio.querySelector(".postcard");
   const back = postcard.querySelector(".postcard-back");
