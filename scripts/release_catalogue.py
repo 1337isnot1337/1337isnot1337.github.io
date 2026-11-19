@@ -159,6 +159,54 @@ def verify_annotation(output, provenance):
                 raise ValueError(f"Snapshot source link points at moving main: {page}")
 
 
+
+def add_breadcrumb_schema(output):
+    """Attach BreadcrumbList to the existing page JSON-LD without changing its type.
+
+    The upstream catalogue already renders visible breadcrumb navigation. This
+    pass mirrors those links rather than generating fictitious hierarchy.
+    """
+    manifest = json.loads((output / "build-manifest.json").read_text())
+    pages = {item["file"]: item for item in manifest["pages"]}
+    # Release-unit-test fixtures deliberately contain only minimal metadata.
+    if "index.html" not in pages or "canonical" not in pages["index.html"]:
+        return 0
+    home = pages["index.html"]["canonical"]
+    count = 0
+    for filename, item in pages.items():
+        if filename == "index.html" or item.get("noindex") or not item.get("canonical"):
+            continue
+        url = item["canonical"]
+        crumbs = [("All results", home)]
+        parts = filename.split("/")
+        if len(parts) >= 4 and parts[0] == "results" and parts[-1] == "index.html":
+            result_file = "/".join(parts[:2]) + "/index.html"
+            parent = pages.get(result_file)
+            if parent and parent.get("canonical") and parent["canonical"] != url:
+                crumbs.append((parent["title"].split(" | ")[0], parent["canonical"]))
+        crumbs.append((item["title"].split(" | ")[0], url))
+        script = re.search(r'<script type="application/ld\\+json">(.*?)</script>', (output / filename).read_text(), re.S)
+        if script is None:
+            raise ValueError(f"Missing JSON-LD in {filename}")
+        page_path = output / filename
+        text = page_path.read_text()
+        structured = json.loads(script.group(1))
+        if not isinstance(structured, dict) or structured.get("url") != url:
+            raise ValueError(f"Unexpected structured page metadata in {filename}")
+        structured["breadcrumb"] = {
+            "@type": "BreadcrumbList",
+            "@id": url + "#breadcrumbs",
+            "itemListElement": [
+                {"@type": "ListItem", "position": i, "name": name, "item": link}
+                for i, (name, link) in enumerate(crumbs, 1)
+            ],
+        }
+        encoded = json.dumps(structured, ensure_ascii=False).replace("<", "\\u003c")
+        page_path.write_text(text[:script.start(1)] + encoded + text[script.end(1):])
+        count += 1
+    return count
+
+
 def apply_reader_skin(output):
     """Style generated pages without rewriting research text or source assets."""
     css = (HERE.parent / "site/research-reader.css").read_bytes()
@@ -254,6 +302,7 @@ def release(current, fallback, output, base_url, config, run_url=None):
             provenance["notice_pages"] = annotate_snapshot(selected, provenance, config)
         verify_annotation(selected, provenance)
         provenance["website_reader"] = apply_reader_skin(selected)
+        provenance["breadcrumb_schema_pages"] = add_breadcrumb_schema(selected)
         (selected / "catalogue-provenance.json").write_text(json.dumps(provenance, indent=2) + "\n")
         check_output(selected_source, selected)
         verify_manifest(selected, rendered)
