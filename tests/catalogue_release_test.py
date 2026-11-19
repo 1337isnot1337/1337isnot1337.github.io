@@ -48,6 +48,7 @@ class CatalogueRelease(unittest.TestCase):
                     "pages": [{"file": file, "title": "Test", "description": "Test description"} for file in ("index.html", "detail/index.html")]}
         (output / 'build-manifest.json').write_text(json.dumps(manifest))
         text = ('<!doctype html><html><head><title>Test</title>'
+                '<link rel="stylesheet" href="/assets/site.css">'
                 '<meta name="description" content="Test description">'
                 '<meta property="og:title" content="Test">'
                 '<meta property="og:description" content="Test description">'
@@ -67,6 +68,34 @@ class CatalogueRelease(unittest.TestCase):
 
     def run_release(self):
         return release.release(self.current, self.fallback, self.output, 'https://example.test/', self.config)
+
+    def test_reader_skin_copies_hashed_site_style_without_changing_body(self):
+        staged = Path(self.temp.name) / 'reader-preview'
+        self.build(self.current, staged, 'https://example.test/')
+        before = {page: page.read_text().split('</head>', 1)[1] for page in staged.rglob('*.html')}
+        info = release.apply_reader_skin(staged)
+        self.assertEqual(info['pages'], 2)
+        self.assertEqual((staged / info['asset']).read_bytes(), (release.HERE.parent / 'site/research-reader.css').read_bytes())
+        for page, body in before.items():
+            text = page.read_text()
+            self.assertEqual(text.split('</head>', 1)[1], body)
+            self.assertEqual(text.count('id="website-reader-style"'), 1)
+            self.assertIn('/' + info['asset'], text)
+        with self.assertRaisesRegex(ValueError, 'Unrecognized reader stylesheet shell'):
+            release.apply_reader_skin(staged)
+
+    def test_unknown_reader_shell_does_not_replace_existing_release(self):
+        self.run_release()
+        previous = (self.output / 'index.html').read_text()
+        original = self.build
+        def changed_shell(source, output, base):
+            original(source, output, base)
+            page = output / 'index.html'
+            page.write_text(page.read_text().replace('/assets/site.css', '/styles/unknown.css'))
+        with patch.object(release, 'run_builder', changed_shell):
+            with self.assertRaisesRegex(ValueError, 'Unrecognized reader stylesheet shell'):
+                self.run_release()
+        self.assertEqual((self.output / 'index.html').read_text(), previous)
 
     def test_current_success_never_uses_snapshot(self):
         provenance = self.run_release()

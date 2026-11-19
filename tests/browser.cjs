@@ -309,6 +309,27 @@ const server = http.createServer((req,res) => {
      } else {
       assert.equal(await page.locator('.catalogue-snapshot').count(),0);
      }
+     assert.ok(provenance.website_reader,'catalogue release identifies its website reader stylesheet');
+     if(provenance.website_reader){
+      await page.goto(base + '/solved-conjectures/results/haralambis-three-differences/proof/');
+      await page.evaluate(()=>document.fonts.ready);
+      assert.equal(await page.locator('#website-reader-style').count(),1);
+      assert.ok((await page.locator('#website-reader-style').getAttribute('href')).endsWith(provenance.website_reader.asset));
+      assert.ok(await page.locator('.prose').evaluate(el=>getComputedStyle(el).fontFamily.includes('Newsreader')));
+      assert.ok(await page.locator('math').count()>10,'native mathematical notation remains present');
+      assert.equal(await page.locator('.prose').evaluate(el=>getComputedStyle(el).color),'rgb(66, 44, 65)');
+      assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),`${name}: proof reader fits viewport`);
+      assert.ok(await page.locator('.prose p').evaluateAll(paragraphs=>paragraphs.filter(p=>p.scrollWidth>p.clientWidth+1).every(p=>{p.scrollLeft=p.scrollWidth;const reachable=p.scrollLeft>0;p.scrollLeft=0;return reachable;})), 'wide equations remain horizontally reachable, not clipped');
+      if(width<=720) assert.equal(await page.locator('.article-nav ul').evaluate(el=>getComputedStyle(el).display),'flex');
+      if(provenance.mode==='snapshot') assert.ok(await page.locator('.catalogue-snapshot').isVisible());
+      await page.screenshot({path:`test-results/${name}-research-reader-top.png`});
+      await page.locator('.prose').scrollIntoViewIfNeeded();
+      await page.screenshot({path:`test-results/${name}-research-reader-body.png`});
+      await page.goto(base + '/solved-conjectures/results/nonmixed-gap-packing/proof/');
+      await page.evaluate(()=>document.fonts.ready);
+      assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),`${name}: inline list equations stay within page`);
+      assert.ok(await page.locator('.prose ul,.prose ol').evaluateAll(lists=>lists.filter(el=>el.scrollWidth>el.clientWidth+1).every(el=>{el.scrollLeft=el.scrollWidth;const reachable=el.scrollLeft>0;el.scrollLeft=0;return reachable;})),'wide list equations remain reachable');
+     }
     }
    }
    assert.deepEqual(errors,[],`${name}: uncaught browser errors`);

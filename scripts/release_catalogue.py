@@ -7,6 +7,7 @@ supply any files to the release. Research checkouts are read-only inputs.
 from datetime import datetime, timezone
 from html import escape
 import argparse
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -158,6 +159,41 @@ def verify_annotation(output, provenance):
                 raise ValueError(f"Snapshot source link points at moving main: {page}")
 
 
+def apply_reader_skin(output):
+    """Style generated pages without rewriting research text or source assets."""
+    css = (HERE.parent / "site/research-reader.css").read_bytes()
+    if not css.strip():
+        raise ValueError("Website reader stylesheet is empty")
+    digest = hashlib.sha256(css).hexdigest()
+    name = f"reader-{digest[:16]}.css"
+    pages = list(output.rglob("*.html"))
+    manifest = json.loads((output / "build-manifest.json").read_text())
+    if not pages or {item["file"] for item in manifest["pages"]} != {page.relative_to(output).as_posix() for page in pages}:
+        raise ValueError("Reader styling requires complete manifest coverage")
+    links = []
+    for page in pages:
+        text = page.read_text()
+        originals = re.findall(r'<link rel="stylesheet" href="(/(?:[^"?#]+/)?assets/site\.css)">', text)
+        if len(originals) != 1 or text.count('</head>') != 1 or 'id="website-reader-style"' in text:
+            raise ValueError(f"Unrecognized reader stylesheet shell: {page}")
+        href = originals[0][:-len("site.css")] + name
+        link = f'<link id="website-reader-style" rel="stylesheet" href="{escape(href, quote=True)}">'
+        # Append only a stylesheet in the head. The entire body is unchanged.
+        page.write_text(text.replace('</head>', link + '\n</head>', 1))
+        links.append(link)
+    asset = output / "assets" / name
+    asset.parent.mkdir(exist_ok=True)
+    if asset.exists():
+        raise ValueError("Reader asset unexpectedly overlaps source output")
+    asset.write_bytes(css)
+    for page, link in zip(pages, links):
+        if page.read_text().count(link) != 1:
+            raise ValueError(f"Missing reader stylesheet: {page}")
+    if hashlib.sha256(asset.read_bytes()).hexdigest() != digest:
+        raise ValueError("Reader stylesheet copy changed")
+    return {"asset": f"assets/{name}", "sha256": digest, "pages": len(pages)}
+
+
 def promote(staged, output):
     # Only replace generated catalogue output, never an unrelated directory.
     if output.is_symlink():
@@ -217,6 +253,7 @@ def release(current, fallback, output, base_url, config, run_url=None):
             provenance["snapshot_previous_validation"] = {"at": config["validated_at"], "run": config["validation_run"]}
             provenance["notice_pages"] = annotate_snapshot(selected, provenance, config)
         verify_annotation(selected, provenance)
+        provenance["website_reader"] = apply_reader_skin(selected)
         (selected / "catalogue-provenance.json").write_text(json.dumps(provenance, indent=2) + "\n")
         check_output(selected_source, selected)
         verify_manifest(selected, rendered)

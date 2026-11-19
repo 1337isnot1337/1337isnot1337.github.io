@@ -1,0 +1,72 @@
+/* Personal-site reading skin. Research content, math fonts and status semantics
+   remain owned by the generated catalogue. Load after its stylesheet. */
+:root {
+  --paper: #fffbf6;
+  --surface: #fffdf9;
+  --ink: #422c41;
+  --muted: #665364;
+  --rule: #ded0d4;
+  --rule-strong: #bca5b3;
+  --control-line: #9b8493;
+  --neutral-wash: #f2ebe4;
+  --focus: #7d3251;
+  --reader-link: #7d3251;
+}
+::selection { background: #e4cbd8; color: #422c41; }
+a { color: var(--reader-link); }
+a:hover { color: #572038; }
+.site-header, .site-footer { background: #fffdf9; }
+.brand:hover, .site-footer a:hover { color: var(--reader-link); }
+input, select, textarea { caret-color: var(--reader-link); }
+button, a, input, select { -webkit-tap-highlight-color: #e4cbd8; }
+.intro-description a, #clear-filters, .clear-filters, .text-button,
+.article-sidebar a:hover, .article-sidebar a[aria-current="location"],
+.article-sidebar a[aria-current="page"] { color: var(--reader-link); }
+.catalogue-tools input:hover, .catalogue-tools select:hover,
+.catalogue-tools input:focus, .catalogue-tools select:focus { border-color: var(--reader-link); }
+.catalogue-tools input::placeholder { color: var(--muted); }
+.result-title a:hover { color: var(--reader-link); text-decoration-color: var(--rule-strong); }
+.prose { color: var(--ink); }
+/* WebKit does not consistently constrain native block MathML itself. Keep
+   the complete expression scrollable in its paragraph, not off the page. */
+.prose p:has(> math[display="block"]), .prose ul:has(math), .prose ol:has(math) { max-width:100%; overflow-x:auto; scrollbar-width:thin; scrollbar-color:var(--rule-strong) transparent; }
+.prose a { text-decoration-color: var(--rule-strong); }
+.prose code { color: #594252; }
+.prose pre { background: #f5eee5; scrollbar-color: var(--rule-strong) transparent; }
+.prose table { scrollbar-color: var(--rule-strong) transparent; }
+.prose th { background: #eee5eb; color: var(--ink); }
+/* Green still means formalized; lavender still means partial. Never use the
+   site's berry accent to erase these distinctions or verification scope. */
+.catalogue-snapshot {
+  border-color: #bca5b3;
+  border-left-color: #665584;
+  background: #eee9f4;
+  color: #422c41;
+}
+.catalogue-snapshot a { color: #55416b; }
+@media (min-width: 721px) {
+  .article-layout > .prose, .article-layout > .article-body {
+    border-left: 1px solid var(--rule);
+    padding: 24px clamp(24px, 3vw, 42px);
+    background: #fffdf9;
+  }
+  .article-sidebar { padding-top: 24px; }
+}
+@media (max-width: 720px) {
+  .article-sidebar { gap: 12px 24px; padding-bottom: 16px; }
+  .article-sidebar .article-nav { flex-basis: 100%; }
+  .article-nav ul { display: flex; flex-wrap: wrap; column-gap: 20px; row-gap: 0; }
+  .article-nav li { margin-bottom: 0; }
+  .article-nav a { padding-block: 8px; }
+  .article-sidebar h2, .article-sidebar h3 { margin-bottom: 6px; }
+  .article-sidebar .page-toc { padding-top: 12px; }
+  .article-layout { gap: 22px; }
+}
+@media print {
+  :root { --paper: white; --surface: white; --ink: black; --muted: #444; --reader-link: #333; }
+  .site-header, .site-footer { background: white; }
+  .prose p:has(> math[display="block"]), .prose ul:has(math), .prose ol:has(math) { overflow:visible; }
+  .article-layout > .prose, .article-layout > .article-body {
+    border: 0; padding: 0; background: white;
+  }
+}
