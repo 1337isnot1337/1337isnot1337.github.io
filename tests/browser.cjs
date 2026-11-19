@@ -1,7 +1,7 @@
 // Browser checks run against site/. CI runs this after the research catalogue build.
 const engines = require('playwright');
 const engineName = process.env.BROWSER || 'chromium';
-if (!['chromium','webkit'].includes(engineName)) throw new Error('BROWSER must be chromium or webkit');
+if (!['chromium','webkit','firefox'].includes(engineName)) throw new Error('BROWSER must be chromium, webkit, or firefox');
 const assert = require('node:assert/strict');
 const http = require('node:http');
 const fs = require('node:fs');
@@ -253,7 +253,7 @@ const server = http.createServer((req,res) => {
   await touch.waitForFunction(()=>!document.body.classList.contains('modal-open'));
   await touch.close();
   console.log('touch-enabled mobile: swipe, momentum and deliberate tap passed');
-  } else console.log('WebKit: native touch-drag injection and PDF export not exercised');
+  } else console.log(`${engineName}: native touch-drag injection and PDF export not exercised`);
 
   // WCAG text-spacing overrides: content may grow vertically, never disappear.
   const spaced = await browser.newPage({viewport:{width:390,height:844},reducedMotion:'reduce'});
@@ -293,7 +293,8 @@ const server = http.createServer((req,res) => {
   assert.ok(plain.url().endsWith('#conway'));
   await plain.locator('#conway').screenshot({path:'test-results/no-script-reading.png'});
   await plain.goto(base + '/#flyover');
-  await plain.waitForFunction(()=>[...document.querySelectorAll('#flyover .spectrum img')].some(image=>!image.hidden && image.naturalWidth>0));
+  // Navigation waits for load; direct evaluation also works with Firefox's disabled-JS context.
+  assert.ok(await plain.locator('#flyover .spectrum img').evaluateAll(images=>images.some(image=>!image.hidden && image.naturalWidth>0)), 'no-script spectrogram is loaded');
   assert.equal(await plain.locator('#flyover .spectrum img:visible').count(),1);
   assert.equal(await plain.locator('#flyover audio:visible').count(),1);
   assert.ok((await plain.locator('#flyover audio:visible').getAttribute('src')).endsWith('livermore.mp3'));
