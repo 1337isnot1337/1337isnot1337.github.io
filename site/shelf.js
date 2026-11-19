@@ -674,28 +674,63 @@ for (let player = 0; player < 3; player++) {
 }
 document.querySelector('.war-cycle').hidden = false;
 const turnSlider = document.querySelector('#war-turn');
-turnSlider.addEventListener('input', () => {
+function inspectWarTurn(requested) {
   hands = initialHands.map(hand => [...hand]);
   turn = 0;
   let winner;
-  const requested = Number(turnSlider.value);
   while (turn < requested) winner = dealTurn();
   showDeal(winner);
-});
+}
+turnSlider.addEventListener('input', () => inspectWarTurn(Number(turnSlider.value)));
+for (const [id, requested] of [['war-compare-six', 6], ['war-compare-ninety', 90]]) {
+  document.getElementById(id).addEventListener('click', () => inspectWarTurn(requested));
+}
+document.querySelector('.war-queue-tools').hidden = false;
+function compareWarQueues() {
+  const exact = JSON.stringify(hands) === startingDeal;
+  const sameSizes = hands.every((hand,i) => hand.length === initialHands[i].length);
+  return exact ? (turn ? 'Every card is back in its starting position. The full deal repeats.' : 'Starting deal: every position matches.')
+    : sameSizes ? 'The hand sizes match the start, but the card order does not. This is not a repeated deal.'
+    : 'The hand sizes and card order differ from the start.';
+}
 function showDeal(winner) {
   const cycleTurn = turn > 0 && turn % 90 === 0 ? 90 : turn % 90;
   turnSlider.value = cycleTurn;
-  document.querySelector('#war-turn-label').value = cycleTurn;
+  document.querySelector('#war-turn-label').textContent = cycleTurn;
   const x = 30 + cycleTurn * 428 / 90;
   document.querySelector('#war-cursor').setAttribute('d', `M${x} 14V113`);
   const queues = document.querySelector("#war-queues");
   queues.replaceChildren();
+  document.querySelector('#war-queue-comparison').textContent = compareWarQueues();
   hands.forEach((hand, i) => {
-    const label = document.createElement("dt");
-    label.textContent = "Player " + "ABC"[i] + " · " + hand.length + " cards";
-    const queue = document.createElement("dd");
-    queue.textContent = hand.join(" → ");
-    queues.append(label, queue);
+    const player = 'ABC'[i];
+    const group = document.createElement('section');
+    group.className = 'war-queue-hand'; group.dataset.warPlayer = player;
+    group.setAttribute('aria-label', `Player ${player} hand comparison`);
+    const heading = document.createElement('h4');
+    heading.textContent = `Player ${player} · ${hand.length} cards`;
+    const direction = document.createElement('p'); direction.className = 'war-queue-direction';
+    direction.textContent = 'Start above · Current below';
+    const pairs = document.createElement('div'); pairs.className = 'war-queue-pairs';
+    for(let position=0; position<Math.max(initialHands[i].length,hand.length); position++) {
+      const original=initialHands[i][position], current=hand[position];
+      const pair=document.createElement('div'); pair.className='war-queue-position';
+      pair.dataset.position=position+1; pair.setAttribute('role','group');
+      pair.setAttribute('aria-label',`Position ${position+1}`);
+      const number=document.createElement('small');number.textContent=position+1;number.setAttribute('aria-hidden','true');
+      pair.append(number);
+      for(const [name,value] of [['start',original],['current',current]]) {
+        const token=document.createElement('span');token.className='war-queue-token';token.dataset.queue=name;
+        token.textContent=value===undefined?'none':String(value);
+        token.classList.toggle('is-empty',value===undefined);
+        token.classList.toggle('is-different',name==='current' && current!==original);
+        token.setAttribute('role','img');
+        token.setAttribute('aria-label',`${name==='start'?'Start':'Current'}: ${value===undefined?'no card':value}${name==='current' && current!==original?', differs from start':''}`);
+        pair.append(token);
+      }
+      pairs.append(pair);
+    }
+    group.append(heading,direction,pairs);queues.append(group);
   });
   cards.forEach((card, i) => {
     card.textContent = hands[i][0];
@@ -721,7 +756,9 @@ function showDeal(winner) {
       turn +
       ". Player " +
       winner +
-      " won. The cards above are up next.";
+      " won. " + (hands.every((hand,i)=>hand.length===initialHands[i].length)
+        ? "The hand sizes match the start, but the card order does not."
+        : "The cards above are up next.");
   }
 }
 document

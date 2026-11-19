@@ -39,7 +39,7 @@ const server = http.createServer((req,res) => {
  const browser = await engines[engineName].launch(process.env.BROWSER_EXECUTABLE ? {executablePath:process.env.BROWSER_EXECUTABLE} : {});
  fs.mkdirSync('test-results', {recursive:true});
  try {
-  for (const [name,width,height] of [['desktop',1440,1000],['mobile',390,844],['small-mobile',320,740]]) {
+  for (const [name,width,height] of [['desktop',1440,1000],['tablet',900,1000],['mobile',390,844],['small-mobile',320,740]]) {
    const page = await browser.newPage({viewport:{width,height}, reducedMotion:name === 'desktop' ? 'no-preference' : 'reduce'});
    const errors=[];
    const mediaRequests=[];
@@ -89,6 +89,12 @@ const server = http.createServer((req,res) => {
    assert.match(await page.locator('.incident-scope').textContent(),/no production changes/);
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth), `${name}: incident case-note overflow`);
    await page.locator('.incident-note').screenshot({path:`test-results/${name}-incident-note.png`});
+   if(width>680) {
+    const widths=await page.locator('.catalogue-list').evaluate(list=>({list:list.clientWidth, notes:[...list.querySelectorAll('li')].filter(li=>li.querySelector('.firmware-note,.incident-note')).map(li=>li.getBoundingClientRect().width)}));
+    assert.ok(widths.notes.every(w=>Math.abs(w-widths.list)<2),`${name}: expanded engineering notes leave no half-row hole`);
+   }
+   await page.locator('#catalogue').screenshot({path:`test-results/${name}-catalogue-expanded.png`});
+
    await incidentSummary.press('Enter');
    assert.equal(await page.locator('.incident-note').getAttribute('open'),null);
    await page.locator('.index summary').click();
@@ -178,8 +184,17 @@ const server = http.createServer((req,res) => {
    await page.locator('#previous-detail').click();
    await page.locator('#repeat-war').click();
    assert.match(await page.locator('#war-report').textContent(), /Turn 90.*game repeats/);
-   await page.getByText('Look at all three hands',{exact:true}).click();
+   await page.getByText('Compare every card with the start',{exact:true}).click();
    await page.screenshot({path:`test-results/${name}-war.png`,fullPage:true});
+   await page.locator('#war-compare-six').click();
+   assert.match(await page.locator('#war-queue-comparison').textContent(),/sizes match.*order does not/);
+   assert.equal(await page.locator('.war-queue-token[data-queue="current"]:not(.is-empty)').count(),23);
+   assert.ok(await page.locator('#war-queues').evaluate(el=>el.scrollWidth<=el.clientWidth),`${name}: paired queues wrap without horizontal scrolling`);
+   await page.locator('.war-queue-hand').first().screenshot({path:`test-results/${name}-war-compare-six.png`});
+   await page.locator('#war-compare-ninety').click();
+   assert.equal(await page.locator('.war-queue-token.is-different').count(),0);
+   await page.locator('.war-queue-hand').first().screenshot({path:`test-results/${name}-war-compare-ninety.png`});
+
    await page.locator('#war-turn').press('Home');
    await page.locator('#war-turn').press('ArrowRight');
    assert.match(await page.locator('#war-report').textContent(), /Turn 1/);
@@ -468,7 +483,7 @@ const server = http.createServer((req,res) => {
   await soundRecovery.locator('#desk-play-recording').click();
   await soundRecovery.waitForFunction(()=>{const a=document.querySelector('#desk-audio');return !a.paused&&a.currentTime>0;});
   assert.equal(await soundRecovery.locator('#desk-audio-status').isVisible(),false);
-  await soundRecovery.locator('.desk-sound .desk-action').click();
+  await soundRecovery.locator('.desk-sound .desk-project').click();
   await soundRecovery.locator('dialog[open]').waitFor();
   assert.equal(await soundRecovery.locator('#desk-audio').evaluate(a=>a.paused),true,'opening recording notes stops the inline player');
   await soundRecovery.close();

@@ -1097,6 +1097,10 @@ body.modal-open {
   column-gap: 4%;
   border-top: 2px solid #8c6c83;
 }
+/* Keep the paired engineering stories in reading order without an empty half-row. */
+.catalogue-list:has(.firmware-note[open], .incident-note[open]) > li:has(.firmware-note, .incident-note) {
+  grid-column: 1 / -1;
+}
 .catalogue-list li {
   border-bottom: 1px solid #dacbd2;
 }

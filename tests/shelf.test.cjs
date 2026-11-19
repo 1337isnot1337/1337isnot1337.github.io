@@ -324,3 +324,37 @@ test('firmware case note is discoverable without overstating the experimental wo
  p.click('#clear-projects');assert.equal(p.d.querySelector('#result-count').textContent,'6 of 31 projects');
  p.dom.window.close();
 });
+
+test('War comparison distinguishes matching sizes from the full ordered state', () => {
+ const p=page();
+ const read=name=>[...p.d.querySelectorAll('.war-queue-hand')].map(group=>[...group.querySelectorAll(`[data-queue="${name}"]:not(.is-empty)`)].map(el=>Number(el.textContent)));
+ const initial=[[15,7,16,8,1,22,17,9],[10,2,23,18,11,19,12,3],[4,20,13,5,21,14,6]];
+ assert.deepEqual(read('start'),initial);
+ assert.equal(p.d.querySelector('#war-turn-label').tagName,'SPAN');
+ assert.ok([...new JSDOM(html).window.document.querySelectorAll('.war-queue-token')].every(token=>token.getAttribute('role')==='img'));
+ p.click('#war-compare-six');
+ assert.equal(p.d.querySelector('#war-turn').value,'6');
+ assert.deepEqual(read('current'),[[17,9,15,10,4,22,19,14],[12,3,23,16,13,18,8,5],[6,20,7,2,21,11,1]]);
+ assert.match(p.d.querySelector('#war-queue-comparison').textContent,/sizes match.*order does not/);
+ assert.match(p.d.querySelector('#war-report').value,/sizes match.*order does not/);
+ assert.ok(p.d.querySelectorAll('.war-queue-token.is-different').length>0);
+ for(let turn=0;turn<=90;turn++){
+  p.input('#war-turn',turn);
+  const actual=read('current');
+  assert.deepEqual(actual.flat().sort((a,b)=>a-b),Array.from({length:23},(_,i)=>i+1));
+  assert.deepEqual(read('start'),initial);
+  assert.equal(JSON.stringify(actual)===JSON.stringify(initial),turn===0||turn===90,`first repeat at 90, not ${turn}`);
+  for(const group of p.d.querySelectorAll('.war-queue-hand')) for(const pair of group.querySelectorAll('.war-queue-position')){
+   const start=pair.querySelector('[data-queue="start"]'),current=pair.querySelector('[data-queue="current"]');
+   assert.equal(current.classList.contains('is-different'),current.textContent!==start.textContent);
+   assert.equal(start.classList.contains('is-different'),false);
+  }
+ }
+ p.click('#war-compare-ninety');
+ assert.equal(p.d.querySelectorAll('.is-different').length,0);
+ assert.match(p.d.querySelector('#war-queue-comparison').textContent,/full deal repeats/);
+ p.click('#deal-war');assert.equal(p.d.querySelector('#war-turn').value,'1');
+ p.click('#war-compare-six');assert.equal(p.d.querySelector('#war-turn').value,'6');
+ p.click('#reset-war');assert.deepEqual(read('current'),initial);
+ p.dom.window.close();
+});

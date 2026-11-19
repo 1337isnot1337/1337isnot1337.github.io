@@ -1,0 +1,18 @@
+/* Compare the ordered state, not only the number of cards in a hand. */
+.war-queue-tools { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.war-queue-tools[hidden] { display: none; }
+.war-queue-tools button { min-height: 44px; padding: 8px 12px; background: #fffbf6; border: 1px solid #aa8f9f; border-radius: 3px; color: var(--ink); font: 13px/1.4 var(--headline); }
+.war-queue-tools button:focus-visible { outline: 2px solid #7d3251; outline-offset: 3px; }
+#war-queue-comparison { margin: 12px 0; font-size: 13px; line-height: 1.55; }
+.war-queue-legend { display: block; margin-top: 10px; font-size: 12px; line-height: 1.55; color: var(--muted); }
+#war-queues { margin: 18px 0 0; }
+.war-queue-hand { padding: 16px 0; border-top: 1px solid #cdbbc3; }
+.war-queue-hand h4 { margin: 0 0 6px; font: 600 15px/1.4 var(--headline); }
+.war-queue-hand .war-queue-direction { margin: 0 0 10px; color: var(--muted); font-size: 11px; }
+.war-queue-pairs { display: grid; grid-template-columns: repeat(auto-fill,minmax(34px,1fr)); gap: 12px 5px; }
+.war-queue-position { min-width: 0; display: flex; flex-direction: column; align-items: stretch; gap: 4px; }
+.war-queue-position > small { text-align: center; font: 10px/1.5 var(--mono); color: var(--muted); }
+.war-queue-token { display: block; text-align: center; min-height: 30px; padding: 4px 1px; border: 1px solid #c7b7bf; border-radius: 2px; background: #fffbf6; font: 13px/1.5 var(--mono); color: var(--ink); }
+.war-queue-token.is-different { border: 2px dashed #7d3251; padding: 3px 0; background: #eee0e8; }
+.war-queue-token.is-empty { font-size: 10px; color: var(--muted); }
+@media print { .war-queue-tools { display: none; }.war-queue-hand { break-inside: avoid; } }

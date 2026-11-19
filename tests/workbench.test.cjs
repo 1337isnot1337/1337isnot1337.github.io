@@ -184,3 +184,15 @@ test('each desk experiment has a persistent native link and restores from its ha
  }
  const legacy=desk('#desk');assert.equal(legacy.d.querySelector('[data-desk-panel="sound"]').hidden,false);legacy.dom.window.close();
 });
+
+test('sound actions have one notes route, with search sources inside the disclosure',()=>{
+ const dom=new JSDOM(fs.readFileSync('site/index.html','utf8')),d=dom.window.document;
+ const sound=d.querySelector('.desk-sound');
+ assert.equal(sound.querySelectorAll('a[data-project="flyover"]').length,1);
+ assert.ok(sound.querySelector('#desk-map a[href="/DOPPLERGEIST/examples.html#livermore"]'));
+ assert.ok(sound.querySelector('.desk-permalink[href="#desk-sound"]'));
+ assert.equal(d.querySelectorAll('.notebook-current').length,0);
+ assert.match(d.querySelector('.desk-cards .desk-copy .desk-small').textContent,/GPT-6.2 Astra.*Lean status/);
+ assert.equal(d.querySelector('meta[name="google-site-verification"]').content,'h4ySSSK_u3l1oEaAhd7lgn_6gM3ePOdC6Iz_FDDQC1o');
+ dom.window.close();
+});
