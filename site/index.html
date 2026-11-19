@@ -29,13 +29,14 @@
       crossorigin
     />
     <link rel="stylesheet" href="vendor/swiper-bundle.min.css" />
-    <link rel="stylesheet" href="shelf.css" />
+    <link rel="stylesheet" href="shelf.css?v=2" />
     <script defer src="vendor/swiper-bundle.min.js"></script>
-    <script defer src="shelf.js"></script>
+    <script defer src="shelf.js?v=2"></script>
     <noscript
       ><style>
         .shelf-controls,
         #factor-form,
+        .war,
         #cpu .toy,
         #conway .toy {
           display: none;
@@ -49,7 +50,7 @@
       <div class="page-width mast-inner">
         <a class="byline" href="./">Cinna Davis</a>
         <nav aria-label="Main">
-          <a href="#projects">Projects</a><a href="#about">About me</a
+          <a href="#catalogue">Catalogue</a><a href="#about">About me</a
           ><a href="#elsewhere">Elsewhere</a>
         </nav>
       </div>
@@ -62,8 +63,13 @@
             <p>Pick a print to open one of my experiments.</p>
           </div>
           <details class="index">
-            <summary>Project index</summary>
+            <summary>Print index</summary>
             <ul>
+              <li>
+                <a data-project="conjectures" href="#conjectures"
+                  >Solved conjectures</a
+                >
+              </li>
               <li>
                 <a href="#flyover" data-project="flyover">Dopplergeist</a>
               </li>
@@ -123,6 +129,24 @@
               </div>
               <div class="swiper-slide">
                 <a
+                  class="print print-conjectures"
+                  href="#conjectures"
+                  data-project="conjectures"
+                  aria-label="Solved conjectures — Deal a round of War"
+                  ><img
+                    width="840"
+                    height="1050"
+                    src="assets/prints/conjectures.webp"
+                    alt=""
+                    draggable="false"
+                  /><span class="print-foot"
+                    ><span class="print-type">Combinatorics</span
+                    ><strong>Solved conjectures</strong></span
+                  ></a
+                >
+              </div>
+              <div class="swiper-slide">
+                <a
                   href="#flyover"
                   class="print print-flyover"
                   data-project="flyover"
@@ -149,7 +173,7 @@
                     width="640"
                     height="800"
                     draggable="false"
-                    src="assets/prints/factoring.webp"
+                    src="assets/prints/factoring-bead.webp"
                     alt=""
                   /><span class="print-foot"
                     ><span class="print-type">Algorithms</span
@@ -162,12 +186,12 @@
                   href="#cpu"
                   class="print print-cpu"
                   data-project="cpu"
-                  aria-label="The Hack CPU — Encode an instruction"
+                  aria-label="The Hack CPU — Train a branch predictor"
                   ><img
                     width="640"
                     height="800"
                     draggable="false"
-                    src="assets/prints/cpu.webp"
+                    src="assets/prints/cpu-switch.webp"
                     alt=""
                   /><span class="print-foot"
                     ><span class="print-type">Hardware</span
@@ -189,6 +213,333 @@
           ><a id="open-print" data-project="flyover" href="#flyover"
             >Listen to a flyover</a
           ><button type="button" id="next" aria-label="Next print">→</button>
+        </div>
+      </section>
+      <section
+        id="catalogue"
+        class="catalogue page-width"
+        aria-labelledby="catalogue-title"
+      >
+        <div class="catalogue-head">
+          <h2 id="catalogue-title">The project catalogue</h2>
+          <label class="catalogue-search" hidden
+            ><span class="visually-hidden">Search projects</span
+            ><input
+              type="search"
+              id="find-project"
+              placeholder="Find a project…"
+          /></label>
+        </div>
+        <div
+          class="catalogue-filters"
+          hidden
+          role="group"
+          aria-label="Filter projects"
+        >
+          <button type="button" aria-pressed="true">All</button
+          ><button type="button" aria-pressed="false">Mathematics</button
+          ><button type="button" aria-pressed="false">Software</button
+          ><button type="button" aria-pressed="false">Collaborations</button
+          ><button type="button" aria-pressed="false">Side projects</button>
+        </div>
+        <ul class="catalogue-list">
+          <li data-category="Mathematics">
+            <a href="https://github.com/1337isnot1337/solved-conjectures"
+              ><strong>Solved conjectures</strong
+              ><span
+                >Unrefereed proofs and counterexamples, including cyclic
+                three-player War deals, Egyptian fractions, and lonely-runner
+                problems.</span
+              ></a
+            >
+          </li>
+          <li data-category="Mathematics">
+            <a href="https://github.com/1337isnot1337/matrix-mult-bounds"
+              ><strong>Matrix multiplication bounds</strong
+              ><span
+                >Exact experiments and obstructions in the search for a better
+                matrix multiplication exponent.</span
+              ></a
+            >
+          </li>
+          <li data-category="Software">
+            <a href="https://github.com/1337isnot1337/incidentmesh"
+              ><strong>IncidentMesh</strong
+              ><span
+                >Concurrent incident investigation that rechecks a proposed
+                response when new evidence arrives.</span
+              ></a
+            >
+          </li>
+          <li data-category="Mathematics">
+            <a href="https://github.com/1337isnot1337/erdos-99"
+              ><strong>Erdős Problem 99</strong
+              ><span
+                >When must a minimum-diameter point packing contain a unit
+                equilateral triangle? The general problem is open.</span
+              ></a
+            >
+          </li>
+          <li data-category="Collaborations">
+            <a href="https://github.com/qbreader/website/pull/356"
+              ><strong>QB Reader</strong
+              ><span
+                >Contributions to the quizbowl reader, including preserving the
+                buzzpoint when making tossup cards.</span
+              ></a
+            >
+          </li>
+          <li data-category="Collaborations">
+            <a href="https://github.com/titan2022/FRC-2026-JAVA/pull/4"
+              ><strong>Titan Robotics</strong
+              ><span
+                >The intake subsystem for the team’s 2026 Java robot code.</span
+              ></a
+            >
+          </li>
+          <li data-category="Mathematics">
+            <a href="https://github.com/1337isnot1337/catalan-constant"
+              ><strong>Catalan’s constant</strong
+              ><span
+                >Rational approximations to Catalan’s constant, with a written
+                irrationality-exponent bound and exact certificates.</span
+              ></a
+            >
+          </li>
+          <li data-category="Mathematics">
+            <a href="https://github.com/1337isnot1337/3-SAT"
+              ><strong>3-SAT bounds</strong
+              ><span
+                >Approaches to faster worst-case 3-SAT algorithms, with explicit
+                cost accounting.</span
+              ></a
+            >
+          </li>
+          <li data-category="Mathematics">
+            <a href="https://github.com/1337isnot1337/integer-factoring"
+              ><strong>Integer factoring</strong
+              ><span
+                >A deterministic factoring bound with a machine-checked proof in
+                Lean.</span
+              ></a
+            >
+          </li>
+          <li data-category="Mathematics">
+            <a href="https://github.com/1337isnot1337/conway-99"
+              ><strong>Conway’s 99-graph</strong
+              ><span
+                >Structural restrictions and construction searches for a
+                still-open graph existence problem.</span
+              ></a
+            >
+          </li>
+          <li data-category="Mathematics">
+            <a href="https://github.com/1337isnot1337/quasi-riemann"
+              ><strong>Zero-free half-planes</strong
+              ><span
+                >Proof gaps and obstructions encountered while studying zeros of
+                Dirichlet L-functions.</span
+              ></a
+            >
+          </li>
+          <li data-category="Collaborations">
+            <a href="https://github.com/CrocSwap/integer-mult-bounds/pull/4447"
+              ><strong>Integer multiplication bounds</strong
+              ><span
+                >Work on the community project’s conditional exponent bounds,
+                including a three-dimensional contact-span construction.</span
+              ></a
+            >
+          </li>
+          <li data-category="Collaborations">
+            <a
+              href="https://github.com/rohanarun/van-der-waerden-refinement/pull/12"
+              ><strong>Van der Waerden bounds</strong
+              ><span
+                >A contributed conditional logarithmic endpoint bound with an
+                explicit threshold.</span
+              ></a
+            >
+          </li>
+          <li data-category="Collaborations">
+            <a href="https://github.com/hodge-computer/sextics/pull/149"
+              ><strong>The sextic fourfold atlas</strong
+              ><span
+                >A contribution on elliptic residue contraction for one family
+                in the Hodge project.</span
+              ></a
+            >
+          </li>
+          <li data-category="Collaborations">
+            <a href="https://github.com/bigospeedrun/verifier/pull/23"
+              ><strong>Big O Speedrun verifier</strong
+              ><span
+                >An independent replay of an integer certificate for block
+                sensitivity.</span
+              ></a
+            >
+          </li>
+          <li data-category="Collaborations">
+            <a
+              href="https://digitalcommons.imsa.edu/sir_presentations/2026/session2/5/"
+              ><strong>Doubly charged Higgs search</strong
+              ><span
+                >An IMSA research abstract with Nathan Catlett on estimating the
+                background when high-mass simulations are sparse.</span
+              ></a
+            >
+          </li>
+          <li data-category="Software">
+            <a href="/DOPPLERGEIST/"
+              ><strong>DOPPLERGEIST</strong
+              ><span
+                >Aircraft audio geolocation from a recording’s Doppler shift and
+                historical flight tracks.</span
+              ></a
+            >
+          </li>
+          <li data-category="Software">
+            <a
+              href="https://github.com/1337isnot1337/nand2tetris-verilog-improved"
+              ><strong>The Hack CPU</strong
+              ><span
+                >A two-stage pipeline, global-history branch predictor, and
+                fused instructions in SystemVerilog.</span
+              ></a
+            >
+          </li>
+          <li data-category="Software">
+            <a href="/imsa-map/"
+              ><strong>IMSA schedule map</strong
+              ><span
+                >A Rust and WebAssembly tool that turns a class schedule into a
+                week of room assignments.</span
+              ></a
+            >
+          </li>
+          <li data-category="Software">
+            <a href="https://github.com/1337isnot1337/canvas-lms-mcp"
+              ><strong>Canvas LMS MCP</strong
+              ><span
+                >A self-hosted connector for working with Canvas through the
+                Model Context Protocol.</span
+              ></a
+            >
+          </li>
+          <li data-category="Software">
+            <a href="https://github.com/1337isnot1337/hp-acpi-lock-order-fix"
+              ><strong>HP firmware workaround</strong
+              ><span
+                >An experimental Linux ACPI override for a lock-order problem on
+                affected HP machines.</span
+              ></a
+            >
+          </li>
+          <li data-category="Software">
+            <a href="https://github.com/1337isnot1337/cozi"
+              ><strong>Cozi</strong
+              ><span
+                >A command-line package manager for unofficial Vencord
+                plugins.</span
+              ></a
+            >
+          </li>
+          <li data-category="Software">
+            <a
+              href="https://github.com/1337isnot1337/timesave-firefox-extension"
+              ><strong>Speed Savings Tracker</strong
+              ><span
+                >A Firefox extension that adds up the time saved when you watch
+                videos at higher speeds.</span
+              ></a
+            >
+          </li>
+          <li data-category="Software">
+            <a href="https://github.com/1337isnot1337/image-measurement"
+              ><strong>Pixel measurer</strong
+              ><span
+                >A tool for measuring distances on an image, originally built
+                for a personal project.</span
+              ></a
+            >
+          </li>
+          <li data-category="Side projects">
+            <a href="https://github.com/1337isnot1337/dotfiles"
+              ><strong>Arch &amp; Hyprland desktop</strong
+              ><span
+                >Window-manager configuration, desktop panels, media controls,
+                and day and night themes.</span
+              ></a
+            >
+          </li>
+          <li data-category="Side projects">
+            <a href="https://github.com/1337isnot1337/sillyMaxwell"
+              ><strong>Maxwell for Vencord</strong
+              ><span
+                >A bouncing Maxwell GIF for the corner of a Discord
+                window.</span
+              ></a
+            >
+          </li>
+          <li data-category="Side projects">
+            <a href="https://github.com/1337isnot1337/refind-custom"
+              ><strong>rEFInd theme</strong
+              ><span>My take on the rEFInd boot menu.</span></a
+            >
+          </li>
+          <li data-category="Side projects">
+            <a href="https://github.com/1337isnot1337/brainfuck"
+              ><strong>Brainfuck interpreter</strong
+              ><span
+                >An interpreter for the eight-command esoteric language.</span
+              ></a
+            >
+          </li>
+          <li data-category="Side projects">
+            <a href="https://github.com/1337isnot1337/roulette"
+              ><strong>Buckshot Roulette CLI</strong
+              ><span
+                >A terminal adaptation of the video game Buckshot
+                Roulette.</span
+              ></a
+            >
+          </li>
+          <li data-category="Side projects">
+            <a href="https://github.com/1337isnot1337/autoDelete"
+              ><strong>Timed messages</strong
+              ><span
+                >A Vencord plugin that removes messages after a chosen interval
+                in a selected channel.</span
+              ></a
+            >
+          </li>
+          <li data-category="Collaborations">
+            <a href="https://github.com/epochml/epochml.github.io/pull/2"
+              ><strong>Epoch website</strong
+              ><span
+                >Updates to the computing club’s events and site content.</span
+              ></a
+            >
+          </li>
+          <li data-category="Collaborations">
+            <a href="https://github.com/rust-malaysia/hyfetch/pull/35"
+              ><strong>HyFetch</strong
+              ><span
+                >An early contribution proposing a Pride Month animation.</span
+              ></a
+            >
+          </li>
+        </ul>
+        <p id="no-projects" hidden>
+          No matching projects. Try another search or category.
+        </p>
+        <div class="catalogue-tail">
+          <span id="result-count" aria-live="polite"></span
+          ><button hidden id="more-projects" type="button">
+            Show all projects</button
+          ><a href="https://github.com/1337isnot1337?tab=repositories"
+            >GitHub repositories</a
+          >
         </div>
       </section>
       <section class="personal page-width" id="about">
@@ -229,12 +580,14 @@
               >
             </li>
             <li>
-              <a href="https://www.paramountpressexpress.com/nickelodeon/shows/the-legend-of-korra/"
+              <a
+                href="https://www.paramountpressexpress.com/nickelodeon/shows/the-legend-of-korra/"
                 >The Legend of Korra</a
               >
             </li>
             <li>
-              <a href="https://www.paramountpressexpress.com/paramount-plus/shows/avatar-seven-havens/"
+              <a
+                href="https://www.paramountpressexpress.com/paramount-plus/shows/avatar-seven-havens/"
                 >Avatar: Seven Havens</a
               >
             </li>
@@ -242,6 +595,64 @@
         </aside>
       </section>
       <div class="project-details page-width">
+        <article
+          class="detail"
+          id="conjectures"
+          aria-labelledby="conjectures-title"
+        >
+          <div class="detail-heading">
+            <p>Combinatorics</p>
+            <h2 id="conjectures-title">Solved conjectures</h2>
+          </div>
+          <p>
+            I curate this collection of proofs and counterexamples with GPT-6.2
+            Astra. The notes are unrefereed. Each entry links to its argument,
+            and the catalogue records which results have complete or partial
+            Lean formalizations.
+          </p>
+          <section class="toy war" aria-labelledby="war-title">
+            <h3 id="war-title">A card game that never ends</h3>
+            <p>
+              This three-player War deal uses 23 different ranks. Each player
+              reveals a card. The highest wins all three and collects them in
+              descending order.
+            </p>
+            <div class="war-hands" aria-label="Next cards">
+              <span>A <b>15</b></span
+              ><span>B <b>10</b></span
+              ><span>C <b>4</b></span>
+            </div>
+            <div class="war-controls">
+              <button id="deal-war" type="button">Deal a turn</button
+              ><button id="repeat-war" type="button">Find the repeat</button
+              ><button id="reset-war" type="button">Reset</button>
+            </div>
+            <output id="war-report" aria-live="polite"
+              >Starting deal. The next three cards are face up.</output
+            >
+          </section>
+          <a
+            class="outbound"
+            href="https://github.com/1337isnot1337/solved-conjectures"
+            >Open the collection</a
+          >
+          <p class="proof-links">
+            <a
+              href="https://github.com/1337isnot1337/solved-conjectures/blob/main/results/spivey-multiplayer-war/PROOF.md"
+              >Three-player War proof</a
+            >
+            ·
+            <a
+              href="https://github.com/1337isnot1337/solved-conjectures/blob/main/results/batista-egyptian-fractions/PROOF.md"
+              >Egyptian fractions proof</a
+            >
+            ·
+            <a
+              href="https://github.com/1337isnot1337/solved-conjectures/blob/main/docs/lean-status.md"
+              >Lean status</a
+            >
+          </p>
+        </article>
         <article class="detail" id="flyover" aria-labelledby="flyover-title">
           <div class="detail-heading">
             <p>Aircraft audio</p>
@@ -259,7 +670,19 @@
                 height="550"
                 src="assets/livermore.webp"
                 alt="The recorded aircraft’s harmonics slope down as its pitch falls."
-              /><span class="playhead" hidden></span>
+              /><span class="playhead" hidden></span
+              ><input
+                class="spectrum-seek"
+                id="spectrum-seek"
+                type="range"
+                min="0"
+                max="85.23"
+                value="0"
+                step="0.1"
+                aria-label="Seek in the flyover spectrogram"
+                hidden
+              />
+              <span class="seek-hint" aria-hidden="true"></span>
             </div>
             <audio
               id="recording"
@@ -321,6 +744,11 @@
             href="https://github.com/1337isnot1337/integer-factoring"
             >Read the proof</a
           >
+          <p class="proof-links">
+            <a href="https://bigospeedrun.com/integer-factoring"
+              >Lean verification on Big O Speedrun</a
+            >
+          </p>
         </article>
         <article class="detail" id="cpu" aria-labelledby="cpu-title">
           <div class="detail-heading">
@@ -330,9 +758,26 @@
           <p>
             For my computing systems capstone, I extended the Hack CPU with a
             two-stage pipeline, a global-history branch predictor, and fused
-            instructions. Start with one instruction the original Hack machine
-            understands.
+            instructions. Like a train approaching a switch, the processor has
+            to pick a route before it knows whether a jump will be taken.
           </p>
+          <section class="toy predictor" aria-labelledby="predictor-title">
+            <h3 id="predictor-title">Train the predictor</h3>
+            <p>
+              Try one entry in the prediction table. Feed it jump outcomes and
+              watch its two-bit counter change.
+            </p>
+            <div class="counter-track" aria-hidden="true">
+              <span>00</span><span>01</span><span>10</span><span>11</span>
+            </div>
+            <div class="outcomes" role="group" aria-label="Actual jump outcome">
+              <button type="button" data-taken="false">Not taken</button
+              ><button type="button" data-taken="true">Taken</button>
+            </div>
+            <output id="forecast" aria-live="polite"
+              >01 · Weakly predicts not taken.</output
+            >
+          </section>
           <div class="toy">
             <label for="address">Set the address in a Hack A-instruction</label>
             <div class="input-row">
@@ -423,6 +868,19 @@
     <dialog class="open-project" aria-label="Project details">
       <div class="modal-top">
         <button type="button" id="close-dialog">Back to shelf</button>
+        <nav class="turn-prints" aria-label="Browse open prints">
+          <button
+            type="button"
+            id="previous-detail"
+            aria-label="Previous project"
+          >
+            ←
+          </button>
+          <span id="print-position"></span>
+          <button type="button" id="next-detail" aria-label="Next project">
+            →
+          </button>
+        </nav>
       </div>
       <div id="detail-slot"></div>
     </dialog>

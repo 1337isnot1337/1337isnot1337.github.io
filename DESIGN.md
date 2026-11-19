@@ -75,8 +75,9 @@ Portrait prints have straight edges. The main action and project index have pill
 ## Components
 
 - **Shelf.** The self-hosted Swiper 14.4.0 bundle adapts the Coverflow demonstration. Drag, swipe, arrows and keyboard navigation move between prints. Reduced-motion preferences set the transition duration to zero. The project index provides a direct route to every entry. The MIT license ships with the vendor files. [Swiper Coverflow demo](https://swiperjs.com/demos#effect-coverflow)
-- **Project artwork.** The five generated illustrations in `site/assets/prints/` serve as print covers and dialog artwork. Captions are selectable HTML. The social preview, `site/assets/project-shelf.jpg`, shows the composed shelf.
-- **Experiments.** Each project hash opens its corresponding detail panel. Visitors can play the flyover recording, factor an integer, encode a Hack instruction, open the schedule tool or move a rook. Without the modal enhancement, the project links lead to inline articles.
+- **Project artwork.** The six generated illustrations in `site/assets/prints/` serve as print covers and dialog artwork. Captions are selectable HTML. The social preview, `site/assets/project-shelf.jpg`, shows the composed shelf.
+- **Catalogue.** The searchable project index separates mathematics, software, collaborations, and side projects. Entry links point to the work or to a concrete contribution.
+- **Experiments.** Each project hash opens its corresponding detail panel. Visitors can scrub the flyover spectrogram, deal the repeating War game from Solved conjectures, factor an integer, train a branch-table counter, encode a Hack instruction, open the schedule tool, or move a rook. Reader arrows turn between prints. Without the modal enhancement, the project links lead to inline articles.
 - **Recording.** The DOPPLERGEIST panel pairs the spectrogram with its native audio player and a moving cursor. Both assets derive from Praveen Pathak’s credited flyover recording. [Dataset](https://doi.org/10.5281/zenodo.23424278) · [License](https://creativecommons.org/licenses/by/4.0/) · [Audio and figure notes](https://1337isnot1337.github.io/DOPPLERGEIST/site-media/livermore-r04-source.txt)
 - **Interests note.** The “Off the clock” note links to ALIEN STAGE and the Avatar series. The underlined hover state preserves the appearance of a short reading list.
 

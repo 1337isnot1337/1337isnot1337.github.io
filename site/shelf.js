@@ -3,8 +3,9 @@ const prints = [...carousel.querySelectorAll(".print")];
 const openButton = document.querySelector("#open-print");
 const actions = {
   flyover: "Listen to a flyover",
+  conjectures: "Deal a round of War",
   factoring: "Split a number",
-  cpu: "Encode an instruction",
+  cpu: "Train a branch predictor",
   schedule: "Try a schedule",
   conway: "Move a rook",
 };
@@ -16,6 +17,14 @@ const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 const articles = new Map(
   [...catalog.children].map((article) => [article.id, article]),
 );
+const shop = document.querySelector(".shop");
+for (const link of projectIndex.querySelectorAll("a[data-project]")) {
+  const art = prints
+    .find((print) => print.dataset.project === link.dataset.project)
+    .querySelector("img")
+    .cloneNode();
+  link.prepend(art);
+}
 let opener = null;
 let activeArticle = null;
 
@@ -26,6 +35,7 @@ if (window.Swiper) {
   shelf = new Swiper(carousel, {
     effect: "coverflow",
     grabCursor: true,
+    touchEventsTarget: "container",
     centeredSlides: true,
     slidesPerView: "auto",
     initialSlide: prints.findIndex(
@@ -43,8 +53,20 @@ if (window.Swiper) {
       slideShadows: false,
     },
     on: {
+      sliderFirstMove() {
+        carousel.classList.add("handling");
+      },
+      touchEnd() {
+        carousel.classList.remove("handling");
+      },
       slideChange(instance) {
         const key = prints[instance.activeIndex].dataset.project;
+        shop.dataset.selection = key;
+        for (const link of projectIndex.querySelectorAll("a[data-project]")) {
+          if (link.dataset.project === key)
+            link.setAttribute("aria-current", "true");
+          else link.removeAttribute("aria-current");
+        }
         openButton.dataset.project = key;
         openButton.href = "#" + key;
         openButton.textContent = actions[key];
@@ -77,6 +99,30 @@ if (window.Swiper) {
   document.querySelector(".shelf-controls").hidden = true;
 }
 
+const hoverPointer = window.matchMedia("(hover: hover) and (pointer: fine)");
+for (const print of prints) {
+  print.addEventListener("pointermove", (event) => {
+    if (
+      reducedMotion.matches ||
+      !hoverPointer.matches ||
+      event.buttons ||
+      event.pointerType === "touch"
+    )
+      return;
+    const box = print.parentElement.getBoundingClientRect();
+    const x = Math.max(
+      -1,
+      Math.min(1, (2 * (event.clientX - box.left)) / box.width - 1),
+    );
+    print.style.setProperty("--lean", (x * 4).toFixed(2) + "deg");
+    print.style.setProperty("--shadow-x", (3 - x * 4).toFixed(1) + "px");
+  });
+  print.addEventListener("pointerleave", () => {
+    print.style.removeProperty("--lean");
+    print.style.removeProperty("--shadow-x");
+  });
+}
+
 function displayFromHash() {
   const article = articles.get(location.hash.slice(1));
   if (!article) {
@@ -84,19 +130,37 @@ function displayFromHash() {
     return;
   }
   if (activeArticle === article && dialog.open) return;
+  const turning = dialog.open;
   if (activeArticle) {
     activeArticle.querySelector("audio")?.pause();
     catalog.append(activeArticle);
   }
   activeArticle = article;
   const print = prints.find((link) => link.dataset.project === article.id);
+  const index = prints.indexOf(print);
+  shelf?.slideTo(index);
+  document.querySelector("#print-position").textContent =
+    index + 1 + " / " + prints.length;
+  const recording = article.querySelector("audio");
+  if (recording) recording.preload = "metadata";
   const art = print.querySelector("img").cloneNode();
   art.className = "detail-art";
   slot.replaceChildren(art, article);
   dialog.setAttribute("aria-labelledby", article.id + "-title");
   if (!dialog.open) dialog.showModal();
   document.body.classList.add("modal-open");
-  document.querySelector("#close-dialog").focus({ preventScroll: true });
+  dialog.scrollTop = 0;
+  if (!turning || !dialog.contains(document.activeElement))
+    document.querySelector("#close-dialog").focus({ preventScroll: true });
+  if (turning && !reducedMotion.matches) {
+    slot.animate(
+      [
+        { opacity: 0.5, transform: "translateY(4px)" },
+        { opacity: 1, transform: "translateY(0)" },
+      ],
+      { duration: 175, easing: "ease-out" },
+    );
+  }
 }
 function returnToShelf() {
   if (history.state?.fromShelf) history.back();
@@ -128,11 +192,12 @@ if (typeof dialog.showModal === "function") {
       : link;
     projectIndex.open = false;
     const id = link.dataset.project;
-    shelf?.slideTo(prints.findIndex((print) => print.dataset.project === id));
     history.pushState({ fromShelf: true }, "", "#" + id);
     displayFromHash();
   });
   dialog.addEventListener("close", () => {
+    // A new hash can reopen the reader before the queued close event fires.
+    if (dialog.open) return;
     if (activeArticle) {
       activeArticle.querySelector("audio")?.pause();
       catalog.append(activeArticle);
@@ -140,6 +205,33 @@ if (typeof dialog.showModal === "function") {
     }
     document.body.classList.remove("modal-open");
     (opener || openButton).focus({ preventScroll: true });
+  });
+  function turnPrint(direction) {
+    const current = prints.findIndex(
+      (print) => print.dataset.project === activeArticle.id,
+    );
+    const next = prints[(current + direction + prints.length) % prints.length];
+    if (opener?.classList.contains("print")) opener = next;
+    history.replaceState(history.state, "", "#" + next.dataset.project);
+    displayFromHash();
+  }
+  document
+    .querySelector("#previous-detail")
+    .addEventListener("click", () => turnPrint(-1));
+  document
+    .querySelector("#next-detail")
+    .addEventListener("click", () => turnPrint(1));
+  dialog.addEventListener("keydown", (event) => {
+    if (
+      !["ArrowLeft", "ArrowRight"].includes(event.key) ||
+      event.altKey ||
+      event.ctrlKey ||
+      event.metaKey ||
+      event.target.closest("input, audio, .toy")
+    )
+      return;
+    event.preventDefault();
+    turnPrint(event.key === "ArrowLeft" ? -1 : 1);
   });
   dialog.addEventListener("cancel", (event) => {
     event.preventDefault();
@@ -174,10 +266,60 @@ projectIndex.addEventListener("keydown", (event) => {
 });
 const audio = document.querySelector("#recording");
 const head = document.querySelector(".playhead");
+const seek = document.querySelector("#spectrum-seek");
+const hint = document.querySelector(".seek-hint");
+const timestamp = (time) =>
+  Math.floor(time / 60) + ":" + String(Math.floor(time % 60)).padStart(2, "0");
+let seekableCopy = null;
+function enableSeeking() {
+  const ranges = audio.seekable;
+  if (
+    !Number.isFinite(audio.duration) ||
+    !ranges.length ||
+    ranges.end(ranges.length - 1) <= 0
+  )
+    return;
+  seek.max = audio.duration;
+  seek.hidden = false;
+  seek.setAttribute("aria-valuetext", timestamp(audio.currentTime));
+}
+audio.addEventListener("loadedmetadata", enableSeeking);
+audio.addEventListener("canplay", async () => {
+  enableSeeking();
+  if (!seek.hidden || seekableCopy || !audio.paused) return;
+  // A basic static preview server may send the MP3 without byte-range support.
+  // In that case a local blob lets the browser seek the same complete recording.
+  seekableCopy = fetch(audio.currentSrc)
+    .then((response) => (response.ok ? response.blob() : null))
+    .then((blob) => {
+      if (blob && audio.paused) audio.src = URL.createObjectURL(blob);
+    })
+    .catch(() => {});
+  await seekableCopy;
+});
 audio.addEventListener("timeupdate", () => {
   head.hidden = !audio.duration || audio.currentTime === 0;
   head.style.left =
     Math.min(99.8, (100 * audio.currentTime) / (audio.duration || 1)) + "%";
+  seek.value = audio.currentTime;
+  seek.setAttribute("aria-valuetext", timestamp(audio.currentTime));
+});
+function showSeekTime(fraction) {
+  hint.textContent = timestamp(fraction * Number(seek.max));
+  hint.style.left = "clamp(24px," + fraction * 100 + "%, calc(100% - 24px))";
+}
+seek.addEventListener("pointermove", (event) => {
+  const rect = seek.getBoundingClientRect();
+  showSeekTime(
+    Math.min(1, Math.max(0, (event.clientX - rect.left) / rect.width)),
+  );
+});
+seek.addEventListener("focus", () =>
+  showSeekTime(seek.valueAsNumber / Number(seek.max)),
+);
+seek.addEventListener("input", () => {
+  audio.currentTime = seek.valueAsNumber;
+  showSeekTime(seek.valueAsNumber / Number(seek.max));
 });
 
 document.querySelector("#factor-form").addEventListener("submit", (event) => {
@@ -197,6 +339,26 @@ document.querySelector("#factor-form").addEventListener("submit", (event) => {
       ? value + " is prime."
       : value + " = " + factors.join(" × ");
 });
+// One PHT entry in the Hack CPU starts at 01. It saturates at either end.
+let counter = 1;
+const predictions = [
+  "Strongly predicts not taken.",
+  "Weakly predicts not taken.",
+  "Weakly predicts taken.",
+  "Strongly predicts taken.",
+];
+const track = document.querySelector(".counter-track");
+track.style.setProperty("--state", counter);
+for (const button of document.querySelectorAll("[data-taken]")) {
+  button.addEventListener("click", () => {
+    const taken = button.dataset.taken === "true";
+    counter = Math.max(0, Math.min(3, counter + (taken ? 1 : -1)));
+    track.style.setProperty("--state", counter);
+    document.querySelector("#forecast").value =
+      counter.toString(2).padStart(2, "0") + " · " + predictions[counter];
+  });
+}
+
 const address = document.querySelector("#address");
 address.addEventListener("input", () => {
   const result = document.querySelector("#instruction");
@@ -234,3 +396,116 @@ for (const square of squares) {
   board.append(button);
 }
 placeRook("B2");
+
+// Distinct ranks and descending collection order from the three-player War proof.
+const initialHands = [
+  [15, 7, 16, 8, 1, 22, 17, 9],
+  [10, 2, 23, 18, 11, 19, 12, 3],
+  [4, 20, 13, 5, 21, 14, 6],
+];
+const startingDeal = JSON.stringify(initialHands);
+let hands = initialHands.map((hand) => [...hand]);
+let turn = 0;
+const cards = [...document.querySelectorAll(".war-hands b")];
+const report = document.querySelector("#war-report");
+function dealTurn() {
+  const exposed = hands.map((hand) => hand.shift());
+  const winner = exposed.indexOf(Math.max(...exposed));
+  hands[winner].push(...exposed.sort((a, b) => b - a));
+  turn++;
+  return "ABC"[winner];
+}
+function showDeal(winner) {
+  cards.forEach((card, i) => {
+    card.textContent = hands[i][0];
+    if (turn && !reducedMotion.matches)
+      card.animate(
+        [
+          { transform: "translateY(-4px)", opacity: 0.25 },
+          { transform: "translateY(0)", opacity: 1 },
+        ],
+        { duration: 160, delay: i * 28, fill: "backwards", easing: "ease-out" },
+      );
+  });
+  if (!turn) {
+    report.value = "Starting deal. The next three cards are face up.";
+  } else if (JSON.stringify(hands) === startingDeal) {
+    report.value =
+      "Turn " +
+      turn +
+      ". All three hands are back in their original order. The game repeats.";
+  } else {
+    report.value =
+      "Turn " +
+      turn +
+      ". Player " +
+      winner +
+      " won. The cards above are up next.";
+  }
+}
+document
+  .querySelector("#deal-war")
+  .addEventListener("click", () => showDeal(dealTurn()));
+document.querySelector("#repeat-war").addEventListener("click", () => {
+  // This exact published deal returns in 90 turns. Compare the entire queues.
+  let winner;
+  for (let step = 0; step < 90; step++) {
+    winner = dealTurn();
+    if (JSON.stringify(hands) === startingDeal) break;
+  }
+  showDeal(winner);
+});
+document.querySelector("#reset-war").addEventListener("click", () => {
+  hands = initialHands.map((hand) => [...hand]);
+  turn = 0;
+  showDeal();
+});
+
+const searchBox = document.querySelector("#find-project");
+const filterBar = document.querySelector(".catalogue-filters");
+const entries = [...document.querySelectorAll(".catalogue-list li")];
+const more = document.querySelector("#more-projects");
+const count = document.querySelector("#result-count");
+let category = "All";
+let expanded = false;
+function filterCatalogue() {
+  const query = searchBox.value.trim().toLowerCase();
+  const filtered = entries.filter(
+    (entry) =>
+      (category === "All" || entry.dataset.category === category) &&
+      entry.textContent.toLowerCase().includes(query),
+  );
+  const compact = !expanded && !query && category === "All";
+  const visible = new Set(compact ? filtered.slice(0, 6) : filtered);
+  entries.forEach((entry) => {
+    entry.hidden = !visible.has(entry);
+  });
+  count.textContent = compact
+    ? visible.size + " of " + filtered.length + " projects"
+    : filtered.length + (filtered.length === 1 ? " project" : " projects");
+  more.hidden = !!query || category !== "All" || filtered.length <= 6;
+  more.textContent = expanded ? "Show fewer" : "Show all " + entries.length;
+  more.setAttribute("aria-expanded", String(expanded));
+  document.querySelector("#no-projects").hidden = filtered.length !== 0;
+}
+searchBox.closest("label").hidden = false;
+filterBar.hidden = false;
+filterBar.addEventListener("click", (event) => {
+  const button = event.target.closest("button");
+  if (!button) return;
+  category = button.textContent;
+  expanded = false;
+  for (const tab of filterBar.children)
+    tab.setAttribute("aria-pressed", String(tab === button));
+  filterCatalogue();
+});
+more.addEventListener("click", () => {
+  expanded = !expanded;
+  filterCatalogue();
+  if (!expanded)
+    document
+      .querySelector("#catalogue-title")
+      .scrollIntoView({ block: "start" });
+});
+searchBox.addEventListener("input", filterCatalogue);
+filterCatalogue();
