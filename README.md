@@ -12,6 +12,8 @@ Pushing to `main` publishes that directory through GitHub Actions.
 
 The same workflow builds the [searchable conjecture catalogue](https://1337isnot1337.github.io/solved-conjectures/) from the current `main` branch of [solved-conjectures](https://github.com/1337isnot1337/solved-conjectures). Its generator, design, search, and page checks live in that repository. The build writes `site/solved-conjectures/` before uploading the complete website; generated pages are not copied into this repository. An hourly scheduled run refreshes the catalogue. You can also run **Publish project shelf** manually in Actions. The catalogue records its source commit and checks local links, page metadata, and sitemap coverage before publication.
 
+The website-owned `scripts/build_catalogue.py` adapter accepts explicit plain-text Lean status markers as well as the upstream Markdown format. Qualified declarations use an exact reviewed allowlist, not inferred verification. The source's mathematical scope, independent status-report comparison, and page checks remain unchanged. Unknown declarations stop publication; do not remove qualifications or change the research source to make a website build pass. Run `PYTHONDONTWRITEBYTECODE=1 python3 tests/catalogue_compat_test.py /path/to/solved-conjectures` to check this boundary.
+
 The root `robots.txt` points to a sitemap index covering the project shelf, schedule tool, and research catalogue. Keep those files at the domain root, not inside the catalogue's subdirectory.
 
 The existing Rust/Yew schedule tool is available at `/imsa-map/`. Its original source is in `src/` and its browser bundle is in `site/imsa-map/`. To rebuild it, install the `wasm32-unknown-unknown` Rust target and wasm-bindgen CLI 0.2.93, then run:
