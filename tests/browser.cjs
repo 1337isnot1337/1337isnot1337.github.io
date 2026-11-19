@@ -27,6 +27,7 @@ const server = http.createServer((req,res) => {
    page.on('pageerror', e=>errors.push(e.message));
    await page.goto(base);
    await page.locator('.swiper-initialized').waitFor();
+   await page.evaluate(() => document.fonts.ready);
    await page.screenshot({path:`test-results/${name}-shelf.png`,fullPage:true});
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth <= innerWidth), `${name}: horizontal page overflow`);
    await page.locator('#open-print').click();
@@ -61,6 +62,7 @@ const server = http.createServer((req,res) => {
    await page.screenshot({path:`test-results/${name}-404.png`,fullPage:true});
    await page.goto(base + '/imsa-map/?example=1');
    await page.getByRole('heading',{name:'S1 room list'}).waitFor();
+   await page.evaluate(() => document.fonts.ready);
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth <= innerWidth), `${name}: schedule overflow`);
    await page.screenshot({path:`test-results/${name}-schedule.png`,fullPage:true});
    assert.deepEqual(errors,[],`${name}: uncaught browser errors`);

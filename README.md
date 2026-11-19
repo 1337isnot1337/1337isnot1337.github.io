@@ -35,3 +35,8 @@ runs these checks before deployment. Rust parser tests run with `cargo test`.
 Browser QA should also cover the looping shelf, keyboard navigation, the reader's
 Back/Forward and Escape behavior, audio seeking, mobile widths, and reduced motion.
 DOM tests do not replace visual or browser-history checks.
+
+For the browser suite, run `npx playwright install chromium` once, then
+`npm run test:browser`. It uses a temporary local server and captures the shelf,
+reader, missing-page recovery, and schedule at desktop, mobile, and narrow-mobile
+widths. CI keeps those screenshots in the `browser-checks` artifact for seven days.

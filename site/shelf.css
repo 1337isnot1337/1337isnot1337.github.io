@@ -1217,3 +1217,22 @@ html {
     transition: none;
   }
 }
+@media (max-width: 380px) {
+  .mast-inner {
+    flex-wrap: wrap;
+    gap: 0;
+    padding-block: 10px;
+  }
+  .mast .byline {
+    white-space: nowrap;
+  }
+  .mast nav {
+    width: 100%;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .mast nav a {
+    padding: 8px 0 2px;
+    white-space: nowrap;
+  }
+}
