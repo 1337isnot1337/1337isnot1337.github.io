@@ -34,8 +34,7 @@ jobs:
         uses: actions/checkout@v7
         with:
           repository: 1337isnot1337/solved-conjectures
-          # Preview only: use the exact source of the last successful live build.
-          ref: d0baa69c2eb911888d9d93ef6efec707a9a86630
+          ref: main
           fetch-depth: 0
           path: _sources/solved-conjectures
           persist-credentials: false
@@ -45,7 +44,9 @@ jobs:
           sudo apt-get install --yes --no-install-recommends pandoc
       - name: Build and check the research catalogue
         run: |
-          python3 _sources/solved-conjectures/scripts/build_site.py \
+          PYTHONDONTWRITEBYTECODE=1 python3 tests/catalogue_compat_test.py _sources/solved-conjectures
+          PYTHONDONTWRITEBYTECODE=1 python3 scripts/build_catalogue.py \
+            --source _sources/solved-conjectures \
             --output "$GITHUB_WORKSPACE/site/solved-conjectures" \
             --base-url https://1337isnot1337.github.io/solved-conjectures/
           python3 _sources/solved-conjectures/scripts/check_site.py \
