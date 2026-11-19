@@ -46,7 +46,28 @@ pub fn get_schedule(input: &str) -> Result<Vec<Class>, &str> {
     for line in listvec {
         let line = line.replace("    ", "\t");
         let split: Vec<String> = line.split('\t').map(|s| s.trim().to_string()).collect();
-        assert!(split.len() >= 8, "Unexpected format: {line}");
+        if split.len() < 8 {
+            return Err("Expected eight tab-separated columns in each class row");
+        }
+        if !matches!(split[1].as_str(), "S1" | "S2") {
+            return Err("Expected S1 or S2 in the term column");
+        }
+        let Some((periods, days)) = split[0].split_once('(') else {
+            return Err("Expected a class period followed by its days, such as 2(A,C-D)");
+        };
+        if !periods.split('-').all(|p| matches!(p.as_bytes(), [b'1'..=b'8'])) {
+            return Err("Class periods must be between 1 and 8");
+        }
+        let valid_day = |d: &str| matches!(d, "A" | "B" | "C" | "D" | "I");
+        for day in days.trim_end_matches(')').split(',').map(str::trim) {
+            if valid_day(day) {
+                continue;
+            }
+            match day.split_once('-') {
+                Some((a, b)) if valid_day(a) && valid_day(b) && a <= b && b != "I" => {}
+                _ => return Err("Expected a day or day range such as A,C-D"),
+            }
+        }
         mods.push(split[0].clone());
         semester.push(split[1].clone());
         short_name.push(split[2].clone());

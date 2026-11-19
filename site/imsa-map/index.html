@@ -43,12 +43,12 @@
   </head>
   <body>
     <script type="module">
-      import init from "./imsa-map-9c5cb3dc721fe8d4.js";
+      import init from "./schedule.js";
       const header = document.createElement("header");
       header.innerHTML =
         '<a href="/">← Cinna Davis’s field notebook</a><h1>IMSA schedule map</h1><p>Paste your PowerSchool schedule with the semester and column headings on the first two lines. Keep the tab-separated class rows intact.</p>';
       try {
-        await init({ module_or_path: "./imsa-map-9c5cb3dc721fe8d4_bg.wasm" });
+        await init();
         requestAnimationFrame(() => {
           document.body.prepend(header);
           document

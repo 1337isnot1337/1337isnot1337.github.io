@@ -1,0 +1,210 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-19T04:52:56.578253+00:00",
+  "title": "Cinna Davis — Field Notebook",
+  "extensions": {
+    "colorMeta": {
+      "lime": {
+        "displayName": "Lime",
+        "role": "primary",
+        "canonical": "#c3f184",
+        "tonalRamp": [
+          "oklch(15% 0.1458 127.8)",
+          "oklch(26% 0.1458 127.8)",
+          "oklch(38% 0.1458 127.8)",
+          "oklch(49% 0.1458 127.8)",
+          "oklch(61% 0.1458 127.8)",
+          "oklch(72% 0.1458 127.8)",
+          "oklch(84% 0.1458 127.8)",
+          "oklch(95% 0.1458 127.8)"
+        ]
+      },
+      "dark": {
+        "displayName": "Dark",
+        "role": "neutral",
+        "canonical": "#151917",
+        "tonalRamp": [
+          "oklch(15% 0.0072 164.2)",
+          "oklch(26% 0.0072 164.2)",
+          "oklch(38% 0.0072 164.2)",
+          "oklch(49% 0.0072 164.2)",
+          "oklch(61% 0.0072 164.2)",
+          "oklch(72% 0.0072 164.2)",
+          "oklch(84% 0.0072 164.2)",
+          "oklch(95% 0.0072 164.2)"
+        ]
+      },
+      "screen": {
+        "displayName": "Screen",
+        "role": "neutral",
+        "canonical": "#141916",
+        "tonalRamp": [
+          "oklch(15% 0.0096 159.1)",
+          "oklch(26% 0.0096 159.1)",
+          "oklch(38% 0.0096 159.1)",
+          "oklch(49% 0.0096 159.1)",
+          "oklch(61% 0.0096 159.1)",
+          "oklch(72% 0.0096 159.1)",
+          "oklch(84% 0.0096 159.1)",
+          "oklch(95% 0.0096 159.1)"
+        ]
+      },
+      "paper": {
+        "displayName": "Paper",
+        "role": "neutral",
+        "canonical": "#f4f1e8",
+        "tonalRamp": [
+          "oklch(15% 0.0124 91.5)",
+          "oklch(26% 0.0124 91.5)",
+          "oklch(38% 0.0124 91.5)",
+          "oklch(49% 0.0124 91.5)",
+          "oklch(61% 0.0124 91.5)",
+          "oklch(72% 0.0124 91.5)",
+          "oklch(84% 0.0124 91.5)",
+          "oklch(95% 0.0124 91.5)"
+        ]
+      },
+      "ink": {
+        "displayName": "Ink",
+        "role": "neutral",
+        "canonical": "#202720",
+        "tonalRamp": [
+          "oklch(15% 0.0163 145.1)",
+          "oklch(26% 0.0163 145.1)",
+          "oklch(38% 0.0163 145.1)",
+          "oklch(49% 0.0163 145.1)",
+          "oklch(61% 0.0163 145.1)",
+          "oklch(72% 0.0163 145.1)",
+          "oklch(84% 0.0163 145.1)",
+          "oklch(95% 0.0163 145.1)"
+        ]
+      },
+      "muted": {
+        "displayName": "Muted",
+        "role": "neutral",
+        "canonical": "#b5beb2",
+        "tonalRamp": [
+          "oklch(15% 0.0194 137.8)",
+          "oklch(26% 0.0194 137.8)",
+          "oklch(38% 0.0194 137.8)",
+          "oklch(49% 0.0194 137.8)",
+          "oklch(61% 0.0194 137.8)",
+          "oklch(72% 0.0194 137.8)",
+          "oklch(84% 0.0194 137.8)",
+          "oklch(95% 0.0194 137.8)"
+        ]
+      },
+      "rule": {
+        "displayName": "Rule",
+        "role": "neutral",
+        "canonical": "#444b42",
+        "tonalRamp": [
+          "oklch(15% 0.0174 138.7)",
+          "oklch(26% 0.0174 138.7)",
+          "oklch(38% 0.0174 138.7)",
+          "oklch(49% 0.0174 138.7)",
+          "oklch(61% 0.0174 138.7)",
+          "oklch(72% 0.0174 138.7)",
+          "oklch(84% 0.0174 138.7)",
+          "oklch(95% 0.0174 138.7)"
+        ]
+      },
+      "light-rule": {
+        "displayName": "Light Rule",
+        "role": "neutral",
+        "canonical": "#c4c7b8",
+        "tonalRamp": [
+          "oklch(15% 0.0208 116.0)",
+          "oklch(26% 0.0208 116.0)",
+          "oklch(38% 0.0208 116.0)",
+          "oklch(49% 0.0208 116.0)",
+          "oklch(61% 0.0208 116.0)",
+          "oklch(72% 0.0208 116.0)",
+          "oklch(84% 0.0208 116.0)",
+          "oklch(95% 0.0208 116.0)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Barlow Condensed"
+      },
+      "signature": {
+        "displayName": "Instrument Serif italic"
+      },
+      "body": {
+        "displayName": "DM Sans"
+      },
+      "label": {
+        "displayName": "IBM Plex Mono"
+      }
+    },
+    "motion": [
+      {
+        "name": "Project link hover",
+        "value": "transform .16s",
+        "purpose": "Moves the project arrow on hover. Reduced motion turns transitions off."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "Mobile",
+        "value": "680px"
+      },
+      {
+        "name": "Tablet",
+        "value": "900px"
+      },
+      {
+        "name": "Wide plot",
+        "value": "1650px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Explore my work",
+      "kind": "button",
+      "refersTo": "primary-link",
+      "description": "Explore my work",
+      "html": "<a class=\"ds-explore\" href=\"#work\">Explore my work ↓</a>",
+      "css": ".ds-explore{display:inline-block;background:var(--lime,#c3f184);color:var(--dark,#151917);padding:12px 18px;font: bold 14px Body,Arial,sans-serif;text-decoration:none}.ds-explore:hover{background:#daffae} :focus-visible{outline:3px solid #df8b36;outline-offset:4px}"
+    },
+    {
+      "name": "Specimen selector",
+      "kind": "button",
+      "refersTo": "plot-control",
+      "description": "Specimen selector",
+      "html": "<button aria-label=\"Next knot\" class=\"ds-next\">Next</button>",
+      "css": ".ds-next{width:38px;height:36px;border:1px solid #607058;background:var(--screen,#141916);color:#dce5d6;cursor:pointer}.ds-next:hover{background:var(--lime,#c3f184);color:var(--ink,#202720)} :focus-visible{outline:3px solid #df8b36;outline-offset:4px}"
+    },
+    {
+      "name": "Source evidence",
+      "kind": "nav",
+      "refersTo": "source-link",
+      "description": "Source evidence",
+      "html": "<a class=\"ds-source\" href=\"#work\">Explore the experiment</a>",
+      "css": ".ds-source{display:inline-block;color:var(--ink,#202720);font:bold 14px Body,Arial,sans-serif;text-decoration:none;border-bottom:1px solid;padding:4px 0}.ds-source:hover{color:#526531} :focus-visible{outline:3px solid #df8b36;outline-offset:4px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Field notebook",
+    "overview": "The graphite cover holds an instrument that responds to the reader. The pale pages pair each project with evidence the reader can inspect.",
+    "keyCharacteristics": [
+      "Phosphor mesh on graphite",
+      "Warm paper project pages",
+      "Italic specimen names"
+    ],
+    "rules": [
+      {
+        "name": "Instrument instructions",
+        "body": "Keep instructions and controls clear of the mesh.",
+        "section": "components"
+      }
+    ],
+    "dos": [
+      "Pair field evidence with its source and credit."
+    ],
+    "donts": []
+  }
+}

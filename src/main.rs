@@ -59,18 +59,17 @@ fn app() -> Html {
 
         Callback::from(move |e: SubmitEvent| {
             e.prevent_default(); // Prevent the default form submission behavior
-            log::info!("User input: {}", *input_value);
-
             match get_schedule(&input_value) {
                 Ok(schedule) => {
                     let path: [[String; 8]; 5] = generate_path(&schedule);
 
-                    log::info!("Parsed schedule: {:?}", schedule);
-                    log::info!("Generated path: {:?}", path);
-
+                    error.set(None);
                     path_value.set(Some(path));
                 }
-                Err(err) => error.set(Some(err.to_string())), // Use the cloned handle here
+                Err(err) => {
+                    path_value.set(None);
+                    error.set(Some(err.to_string()));
+                }
             };
         })
     };
@@ -78,7 +77,7 @@ fn app() -> Html {
     // HTML part starts here
     html! {
         <form onsubmit={on_submit}>
-            <textarea placeholder="Enter schedule..." rows="20" cols="120" oninput={on_input} />
+            <textarea aria-label="PowerSchool schedule" placeholder="Enter schedule..." rows="20" cols="120" oninput={on_input} />
             <p></p>
             <button type="submit">{"Submit"}</button>
 
@@ -99,7 +98,7 @@ fn app() -> Html {
             }
             {match &*error {
                 Some(error_val) => html! {<div> {format!("Error: {error_val}")}</div>},
-                None => html! {<div> {format!("No error")}</div>},
+                None => Html::default(),
             }}
         </form>
     }
