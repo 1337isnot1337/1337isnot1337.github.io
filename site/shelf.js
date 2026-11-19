@@ -608,6 +608,7 @@ function placeRook(position) {
   }
   document.querySelector("#rook-caption").value =
     "From " + position + " → " + neighbors.join(", ");
+  board.dispatchEvent(new Event("rook-change"));
 }
 for (const square of squares) {
   const button = document.createElement("button");
@@ -631,6 +632,7 @@ function compareRooks(first, second) {
   document.querySelector('#rook-caption').value =
     `${first} + ${second} · ${adjacent ? 'Adjacent' : 'Nonadjacent'} · ` +
     `${shared.length} shared neighbor${shared.length === 1 ? '' : 's'}: ${shared.join(', ')}.`;
+  board.dispatchEvent(new Event("rook-change"));
 }
 for (const button of document.querySelectorAll('[data-rook-pair]')) {
   button.addEventListener('click', () => compareRooks(...button.dataset.rookPair.split(',')));

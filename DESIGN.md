@@ -148,3 +148,9 @@ The note preserves the distinction between an experimental local Linux override 
 ## Shareable desk experiments
 
 Each of the four existing experiments has a stable native anchor: `#desk-sound`, `#desk-war`, `#desk-bits` and `#desk-numbers`. The links select the right sheet on a direct load or reload; normal back/forward navigation restores the selected sheet, including returning from its project reader. Tab changes and shelf handoffs update the address without creating duplicate entries for repeated selections. The original reader hashes and legacy `#desk` destination remain intact. The link identifies the experiment, not a serialized copy of a visitor's custom inputs. Static IDs and ordinary permalink anchors also work when JavaScript is unavailable. Navigation never starts sound.
+
+## Rook board and graph
+
+The Conway reader now gives two views of the same nine selectable positions. Graph view draws all eighteen rook-move edges, with the six skip-middle connections curved so they never pass through an unrelated vertex. Board view retains the original row/column explanation. The same native buttons, selected positions, pair presets and live shared-neighbor caption serve both views; the decorative SVG is hidden from assistive technology. Incident edges follow the current selection. The explicit nine-vertex/four-neighbor qualification remains, and this is not presented as a 99-vertex solution. Tests independently verify every degree and all pairwise shared-neighbor counts, preserve selection across view changes, check rendered edge/node clearance at mobile widths, and retain the original board if the graph script fails.
+
+The processor trace's static fallback is now actually visible without JavaScript and when the main enhancement fails. The inherited rule hiding every CPU toy is narrowed to the interactive predictor. Browser tests assert visibility of the recorded trace, not merely that its controls are hidden.
