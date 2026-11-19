@@ -254,6 +254,10 @@ const server = http.createServer((req,res) => {
   await plain.locator('#conway-title').waitFor();
   assert.ok(plain.url().endsWith('#conway'));
   await plain.locator('#conway').screenshot({path:'test-results/no-script-reading.png'});
+  await plain.goto(base + '/#flyover');
+  await plain.waitForFunction(()=>[...document.querySelectorAll('#flyover .spectrum img')].some(image=>!image.hidden && image.naturalWidth>0));
+  assert.equal(await plain.locator('#flyover .spectrum img:visible').count(),1);
+  await plain.locator('#flyover .player').screenshot({path:'test-results/no-script-flyover.png'});
   await plain.close();
   console.log('no JavaScript: catalogue and project reading passed');
 
