@@ -8,7 +8,7 @@ function desk(){
  const d=dom.window.document;
  return {dom,d,click:selector=>d.querySelector(selector).click()};
 }
-test('workbench switches its three real project sheets and retains experiment state',()=>{
+test('workbench switches its real project sheets and retains experiment state',()=>{
  const p=desk();
  assert.equal(p.d.querySelectorAll('[data-desk-panel]:not([hidden])').length,1);
  p.click('[data-desk="cards"]');
@@ -41,7 +41,7 @@ test('workbench bit switches encode every address bit with fixed instruction zer
 test('workbench remains readable without JavaScript and does not preload audio',()=>{
  const dom=new JSDOM(fs.readFileSync('site/index.html','utf8'));
  const d=dom.window.document.querySelector('.workbench');
- assert.equal(d.querySelectorAll('[data-desk-panel]:not([hidden])').length,3);
+ assert.equal(d.querySelectorAll('[data-desk-panel]:not([hidden])').length,4);
  const audio=d.querySelector('audio');
  assert.equal(audio.getAttribute('src'),null);
  assert.equal(audio.hidden,true);

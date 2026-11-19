@@ -91,7 +91,7 @@ Portrait prints have straight edges. The main action and project index have pill
 
 ## Open workbench
 
-The homepage changes pace beneath the shelf: large editorial headings, paper tabs, and one asymmetric working spread rather than another row of project thumbnails. Sound uses the real credited spectrogram; cards use the same actual 23-card deal as the full experiment; bits encode a real 15-bit Hack address under a fixed instruction bit. Three choices preserve their local experiment state. On narrow screens the spread stacks and the register forms two eight-bit rows with 40px-tall switches. Without JavaScript all three sheets remain readable, with controls hidden and links to the full project notes. The audio file is still fetched only when opened or played.
+The homepage changes pace beneath the shelf: large editorial headings, paper tabs, and one asymmetric working spread rather than another row of project thumbnails. Sound uses the real credited spectrogram; cards use the same actual 23-card deal as the full experiment; bits encode a real 15-bit Hack address under a fixed instruction bit. Four choices preserve their local experiment state. On narrow screens the spread stacks and the register forms two eight-bit rows with 40px-tall switches. Without JavaScript all four sheets remain readable, with controls hidden and links to the full project notes. The audio file is still fetched only when opened or played.
 
 `welcome.css` owns the opening and narrow-screen navigation; `workbench.css` and `workbench.js` own the spread. The visual addition intentionally exposes existing work rather than introducing new performance claims or unverified research results.
 
@@ -104,3 +104,7 @@ Sources: [robot code at its original commit](https://github.com/titan2022/FRC-20
 ## In-place sound
 
 The sound spread plays its recording in place. Its initial Play button assigns the MP3 URL only after activation, then gives way to accessible native audio controls. A cursor follows the actual playback time across the spectrogram. Network failure exposes a retry; leaving the sound sheet or opening a project reader pauses inline sound, including history navigation. The two players pause each other rather than mixing. The recording credit and CC BY 4.0 link remain alongside the artifact.
+
+## A mathematical example on the desk
+
+The fourth workbench sheet makes one Haralambis example tangible: choose residues in a seven-position pattern while avoiding differences 2, 5 and 9. Three full repeats show what the controls mean. Validation uses the infinite periodic set, including cross-boundary pairs, not only the displayed points. The fraction describes all integers in that periodic set. A dashed outline and explicit numerical explanation identify a forbidden pair without relying on color. The default 0, 1, 4 pattern attains density 3/7; the expandable seven-block cycle argument explains this example's upper bound without presenting the toy as a proof of the general theorem. The Lean source is pinned to the reviewed catalogue source, and the written argument links into that same dated catalogue. Exhaustive tests compare all 128 patterns against an independent integer-line check. No research repository is changed.

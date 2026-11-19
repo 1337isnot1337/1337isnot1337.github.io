@@ -161,6 +161,16 @@ const server = http.createServer((req,res) => {
    assert.equal(await page.locator('#desk-address-value').textContent(),'42');
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),`${name}: workbench fits`);
    await page.screenshot({path:`test-results/${name}-desk-bits.png`});
+   await page.locator('[data-desk="numbers"]').click();
+   assert.equal(await page.locator('#desk-number-density').textContent(),'3/7');
+   await page.locator('[data-residue="5"]').click();
+   assert.match(await page.locator('#desk-number-explanation').textContent(),/5 and 7 are 2 apart/);
+   assert.equal(await page.locator('#desk-number-status').getAttribute('data-valid'),'false');
+   await page.locator('[data-desk-panel="numbers"]').screenshot({path:`test-results/${name}-numberline-conflict.png`});
+   await page.locator('#desk-number-reset').click();
+   assert.equal(await page.locator('#desk-number-status').getAttribute('data-valid'),'true');
+   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),`${name}: fourth workbench tab and numberline fit`);
+   await page.locator('[data-desk-panel="numbers"]').screenshot({path:`test-results/${name}-numberline.png`});
    await page.locator('[data-desk="sound"]').click();
    await page.screenshot({path:`test-results/${name}-desk-sound.png`});
    const catalogueLinks = page.locator('.catalogue-list li a');
