@@ -52,6 +52,17 @@ test('published WASM separates terms, expands periods and recovers from invalid 
     assert.equal(periods[0].textContent, 'Room not listed');
     assert.equal(periods[1].textContent, 'Free period');
   }
+  for (const [first, second] of [['A101', 'B204'], ['', 'B204'], ['B204', '']]) {
+    await submit(row('1-3(A,C-D)', 'S1', first) + '\n' + row('2(C)', 'S1', second));
+    assert.match(document.querySelector('[role="alert"]').textContent, /Conflicting rooms/);
+    assert.equal(document.querySelector('.schedule-results'), null);
+  }
+  await submit(row('1(A)', 'S1', 'A101') + '\n' + row('1(A)', 'S1', ' A101 '));
+  assert.equal(document.querySelector('[role="alert"]'), null);
+  assert.equal(document.querySelector('.schedule-days li').textContent, 'A101');
+  await submit(row('1(A)', 'S1', 'A101') + '\n' + row('1(A)', 'S2', 'B204'));
+  assert.equal(document.querySelector('[role="alert"]'), null);
+  assert.deepEqual([...document.querySelectorAll('.schedule-days')].map(days => days.querySelector('li').textContent), ['A101', 'B204']);
   dom.window.close();
 });
 

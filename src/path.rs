@@ -96,7 +96,7 @@ pub fn get_schedule(input: &str) -> Result<Vec<Class>, &str> {
     if mods.is_empty() {
         return Err("Add at least one class row");
     }
-    Ok(sort_by_day(&ScheduleInfo {
+    let classes = sort_by_day(&ScheduleInfo {
         mods,
         semester,
         short_name,
@@ -105,7 +105,24 @@ pub fn get_schedule(input: &str) -> Result<Vec<Class>, &str> {
         room,
         start,
         end,
-    }))
+    });
+    // A weekly room list cannot choose between different locations assigned
+    // to the same slot. Repeated copies of the same location are harmless.
+    for (index, class) in classes.iter().enumerate() {
+        for earlier in &classes[..index] {
+            if class.semester == earlier.semester
+                && class.room != earlier.room
+                && class.days.iter().any(|day| earlier.days.contains(day))
+                && class
+                    .mods
+                    .iter()
+                    .any(|period| earlier.mods.contains(period))
+            {
+                return Err("Conflicting rooms for the same semester, day, and period. Check the pasted class rows.");
+            }
+        }
+    }
+    Ok(classes)
 }
 
 fn parse_day(day_str: &str) -> Vec<Day> {
@@ -300,6 +317,35 @@ mod tests {
             let path = generate_path(&classes, &Semester::S1);
             assert_eq!(path[0][0], "Room not listed");
             assert_eq!(path[0][1], "");
+        }
+    }
+
+    #[test]
+    fn conflicting_rooms_are_rejected_in_either_order() {
+        for (a, b) in [("A101", "B204"), ("", "B204"), ("   ", "B204")] {
+            for (first, second) in [(a, b), (b, a)] {
+                let input = format!(
+                    "{}\n{}",
+                    row("1-3(A,C-D)", "S1", first),
+                    row("2(C)", "S1", second)
+                );
+                assert!(
+                    matches!(get_schedule(&input), Err(message) if message.contains("Conflicting rooms"))
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn duplicate_rooms_and_separate_slots_are_allowed() {
+        for (first, second) in [
+            (row("1(A)", "S1", "A101"), row("1(A)", "S1", " A101 ")),
+            (row("1(A)", "S1", ""), row("1(A)", "S1", "   ")),
+            (row("1(A)", "S1", "A101"), row("1(A)", "S2", "B204")),
+            (row("1(A)", "S1", "A101"), row("1(B)", "S1", "B204")),
+            (row("1(A)", "S1", "A101"), row("2(A)", "S1", "B204")),
+        ] {
+            assert!(get_schedule(&format!("{first}\n{second}")).is_ok());
         }
     }
 
