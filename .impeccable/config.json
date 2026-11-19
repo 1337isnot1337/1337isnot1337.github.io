@@ -1,0 +1,35 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "cramped-padding",
+        "value": "*",
+        "files": [
+          "site/index.html"
+        ],
+        "createdAt": "2026-11-19T05:55:44.866Z",
+        "reason": "Agent verified the two divider warnings in the rendered catalogue and footer: catalogue text clears the line by 9 to 11px, footer text by 22 to 29px across phone and desktop."
+      },
+      {
+        "rule": "cream-palette",
+        "value": "*",
+        "files": [
+          "site/index.html"
+        ],
+        "createdAt": "2026-11-19T05:55:44.874Z",
+        "reason": "Project design explicitly pairs warm ivory paper with plum ink beneath the illustrated shelf in DESIGN.md."
+      },
+      {
+        "rule": "organic-clip-path",
+        "value": "*",
+        "files": [
+          "site/index.html"
+        ],
+        "createdAt": "2026-11-19T05:55:44.883Z",
+        "reason": "DESIGN.md specifies the little strip of CSS tape on the interests note. Its cut edge is intentional stationery artwork."
+      }
+    ]
+  }
+}

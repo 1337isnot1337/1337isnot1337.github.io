@@ -31,17 +31,53 @@ let activeArticle = null;
 // Adapted from Swiper's Coverflow demo. Keep an ordinary scrollable shelf if
 // the enhancement is unavailable, and keep every print addressable by a link.
 let shelf = null;
+let coastFrame = 0;
+function stopCoast() {
+  cancelAnimationFrame(coastFrame);
+  coastFrame = 0;
+}
 if (window.Swiper) {
   // A wide shelf shows five prints at once. A second run gives Swiper room to
   // move paper around the back without exposing an empty end of the ledge.
   const track = carousel.querySelector(".swiper-wrapper");
   for (const slide of [...track.children]) track.append(slide.cloneNode(true));
   let blurTimer;
+  let caughtGlide = false;
   function showMotion(duration) {
     if (!duration || reducedMotion.matches) return;
     carousel.classList.add("moving");
     clearTimeout(blurTimer);
     blurTimer = setTimeout(() => carousel.classList.remove("moving"), duration);
+  }
+  function coast(instance, event) {
+    if (reducedMotion.matches || event.type.includes("cancel")) return;
+    const samples = instance.touchEventsData.velocities;
+    const last = samples.at(-1);
+    if (!last || Date.now() - last.time > 100) return;
+    const first = samples.find((sample) => last.time - sample.time <= 100);
+    if (first.time === last.time) return;
+    let speed = (last.position - first.position) / (last.time - first.time);
+    speed = Math.max(-5, Math.min(5, speed));
+    if (Math.abs(speed) < 0.08) return;
+    const direction = speed < 0 ? "next" : "prev";
+    let previous = performance.now();
+
+    // Move the same looping track that the finger dragged. A single CSS
+    // transition would hit the end of the physical slides during a long fling.
+    function glide(now) {
+      const decay = Math.exp(-Math.min(now - previous, 64) / 380);
+      previous = now;
+      instance.setTranslate(instance.translate + speed * 380 * (1 - decay));
+      speed *= decay;
+      instance.updateActiveIndex();
+      instance.updateSlidesClasses();
+      instance.loopFix({ direction, byMousewheel: true });
+      instance.updateActiveIndex();
+      instance.updateSlidesClasses();
+      if (Math.abs(speed) > 0.4) showMotion(75);
+      coastFrame = Math.abs(speed) > 0.025 ? requestAnimationFrame(glide) : 0;
+    }
+    coastFrame = requestAnimationFrame(glide);
   }
   shelf = new Swiper(carousel, {
     effect: "coverflow",
@@ -53,6 +89,11 @@ if (window.Swiper) {
       (print) => print.dataset.project === "flyover",
     ),
     loop: true,
+    freeMode: {
+      enabled: true,
+      momentum: false,
+      sticky: false,
+    },
     mousewheel: {
       enabled: true,
       forceToAxis: true,
@@ -70,17 +111,34 @@ if (window.Swiper) {
       slideShadows: false,
     },
     on: {
+      touchStart(instance) {
+        caughtGlide = Boolean(coastFrame);
+        stopCoast();
+        instance.touchEventsData.velocities.length = 0;
+      },
+      beforeTransitionStart: stopCoast,
       sliderMove() {
         showMotion(75);
       },
-      beforeTransitionStart(instance, duration) {
-        if (instance.initialized) showMotion(duration * 0.55);
+      scroll(instance) {
+        stopCoast();
+        // Free scrolling can move slides around the loop after the wheel
+        // module has already chosen a center print. Read its final position.
+        instance.updateActiveIndex();
+        instance.updateSlidesClasses();
+        showMotion(70);
+      },
+      setTransition(instance, duration) {
+        if (instance.initialized) showMotion(Math.min(duration * 0.55, 320));
       },
       sliderFirstMove() {
         carousel.classList.add("handling");
       },
-      touchEnd() {
-        carousel.classList.remove("handling");
+      touchEnd(instance, event) {
+        if (carousel.classList.contains("handling")) {
+          carousel.classList.remove("handling");
+          coast(instance, event);
+        }
       },
       slideChange(instance) {
         const print = prints[instance.realIndex % prints.length];
@@ -109,21 +167,35 @@ if (window.Swiper) {
       },
     },
   });
+  // The first tap on a moving print catches the shelf. A fresh tap opens it.
+  carousel.addEventListener("click", (event) => {
+    if (caughtGlide && event.detail > 0) {
+      event.preventDefault();
+      event.stopPropagation();
+      caughtGlide = false;
+    }
+  }, true);
   reducedMotion.addEventListener("change", () => {
+    stopCoast();
     shelf.params.speed = reducedMotion.matches ? 0 : 380;
   });
+  document.addEventListener("visibilitychange", stopCoast);
+  function stepPrint(direction) {
+    stopCoast();
+    const total = shelf.slides.length;
+    shelf.slideToLoop((shelf.realIndex + direction + total) % total);
+  }
   document
     .querySelector("#prev")
-    .addEventListener("click", () => shelf.slidePrev());
+    .addEventListener("click", () => stepPrint(-1));
   document
     .querySelector("#next")
-    .addEventListener("click", () => shelf.slideNext());
+    .addEventListener("click", () => stepPrint(1));
   document.querySelector(".shop").addEventListener("keydown", (event) => {
     if (projectIndex.open || !["ArrowLeft", "ArrowRight"].includes(event.key))
       return;
     event.preventDefault();
-    if (event.key === "ArrowLeft") shelf.slidePrev();
-    else shelf.slideNext();
+    stepPrint(event.key === "ArrowLeft" ? -1 : 1);
     if (event.target.classList.contains("print"))
       shelf.slides[shelf.activeIndex]
         .querySelector(".print")
@@ -164,6 +236,7 @@ function displayFromHash() {
     return;
   }
   if (activeArticle === article && dialog.open) return;
+  stopCoast();
   const turning = dialog.open;
   if (activeArticle) {
     activeArticle.querySelector("audio")?.pause();
