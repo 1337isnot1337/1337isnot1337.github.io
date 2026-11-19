@@ -38,7 +38,7 @@
       crossorigin
     />
     <link rel="stylesheet" href="vendor/swiper-bundle.min.css" />
-    <link rel="stylesheet" href="shelf.css?v=25" />
+    <link rel="stylesheet" href="shelf.css?v=26" />
     <link rel="stylesheet" href="welcome.css?v=desk-1" />
     <link rel="stylesheet" href="workbench.css?v=6" />
     <link rel="stylesheet" href="notebook.css?v=4" />
@@ -53,7 +53,7 @@
     <link rel="stylesheet" href="incident-note.css?v=2" />
     <script defer src="cpu-trace.js?v=1"></script>
     <script defer src="vendor/swiper-bundle.min.js"></script>
-    <script defer src="shelf.js?v=31" onerror="
+    <script defer src="shelf.js?v=32" onerror="
       const restoreReading = () => {
         document.documentElement.classList.add('script-unavailable');
         document.querySelector('.shelf-heading p').textContent = 'The interactive shelf could not load. You can still read the project notes below.';
@@ -67,9 +67,10 @@
     "></script>
     <script defer src="rook-graph.js?v=1"></script>
     <script>document.documentElement.dataset.view = /^(#projects|#flyover|#cpu|#schedule|#conjectures|#factoring|#conway)$/.test(location.hash) ? "shelf" : "desk";</script>
-    <link rel="stylesheet" href="studio.css?v=7" />
-    <script defer src="studio.js?v=8" onerror="delete document.documentElement.dataset.view"></script>
-    <script defer src="desk-keepsakes.js?v=4"></script>
+    <link rel="stylesheet" href="studio.css?v=8" />
+    <script defer src="studio.js?v=9" onerror="delete document.documentElement.dataset.view"></script>
+    <script defer src="desk-keepsakes.js?v=5"></script>
+    <script defer src="paper-dismiss.js?v=1"></script>
     <noscript
       ><style>
         .shelf-controls,
@@ -131,6 +132,7 @@
             <noscript><p class="graphics-warning">Enable JavaScript, canvas and WebGL to see the 3D desk.</p></noscript>
           </div>
         </section>
+        <button type="button" class="put-down-surface" aria-label="Put back on the desk" tabindex="-1" hidden></button>
         <div class="desk-reading">
         <nav class="desk-rail" aria-label="Move around the desk" hidden>
           <a class="back-to-desk" href="#studio">← <span>Put it back</span></a>

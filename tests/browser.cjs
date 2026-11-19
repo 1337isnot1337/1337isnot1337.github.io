@@ -162,8 +162,8 @@ const server = http.createServer((req,res) => {
    await page.locator('dialog[open]').waitFor();
    if(width<=680) {
     const sheet=await page.locator('dialog[open]').boundingBox();
-    assert.ok(Math.abs(sheet.x)<1 && Math.abs(sheet.y)<1, `${name}: reader fills phone without outer margins`);
-    assert.ok(Math.abs(sheet.width-width)<1 && Math.abs(sheet.height-height)<1, `${name}: reader uses the full dynamic viewport`);
+    assert.ok(Math.abs(sheet.x)<1 && sheet.y>=32 && sheet.y<=49, `${name}: phone reader leaves a tappable strip above the sheet`);
+    assert.ok(Math.abs(sheet.width-width)<1 && Math.abs(sheet.y+sheet.height-height)<1, `${name}: reader uses the available phone width and height`);
     for(const id of ['close-dialog','previous-detail','next-detail']) {
      const control=await page.locator('#'+id).boundingBox();
      assert.ok(control.height>=44 && control.width>=44, `${name}: ${id} is a 44px touch target`);
@@ -309,7 +309,13 @@ const server = http.createServer((req,res) => {
    await page.locator('.object-letters').click();
    assert.equal(await page.locator('.address-links a:visible').count(),3);
    assert.equal(await page.locator('#flip-post').isVisible(),false);
-   await page.locator('.back-to-desk').click();
+   const sheetMargin=(await page.locator('.desk-reading').boundingBox()).x/2;
+   await page.mouse.move(sheetMargin,120);await page.mouse.down();
+   await page.mouse.move(sheetMargin,166,{steps:4});await page.mouse.up();
+   assert.equal(await page.locator('#elsewhere').isVisible(),true,'dragging across the desk keeps the reader open');
+   await page.mouse.click(sheetMargin,120);
+   await page.locator('.desk-reading').waitFor({state:'hidden'});
+   assert.equal(await page.evaluate(()=>document.activeElement.dataset.object),'letters');
    await page.locator('.object-drawer').focus();
    await page.keyboard.press('Enter');
    assert.equal(await page.evaluate(()=>document.pointerLockElement),null);
@@ -680,7 +686,7 @@ const server = http.createServer((req,res) => {
    assert.equal(await printable.locator('dialog .outbound').evaluate(el=>el===document.activeElement),true,'printing preserves reader focus');
    if(printWidth===390) {
     const restored=await printable.locator('.open-project').boundingBox();
-    assert.ok(Math.abs(restored.width-390)<1 && Math.abs(restored.height-800)<1,'phone reader restores full viewport after printing');
+    assert.ok(Math.abs(restored.width-390)<1 && restored.y>=32 && Math.abs(restored.y+restored.height-800)<1,'phone reader restores the visible desk margin after printing');
    }
   }
   await printable.close();

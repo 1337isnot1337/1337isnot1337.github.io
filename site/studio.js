@@ -30,7 +30,7 @@
   function showFurniture() {
     if (page.dataset.view!=="desk" || !sceneNearby || sceneStarted || studio.dataset.open || document.querySelector(".open-project[open]")) return;
     sceneStarted=true;
-    import("./furniture.js?v=9").then(module => module.mountFurniture(stage)).catch(() => {
+    import("./furniture.js?v=10").then(module => module.mountFurniture(stage)).catch(() => {
       stage.querySelector(".graphics-warning").hidden = false;
     });
   }
@@ -108,6 +108,7 @@
     current = room;
     for (const panel of rooms) panel.hidden = panel !== room;
     reader.hidden = !room;
+    studio.querySelector(".put-down-surface").hidden = !room;
     overview.inert = Boolean(room);
     studio.dispatchEvent(new CustomEvent("desk-room", {detail: room?.id}));
     rail.hidden = !room;

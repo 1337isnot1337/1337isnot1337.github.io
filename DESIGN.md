@@ -97,7 +97,7 @@ The desk fills the first viewport. The mouse gently shifts the viewpoint, and a 
 
 The prints and framed photo enlarge into two-sided cards with original SVG doodles on their backs. The plant, both pencils, the cup and the cassette lift into a full-screen inspection view. Their actual model can be rotated with a pointer, touch or the arrow keys. Both pencils and the cup lead to the same sheet of scratch paper as the blotter. The lamp switches on a warm light. The postcard can only be taken from the open drawer.
 
-The desk becomes inert while someone reads an experiment, the catalogue, a notebook leaf or Letters. Putting it back restores focus to the originating object. Reduced motion applies cover and drawer positions immediately and skips paper entrance animations.
+The desk becomes inert while someone reads an experiment, the catalogue, a notebook leaf or Letters. Clicking the exposed desktop or choosing Put it back returns focus to the originating object. A tap beside a held model puts it back, while dragging turns it in the hand. Reduced motion applies cover and drawer positions immediately and skips paper entrance animations.
 
 ## Open workbench
 
@@ -177,7 +177,7 @@ The data comes from `incidentmesh` at `7bb27809e5a5278963a7186ebe3604246cbfbc9f`
 
 ## Phone reading sheets
 
-At 680px and below, project readers fill the viewport instead of sitting in an inset dialog. Sixteen-pixel side gutters give the diagrams and recordings more room; the sticky toolbar keeps 44px navigation controls reachable and accounts for safe-area insets. Desktop retains the illustrated split-pane print. Native dialog semantics, history, focus return, and the separate print layout are unchanged.
+At 680px and below, project readers use the full width with a tappable strip of the desk above the page. Sixteen-pixel side gutters give the diagrams and recordings more room; the sticky toolbar keeps 44px navigation controls reachable and accounts for safe-area insets. Desktop retains the illustrated split-pane print. Native dialog semantics, history, focus return, and the separate print layout are unchanged.
 
 ## War: a repeated state, not just repeated counts
 

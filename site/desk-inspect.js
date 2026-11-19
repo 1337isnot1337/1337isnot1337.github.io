@@ -30,7 +30,15 @@ export function inspectDeskObjects(stage,engine,room,deskCamera,getModel,redraw)
   const screen=new T.Mesh(new T.PlaneGeometry(2,2),backdrop);
   screen.frustumCulled=false;screen.renderOrder=-1000;display.add(screen);
   let active='',source=null,snapshot=null,opener=null,using=false,drag=null;
-  let yaw=0,pitch=0,radius=1,aspect=0;
+  let yaw=0,pitch=0,radius=1,aspect=0,backgroundTap=false;
+  const ray=new T.Raycaster(),screenPoint=new T.Vector2();
+  function hitsObject(e){
+    if(!source)return true;
+    const r=surface.getBoundingClientRect();
+    screenPoint.set((e.clientX-r.left)/r.width*2-1,1-(e.clientY-r.top)/r.height*2);
+    ray.setFromCamera(screenPoint,camera);
+    return ray.intersectObject(stand,true).length>0;
+  }
   function rotate(dx,dy){
     yaw+=dx;pitch=T.MathUtils.clamp(pitch+dy,-Math.PI*.94,Math.PI*.94);redraw();
   }
@@ -59,14 +67,18 @@ export function inspectDeskObjects(stage,engine,room,deskCamera,getModel,redraw)
   });
   surface.addEventListener('pointerdown',e=>{
     if(!e.isPrimary||e.button!==0)return;
-    drag={id:e.pointerId,x:e.clientX,y:e.clientY};surface.setPointerCapture(e.pointerId);
+    backgroundTap=!hitsObject(e);
+    drag={id:e.pointerId,x:e.clientX,y:e.clientY,startX:e.clientX,startY:e.clientY};surface.setPointerCapture(e.pointerId);
   });
   surface.addEventListener('pointermove',e=>{
     if(!drag || drag.id!==e.pointerId)return;
+    if(Math.hypot(e.clientX-drag.startX,e.clientY-drag.startY)>6)backgroundTap=false;
     rotate((e.clientX-drag.x)*.012,(e.clientY-drag.y)*.012);drag.x=e.clientX;drag.y=e.clientY;
   });
+  surface.addEventListener('click',e=>{if(e.detail && backgroundTap && !hitsObject(e))close();backgroundTap=false;});
+  surface.addEventListener('pointercancel',()=>{backgroundTap=false;});
   surface.addEventListener('lostpointercapture',()=>{drag=null;});
-  surface.addEventListener('touchstart',e=>{if(e.cancelable)e.preventDefault();},{passive:false});
+  surface.addEventListener('touchmove',e=>{if(drag && e.cancelable)e.preventDefault();},{passive:false});
   window.addEventListener('hashchange',close);
   function paint(){
     if(!active || !dialog.open)return false;

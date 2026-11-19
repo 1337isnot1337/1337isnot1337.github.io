@@ -1310,14 +1310,15 @@ html {
 .script-unavailable #cpu .predictor,
 .script-unavailable #conway .toy { display: none; }
 
-/* On phones the print becomes a reading sheet, not a narrow inset window. */
+/* Leave a strip of the desk above the full-width phone reader. */
 @media screen and (max-width: 680px) {
   .open-project {
-    inset: 0;
+    --exposed-desk: clamp(32px, 5.5svh, 48px);
+    inset: var(--exposed-desk) 0 0;
     margin: 0;
     width: 100%;
     max-width: none;
-    height: 100dvh;
+    height: calc(100dvh - var(--exposed-desk));
     max-height: none;
     border: 0;
     border-radius: 0;

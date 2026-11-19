@@ -329,3 +329,13 @@ body:has(.object-view[open],.drawer-post[open]) { overflow:hidden; }
   .address-links a { column-gap:6px; }
 }
 html:not([data-view]):not(:has(#projects:target)) .mast { display:none; }
+.put-down-surface {
+  position:absolute; z-index:1; inset:0; width:100%; height:100%; border:0; padding:0;
+  background:transparent; touch-action:pan-y pinch-zoom;
+}
+.object-caption h2 { pointer-events:auto; }
+@media (max-width:680px) {
+  html[data-view="desk"] .studio-ready .desk-reading {
+    width:calc(100% - 24px); margin:clamp(38px,6svh,54px) auto 28px; scroll-margin-top:clamp(38px,6svh,54px);
+  }
+}

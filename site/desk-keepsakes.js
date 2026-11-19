@@ -82,10 +82,6 @@
   }
   flip.onclick=flipControl.onclick=()=>side(!reverse,true);
   dialog.querySelector('.put-down').onclick=()=>dialog.close();
-  dialog.addEventListener('click',e=>{if(e.target===dialog){
-    const r=dialog.getBoundingClientRect();
-    if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)dialog.close();
-  }});
   // Let the desk's normal link handlers own history and focus for the next reader.
   link.addEventListener('click',e=>{
     if(e.button||e.ctrlKey||e.metaKey||e.altKey||e.shiftKey)return;
