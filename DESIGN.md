@@ -58,7 +58,7 @@ Plum ink carries text and primary controls on warm ivory paper. Berry marks the 
 
 ## Typography
 
-Bricolage Grotesque sets headings, print titles and main actions. Its closely spaced letterforms keep even long project names compact. DM Sans sets prose and navigation. IBM Plex Mono labels each print’s subject and displays the outputs of the mathematical and computing examples. The three WOFF2 families and their SIL Open Font Licenses live in `site/assets/fonts/`.
+Bricolage Grotesque sets headings, print titles and main actions. Its closely spaced letterforms keep even long project names compact. DM Sans sets prose and navigation. Its 100–1000 variable weights provide real semibold and bold rather than synthesized strokes; a Latin-extended subset keeps names such as Erdős in the same face. IBM Plex Mono labels each print’s subject and displays the outputs of the mathematical and computing examples. The three WOFF2 families and their SIL Open Font Licenses live in `site/assets/fonts/`.
 
 ## Layout
 
