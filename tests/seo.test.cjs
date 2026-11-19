@@ -8,7 +8,7 @@ const root = path.join(__dirname, '..', 'site');
 const origin = 'https://1337isnot1337.github.io';
 const ownPages = [
   '/', '/about/', '/projects/', '/projects/integer-factoring/',
-  '/projects/hack-cpu/', '/projects/conway-99/', '/imsa-map/'
+  '/projects/hack-cpu/', '/projects/conway-99/', '/imsa-map/', '/research-notes/'
 ];
 const pageFile = url => path.join(root, url.slice(1), 'index.html');
 const documentFor = url => new JSDOM(fs.readFileSync(pageFile(url), 'utf8'), { url: origin + url }).window.document;
