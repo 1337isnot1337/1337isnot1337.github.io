@@ -40,6 +40,8 @@ const server = http.createServer((req,res) => {
   for (const [name,width,height] of [['desktop',1440,1000],['mobile',390,844],['small-mobile',320,740]]) {
    const page = await browser.newPage({viewport:{width,height}, reducedMotion:name === 'desktop' ? 'no-preference' : 'reduce'});
    const errors=[];
+   const mediaRequests=[];
+   page.on('request',request=>{if (/\/assets\/livermore\.(mp3|webp)(?:[?#]|$)/.test(request.url())) mediaRequests.push(request.url());});
    page.on('pageerror', e=>errors.push(e.message));
    page.on('response', response => {
     if (response.url().startsWith(base) && response.status() >= 400 &&
@@ -54,6 +56,7 @@ const server = http.createServer((req,res) => {
    await page.locator('.swiper-initialized').waitFor();
    await page.evaluate(() => document.fonts.ready);
    await page.screenshot({path:`test-results/${name}-shelf.png`,fullPage:true});
+   assert.deepEqual(mediaRequests,[],`${name}: unopened flyover must not download media`);
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth <= innerWidth), `${name}: horizontal page overflow`);
    await page.locator('.index summary').click();
    await page.locator('.index[open]').waitFor();
