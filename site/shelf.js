@@ -191,7 +191,7 @@ document.querySelector("#factor-form").addEventListener("submit", (event) => {
       remainder /= divisor;
     }
   }
-  factors.push(remainder);
+  if (remainder > 1) factors.push(remainder);
   document.querySelector("#factors").value =
     factors.length === 1
       ? value + " is prime."
