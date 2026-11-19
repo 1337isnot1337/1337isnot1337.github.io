@@ -7,7 +7,7 @@ pub enum Msg {
     Decrement,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum Semester {
     S1,
     S2,
@@ -38,8 +38,7 @@ pub struct Class {
 #[function_component(App)]
 fn app() -> Html {
     let input_value: UseStateHandle<String> = use_state(String::new);
-    let path_value: UseStateHandle<Option<[[String; 8]; 5]>> =
-        use_state(|| None::<[[String; 8]; 5]>);
+    let path_value: UseStateHandle<Option<Vec<(String, [[String; 8]; 5])>>> = use_state(|| None);
     let error: UseStateHandle<Option<String>> = use_state(|| None);
 
     let on_input: Callback<InputEvent> = {
@@ -61,10 +60,14 @@ fn app() -> Html {
             e.prevent_default(); // Prevent the default form submission behavior
             match get_schedule(&input_value) {
                 Ok(schedule) => {
-                    let path: [[String; 8]; 5] = generate_path(&schedule);
+                    let paths = [Semester::S1, Semester::S2]
+                        .into_iter()
+                        .filter(|term| schedule.iter().any(|class| &class.semester == term))
+                        .map(|term| (format!("{:?}", term), generate_path(&schedule, &term)))
+                        .collect();
 
                     error.set(None);
-                    path_value.set(Some(path));
+                    path_value.set(Some(paths));
                 }
                 Err(err) => {
                     path_value.set(None);
@@ -81,23 +84,29 @@ fn app() -> Html {
             <p></p>
             <button type="submit">{"Submit"}</button>
 
-            if let Some(path) = &*path_value {
-                <div>
-                    <p>{"Path:"}</p>
-                    { for path.iter().enumerate().map(|(i, row)| html! {
-                        <div>
-                            <p>{format!("Day {}:", i + 1)}</p>
-                            <ul>
-                                { for row.iter().enumerate().map(|(j, item)| html! {
-                                    <li>{format!("Module {}: {}", j + 1, item)}</li>
-                                }) }
-                            </ul>
-                        </div>
-                    })}
+            if let Some(paths) = &*path_value {
+                <div class="schedule-results" aria-live="polite">
+                    { for paths.iter().map(|(term, path)| html! {
+                        <section>
+                            <h2>{format!("{term} room list")}</h2>
+                            <div class="schedule-days">
+                            { for path.iter().enumerate().map(|(i, row)| html! {
+                                <section>
+                                    <h3>{format!("{} day", ["A", "B", "I", "C", "D"][i])}</h3>
+                                    <ol>
+                                        { for row.iter().map(|item| html! {
+                                            <li>{if item.is_empty() { "Free period" } else { item }}</li>
+                                        }) }
+                                    </ol>
+                                </section>
+                            }) }
+                            </div>
+                        </section>
+                    }) }
                 </div>
             }
             {match &*error {
-                Some(error_val) => html! {<div> {format!("Error: {error_val}")}</div>},
+                Some(error_val) => html! {<div role="alert"> {format!("Error: {error_val}")}</div>},
                 None => Html::default(),
             }}
         </form>

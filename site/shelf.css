@@ -1147,3 +1147,73 @@ body.modal-open {
     padding: 10px 1px;
   }
 }
+
+/* Small reading details belong to the same paper-and-plum world as the shelf. */
+::selection {
+  background: #dfc8dd;
+  color: #422c41;
+}
+input {
+  caret-color: var(--berry);
+}
+html {
+  scrollbar-color: #a68b9f var(--paper);
+}
+.hand-inspector {
+  margin-top: 16px;
+  border-top: 1px solid #d8c8cc;
+  padding-top: 10px;
+}
+.hand-inspector summary {
+  font-weight: 600;
+  font-size: 14px;
+}
+.hand-inspector p,
+.experiment-note {
+  margin-top: 9px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+.hand-inspector dl {
+  margin: 12px 0 0;
+}
+.hand-inspector dt {
+  margin-top: 10px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.hand-inspector dd {
+  margin: 3px 0 0;
+  font: 12px/1.7 var(--mono);
+  overflow-wrap: anywhere;
+}
+#factor-form small {
+  margin-top: 12px;
+  color: var(--muted);
+}
+#clear-projects {
+  display: block;
+  margin-top: 10px;
+  padding: 7px 14px;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--hair);
+  border-radius: 4px;
+}
+#clear-projects:hover {
+  background: #f0dfe7;
+}
+.modal-top {
+  position: sticky;
+  top: 0;
+  z-index: 4;
+}
+.catalogue-search input {
+  font-size: 16px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .counter-track::before {
+    transition: none;
+  }
+}

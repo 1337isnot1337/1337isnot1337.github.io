@@ -24,6 +24,7 @@ pub struct ScheduleInfo {
 }
 pub fn get_schedule(input: &str) -> Result<Vec<Class>, &str> {
     let mut listvec: Vec<String> = input
+        .trim()
         .lines()
         .map(std::string::ToString::to_string)
         .collect();
@@ -43,7 +44,7 @@ pub fn get_schedule(input: &str) -> Result<Vec<Class>, &str> {
     let mut start = Vec::new();
     let mut end = Vec::new();
 
-    for line in listvec {
+    for line in listvec.into_iter().filter(|line| !line.trim().is_empty()) {
         let line = line.replace("    ", "\t");
         let split: Vec<String> = line.split('\t').map(|s| s.trim().to_string()).collect();
         if split.len() < 8 {
@@ -55,8 +56,9 @@ pub fn get_schedule(input: &str) -> Result<Vec<Class>, &str> {
         let Some((periods, days)) = split[0].split_once('(') else {
             return Err("Expected a class period followed by its days, such as 2(A,C-D)");
         };
-        if !periods.split('-').all(|p| matches!(p.as_bytes(), [b'1'..=b'8'])) {
-            return Err("Class periods must be between 1 and 8");
+        parse_mods(periods)?;
+        if !days.ends_with(')') {
+            return Err("Close the class days with a parenthesis, such as 2(A,C-D)");
         }
         let valid_day = |d: &str| matches!(d, "A" | "B" | "C" | "D" | "I");
         for day in days.trim_end_matches(')').split(',').map(str::trim) {
@@ -78,6 +80,9 @@ pub fn get_schedule(input: &str) -> Result<Vec<Class>, &str> {
         end.push(split[7].clone());
     }
 
+    if mods.is_empty() {
+        return Err("Add at least one class row after the headings");
+    }
     Ok(sort_by_day(&ScheduleInfo {
         mods,
         semester,
@@ -126,22 +131,24 @@ fn parse_day_char(ch: char) -> Day {
     }
 }
 
-fn parse_mods(mod_str: &str) -> Vec<u8> {
-    let mut mods = vec![];
-    for part in mod_str.split('-') {
-        if let Some(start_char) = part.chars().next() {
-            if let Some(end_char) = part.chars().last() {
-                if let (Some(start), Some(end)) = (start_char.to_digit(10), end_char.to_digit(10)) {
-                    for m in start..=end {
-                        mods.push(u8::try_from(m).unwrap());
-                    }
-                }
-            }
+fn parse_mods(mod_str: &str) -> Result<Vec<u8>, &'static str> {
+    let parse = |value: &str| -> Result<u8, &'static str> {
+        match value.as_bytes() {
+            [digit @ b'1'..=b'8'] => Ok(digit - b'0'),
+            _ => Err("Class periods must be between 1 and 8"),
         }
+    };
+    match mod_str.split_once('-') {
+        Some((start, end)) => {
+            let (start, end) = (parse(start)?, parse(end)?);
+            if start > end {
+                return Err("A period range must run forwards, such as 2-4");
+            }
+            Ok((start..=end).collect())
+        }
+        None => Ok(vec![parse(mod_str)?]),
     }
-    mods
 }
-
 
 fn sort_by_day(schedule_info: &ScheduleInfo) -> Vec<Class> {
     schedule_info
@@ -151,7 +158,7 @@ fn sort_by_day(schedule_info: &ScheduleInfo) -> Vec<Class> {
         .map(|(item, mods_days)| {
             let (mod_str, day_str) = mods_days.split_once('(').unwrap();
             let days = parse_day(day_str.trim_end_matches(')'));
-            let mods = parse_mods(mod_str);
+            let mods = parse_mods(mod_str).expect("periods validated by get_schedule");
 
             Class {
                 days,
@@ -172,7 +179,7 @@ fn sort_by_day(schedule_info: &ScheduleInfo) -> Vec<Class> {
         .collect()
 }
 
-pub fn generate_path(weekly_schedule: &Vec<Class>) -> [[String; 8]; 5] {
+pub fn generate_path(weekly_schedule: &[Class], semester: &Semester) -> [[String; 8]; 5] {
     let mut weekly_path: [[String; 8]; 5] = [
         Default::default(),
         Default::default(),
@@ -192,7 +199,7 @@ pub fn generate_path(weekly_schedule: &Vec<Class>) -> [[String; 8]; 5] {
         };
 
         for class in weekly_schedule {
-            if class.days.contains(&letter_day) {
+            if &class.semester == semester && class.days.contains(&letter_day) {
                 for mods in &class.mods {
                     match mods {
                         1 => weekly_path[day][0].clone_from(&class.room),
@@ -211,4 +218,47 @@ pub fn generate_path(weekly_schedule: &Vec<Class>) -> [[String; 8]; 5] {
     }
 
     weekly_path
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    fn row(period: &str, term: &str, room: &str) -> String {
+        format!("{period}\t{term}\tMAT101\tMath\tExample\t{room}\tstart\tend")
+    }
+    #[test]
+    fn inclusive_period_ranges() {
+        assert_eq!(parse_mods("2-4"), Ok(vec![2, 3, 4]));
+        assert_eq!(parse_mods("8"), Ok(vec![8]));
+        for invalid in ["4-2", "1-2-3", "0", "9", "", "12"] {
+            assert!(parse_mods(invalid).is_err(), "{invalid}");
+        }
+    }
+    #[test]
+    fn semesters_do_not_overwrite_each_other() {
+        let input = format!(
+            "Schedule\nHeadings\n{}\n{}\n",
+            row("2-4(A,C-D)", "S1", "A113"),
+            row("3(A)", "S2", "B204")
+        );
+        let classes = get_schedule(&input).unwrap();
+        let first = generate_path(&classes, &Semester::S1);
+        let second = generate_path(&classes, &Semester::S2);
+        assert_eq!(&first[0][1..4], &["A113", "A113", "A113"]);
+        assert_eq!(first[2][2], "");
+        assert_eq!(first[3][2], "A113");
+        assert_eq!(second[0][2], "B204");
+        assert_eq!(second[0][1], "");
+    }
+    #[test]
+    fn malformed_input_returns_errors() {
+        for period in ["2(A", "2(Z)", "2(A-I)", "2-4-6(A)", "4-2(A)"] {
+            assert!(get_schedule(&format!(
+                "Schedule\nHeadings\n{}",
+                row(period, "S1", "A113")
+            ))
+            .is_err());
+        }
+        assert!(get_schedule("empty").is_err());
+    }
 }

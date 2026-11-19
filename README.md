@@ -23,3 +23,15 @@ wasm-bindgen --target web --no-typescript --out-name schedule --out-dir site/ims
 
 The shelf adapts the [Swiper Coverflow demo](https://github.com/nolimits4web/swiper/blob/master/demos/240-effect-coverflow.html). Swiper 14.4.0 runs from `site/vendor/` under the included MIT license. The six poster illustrations were generated for this site. Catalogue entries link to public repositories, research records, or specific contributions. The War demonstration uses the starting queues and descending collection rule from the [three-player War proof](https://github.com/1337isnot1337/solved-conjectures/blob/main/results/spivey-multiplayer-war/PROOF.md). The demos and links behind them describe the actual projects. The flyover and spectrogram are from the [DOPPLERGEIST Livermore example](https://1337isnot1337.github.io/DOPPLERGEIST/). The recording is by Praveen Pathak ([dataset](https://doi.org/10.5281/zenodo.23424278), [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)). Font licenses are in `site/assets/fonts/`.
 
+
+## Checks
+
+Run `npm ci && npm test` (Node 24 or newer) for homepage and schedule regression checks.
+They check local assets and anchors, search recovery, the complete War cycle,
+branch-predictor saturation and reset, factoring, instruction encoding, rook
+neighbors, and the actual schedule WebAssembly bundle. The publishing workflow
+runs these checks before deployment. Rust parser tests run with `cargo test`.
+
+Browser QA should also cover the looping shelf, keyboard navigation, the reader's
+Back/Forward and Escape behavior, audio seeking, mobile widths, and reduced motion.
+DOM tests do not replace visual or browser-history checks.

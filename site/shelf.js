@@ -27,6 +27,7 @@ for (const link of projectIndex.querySelectorAll("a[data-project]")) {
 }
 let opener = null;
 let activeArticle = null;
+let returningToShelf = false;
 
 // Adapted from Swiper's Coverflow demo. Keep an ordinary scrollable shelf if
 // the enhancement is unavailable, and keep every print addressable by a link.
@@ -230,6 +231,7 @@ for (const print of carousel.querySelectorAll(".print")) {
 }
 
 function displayFromHash() {
+  returningToShelf = false;
   const article = articles.get(location.hash.slice(1));
   if (!article) {
     if (dialog.open) dialog.close();
@@ -277,6 +279,9 @@ function displayFromHash() {
   }
 }
 function returnToShelf() {
+  // Repeated Escape/clicks must not walk past our own history entry.
+  if (returningToShelf) return;
+  returningToShelf = true;
   if (history.state?.fromShelf) history.back();
   else {
     history.replaceState(
@@ -442,7 +447,12 @@ seek.addEventListener("input", () => {
 
 document.querySelector("#factor-form").addEventListener("submit", (event) => {
   event.preventDefault();
-  const value = document.querySelector("#composite").valueAsNumber;
+  const input = document.querySelector("#composite");
+  const value = input.valueAsNumber;
+  if (!input.checkValidity() || !Number.isSafeInteger(value)) {
+    input.reportValidity();
+    return;
+  }
   let remainder = value;
   const factors = [];
   for (let divisor = 2; divisor * divisor <= remainder; divisor++) {
@@ -470,12 +480,25 @@ track.style.setProperty("--state", counter);
 for (const button of document.querySelectorAll("[data-taken]")) {
   button.addEventListener("click", () => {
     const taken = button.dataset.taken === "true";
+    const predictedTaken = counter >= 2;
+    document.querySelector("#prediction-result").textContent =
+      "Predicted " + (predictedTaken ? "taken" : "not taken") +
+      "; actual jump " + (taken ? "taken" : "not taken") +
+      ". " + (predictedTaken === taken ? "Correct." : "Missed this one.");
     counter = Math.max(0, Math.min(3, counter + (taken ? 1 : -1)));
     track.style.setProperty("--state", counter);
     document.querySelector("#forecast").value =
       counter.toString(2).padStart(2, "0") + " · " + predictions[counter];
   });
 }
+
+document.querySelector("#reset-predictor").addEventListener("click", () => {
+  counter = 1;
+  track.style.setProperty("--state", counter);
+  document.querySelector("#forecast").value = "01 · " + predictions[counter];
+  document.querySelector("#prediction-result").textContent =
+    "Reset to 01. Try a few taken jumps, then switch.";
+});
 
 const address = document.querySelector("#address");
 address.addEventListener("input", () => {
@@ -534,6 +557,15 @@ function dealTurn() {
   return "ABC"[winner];
 }
 function showDeal(winner) {
+  const queues = document.querySelector("#war-queues");
+  queues.replaceChildren();
+  hands.forEach((hand, i) => {
+    const label = document.createElement("dt");
+    label.textContent = "Player " + "ABC"[i] + " · " + hand.length + " cards";
+    const queue = document.createElement("dd");
+    queue.textContent = hand.join(" → ");
+    queues.append(label, queue);
+  });
   cards.forEach((card, i) => {
     card.textContent = hands[i][0];
     if (turn && !reducedMotion.matches)
@@ -579,6 +611,12 @@ document.querySelector("#reset-war").addEventListener("click", () => {
   showDeal();
 });
 
+showDeal();
+
+// Ignore accents and layout whitespace, so “erdos” and multi-word searches
+// work just as well as the printed titles.
+const searchText = (text) => text.normalize("NFD")
+  .replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\s+/g, " ").trim();
 const searchBox = document.querySelector("#find-project");
 const filterBar = document.querySelector(".catalogue-filters");
 const entries = [...document.querySelectorAll(".catalogue-list li")];
@@ -587,11 +625,12 @@ const count = document.querySelector("#result-count");
 let category = "All";
 let expanded = false;
 function filterCatalogue() {
-  const query = searchBox.value.trim().toLowerCase();
+  const query = searchText(searchBox.value);
+  const terms = query.split(" ").filter(Boolean);
   const filtered = entries.filter(
     (entry) =>
       (category === "All" || entry.dataset.category === category) &&
-      entry.textContent.toLowerCase().includes(query),
+      terms.every((term) => searchText(entry.textContent).includes(term)),
   );
   const compact = !expanded && !query && category === "All";
   const visible = new Set(compact ? filtered.slice(0, 6) : filtered);
@@ -624,6 +663,15 @@ more.addEventListener("click", () => {
     document
       .querySelector("#catalogue-title")
       .scrollIntoView({ block: "start" });
+});
+document.querySelector("#clear-projects").addEventListener("click", () => {
+  searchBox.value = "";
+  category = "All";
+  expanded = false;
+  for (const tab of filterBar.children)
+    tab.setAttribute("aria-pressed", String(tab.textContent === category));
+  filterCatalogue();
+  searchBox.focus();
 });
 searchBox.addEventListener("input", filterCatalogue);
 filterCatalogue();

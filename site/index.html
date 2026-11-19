@@ -29,9 +29,9 @@
       crossorigin
     />
     <link rel="stylesheet" href="vendor/swiper-bundle.min.css" />
-    <link rel="stylesheet" href="shelf.css?v=3" />
+    <link rel="stylesheet" href="shelf.css?v=5" />
     <script defer src="vendor/swiper-bundle.min.js"></script>
-    <script defer src="shelf.js?v=4"></script>
+    <script defer src="shelf.js?v=5"></script>
     <noscript
       ><style>
         .shelf-controls,
@@ -529,6 +529,7 @@
         </ul>
         <p id="no-projects" hidden>
           No matching projects. Try another search or category.
+          <button type="button" id="clear-projects">Clear filters</button>
         </p>
         <div class="catalogue-tail">
           <span id="result-count" aria-live="polite"></span
@@ -638,6 +639,13 @@
             <output id="war-report" aria-live="polite"
               >Starting deal. The next three cards are face up.</output
             >
+            <details class="hand-inspector">
+              <summary>Look at all three hands</summary>
+              <p>Read each queue from left to right. The next card is first;
+                won cards go at the end. A repeat means every card is back
+                in its original place, not just the three face-up cards.</p>
+              <dl id="war-queues"></dl>
+            </details>
           </section>
           <a
             class="outbound"
@@ -746,6 +754,8 @@
             <output id="factors" for="composite" aria-live="polite"
               >221 = 13 × 17</output
             >
+            <small>This little demo tries divisors in order. It illustrates
+              factorization, not the research algorithm.</small>
           </form>
           <a
             class="outbound"
@@ -781,10 +791,13 @@
             <div class="outcomes" role="group" aria-label="Actual jump outcome">
               <button type="button" data-taken="false">Not taken</button
               ><button type="button" data-taken="true">Taken</button>
+              <button type="button" id="reset-predictor">Reset</button>
             </div>
             <output id="forecast" aria-live="polite"
               >01 · Weakly predicts not taken.</output
             >
+            <p id="prediction-result" class="experiment-note">The counter guesses
+              before seeing the next outcome. Try a few taken jumps, then switch.</p>
           </section>
           <div class="toy">
             <label for="address">Set the address in a Hack A-instruction</label>

@@ -30,6 +30,13 @@
         background: var(--paper);
         border: 1px solid var(--ink);
       }
+      .schedule-results { margin-top: 32px; }
+      .schedule-results > section { margin-bottom: 32px; }
+      .schedule-days { display: grid; grid-template-columns: repeat(auto-fit, minmax(135px, 1fr)); gap: 16px; margin-top: 16px; }
+      .schedule-days section { background: #f4ebe6; border: 1px solid var(--hair); padding: 14px; border-radius: 4px; }
+      .schedule-days ol { padding-left: 24px; margin-bottom: 0; }
+      .schedule-days li { padding: 4px 0; font-size: 14px; }
+      [role="alert"] { padding: 12px; border-left: 3px solid var(--berry); }
       form p {
         overflow-wrap: anywhere;
       }
@@ -43,11 +50,11 @@
   </head>
   <body>
     <script type="module">
-      import init from "./schedule.js";
       const header = document.createElement("header");
       header.innerHTML =
-        '<a href="/">← Cinna Davis’s project shelf</a><h1>IMSA schedule map</h1><p>Paste your PowerSchool schedule with the semester and column headings on the first two lines. Keep the tab-separated class rows intact.</p>';
+        '<a href="/">← Cinna Davis’s project shelf</a><h1>IMSA schedule map</h1><p>Paste your PowerSchool schedule with the semester and column headings on the first two lines. Keep the tab-separated class rows intact. S1 and S2 are shown separately.</p><p>Your schedule stays in this browser. Nothing is uploaded or saved.</p>';
       try {
+        const { default: init } = await import("./schedule.js");
         await init();
         requestAnimationFrame(() => {
           document.body.prepend(header);
