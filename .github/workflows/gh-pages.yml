@@ -34,7 +34,8 @@ jobs:
         uses: actions/checkout@v7
         with:
           repository: 1337isnot1337/solved-conjectures
-          ref: main
+          # Preview only: use the exact source of the last successful live build.
+          ref: d0baa69c2eb911888d9d93ef6efec707a9a86630
           fetch-depth: 0
           path: _sources/solved-conjectures
           persist-credentials: false
