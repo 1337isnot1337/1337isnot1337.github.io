@@ -29,7 +29,7 @@
       crossorigin
     />
     <link rel="stylesheet" href="vendor/swiper-bundle.min.css" />
-    <link rel="stylesheet" href="shelf.css?v=9" />
+    <link rel="stylesheet" href="shelf.css?v=10" />
     <script defer src="vendor/swiper-bundle.min.js"></script>
     <script defer src="shelf.js?v=8"></script>
     <noscript
@@ -668,7 +668,7 @@
               <p>All 23 cards keep moving between the three hands. Nobody runs out.</p>
               <svg id="war-trace" viewBox="0 0 480 150" role="img" aria-labelledby="war-chart-title war-chart-desc">
                 <title id="war-chart-title">Cards in each hand over one 90-turn cycle</title>
-                <desc id="war-chart-desc">Three lines follow players A, B and C. The hands return to their starting sizes at turn 90. Matching sizes alone do not prove a repeat: the full card order also matches.</desc>
+                <desc id="war-chart-desc">A solid line follows player A, a dashed line player B, and a dotted line player C. The hands return to their starting sizes at turn 90. Matching sizes alone do not prove a repeat: the full card order also matches.</desc>
                 <g class="chart-grid" aria-hidden="true">
                   <path d="M30 18H458 M30 63H458 M30 108H458" />
                   <text x="23" y="22" text-anchor="end">12</text>
@@ -679,7 +679,7 @@
                 <g id="war-lines" fill="none" stroke-width="2" aria-hidden="true"></g>
                 <path id="war-cursor" d="M30 14V113" aria-hidden="true" />
               </svg>
-              <div class="war-legend" aria-hidden="true"><span>A · solid</span><span>B · dashed</span><span>C · dotted</span></div>
+              <div class="war-legend" aria-hidden="true"><span>A</span><span>B</span><span>C</span></div>
               <label for="war-turn">Inspect turn <output id="war-turn-label">0</output> of 90</label>
               <input id="war-turn" type="range" min="0" max="90" value="0" step="1" />
             </figure>

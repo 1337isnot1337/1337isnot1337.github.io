@@ -1266,3 +1266,11 @@ html {
 .rook-board { grid-template-columns: repeat(3, 48px); gap: 3px; }
 .rook-board button { height: 48px; }
 #rook-caption + small { margin-top: 10px; color: var(--muted); }
+
+.war-legend span { display: inline-flex; align-items: center; gap: 5px; }
+.war-legend span::before { content: ""; width: 20px; border-top: 2px solid currentColor; }
+.war-legend span:nth-child(2)::before { border-top-style: dashed; }
+.war-legend span:nth-child(3)::before { border-top-style: dotted; }
+@media (max-width: 680px) {
+  .chart-grid text { font-size: 24px; }
+}
