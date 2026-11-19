@@ -412,7 +412,9 @@ for (const cue of audioCues.querySelectorAll('button')) {
         audio.addEventListener('loadedmetadata', seekWhenReady, { once: true });
       else seekWhenReady();
       await audio.play();
-    } catch {
+    } catch (error) {
+      // Closing the reader or pausing cancels playback intentionally.
+      if (error?.name === 'AbortError') return;
       audioStatus.hidden = false;
       audioStatus.textContent = 'The recording could not start. Try the audio player below.';
     }

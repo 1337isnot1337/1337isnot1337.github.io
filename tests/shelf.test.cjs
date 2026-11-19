@@ -175,6 +175,10 @@ test('audio comparison seeks explicitly and explains playback failures', async (
   assert.equal(audio.currentTime,10);
   assert.equal(p.d.querySelector('#audio-status').hidden,false);
   assert.match(p.d.querySelector('#audio-status').textContent,/Try the audio player/);
+  audio.play=async () => {throw new p.dom.window.DOMException('Paused', 'AbortError');};
+  p.click('[data-audio-cue="10"]');
+  await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(p.d.querySelector('#audio-status').hidden,true);
   p.dom.window.close();
 });
 
