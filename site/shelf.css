@@ -1333,3 +1333,55 @@ html {
 .script-unavailable .war,
 .script-unavailable #cpu .toy,
 .script-unavailable #conway .toy { display: none; }
+
+/* Save the open project as a readable note, not a clipped overlay on the shelf. */
+@media print {
+  body.modal-open { overflow: visible; background: white; }
+  body.modal-open > :not(.open-project) { display: none !important; }
+  .open-project[open] {
+    position: static;
+    width: auto;
+    max-width: none;
+    height: auto;
+    max-height: none;
+    margin: 0;
+    overflow: visible;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+    background: white;
+  }
+  .open-project::backdrop { background: none; }
+  .open-project .modal-top,
+  .open-project .detail-art,
+  .open-project audio,
+  .open-project .audio-cues,
+  .open-project input[type="range"] { display: none !important; }
+  .open-project #detail-slot {
+    display: block;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .open-project #detail-slot > .detail { padding: 16px; }
+  .open-project .detail-heading { break-after: avoid; }
+  .open-project .toy,
+  .open-project .player {
+    break-inside: avoid;
+    print-color-adjust: exact;
+  }
+  .open-project .outbound {
+    color: var(--ink);
+    background: none;
+    border: 0;
+    padding: 0;
+    text-decoration: underline;
+  }
+  .open-project .detail::after {
+    content: "Cinna Davis · 1337isnot1337.github.io";
+    display: block;
+    margin-top: 24px;
+    border-top: 1px solid var(--hair);
+    padding-top: 8px;
+    font: 11px var(--mono);
+  }
+}

@@ -268,6 +268,24 @@ const server = http.createServer((req,res) => {
   }
   // Playwright exposes real touch-drag injection through Chromium's CDP only.
   if (engineName === 'chromium') {
+  // Printing an open reader must not superimpose it on the underlying shelf.
+  const printable = await browser.newPage({viewport:{width:900,height:800}});
+  for (const project of ['conway','conjectures','flyover','factoring','cpu','schedule']) {
+   await printable.goto(base + '/#' + project);
+   await printable.locator('dialog[open]').waitFor();
+   await printable.locator('dialog .outbound').focus();
+   await printable.evaluate(()=>window.dispatchEvent(new Event('beforeprint')));
+   await printable.emulateMedia({media:'print'});
+   assert.equal(await printable.locator('body > main').isVisible(),false,'printed reader omits background page');
+   assert.equal(await printable.locator('.modal-top').isVisible(),false,'printed reader omits navigation');
+   assert.ok(await printable.locator('dialog').evaluate(el=>el.scrollHeight<=el.clientHeight+1),`${project}: print reader is not clipped`);
+   if (engineName === 'chromium') await printable.pdf({path:`test-results/project-${project}-print.pdf`,format:'Letter'});
+   await printable.evaluate(()=>window.dispatchEvent(new Event('afterprint')));
+   await printable.emulateMedia({media:'screen'});
+   assert.equal(await printable.locator('dialog').evaluate(el=>el.matches(':modal')),true,'reader returns to modal after printing');
+   assert.equal(await printable.locator('dialog .outbound').evaluate(el=>el===document.activeElement),true,'printing preserves reader focus');
+  }
+  await printable.close();
   const touch = await browser.newPage({viewport:{width:390,height:844},hasTouch:true,isMobile:true,deviceScaleFactor:2,reducedMotion:'no-preference'});
   const touchErrors=[];
   touch.on('pageerror',error=>touchErrors.push(error.message));

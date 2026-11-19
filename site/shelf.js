@@ -331,6 +331,24 @@ if (typeof dialog.showModal === "function") {
     history.pushState({ fromShelf: true }, "", "#" + id);
     displayFromHash();
   });
+  let printReaderState = null;
+  window.addEventListener('beforeprint', () => {
+    if (!dialog.open || printReaderState) return;
+    printReaderState = { focus: document.activeElement, scrollTop: dialog.scrollTop };
+    // Top-layer dialogs can be clipped or painted blank by PDF renderers.
+    // Use the same live article in normal document flow while printing.
+    dialog.close();
+    dialog.show();
+  });
+  window.addEventListener('afterprint', () => {
+    if (!printReaderState) return;
+    const state = printReaderState;
+    printReaderState = null;
+    dialog.close();
+    dialog.showModal();
+    state.focus?.focus({ preventScroll: true });
+    dialog.scrollTop = state.scrollTop;
+  });
   dialog.addEventListener("close", () => {
     // A new hash can reopen the reader before the queued close event fires.
     if (dialog.open) return;
