@@ -28,7 +28,7 @@ SECTIONS = [
     ("Candidate investigations", "candidate"),
     ("Other research notes", "other"),
 ]
-ROUTE = re.compile(r"^docs/[a-z0-9][a-z0-9-]*/$")
+ROUTE = re.compile(r"^docs/(?:[a-z0-9][a-z0-9-]*/)+$")
 
 
 def note_entries(manifest: dict, catalogue_dir: Path) -> list[dict]:
