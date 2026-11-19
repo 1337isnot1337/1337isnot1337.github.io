@@ -255,3 +255,23 @@ test('predictor announces the outcome and next state together without nested liv
   assert.doesNotMatch(status.textContent, /Correct|Missed/);
   p.dom.window.close();
 });
+
+
+test('binary register shows the actual fixed type bit and weighted address', () => {
+  const p=page();
+  for(const n of [0,1,42,16384,32767]) {
+    p.input('#address',n);
+    const cells=[...p.d.querySelectorAll('#binary-register .binary-cell')];
+    assert.equal(cells.length,16);
+    assert.equal(cells[0].querySelector('strong').textContent,'0');
+    assert.equal(cells[0].querySelector('small').textContent,'type');
+    assert.equal(parseInt(cells.map(el=>el.querySelector('strong').textContent).join(''),2),n);
+    const sum=p.d.querySelector('#binary-sum').textContent.split(' = ');
+    assert.equal(sum[0].split(' + ').reduce((a,b)=>a+Number(b),0),n);
+    assert.equal(Number(sum[1]),n);
+  }
+  p.input('#address','');
+  assert.equal(p.d.querySelector('#binary-register').children.length,0);
+  assert.equal(p.d.querySelector('#binary-sum').textContent,'');
+  p.dom.window.close();
+});

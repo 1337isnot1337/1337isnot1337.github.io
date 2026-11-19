@@ -29,9 +29,9 @@
       crossorigin
     />
     <link rel="stylesheet" href="vendor/swiper-bundle.min.css" />
-    <link rel="stylesheet" href="shelf.css?v=15" />
+    <link rel="stylesheet" href="shelf.css?v=16" />
     <script defer src="vendor/swiper-bundle.min.js"></script>
-    <script defer src="shelf.js?v=14"></script>
+    <script defer src="shelf.js?v=15"></script>
     <noscript
       ><style>
         .shelf-controls,
@@ -879,6 +879,12 @@
               >The first bit is 0. The remaining 15 bits hold the
               address.</small
             >
+            <details class="binary-working">
+              <summary>Read the bits</summary>
+              <p>Each 1 adds 2 raised to its bit number. Bit 15 stays 0 to mark an A-instruction.</p>
+              <div id="binary-register" aria-hidden="true"></div>
+              <p id="binary-sum">32 + 8 + 2 = 42</p>
+            </details>
           </div>
           <a
             class="outbound"

@@ -544,18 +544,34 @@ document.querySelector("#reset-predictor").addEventListener("click", () => {
 });
 
 const address = document.querySelector("#address");
-address.addEventListener("input", () => {
+function renderInstruction() {
   const result = document.querySelector("#instruction");
+  const register = document.querySelector('#binary-register');
+  const sum = document.querySelector('#binary-sum');
+  register.replaceChildren();
   if (!address.validity.valid) {
     result.value = "Enter a whole number from 0 to 32,767.";
+    sum.textContent = '';
     return;
   }
-  result.value = address.valueAsNumber
-    .toString(2)
-    .padStart(16, "0")
-    .match(/.{4}/g)
-    .join(" ");
-});
+  const bits = address.valueAsNumber.toString(2).padStart(16, "0");
+  result.value = bits.match(/.{4}/g).join(" ");
+  const places = [];
+  [...bits].forEach((bit, index) => {
+    const cell = document.createElement('span');
+    cell.className = 'binary-cell' + (bit === '1' ? ' is-one' : '') + (index === 0 ? ' instruction-type' : '');
+    const position = document.createElement('small');
+    position.textContent = index === 0 ? 'type' : String(15-index);
+    const value = document.createElement('strong');
+    value.textContent = bit;
+    cell.append(position,value);
+    register.append(cell);
+    if (bit === '1') places.push(2 ** (15-index));
+  });
+  sum.textContent = (places.length ? places.join(' + ') : '0') + ' = ' + address.valueAsNumber;
+}
+address.addEventListener("input", renderInstruction);
+renderInstruction();
 const board = document.querySelector("#rook-board");
 const squares = ["A3", "B3", "C3", "A2", "B2", "C2", "A1", "B1", "C1"];
 function placeRook(position) {

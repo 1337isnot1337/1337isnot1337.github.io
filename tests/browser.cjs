@@ -132,6 +132,11 @@ const server = http.createServer((req,res) => {
    await page.locator('#reset-predictor').click();
    assert.match(await page.locator('#forecast').textContent(),/^01/);
    await page.screenshot({path:`test-results/${name}-predictor.png`,fullPage:true});
+   await page.locator('.binary-working summary').click();
+   await page.locator('#address').fill('42');
+   assert.equal(await page.locator('#binary-register .is-one').count(),3);
+   assert.equal(await page.locator('#binary-sum').textContent(),'32 + 8 + 2 = 42');
+   await page.locator('.binary-working').screenshot({path:`test-results/${name}-binary-register.png`});
    await page.goto(base + '/#factoring');
    await page.locator('dialog[open]').waitFor();
    await page.locator('#composite').fill('30030');
