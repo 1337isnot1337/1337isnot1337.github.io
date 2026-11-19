@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-11-19T05:11:12.192567+00:00",
+  "generatedAt": "2026-11-19T17:59:23.631370+00:00",
   "title": "Cinna Davis · Project shelf",
   "extensions": {
     "colorMeta": {
@@ -136,6 +136,16 @@
         "name": "Coverflow",
         "value": "380ms",
         "purpose": "Centers the selected print. Reduced motion sets the duration to zero."
+      },
+      {
+        "name": "Room and leaf change",
+        "value": "210ms ease-out",
+        "purpose": "Moves the selected room or leaf into view after navigation. Reduced motion skips the animation."
+      },
+      {
+        "name": "Postcard turn",
+        "value": "230ms ease-out",
+        "purpose": "Marks a change between the address side and the painted side. Reduced motion skips the rotation."
       }
     ],
     "breakpoints": [
@@ -154,6 +164,10 @@
       {
         "name": "Wide shelf",
         "value": "1550px"
+      },
+      {
+        "name": "Studio portrait",
+        "value": "720px"
       }
     ]
   },
@@ -185,11 +199,12 @@
   ],
   "narrative": {
     "northStar": "Project shelf",
-    "overview": "Five project illustrations rest on a wooden ledge. The center print opens into its experiment. A taped note lists personal interests.",
+    "overview": "Six illustrated prints stand on a wooden ledge. A sunlit desk below opens the workbench, the project files, the personal notebook and Letters.",
     "keyCharacteristics": [
-      "Illustrated prints",
-      "Soft plum ink and ivory stock",
-      "Taped interests note"
+      "Illustrated project prints",
+      "A painted desk with labelled objects",
+      "Plum ink and warm paper",
+      "Illustrated notebook leaves and a two-sided postcard"
     ],
     "rules": [
       {

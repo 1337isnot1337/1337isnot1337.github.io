@@ -792,6 +792,13 @@ const more = document.querySelector("#more-projects");
 const count = document.querySelector("#result-count");
 let category = "All";
 let expanded = false;
+let filePage = 0;
+const filesPerPage = 6;
+const filePager = document.querySelector(".file-pager");
+for (const tab of filterBar.children) {
+  tab.dataset.count = tab.textContent === "All" ? entries.length
+    : entries.filter(entry => entry.dataset.category === tab.textContent).length;
+}
 function filterCatalogue() {
   const query = searchText(searchBox.value);
   const terms = query.split(" ").filter(Boolean);
@@ -801,24 +808,41 @@ function filterCatalogue() {
       terms.every((term) => searchText(entry.textContent).includes(term)),
   );
   const compact = !expanded && !query && category === "All";
-  const visible = new Set(compact ? filtered.slice(0, 6) : filtered);
+  const pages = Math.ceil(filtered.length / filesPerPage);
+  filePage = Math.max(0, Math.min(filePage, pages - 1));
+  const start = filePage * filesPerPage;
+  const visible = new Set(compact ? filtered.slice(start, start + filesPerPage) : filtered);
   entries.forEach((entry) => {
     entry.hidden = !visible.has(entry);
   });
   count.textContent = compact
-    ? visible.size + " of " + filtered.length + " projects"
+    ? (filePage ? (start + 1) + "–" + (start + visible.size) : visible.size) + " of " + filtered.length + " projects"
     : filtered.length + (filtered.length === 1 ? " project" : " projects");
   more.hidden = !!query || category !== "All" || filtered.length <= 6;
   more.textContent = expanded ? "Show fewer" : "Show all " + entries.length;
   more.setAttribute("aria-expanded", String(expanded));
   document.querySelector("#no-projects").hidden = filtered.length !== 0;
+  filePager.hidden = !compact || pages < 2;
+  document.querySelector("#file-page").textContent = (pages ? filePage + 1 : 0) + " / " + pages;
+  document.querySelector("#file-prev").disabled = filePage === 0;
+  document.querySelector("#file-next").disabled = filePage + 1 >= pages;
 }
+filePager.addEventListener("click", (event) => {
+  const button = event.target.closest("button");
+  if (!button || button.disabled) return;
+  filePage += button.id === "file-next" ? 1 : -1;
+  filterCatalogue();
+  const visible = entries.find(entry => !entry.hidden).querySelector("a");
+  visible.focus({ preventScroll: true });
+  document.querySelector(".catalogue-filters").scrollIntoView({block:"start"});
+});
 searchBox.closest("label").hidden = false;
 filterBar.hidden = false;
 filterBar.addEventListener("click", (event) => {
   const button = event.target.closest("button");
   if (!button) return;
   category = button.textContent;
+  filePage = 0;
   expanded = false;
   for (const tab of filterBar.children)
     tab.setAttribute("aria-pressed", String(tab === button));
@@ -826,9 +850,10 @@ filterBar.addEventListener("click", (event) => {
 });
 more.addEventListener("click", () => {
   const firstNewProject = !expanded
-    ? entries.find((entry) => entry.hidden)?.querySelector("a")
+    ? (entries[(filePage + 1) * filesPerPage] || entries[0]).querySelector("a")
     : null;
   expanded = !expanded;
+  filePage = 0;
   filterCatalogue();
   // Continue reading where the compact list ended instead of leaving keyboard
   // focus below all 25 newly revealed links.
@@ -844,11 +869,15 @@ more.addEventListener("click", () => {
 document.querySelector("#clear-projects").addEventListener("click", () => {
   searchBox.value = "";
   category = "All";
+  filePage = 0;
   expanded = false;
   for (const tab of filterBar.children)
     tab.setAttribute("aria-pressed", String(tab.textContent === category));
   filterCatalogue();
   searchBox.focus();
 });
-searchBox.addEventListener("input", filterCatalogue);
+searchBox.addEventListener("input", () => {
+  filePage = 0;
+  filterCatalogue();
+});
 filterCatalogue();

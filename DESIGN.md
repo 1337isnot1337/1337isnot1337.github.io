@@ -1,6 +1,6 @@
 ---
 name: Cinna Davis · Project shelf
-description: A personal opening, six illustrated prints on a wooden ledge, and an open workbench of real project artifacts.
+description: A personal opening, six illustrated prints on a wooden ledge, and a painted desk that opens into four rooms.
 colors:
   ink: "#422c41"
   muted: "#665364"
@@ -50,7 +50,7 @@ components:
 
 ## Overview
 
-A large personal greeting introduces Cinna before the six illustrated prints. Each print has a subject, title and an experiment to open. Beneath the wooden ledge, an open paper workbench puts real project artifacts directly on the homepage: a credited aircraft spectrogram, a repeating War deal, and editable Hack address bits. The searchable catalogue and personal notes follow. The original illustration, paper colors and type families remain the visual identity.
+A large personal greeting introduces Cinna before the six illustrated prints. Each print has a subject, title and experiment to open. Beneath the ledge, the visitor chooses an object on a painted desk. The oscilloscope opens the workbench, the card box opens the project files, the clothbound book opens personal stories and the envelopes open Letters.
 
 ## Colors
 
@@ -62,11 +62,11 @@ Bricolage Grotesque sets headings, print titles and main actions. Its closely sp
 
 ## Layout
 
-Text shares a centered measure of 90% up to 1120px. The shelf extends beyond that column to show the adjacent prints. Coverflow centers the active print above the ledge, with its action immediately below. At 680px and below, print width follows the viewport, the interests note sits below the biography, and the project dialog gives its width to the experiment. At 380px and below, the text measure expands to 92%.
+Text shares a centered measure of 90% up to 1120px. The shelf extends beyond that column to show the adjacent prints. Coverflow centers the active print above the ledge, with its action immediately below. At 680px and below, print width follows the viewport and the project reader fills the screen. At 380px and below, the text measure expands to 92%.
 
 ## Elevation & Depth
 
-A faint woven check sits behind the prints. The perspective, narrow paper edges and two soft shadows make their order legible. The wooden ledge uses layered CSS gradients. The interests note has a one-degree tilt and a short strip of CSS-drawn tape. Introductory prose and footer links rest directly on the page.
+A faint woven check sits behind the prints. The perspective, narrow paper edges and two soft shadows make their order legible. The wooden ledge uses layered CSS gradients. The studio map sits inside a cream picture frame. Layered paper edges distinguish the workshop and file drawer, and a slight tilt lifts the postcard from its background. Introductory prose and footer links rest directly on the page.
 
 ## Shapes
 
@@ -76,12 +76,12 @@ Portrait prints have straight edges. The main action and project index have pill
 
 - **Shelf.** The self-hosted Swiper 14.4.0 bundle adapts the Coverflow demonstration. Drag, swipe, arrows and keyboard navigation move between prints. Reduced-motion preferences set the transition duration to zero. The project index is an illustrated contents sheet: a miniature print, its title, and a short description of what visitors can try. The artwork and descriptions remain available without JavaScript. The MIT license ships with the vendor files. [Swiper Coverflow demo](https://swiperjs.com/demos#effect-coverflow)
 - **Project artwork.** The six generated illustrations in `site/assets/prints/` serve as print covers and dialog artwork. Captions are selectable HTML. The social preview, `site/assets/project-shelf.jpg`, shows the composed shelf.
-- **Catalogue.** The searchable project index separates mathematics, software, collaborations, and side projects. Entry links point to the work or to a concrete contribution.
+- **Project files.** A painted card box sits above the searchable catalogue. Category tabs, a paged stack of cards and links to the work let readers move from a broad subject to a specific contribution.
 - **Experiments.** Each project hash opens its corresponding detail panel. Visitors can scrub the flyover spectrogram, deal the repeating War game from Solved conjectures, factor an integer, train a branch-table counter, encode a Hack instruction, open the schedule tool, or move a rook. Reader arrows turn between prints. Without the modal enhancement, the project links lead to inline articles.
 - **War trace.** Three hand-size traces are computed from the actual 90-turn deal. A keyboard-accessible scrubber inspects the full card order at each turn. Solid, dashed and dotted lines distinguish players without relying on color. The caption distinguishes matching hand sizes from a complete repeated state.
 - **Binary register.** An optional worksheet inside the CPU encoder lays out all sixteen bits, marks the fixed instruction bit, and highlights the address’s ones. Its place-value sum is computed from the same bits as the instruction output.
 - **Recording.** The DOPPLERGEIST panel pairs the spectrogram with its native audio player and a moving cursor. Both assets derive from Praveen Pathak’s credited flyover recording. [Dataset](https://doi.org/10.5281/zenodo.23424278) · [License](https://creativecommons.org/licenses/by/4.0/) · [Audio and figure notes](https://1337isnot1337.github.io/DOPPLERGEIST/site-media/livermore-r04-source.txt)
-- **Interests note.** The “Off the clock” note links to ALIEN STAGE and the Avatar series. The underlined hover state preserves the appearance of a short reading list.
+- **Letters.** The social profiles share a room with a two-sided illustrated postcard. Turning it over reveals up to five distinct stops from this browser-tab visit. The latest stop with artwork supplies the stamp. Saving the card exports its front and back together in a 1200 × 1600 PNG.
 
 ## Do's and Don'ts
 
@@ -89,15 +89,21 @@ Portrait prints have straight edges. The main action and project index have pill
 - Give every print a text title and a direct link.
 - Keep project thumbnails and their corresponding dialog illustrations consistent.
 
+## Studio map
+
+A single sunlit desk illustration carries four text-labelled links. Each label stays in HTML so it can receive keyboard focus, change its caption and open a real address. Desktop art uses a 3:2 composition. At 720px and below, the picture switches to a 2:3 portrait composition with the same four destinations. Keep labels aligned to the depicted objects in both images. The four PNG masks in `site/assets/studio/` isolate the corresponding desktop objects for the hover lift. The paper labels remain usable with touch and reduced motion.
+
+The map lives at `#studio`. Following an object opens one room and reveals a shared navigation rail. Each room and notebook leaf has its own hash. Back and Forward restore the addressed view. On an explicit turn, keyboard focus moves to the new heading, or back to the corresponding object when the visitor returns to the desk. A short rise marks a room or leaf change (210ms). The postcard turn takes 230ms. Both effects respect reduced motion. Project readers can float above the current room.
+
 ## Open workbench
 
-The homepage changes pace beneath the shelf: large editorial headings, paper tabs, and one asymmetric working spread rather than another row of project thumbnails. Sound uses the real credited spectrogram; cards use the same actual 23-card deal as the full experiment; bits encode a real 15-bit Hack address under a fixed instruction bit. Four choices preserve their local experiment state. On narrow screens the spread stacks and the register forms two eight-bit rows with 40px-tall switches. Without JavaScript all four sheets remain readable, with controls hidden and links to the full project notes. The audio file is still fetched only when opened or played.
+Inside the workshop, paper tabs select an asymmetric working spread with the artifact, its labels and Cinna’s explanation. Sound uses the real credited spectrogram; cards use the same actual 23-card deal as the full experiment; bits encode a real 15-bit Hack address under a fixed instruction bit. Four choices preserve their local experiment state. On narrow screens the spread stacks and the register forms two eight-bit rows with 40px-tall switches. Without JavaScript all four sheets remain readable, with controls hidden and links to the full project notes. The audio file is still fetched only when opened or played.
 
 `welcome.css` owns the opening and narrow-screen navigation; `workbench.css` and `workbench.js` own the spread. The visual addition intentionally exposes existing work rather than introducing new performance claims or unverified research results.
 
 ## Personal notebook
 
-The biography is an open two-page spread rather than a wall of paragraphs. Robotics is paired with an actual Java excerpt from Cinna’s merged intake-subsystem contribution; particle physics is paired with the title, authors and date of the public IMSAloquium abstract. These are source artifacts, not illustrative performance data. The code link is pinned to its original commit so the displayed excerpt remains traceable. The abstract is not presented as a downloadable paper, and no research plot is invented. Teaching and the lighter off-the-clock note retain the existing personal facts and interests. On mobile the two pages stack in reading order.
+The book opens to one illustrated leaf at a time. Bookmarks and previous/next links turn between robotics, particle physics, teaching and off-the-clock interests. The roller, particle tracks, terminal and cassette illustrations identify their respective leaves. Robotics is paired with an actual Java excerpt from Cinna’s merged intake-subsystem contribution; particle physics is paired with the title, authors and date of the public IMSAloquium abstract. These are source artifacts, not illustrative performance data. The code link is pinned to its original commit so the displayed excerpt remains traceable. The abstract is not presented as a downloadable paper, and no research plot is invented. The teaching leaf covers the Linux workshops and computing classes. The cassette leaf links to ALIEN STAGE and the Avatar series. Keep the story and its primary source together when adapting a leaf for a phone.
 
 Sources: [robot code at its original commit](https://github.com/titan2022/FRC-2026-JAVA/blob/275a9639b7a768b2026bf9e56adfdf6069d0093e/src/main/java/frc/robot/subsystems/base/VoltageControlledBase.java), [IMSAloquium abstract](https://digitalcommons.imsa.edu/sir_presentations/2026/session2/5/).
 

@@ -41,7 +41,7 @@
     <link rel="stylesheet" href="shelf.css?v=23" />
     <link rel="stylesheet" href="welcome.css?v=1" />
     <link rel="stylesheet" href="workbench.css?v=6" />
-    <link rel="stylesheet" href="notebook.css?v=3" />
+    <link rel="stylesheet" href="notebook.css?v=4" />
     <link rel="stylesheet" href="numberline.css?v=1" />
     <script defer src="numberline.js?v=1"></script>
     <script defer src="workbench.js?v=5"></script>
@@ -53,7 +53,7 @@
     <link rel="stylesheet" href="incident-note.css?v=2" />
     <script defer src="cpu-trace.js?v=1"></script>
     <script defer src="vendor/swiper-bundle.min.js"></script>
-    <script defer src="shelf.js?v=27" onerror="
+    <script defer src="shelf.js?v=28" onerror="
       const restoreReading = () => {
         document.documentElement.classList.add('script-unavailable');
         document.querySelector('.shelf-heading p').textContent = 'The interactive shelf could not load. You can still read the project notes below.';
@@ -66,6 +66,8 @@
       else restoreReading();
     "></script>
     <script defer src="rook-graph.js?v=1"></script>
+    <link rel="stylesheet" href="studio.css?v=1" />
+    <script defer src="studio.js?v=1"></script>
     <noscript
       ><style>
         .shelf-controls,
@@ -85,7 +87,7 @@
       <div class="page-width mast-inner">
         <a class="byline" href="./">Cinna Davis</a>
         <nav aria-label="Main">
-          <a href="#desk">Desk</a><a href="#catalogue">Catalogue</a><a href="#about">About me</a
+          <a href="#studio">Desk</a><a href="#catalogue">Catalogue</a><a href="#about">About me</a
           ><a href="#elsewhere">Elsewhere</a>
         </nav>
       </div>
@@ -281,8 +283,34 @@
           ><button type="button" id="next" aria-label="Next print">→</button>
         </div>
       </section>
-<section class="workbench page-width" id="desk" aria-labelledby="desk-title">
-  <header class="desk-heading"><h2 id="desk-title">Open on the desk</h2><p>Sound, cards, bits, and a number line.<br> Here’s what I’m doing with them.</p></header>
+
+      <div class="stationery" id="studio">
+        <section class="desk-overview" aria-labelledby="studio-title">
+          <header class="studio-caption">
+            <h2 id="studio-title" tabindex="-1">On my desk.</h2>
+            <p id="object-hint">Pick something up. I left the project files in the card box and my notes in the little book.</p>
+            <a class="shelf-return" href="#projects">↑ Back to the shelf</a>
+          </header>
+          <div class="desktop-picture">
+            <picture><source media="(max-width: 720px)" srcset="assets/studio/desk-portrait.webp" width="720" height="1080" /><img class="desktop-art" src="assets/studio/desk.webp" srcset="assets/studio/desk-small.webp 720w, assets/studio/desk.webp 1440w" sizes="(max-width: 720px) 100vw, 75vw" width="1440" height="960" loading="lazy" alt="A sunlit green desk with a little oscilloscope, letters, a card file and a clothbound notebook." /></picture>
+            <nav class="desk-objects" aria-label="Objects on Cinna’s desk">
+              <a class="object-scope" href="#desk"><span>Try an experiment</span></a>
+              <a class="object-letters" href="#elsewhere"><span>Open the letters</span></a>
+              <a class="object-file" href="#catalogue"><span>Project files</span></a>
+              <a class="object-book" href="#about"><span>My notebook</span></a>
+            </nav>
+            <a class="postcat" href="#elsewhere" aria-label="Meet the desk cat"><span>Who’s there?</span></a>
+          </div>
+        </section>
+        <nav class="desk-rail" aria-label="Move around the desk" hidden>
+          <a class="back-to-desk" href="#studio">← <span>Desk</span></a>
+          <a href="#desk">Experiments</a>
+          <a href="#catalogue">Files</a>
+          <a href="#about">Notebook</a>
+          <a href="#elsewhere">Letters</a>
+        </nav>
+<section data-room="desk" class="workbench page-width" id="desk" aria-labelledby="desk-title">
+  <header class="desk-heading"><h2 id="desk-title">The workbench</h2><p>Sound, cards, bits, and a number line.<br> Here’s what I’m doing with them.</p></header>
   <div class="desk-tabs" role="group" aria-label="Choose a project to explore" hidden>
     <button type="button" data-desk="sound" aria-pressed="true">Follow a sound</button>
     <button type="button" data-desk="cards" aria-pressed="false">Find a loop</button>
@@ -358,12 +386,12 @@
 </section>
 
       <section
-        id="catalogue"
+        id="catalogue" data-room="catalogue"
         class="catalogue page-width"
         aria-labelledby="catalogue-title"
       >
         <div class="catalogue-head">
-          <h2 id="catalogue-title">The project catalogue</h2>
+          <h2 id="catalogue-title">The project files</h2>
           <label class="catalogue-search" hidden
             ><span class="visually-hidden">Search projects</span
             ><input
@@ -372,6 +400,9 @@
               placeholder="Find a project…"
           /></label>
         </div>
+        <div class="file-cabinet">
+        <div class="file-dividers">
+          <img src="assets/studio/card-box.webp" alt="" width="360" height="250" loading="lazy" />
         <div
           class="catalogue-filters"
           hidden
@@ -384,6 +415,8 @@
           ><button type="button" aria-pressed="false">Collaborations</button
           ><button type="button" aria-pressed="false">Side projects</button>
         </div>
+        </div>
+        <div class="file-stack">
         <ul class="catalogue-list">
           <li data-category="Mathematics">
             <a href="/solved-conjectures/"
@@ -699,6 +732,11 @@
           <button type="button" id="clear-projects">Clear filters</button>
         </p>
         <div class="catalogue-tail">
+          <nav class="file-pager" aria-label="Project file pages" hidden>
+            <button id="file-prev" type="button" aria-label="Previous project page">←</button>
+            <span id="file-page"></span>
+            <button id="file-next" type="button" aria-label="Next project page">→</button>
+          </nav>
           <span id="result-count" aria-live="polite"></span
           ><button hidden id="more-projects" type="button">
             Show all projects</button
@@ -706,14 +744,21 @@
             >GitHub repositories</a
           ><a href="/projects/">Project pages</a>
         </div>
+        </div>
+        </div>
       </section>
-<section class="notebook page-width" id="about" aria-labelledby="notebook-title">
+<section data-room="about" class="notebook page-width" id="about" aria-labelledby="notebook-title">
   <header class="notebook-heading">
-    <h2 id="notebook-title">A bit about me.</h2>
+    <h2 id="notebook-title">My notebook.</h2>
     <p>I’m a senior at the Illinois Mathematics and Science Academy. Some of my work lives in proofs and code. Some of it has to run a robot. <a href="/about/">Read more about me</a>.</p>
   </header>
+  <nav class="notebook-tabs" aria-label="Notebook pages" hidden>
+    <a href="#about">Robot code</a><a href="#about-physics">Physics</a><a href="#about-teaching">Teaching</a><a href="#off-the-clock">Off the clock</a>
+  </nav>
   <div class="notebook-spread">
-    <article class="notebook-page notebook-robotics" aria-labelledby="robotics-story-title">
+    <article data-leaf="about" class="notebook-page notebook-robotics" aria-labelledby="robotics-story-title">
+      <div class="leaf-art"><img src="assets/studio/roller.webp" width="500" height="500" loading="lazy" alt="An intake roller, drive belt and hex key on the worktable." /></div>
+      <div class="leaf-writing">
       <h3 id="robotics-story-title">Code that has to<br> move something.</h3>
       <p>I lead programming for Titan Robotics, FIRST Team 2022. Our team of ten writes the robot’s Java code. I teach rookies, review code, and dig through match logs when the robot does something we didn’t ask it to.</p>
       <figure class="notebook-code">
@@ -733,8 +778,11 @@
         <a href="https://github.com/titan2022/FRC-2026-JAVA/blob/275a9639b7a768b2026bf9e56adfdf6069d0093e/src/main/java/frc/robot/subsystems/base/VoltageControlledBase.java">From my intake subsystem contribution</a>
       </figure>
       <p class="notebook-season"><a href="https://titanrobotics2022.com/robot/current-season/">Meet Timmy, our 2026 robot ↗</a></p>
+      </div>
     </article>
-    <article class="notebook-page notebook-physics" aria-labelledby="physics-story-title">
+    <article id="about-physics" data-leaf="about-physics" class="notebook-page notebook-physics" aria-labelledby="physics-story-title">
+      <div class="leaf-art"><img src="assets/studio/tracks.webp" width="500" height="500" loading="lazy" alt="Particle tracks radiating across a dark field." /></div>
+      <div class="leaf-writing">
       <h3 id="physics-story-title">Looking for<br> a rare signal.</h3>
       <p>With Dr. Peter Dong’s group in IMSA–CMS through Fermilab, I write software for a search for a doubly charged Higgs boson.</p>
       <p>Ordinary collisions can look like the signal. At high masses, simulations give us very few of those lookalikes to count. Nathan Catlett and I developed a way to estimate that background, and I wrote most of the code for it.</p>
@@ -745,15 +793,19 @@
         <p class="abstract-venue">IMSAloquium · <time datetime="2026-04-15">April 15, 2026</time></p>
         <a href="https://digitalcommons.imsa.edu/sir_presentations/2026/session2/5/">Read the abstract</a>
       </figure>
+      </div>
     </article>
-  </div>
-  <div class="notebook-margins">
-    <div class="notebook-teaching">
+    <div id="about-teaching" data-leaf="about-teaching" class="notebook-page notebook-teaching">
+      <div class="leaf-art"><img src="assets/studio/terminal.webp" width="500" height="500" loading="lazy" alt="A school computer with a pencil and an open notebook." /></div>
+      <div class="leaf-writing">
       <h3>Passing it on.</h3>
       <p>I’m co-president of Epoch, our computer science club, where I’ve taught Linux workshops. I was also a teaching assistant for Elements of Computing Systems I and II.</p>
       <p>I played varsity Scholastic Bowl, too. At Scobol Solo I won biology and tied for first in chemistry.</p>
+      </div>
     </div>
-    <aside class="favorites notebook-favorites" aria-labelledby="favorites-title">
+    <aside id="off-the-clock" data-leaf="off-the-clock" class="notebook-page favorites notebook-favorites" aria-labelledby="favorites-title">
+      <div class="leaf-art"><img src="assets/studio/tape.webp" width="500" height="500" loading="lazy" alt="A plum cassette with a loose ribbon of tape." /></div>
+      <div class="leaf-writing">
       <h3 id="favorites-title">Off the clock</h3>
       <p>I’m into ALIEN STAGE and the Avatar universe. These are on my shelf, too.</p>
       <ul>
@@ -762,9 +814,35 @@
         <li><a href="https://www.paramountpressexpress.com/nickelodeon/shows/the-legend-of-korra/">The Legend of Korra</a></li>
         <li><a href="https://www.paramountpressexpress.com/paramount-plus/shows/avatar-seven-havens/">Avatar: Seven Havens</a></li>
       </ul>
+      </div>
     </aside>
   </div>
+  <nav class="leaf-pager" aria-label="Turn notebook pages" hidden>
+    <a href="#off-the-clock" id="leaf-prev" aria-label="Previous notebook page">←</a>
+    <span id="leaf-count"></span>
+    <a href="#about-physics" id="leaf-next" aria-label="Next notebook page">→</a>
+  </nav>
 </section>
+
+<section class="letter-room page-width" id="elsewhere" data-room="elsewhere" aria-labelledby="letters-title">
+  <header class="letter-heading"><h2 id="letters-title">Letters &amp; links.</h2><nav aria-label="Social profiles">
+          <a href="https://x.com/1337isnot1337">X</a
+          ><a href="https://www.linkedin.com/in/cinna-davis/">LinkedIn</a
+          ><a href="https://github.com/1337isnot1337">GitHub</a>
+        </nav></header>
+  <figure class="post-office">
+    <div class="postcard">
+      <img class="postcard-front" src="assets/studio/night-mail.webp" width="1200" height="800" loading="lazy" alt="A calico mail carrier with a pink envelope at a moonlit window." />
+      <div class="postcard-back" hidden>
+        <div class="post-message"><h3>From Cinna’s desk</h3><p>Your stops on this visit</p><ol id="post-route"></ol></div>
+        <div class="post-address"><img class="cat-stamp" src="assets/studio/night-mail.webp" alt="" loading="lazy" width="92" height="65" /><p>To whoever<br>picked this up.</p><small>1337isnot1337.github.io</small></div>
+      </div>
+    </div>
+    <figcaption><span>A postcard for you.</span><div class="post-controls" hidden><button id="flip-post" type="button">Turn it over ↻</button><button id="save-post" type="button">Save postcard ↓</button></div></figcaption>
+    <p id="post-status" role="status"></p>
+  </figure>
+</section>
+      </div>
 
       <div class="project-details page-width">
         <article
@@ -1146,16 +1224,7 @@
         </article>
       </div>
     </main>
-    <footer id="elsewhere">
-      <div class="page-width footer-inner">
-        <h2>Elsewhere</h2>
-        <nav aria-label="Social profiles">
-          <a href="https://x.com/1337isnot1337">X</a
-          ><a href="https://www.linkedin.com/in/cinna-davis/">LinkedIn</a
-          ><a href="https://github.com/1337isnot1337">GitHub</a>
-        </nav>
-      </div>
-    </footer>
+
     <dialog class="open-project" aria-label="Project details">
       <div class="modal-top">
         <button type="button" id="close-dialog">Back to shelf</button>

@@ -67,6 +67,7 @@ const server = http.createServer((req,res) => {
    assert.equal(await page.locator("#desk-audio").getAttribute("src"),null);
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth <= innerWidth), `${name}: horizontal page overflow`);
    assert.deepEqual(mapRequests,[],`${name}: closed map must not request image`);
+   await page.locator('.object-scope').click();
    await page.locator('#desk-map summary').click();
    await page.waitForFunction(()=>{const img=document.querySelector('#desk-map-image img');return img?.complete && img.naturalWidth>0;});
    assert.equal(mapRequests.length,1,`${name}: one responsive map image`);
@@ -75,6 +76,7 @@ const server = http.createServer((req,res) => {
    await page.locator('#desk-map').screenshot({path:`test-results/${name}-location-search.png`});
    assert.equal(await page.locator('#desk-map a').first().getAttribute('href'),'assets/livermore-automatic-mp3.webp');
    await page.locator('#desk-map summary').click();
+   await page.locator('.desk-rail [href="#catalogue"]').click();
    assert.ok(await page.locator('.firmware-project').isVisible());
    await page.locator('.firmware-note summary').click();
    assert.match(await page.locator('.firmware-limit').textContent(),/not yet hardware-verified/);
@@ -90,7 +92,7 @@ const server = http.createServer((req,res) => {
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth), `${name}: incident case-note overflow`);
    await page.locator('.incident-note').screenshot({path:`test-results/${name}-incident-note.png`});
    if(width>680) {
-    const widths=await page.locator('.catalogue-list').evaluate(list=>({list:list.clientWidth, notes:[...list.querySelectorAll('li')].filter(li=>li.querySelector('.firmware-note,.incident-note')).map(li=>li.getBoundingClientRect().width)}));
+    const widths=await page.locator('.catalogue-list').evaluate(list=>({list:list.clientWidth - parseFloat(getComputedStyle(list).paddingLeft) - parseFloat(getComputedStyle(list).paddingRight), notes:[...list.querySelectorAll('li')].filter(li=>li.querySelector('.firmware-note,.incident-note')).map(li=>li.getBoundingClientRect().width)}));
     assert.ok(widths.notes.every(w=>Math.abs(w-widths.list)<2),`${name}: expanded engineering notes leave no half-row hole`);
    }
    await page.locator('#catalogue').screenshot({path:`test-results/${name}-catalogue-expanded.png`});
@@ -249,7 +251,13 @@ const server = http.createServer((req,res) => {
    await page.locator('[data-desk-panel="numbers"]').screenshot({path:`test-results/${name}-numberline.png`});
    await page.locator('[data-desk="sound"]').click();
    await page.screenshot({path:`test-results/${name}-desk-sound.png`});
+   await page.locator('.desk-rail [href="#catalogue"]').click();
    const catalogueLinks = page.locator('.catalogue-list > li > a');
+   await page.locator('#file-next').click();
+   assert.match(await page.locator('#result-count').innerText(), /^7–12 of /);
+   assert.ok(await catalogueLinks.nth(6).isVisible());
+   await page.locator('#file-prev').click();
+   assert.ok(await catalogueLinks.first().isVisible());
    await page.locator('#more-projects').focus();
    await page.locator('#more-projects').press('Enter');
    assert.equal(await catalogueLinks.nth(6).evaluate(el => el === document.activeElement),true,
@@ -267,11 +275,23 @@ const server = http.createServer((req,res) => {
    await page.locator('#find-project').fill('not-a-project');
    await page.locator('#clear-projects').click();
    assert.equal(await page.locator('#find-project').inputValue(),'');
-   await page.locator('#about').scrollIntoViewIfNeeded();
+   await page.locator('.desk-rail [href="#about"]').click();
    assert.ok(await page.locator('#about pre').evaluate(el=>el.scrollWidth<=el.clientWidth+1),`${name}: robot excerpt fits without horizontal scrolling`);
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),`${name}: notebook fits page`);
    assert.equal(await page.locator('#about .favorites a').count(),4);
    await page.locator('#about').screenshot({path:`test-results/${name}-notebook.png`});
+   await page.locator('#leaf-next').click();
+   assert.ok(await page.locator('#about-physics').isVisible());
+   assert.ok(page.url().endsWith('#about-physics'));
+   await page.locator('.desk-rail a[href="#studio"]').click();
+   await page.locator(name === 'mobile' ? '.postcat' : '.object-letters').click();
+   await page.locator('#flip-post').click();
+   assert.match(await page.locator('#post-route').innerText(),/Particle physics/);
+   const downloaded = page.waitForEvent('download');
+   await page.locator('#save-post').click();
+   assert.equal((await downloaded).suggestedFilename(),'a-postcard-from-cinnas-desk.png');
+   await page.goBack();
+   assert.ok(await page.locator('.desktop-picture').isVisible());
    await page.goto(base + '/#cpu');
    await page.locator('dialog[open]').waitFor();
    await page.locator('[data-taken="true"]').click();
@@ -488,7 +508,7 @@ const server = http.createServer((req,res) => {
   assert.equal(await soundRecovery.locator('#desk-audio').evaluate(a=>a.paused),true,'opening recording notes stops the inline player');
   await soundRecovery.close();
   const historySound = await browser.newPage();
-  await historySound.goto(base);
+  await historySound.goto(base+'/#desk');
   await historySound.locator('.index summary').click();
   await historySound.locator('.index a[data-project="cpu"]').click();
   await historySound.locator('dialog[open]').waitFor();
@@ -655,7 +675,7 @@ const server = http.createServer((req,res) => {
 
   const noDesk=await browser.newPage({viewport:{width:390,height:844},reducedMotion:'reduce'});
   await noDesk.route('**/workbench.js*',route=>route.abort());
-  await noDesk.goto(base);
+  await noDesk.goto(base+'/#desk');
   assert.equal(await noDesk.locator('.desk-tabs').isVisible(),false);
   assert.equal(await noDesk.locator('[data-desk-panel]:visible').count(),4);
   assert.equal(await noDesk.locator('#open-print').textContent(),'Listen to a flyover');

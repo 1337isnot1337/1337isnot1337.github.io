@@ -1,31 +1,77 @@
-/* A two-page personal notebook, extending the shelf's paper-and-plum world. */
-.notebook{padding-block:72px 80px;scroll-margin-top:32px}
-.notebook-heading{display:flex;align-items:end;justify-content:space-between;gap:48px;margin-bottom:36px}
-.notebook-heading h2{font:650 clamp(36px,4.4vw,60px)/1.04 var(--headline);letter-spacing:-.035em;text-wrap:balance}
-.notebook-heading>p{max-width:40ch;font-size:16px;line-height:1.65;color:var(--muted)}
-.notebook-spread{display:grid;grid-template-columns:1fr 1fr;background:#f5ecdf;box-shadow:0 8px 28px #422c4112;border-radius:3px;position:relative}
-.notebook-spread:after{content:"";position:absolute;left:50%;width:28px;top:0;bottom:0;transform:translateX(-50%);background:linear-gradient(90deg,transparent,#6f55440b 43%,#6f554419 50%,#fffbf64a 54%,transparent);pointer-events:none}
-.notebook-page{padding:44px 48px 42px;min-width:0}
-.notebook-page h3{font:650 clamp(29px,3vw,40px)/1.1 var(--headline);letter-spacing:-.03em;margin-bottom:22px;text-wrap:balance}
-.notebook-page>p{font-size:15px;line-height:1.7;max-width:48ch;margin:0 0 16px}
-.notebook-code{margin-top:30px;padding-top:21px;border-top:1px solid #c9b8ac}
-.notebook-code figcaption{font:600 17px var(--headline);margin-bottom:16px}
-.notebook-code pre{margin:0 0 16px;overflow-x:auto;tab-size:2;font:12px/1.65 var(--mono);color:#4e464d}
-.notebook-code code{font:inherit}.notebook-code .code-keyword{color:#8a3c5c}
-.notebook-code>a,.notebook-abstract>a{font-size:12px;color:var(--berry);text-decoration-thickness:1px}
-.notebook-abstract{margin-top:30px;padding:24px 25px;background:#fffbf6;box-shadow:0 4px 12px #422c4110;transform:rotate(.6deg)}
-.notebook-abstract figcaption{font-size:11px;color:var(--muted);border-bottom:1px solid #d4c5cd;padding-bottom:9px;margin-bottom:15px}
-.notebook-abstract h4{font:550 clamp(20px,2vw,26px)/1.22 var(--headline);letter-spacing:-.02em;margin:0 0 18px;text-wrap:balance}
-.notebook-abstract .abstract-authors{font-size:12px;line-height:1.5;margin:0 0 5px}
-.notebook-abstract .abstract-venue{font-size:11px;line-height:1.5;color:var(--muted);margin:0 0 17px}
-.notebook-margins{display:grid;grid-template-columns:1.12fr .88fr;gap:80px;align-items:start;padding-top:48px}
-.notebook-margins h3{font:650 28px/1.12 var(--headline);letter-spacing:-.025em;margin:0 0 14px}
-.notebook-teaching p{font-size:15px;line-height:1.65;max-width:58ch;margin:0 0 15px}
-.notebook-favorites{margin-top:8px;padding:25px 28px;transform:rotate(1deg)}
-.notebook-favorites h3{font-size:28px}.notebook-favorites li a{font-size:14px;line-height:1.4;padding-block:7px}
-@media(max-width:900px){.notebook-page{padding:32px}.notebook-margins{gap:44px}.notebook-heading{gap:32px}.notebook-heading>p{max-width:35ch;font-size:14px}.notebook-abstract{padding:20px}.notebook-code pre{font-size:12px}}
-@media(max-width:680px){.notebook{padding-block:48px 60px}.notebook-heading{display:block;margin-bottom:28px}.notebook-heading h2{font-size:39px}.notebook-heading>p{max-width:none;margin-top:18px;font-size:15px}.notebook-spread{grid-template-columns:1fr}.notebook-spread:after{display:none}.notebook-page{padding:30px 25px}.notebook-page+.notebook-page{border-top:1px solid #c9b8ac}.notebook-page h3{font-size:31px}.notebook-page h3 br{display:none}.notebook-page>p{font-size:15px;max-width:none}.notebook-code pre{font-size:12px;white-space:pre-wrap;overflow-wrap:normal}.notebook-abstract{transform:none;padding:20px}.notebook-abstract h4{font-size:23px}.notebook-margins{grid-template-columns:1fr;gap:28px;padding-top:32px}.notebook-favorites{max-width:none;margin:8px 3px 0}.notebook-margins h3{font-size:28px}}
-@media(max-width:360px){.notebook-page{padding:27px 20px}.notebook-code pre{font-size:12px}.notebook-abstract{padding:18px}.notebook-abstract h4{font-size:21px}}
-@media print{.notebook{padding:24px 0}.notebook-spread{box-shadow:none;background:white}.notebook-spread:after{display:none}.notebook-page{padding:20px;break-inside:avoid}.notebook-abstract{box-shadow:none;transform:none}.notebook-margins{gap:30px}.notebook-favorites{transform:none;box-shadow:none}.notebook-code pre{white-space:pre-wrap}}
-
-.notebook-page .notebook-season{margin-top:18px;font-size:13px}
+.notebook-heading {
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:32px;
+}
+.notebook-heading p { max-width:47ch; margin:0; line-height:1.55; }
+.notebook-tabs {
+  display:flex; flex-wrap:wrap; gap:4px; align-items:end; margin:0 14px;
+}
+.notebook-tabs a {
+  padding:9px 15px; color:#533845; background:#e1c6c7;
+  border:1px solid #bca9a6; border-radius:6px 6px 0 0;
+  text-decoration:none; font:600 14px var(--headline);
+}
+.notebook-tabs a:nth-child(2) { background:#c5d7c5; }
+.notebook-tabs a:nth-child(3) { background:#ecdbb7; }
+.notebook-tabs a:nth-child(4) { background:#cec8e2; }
+.notebook-tabs a:is(:hover,[aria-current]) { text-decoration:underline; text-underline-offset:3px; color:#372936; }
+.notebook-tabs [aria-current] { border-top:3px solid currentColor; }
+.notebook-spread {
+  border:5px solid #765769;
+  border-radius:5px 9px 9px 5px;
+  background:#f7edda;
+  box-shadow:2px 3px 0 #cec0aa,3px 5px 0 #f7edd9,4px 7px 0 #896e7e,0 12px 22px #573c461f;
+}
+.notebook-spread .notebook-page {
+  display:grid; grid-template-columns:.93fr 1.07fr;
+  color:#44343b; background:#fff8e8; padding:0; margin:0;
+  transform:none; border-radius:0; box-shadow:none; max-width:none;
+}
+.notebook-spread .notebook-page[hidden] { display:none; }
+.notebook-spread .notebook-page::before { content:none; }
+.leaf-art {
+  display:grid; align-items:center; padding:clamp(18px,2.6vw,39px);
+  border-right:1px solid #c9b79f;
+  background:linear-gradient(to right,#f4ead6 94%,#e1d2bc);
+}
+.leaf-art img {
+  display:block; width:100%; height:auto; border:7px solid #fff9ea;
+  transform:rotate(-2deg); box-shadow:1px 4px 8px #4d3c322e;
+}
+.notebook-physics .leaf-art img,.notebook-favorites .leaf-art img { transform:rotate(1deg); }
+.leaf-writing { align-content:center; min-width:0; padding:clamp(22px,3.2vw,47px); }
+.leaf-writing h3 { margin:0 0 14px; font:650 clamp(26px,3vw,42px)/1.04 var(--headline); letter-spacing:-.04em; }
+.leaf-writing h3 br {display:none;}
+.leaf-writing p { font-size:15px; line-height:1.62; margin:0 0 13px; }
+.leaf-writing a { text-underline-offset:3px; }
+.notebook-code,.notebook-abstract {
+  margin:18px 0; padding:14px 17px; background:#f2e7d4;
+  border-left:2px solid #b5a18c;
+}
+.notebook-code figcaption,.notebook-abstract figcaption { font:12px var(--mono); color:#614c54; }
+.notebook-code pre { font:12px/1.45 var(--mono); white-space:pre-wrap; overflow-wrap:anywhere; margin:10px 0; }
+.code-keyword { color:#85364f; }
+.notebook-code a,.notebook-abstract a,.leaf-writing .notebook-season { font-size:13px; }
+.notebook-abstract h4 {font:600 22px/1.18 var(--headline); letter-spacing:-.025em; margin:12px 0;}
+.notebook-abstract .abstract-authors,.notebook-abstract .abstract-venue {font-size:13px; margin-bottom:6px;}
+.notebook-favorites .leaf-writing ul { margin:0; padding:0; list-style:none; }
+.notebook-favorites .leaf-writing li { border-bottom:1px solid #cbbb9e; }
+.notebook-favorites .leaf-writing a { padding:7px 0; display:block; font-size:15px; }
+.leaf-pager { justify-content:end; margin-top:18px; }
+@media(max-width:720px) {
+  .notebook-heading {display:block;}
+  .notebook-heading p { margin-top:9px; font-size:15px; }
+  .notebook-tabs {margin:0 2px;gap:2px;}
+  .notebook-tabs a {padding:8px 6px;font-size:12px;}
+  .notebook-spread .notebook-page { display:block; }
+  .leaf-art { display:block; border:0; padding:0; background:#f4ead6; }
+  .leaf-art img { height:clamp(135px,45vw,245px); object-fit:cover; width:100%; transform:none!important; border:0; box-shadow:none; }
+  .leaf-writing {padding:20px;}
+  .leaf-writing p {font-size:15px;}
+}
+@media print {
+  .notebook-spread { box-shadow:none; border:0; }
+  .notebook-spread .notebook-page { break-inside:avoid; }
+}
