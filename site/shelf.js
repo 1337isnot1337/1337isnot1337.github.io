@@ -230,6 +230,13 @@ for (const print of carousel.querySelectorAll(".print")) {
   });
 }
 
+function loadArticleMedia(article) {
+  for (const image of article.querySelectorAll('img[data-src]')) {
+    image.src = image.dataset.src;
+    image.hidden = false;
+    delete image.dataset.src;
+  }
+}
 function displayFromHash() {
   returningToShelf = false;
   const article = articles.get(location.hash.slice(1));
@@ -257,6 +264,7 @@ function displayFromHash() {
   }
   document.querySelector("#print-position").textContent =
     index + 1 + " / " + prints.length;
+  loadArticleMedia(article);
   const recording = article.querySelector("audio");
   if (recording) recording.preload = "metadata";
   const art = print.querySelector("img").cloneNode();
@@ -377,6 +385,10 @@ if (typeof dialog.showModal === "function") {
   window.addEventListener("popstate", displayFromHash);
   window.addEventListener("hashchange", displayFromHash);
   displayFromHash();
+}
+// Older browsers without modal support still read ordinary inline articles.
+if (!document.body.classList.contains('enhanced')) {
+  for (const article of articles.values()) loadArticleMedia(article);
 }
 document.addEventListener("click", (event) => {
   if (!projectIndex.contains(event.target)) projectIndex.open = false;

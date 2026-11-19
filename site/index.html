@@ -31,7 +31,7 @@
     <link rel="stylesheet" href="vendor/swiper-bundle.min.css" />
     <link rel="stylesheet" href="shelf.css?v=16" />
     <script defer src="vendor/swiper-bundle.min.js"></script>
-    <script defer src="shelf.js?v=15"></script>
+    <script defer src="shelf.js?v=16"></script>
     <noscript
       ><style>
         .shelf-controls,
@@ -730,10 +730,11 @@
               <img
                 width="1600"
                 height="550"
-                src="assets/livermore.webp"
-                loading="lazy"
+                data-src="assets/livermore.webp"
+                hidden
                 alt="The recorded aircraft’s harmonics slope down as its pitch falls."
-              /><span class="playhead" hidden></span
+              /><noscript><img width="1600" height="550" src="assets/livermore.webp"
+                alt="The recorded aircraft’s harmonics slope down as its pitch falls." /></noscript><span class="playhead" hidden></span
               ><input
                 class="spectrum-seek"
                 id="spectrum-seek"
