@@ -131,6 +131,16 @@ const server = http.createServer((req,res) => {
    assert.equal(await page.evaluate(()=>document.activeElement===document.querySelector('[data-desk-panel="sound"] h3')),true);
    await page.locator('[data-desk-panel="sound"] .desk-project').click();
    await page.locator('dialog[open]').waitFor();
+   if(width<=680) {
+    const sheet=await page.locator('dialog[open]').boundingBox();
+    assert.ok(Math.abs(sheet.x)<1 && Math.abs(sheet.y)<1, `${name}: reader fills phone without outer margins`);
+    assert.ok(Math.abs(sheet.width-width)<1 && Math.abs(sheet.height-height)<1, `${name}: reader uses the full dynamic viewport`);
+    for(const id of ['close-dialog','previous-detail','next-detail']) {
+     const control=await page.locator('#'+id).boundingBox();
+     assert.ok(control.height>=44 && control.width>=44, `${name}: ${id} is a 44px touch target`);
+    }
+    assert.ok(await page.locator('#detail-slot > .detail').evaluate(el=>el.clientWidth>=innerWidth-1), `${name}: article retains full sheet width`);
+   }
    // Reader navigation must not swallow browser shortcuts or text selection.
    for (const modifier of ['altKey','ctrlKey','metaKey','shiftKey']) {
     for (const key of ['ArrowLeft','ArrowRight']) {
