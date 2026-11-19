@@ -1,0 +1,51 @@
+/* Standalone project and profile pages use the homepage typography and palette. */
+.project-page {max-width:1100px;width:90%;margin:0 auto;padding:34px 0 90px}
+.project-page .crumbs {font:12px/1.5 var(--mono);color:var(--muted);display:flex;flex-wrap:wrap;gap:10px;margin:0 0 34px}
+.project-page .crumbs a {color:var(--berry)}
+.project-page .eyebrow {font:12px/1.5 var(--mono);letter-spacing:.07em;text-transform:uppercase;color:var(--berry);margin:0 0 16px}
+.project-page .hero {display:grid;grid-template-columns:minmax(0,1.38fr) minmax(230px,.68fr);align-items:center;gap:clamp(28px,6vw,100px);border-bottom:1px solid var(--hair);padding-bottom:58px}
+.project-page h1 {font:690 clamp(39px,5.2vw,70px)/1.06 var(--headline);letter-spacing:-.055em;max-width:14ch}
+.project-page .lead {font-size:clamp(17px,1.7vw,21px);line-height:1.62;color:var(--muted);margin:22px 0 24px;max-width:58ch}
+.project-page .hero-figure{margin:0;background:#eee4eb;padding:22px 22px 17px;transform:rotate(1.4deg);border:1px solid #cdb8c0;box-shadow:10px 12px 28px #422c411b}
+.project-page .hero-figure img{display:block;width:100%;height:auto;max-height:350px;object-fit:contain}
+.project-page .hero-figure figcaption{font:12px/1.5 var(--mono);color:var(--muted);padding-top:15px;text-align:center}
+.project-page .hero-actions,.project-page .related-links {display:flex;gap:14px 23px;align-items:center;flex-wrap:wrap;margin-top:22px}
+.project-page .hero-actions a.primary {text-decoration:none;background:var(--ink);color:white;border-radius:30px;padding:12px 20px;font:620 14px/1.4 var(--headline)}
+.project-page .hero-actions a:not(.primary) {font-size:14px}
+.project-page .content-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(230px,.4fr);gap:clamp(28px,7vw,110px);padding-top:46px}
+.project-page .prose h2{font:650 clamp(26px,3vw,36px)/1.15 var(--headline);letter-spacing:-.03em;margin:0 0 19px}
+.project-page .prose h3{font:650 21px/1.25 var(--headline);margin:34px 0 12px}
+.project-page .prose p{margin:0 0 17px;font-size:16px;line-height:1.77;max-width:68ch}
+.project-page .prose p + h2,.project-page .prose ul + h2{margin-top:43px}
+.project-page .prose ul {padding-left:23px;margin:10px 0 24px;line-height:1.7}
+.project-page .prose li {margin:8px 0}
+.project-page .info {align-self:start;background:#f6efea;border:1px solid #c9bac2;padding:24px;position:sticky;top:25px}
+.project-page .info h2{font:650 21px/1.3 var(--headline);margin:0 0 15px}
+.project-page .info dl{display:grid;gap:18px;margin:0}
+.project-page .info dt{font:11px/1.4 var(--mono);color:var(--berry);text-transform:uppercase;letter-spacing:.06em}
+.project-page .info dd{margin:4px 0 0;font-size:14px;line-height:1.5;overflow-wrap:anywhere}
+.project-page .info dd a{color:var(--ink)}
+.project-page .notice {padding:17px 20px;border-left:3px solid var(--berry);background:#f3e9ef;margin:28px 0;font-size:15px;line-height:1.65}
+.project-page .formula {display:block;padding:25px 15px;background:#f1eaf5;border:1px solid #d9cada;text-align:center;font:clamp(20px,3.1vw,34px)/1.4 var(--headline);margin:24px 0 26px;overflow-x:auto}
+.project-page .related {border-top:1px solid var(--hair);margin-top:60px;padding-top:31px}
+.project-page .related h2{font:650 26px var(--headline);margin:0 0 16px}
+.project-page .related-links a{font-size:14px;text-underline-offset:4px}
+.project-page .collection-intro{max-width:700px;padding-bottom:36px}
+.project-page .collection-intro h1{max-width:16ch}
+.project-page .cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;margin-top:33px}
+.project-page .project-card{min-width:0;border:1px solid #d1c0ca;background:#fff9f4;display:flex;flex-direction:column;text-decoration:none;transition:transform .15s ease,box-shadow .15s ease}
+.project-page .project-card:hover{transform:translateY(-3px);box-shadow:4px 8px 20px #422c4120}
+.project-page .project-card img{display:block;width:100%;height:200px;object-fit:cover;background:#eee7e6}
+.project-page .project-card .card-content{padding:20px 22px 25px}
+.project-page .project-card h2{font:640 24px/1.2 var(--headline);margin:0 0 10px}
+.project-page .project-card p{font-size:14px;line-height:1.6;color:var(--muted);margin:0}
+.project-page .profile-columns{display:grid;grid-template-columns:1fr 1fr;gap:42px;margin-top:38px}
+.project-page .profile-columns h2{font:650 28px var(--headline);margin:0 0 13px}
+.project-page .profile-columns p{margin:0 0 14px;line-height:1.75}
+.project-footer{border-top:1px solid var(--hair);background:#f6efe8;margin-top:0;padding:28px 0}
+.project-footer .page-width{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+.project-footer p{font-size:13px;color:var(--muted)}
+.project-footer nav{display:flex;gap:24px;font-size:13px}
+@media(max-width:850px){.project-page .cards{grid-template-columns:repeat(2,minmax(0,1fr))}.project-page .content-grid{gap:35px}.project-page .hero{gap:30px}}
+@media(max-width:650px){.project-page{padding-top:26px}.project-page .hero,.project-page .content-grid,.project-page .profile-columns{grid-template-columns:1fr}.project-page .hero-figure{max-width:400px;transform:none}.project-page .info{position:static;order:-1}.project-page .cards{grid-template-columns:1fr}.project-page .project-card{flex-direction:row}.project-page .project-card img{width:110px;height:100%;min-height:165px;object-fit:cover}.project-page .project-card .card-content{padding:20px}.project-page .project-card h2{font-size:21px}}
+@media(prefers-reduced-motion:reduce){.project-page .project-card{transition:none}}

@@ -3,6 +3,7 @@ import json
 import contextlib
 import io
 import os
+import re
 from pathlib import Path
 import subprocess
 import sys
@@ -216,6 +217,37 @@ class CatalogueRelease(unittest.TestCase):
         with patch.object(release, 'identity', changing_identity):
             with self.assertRaisesRegex(ValueError, 'changed during'): self.run_release()
         self.assertFalse(self.output.exists())
+
+
+    def test_breadcrumb_schema_follows_existing_result_hierarchy(self):
+        self.output.mkdir()
+        base = "https://1337isnot1337.github.io/solved-conjectures/"
+        pages = [
+            ("index.html", "All results", base),
+            ("results/example/index.html", "Example result", base + "results/example/"),
+            ("results/example/proof/index.html", "Example proof", base + "results/example/proof/"),
+            ("docs/formalization/index.html", "Lean formalization", base + "docs/formalization/"),
+        ]
+        (self.output / "build-manifest.json").write_text(json.dumps({
+            "pages": [{"file": filename, "title": title, "canonical": url}
+                      for filename, title, url in pages]
+        }))
+        for filename, title, url in pages:
+            page = self.output / filename
+            page.parent.mkdir(parents=True, exist_ok=True)
+            data = json.dumps({"@context": "https://schema.org", "@type": "WebPage",
+                               "url": url, "name": title})
+            page.write_text(f'<html><head><script type="application/ld+json">{data}</script></head></html>')
+        self.assertEqual(release.add_breadcrumb_schema(self.output), 3)
+        proof = (self.output / "results/example/proof/index.html").read_text()
+        graph = json.loads(re.search(r'<script type="application/ld\+json">(.*?)</script>', proof).group(1))
+        self.assertEqual(graph["@type"], "WebPage")
+        self.assertEqual(graph["url"], base + "results/example/proof/")
+        self.assertEqual([node["item"] for node in graph["breadcrumb"]["itemListElement"]],
+                         [base, base + "results/example/", base + "results/example/proof/"])
+        self.assertNotIn('"breadcrumb"', (self.output / "index.html").read_text())
+
+
 
 
 if __name__ == '__main__': unittest.main()
