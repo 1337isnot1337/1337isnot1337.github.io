@@ -30,7 +30,7 @@ Run `npm ci && npm test` (Node 24 or newer) for homepage and schedule regression
 They check local assets and anchors, search recovery, the complete War cycle,
 branch-predictor saturation and reset, factoring, instruction encoding, rook
 neighbors, and the actual schedule WebAssembly bundle. The publishing workflow
-runs these checks before deployment. Rust parser tests run with `cargo test`.
+runs these checks before deployment. Rust parser tests run with `cargo test`. After rebuilding the WebAssembly bundle, update the loader’s `?v=` to the first 12 characters of its SHA-256 digest; the test suite checks this so returning visitors receive the new parser.
 
 Browser QA should also cover the looping shelf, keyboard navigation, the reader's
 Back/Forward and Escape behavior, audio seeking, mobile widths, and reduced motion.

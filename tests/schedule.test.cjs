@@ -48,3 +48,11 @@ test('published WASM separates terms, expands periods and recovers from invalid 
   assert.match(document.querySelector('.schedule-results').textContent, /C105/);
   dom.window.close();
 });
+
+test('schedule loader versions its binary by content', () => {
+  const { createHash } = require('node:crypto');
+  const binary = fs.readFileSync('site/imsa-map/schedule_bg.wasm');
+  const digest = createHash('sha256').update(binary).digest('hex').slice(0,12);
+  const html = fs.readFileSync('site/imsa-map/index.html','utf8');
+  assert.ok(html.includes(`schedule_bg.wasm?v=${digest}`), 'update loader version when rebuilding WASM');
+});
