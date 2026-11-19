@@ -55,7 +55,7 @@ const server = http.createServer((req,res) => {
    await page.goto(base);
    await page.locator('.swiper-initialized').waitFor();
    await page.evaluate(() => document.fonts.ready);
-   assert.ok(await page.evaluate(()=>[...document.fonts].filter(font=>font.family==='DM Sans').every(font=>font.weight==='100 1000')), 'DM Sans uses real variable weights');
+   assert.ok(await page.evaluate(()=>(()=>{const faces=[...document.fonts].filter(font=>font.family.includes('DM Sans'));return faces.length===2 && faces.every(font=>font.weight==='100 1000' && font.status==='loaded');})()), 'DM Sans uses real variable weights');
    await page.screenshot({path:`test-results/${name}-shelf.png`,fullPage:true});
    assert.deepEqual(mediaRequests,[],`${name}: unopened flyover must not download media`);
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth <= innerWidth), `${name}: horizontal page overflow`);
