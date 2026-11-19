@@ -192,6 +192,31 @@ const server = http.createServer((req,res) => {
    await page.close();
    console.log(`${name}: layout and interactions passed`);
   }
+  const touch = await browser.newPage({viewport:{width:390,height:844},hasTouch:true,isMobile:true,deviceScaleFactor:2,reducedMotion:'no-preference'});
+  const touchErrors=[];
+  touch.on('pageerror',error=>touchErrors.push(error.message));
+  await touch.goto(base);
+  await touch.locator('.swiper-initialized').waitFor();
+  const cdp=await touch.context().newCDPSession(touch);
+  const box=await touch.locator('.swiper').boundingBox();
+  const y=Math.round(box.y+box.height*.45);
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:310,y,id:1}]});
+  for(let step=1;step<=8;step++) {
+    await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:310-step*30,y,id:1}]});
+    await new Promise(resolve=>setTimeout(resolve,40));
+  }
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+  await touch.waitForFunction(()=>document.querySelector('#open-print').dataset.project!=='flyover');
+  assert.equal(await touch.locator('dialog[open]').count(),0,'swiping must not open a print');
+  await touch.screenshot({path:'test-results/touch-shelf.png',fullPage:true});
+  await touch.locator('#open-print').tap();
+  await touch.locator('dialog[open]').waitFor();
+  assert.deepEqual(touchErrors,[]);
+  await touch.locator('#close-dialog').tap();
+  await touch.waitForFunction(()=>!document.body.classList.contains('modal-open'));
+  await touch.close();
+  console.log('touch-enabled mobile: swipe, momentum and deliberate tap passed');
+
   // WCAG text-spacing overrides: content may grow vertically, never disappear.
   const spaced = await browser.newPage({viewport:{width:390,height:844},reducedMotion:'reduce'});
   await spaced.goto(base);
