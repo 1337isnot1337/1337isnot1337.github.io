@@ -29,9 +29,9 @@
       crossorigin
     />
     <link rel="stylesheet" href="vendor/swiper-bundle.min.css" />
-    <link rel="stylesheet" href="shelf.css?v=2" />
+    <link rel="stylesheet" href="shelf.css?v=3" />
     <script defer src="vendor/swiper-bundle.min.js"></script>
-    <script defer src="shelf.js?v=2"></script>
+    <script defer src="shelf.js?v=3"></script>
     <noscript
       ><style>
         .shelf-controls,
@@ -60,7 +60,7 @@
         <div class="shelf-heading page-width">
           <div>
             <h1 id="shelf-title">The project shelf</h1>
-            <p>Pick a print to open one of my experiments.</p>
+            <p>Slide along the shelf. Pick a print to try it.</p>
           </div>
           <details class="index">
             <summary>Print index</summary>
@@ -89,7 +89,12 @@
           </details>
         </div>
         <div class="display-case">
-          <div class="swiper" aria-label="Illustrated project prints">
+          <div
+            class="swiper"
+            role="region"
+            aria-roledescription="carousel"
+            aria-label="Illustrated project prints"
+          >
             <div class="swiper-wrapper">
               <div class="swiper-slide">
                 <a
@@ -521,14 +526,6 @@
               ></a
             >
           </li>
-          <li data-category="Collaborations">
-            <a href="https://github.com/rust-malaysia/hyfetch/pull/35"
-              ><strong>HyFetch</strong
-              ><span
-                >An early contribution proposing a Pride Month animation.</span
-              ></a
-            >
-          </li>
         </ul>
         <p id="no-projects" hidden>
           No matching projects. Try another search or category.
@@ -544,16 +541,27 @@
       </section>
       <section class="personal page-width" id="about">
         <div class="intro">
-          <h2>A little about me</h2>
+          <h2>Hi, I’m Cinna.</h2>
           <p>
-            I’m Cinna. I study mathematics and computer science at IMSA. I’ve
-            programmed for our FIRST Robotics team, played varsity Scholastic
-            Bowl, and helped teach Elements of Computing Systems.
+            I’m a senior at the Illinois Mathematics and Science Academy and
+            the programming lead for Titan Robotics, FIRST Team 2022. Our team
+            of ten writes the Java code that runs the robot. I teach rookies,
+            review code, and dig through match logs when the robot does
+            something we didn’t ask it to.
           </p>
           <p>
-            I also work on particle physics. Nathan Catlett and I studied how to
-            estimate the background in a search for a doubly charged Higgs boson
-            when simulations run thin at high masses.
+            I’m co-president of Epoch, our computer science club, where I’ve
+            taught Linux workshops. I was also a teaching assistant for Elements
+            of Computing Systems I and II. I played varsity Scholastic Bowl,
+            too. At Scobol Solo I won biology and tied for first in chemistry.
+          </p>
+          <p>
+            With Dr. Peter Dong’s group at Fermilab, I write software for a
+            search for a doubly charged Higgs boson. An ordinary collision can
+            look like the particle we’re after. At high masses, even the
+            simulations give us very few of those lookalikes to count. Nathan
+            Catlett and I developed a way to estimate that background, and I
+            wrote most of the code for it.
           </p>
           <a
             class="inline-link"

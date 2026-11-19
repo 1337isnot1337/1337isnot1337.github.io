@@ -32,6 +32,17 @@ let activeArticle = null;
 // the enhancement is unavailable, and keep every print addressable by a link.
 let shelf = null;
 if (window.Swiper) {
+  // A wide shelf shows five prints at once. A second run gives Swiper room to
+  // move paper around the back without exposing an empty end of the ledge.
+  const track = carousel.querySelector(".swiper-wrapper");
+  for (const slide of [...track.children]) track.append(slide.cloneNode(true));
+  let blurTimer;
+  function showMotion(duration) {
+    if (!duration || reducedMotion.matches) return;
+    carousel.classList.add("moving");
+    clearTimeout(blurTimer);
+    blurTimer = setTimeout(() => carousel.classList.remove("moving"), duration);
+  }
   shelf = new Swiper(carousel, {
     effect: "coverflow",
     grabCursor: true,
@@ -41,7 +52,13 @@ if (window.Swiper) {
     initialSlide: prints.findIndex(
       (print) => print.dataset.project === "flyover",
     ),
-    rewind: true,
+    loop: true,
+    mousewheel: {
+      enabled: true,
+      forceToAxis: true,
+      eventsTarget: ".display-case",
+    },
+    a11y: { scrollOnFocus: false, slideLabelMessage: "" },
     spaceBetween: 0,
     breakpoints: { 900: { spaceBetween: 28 } },
     speed: reducedMotion.matches ? 0 : 380,
@@ -53,6 +70,12 @@ if (window.Swiper) {
       slideShadows: false,
     },
     on: {
+      sliderMove() {
+        showMotion(75);
+      },
+      beforeTransitionStart(instance, duration) {
+        if (instance.initialized) showMotion(duration * 0.55);
+      },
       sliderFirstMove() {
         carousel.classList.add("handling");
       },
@@ -60,7 +83,18 @@ if (window.Swiper) {
         carousel.classList.remove("handling");
       },
       slideChange(instance) {
-        const key = prints[instance.activeIndex].dataset.project;
+        const print = prints[instance.realIndex % prints.length];
+        const key = print.dataset.project;
+        const activeSlide = instance.slides[instance.activeIndex];
+        activeSlide.removeAttribute("aria-hidden");
+        if (carousel.contains(document.activeElement)) {
+          activeSlide.querySelector(".print").focus({ preventScroll: true });
+        }
+        for (const [i, slide] of instance.slides.entries()) {
+          const selected = i === instance.activeIndex;
+          slide.setAttribute("aria-hidden", String(!selected));
+          slide.querySelector(".print").tabIndex = selected ? 0 : -1;
+        }
         shop.dataset.selection = key;
         for (const link of projectIndex.querySelectorAll("a[data-project]")) {
           if (link.dataset.project === key)
@@ -71,14 +105,12 @@ if (window.Swiper) {
         openButton.href = "#" + key;
         openButton.textContent = actions[key];
         document.querySelector("#shelf-status").textContent =
-          prints[instance.activeIndex].querySelector("strong").textContent;
+          print.querySelector("strong").textContent;
       },
     },
   });
-  carousel.addEventListener("focusin", (event) => {
-    const link = event.target.closest(".print");
-    if (link && link.matches(":focus-visible"))
-      shelf.slideTo(prints.indexOf(link));
+  reducedMotion.addEventListener("change", () => {
+    shelf.params.speed = reducedMotion.matches ? 0 : 380;
   });
   document
     .querySelector("#prev")
@@ -93,14 +125,16 @@ if (window.Swiper) {
     if (event.key === "ArrowLeft") shelf.slidePrev();
     else shelf.slideNext();
     if (event.target.classList.contains("print"))
-      prints[shelf.activeIndex].focus({ preventScroll: true });
+      shelf.slides[shelf.activeIndex]
+        .querySelector(".print")
+        .focus({ preventScroll: true });
   });
 } else {
   document.querySelector(".shelf-controls").hidden = true;
 }
 
 const hoverPointer = window.matchMedia("(hover: hover) and (pointer: fine)");
-for (const print of prints) {
+for (const print of carousel.querySelectorAll(".print")) {
   print.addEventListener("pointermove", (event) => {
     if (
       reducedMotion.matches ||
@@ -138,7 +172,14 @@ function displayFromHash() {
   activeArticle = article;
   const print = prints.find((link) => link.dataset.project === article.id);
   const index = prints.indexOf(print);
-  shelf?.slideTo(index);
+  if (shelf && shelf.realIndex % prints.length !== index) {
+    // Pick the nearest occurrence, including when the reader crosses the seam.
+    let offset = index - (shelf.realIndex % prints.length);
+    if (Math.abs(offset) > prints.length / 2)
+      offset -= Math.sign(offset) * prints.length;
+    const total = shelf.slides.length;
+    shelf.slideToLoop((shelf.realIndex + offset + total) % total, 0);
+  }
   document.querySelector("#print-position").textContent =
     index + 1 + " / " + prints.length;
   const recording = article.querySelector("audio");
@@ -204,7 +245,11 @@ if (typeof dialog.showModal === "function") {
       activeArticle = null;
     }
     document.body.classList.remove("modal-open");
-    (opener || openButton).focus({ preventScroll: true });
+    const focusTarget =
+      opener?.classList.contains("print") && shelf
+        ? shelf.slides[shelf.activeIndex].querySelector(".print")
+        : opener || openButton;
+    focusTarget.focus({ preventScroll: true });
   });
   function turnPrint(direction) {
     const current = prints.findIndex(

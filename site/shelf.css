@@ -1,16 +1,16 @@
 @font-face {
-  font-family: Bricolage;
+  font-family: "Bricolage Grotesque";
   src: url(assets/fonts/bricolage.woff2) format("woff2");
   font-weight: 200 800;
   font-display: swap;
 }
 @font-face {
-  font-family: DM;
+  font-family: "DM Sans";
   src: url(assets/fonts/body.woff2) format("woff2");
   font-display: swap;
 }
 @font-face {
-  font-family: IBM;
+  font-family: "IBM Plex Mono";
   src: url(assets/fonts/mono.woff2) format("woff2");
   font-display: swap;
 }
@@ -20,8 +20,8 @@
   --berry: #7d3251;
   --paper: #fffbf6;
   --hair: #bdabba;
-  --mono: IBM, monospace;
-  --headline: Bricolage, sans-serif;
+  --mono: "IBM Plex Mono", monospace;
+  --headline: "Bricolage Grotesque", sans-serif;
 }
 * {
   box-sizing: border-box;
@@ -30,10 +30,9 @@ body {
   margin: 0;
   background: var(--paper);
   color: var(--ink);
-  font:
-    16px/1.5 DM,
-    Arial,
-    sans-serif;
+  font-family: "DM Sans", Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
 }
 a {
   color: inherit;
@@ -202,6 +201,17 @@ h1 {
   margin: 0 auto;
   padding: 0 0 12px;
   overflow: hidden;
+}
+.swiper-initialized {
+  overscroll-behavior-x: contain;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .swiper-initialized .print img {
+    transition: filter 95ms ease-out;
+  }
+  .swiper.moving .print img {
+    filter: blur(1px);
+  }
 }
 .swiper {
   padding: 24px 0 12px;
