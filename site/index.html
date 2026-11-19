@@ -45,6 +45,7 @@
     <link rel="stylesheet" href="cpu-trace.css?v=1" />
     <link rel="stylesheet" href="firmware-note.css?v=1" />
     <link rel="stylesheet" href="rook-graph.css?v=1" />
+    <link rel="stylesheet" href="schedule-example.css?v=1" />
     <script defer src="cpu-trace.js?v=1"></script>
     <script defer src="vendor/swiper-bundle.min.js"></script>
     <script defer src="shelf.js?v=26" onerror="
@@ -1019,15 +1020,27 @@
             need for each class period. I built a Rust tool that turns an IMSA
             schedule into a day-by-day room list.
           </p>
-          <div class="toy">
-            <p>
-              Open a sample week to see how classes repeat on letter days. You
-              can replace it with your own schedule.
-            </p>
-            <a class="inline-link" href="/imsa-map/?example=1"
-              >Load the example week</a
-            >
-          </div>
+<section class="schedule-example" aria-labelledby="schedule-example-title">
+  <h3 id="schedule-example-title">From class rows to room lists</h3>
+  <p class="schedule-example-scope">Example data, not my class schedule</p>
+  <div class="schedule-example-input">
+    <h4>Selected input fields</h4>
+    <div><b>Mathematics</b><span><code>2(A,C-D)</code> · S1 · Room A113</span></div>
+    <div><b>Physics</b><span><code>3(B,I)</code> · S1 · Room B204</span></div>
+  </div>
+  <div class="schedule-example-output">
+    <h4>S1 room list</h4>
+    <p>Periods 2–3 shown; all other periods are free in this example.</p>
+    <div class="schedule-example-day" data-example-day="A"><h5>A day</h5><dl><div><dt>Period 2</dt><dd data-example-period="2">A113</dd></div><div><dt>Period 3</dt><dd data-example-period="3">Free period</dd></div></dl></div>
+    <div class="schedule-example-day" data-example-day="B"><h5>B day</h5><dl><div><dt>Period 2</dt><dd data-example-period="2">Free period</dd></div><div><dt>Period 3</dt><dd data-example-period="3">B204</dd></div></dl></div>
+    <div class="schedule-example-day" data-example-day="I"><h5>I day</h5><dl><div><dt>Period 2</dt><dd data-example-period="2">Free period</dd></div><div><dt>Period 3</dt><dd data-example-period="3">B204</dd></div></dl></div>
+    <div class="schedule-example-day" data-example-day="C"><h5>C day</h5><dl><div><dt>Period 2</dt><dd data-example-period="2">A113</dd></div><div><dt>Period 3</dt><dd data-example-period="3">Free period</dd></div></dl></div>
+    <div class="schedule-example-day" data-example-day="D"><h5>D day</h5><dl><div><dt>Period 2</dt><dd data-example-period="2">A113</dd></div><div><dt>Period 3</dt><dd data-example-period="3">Free period</dd></div></dl></div>
+  </div>
+  <p class="schedule-example-privacy">The tool processes your schedule in your browser. Nothing is uploaded or saved.</p>
+  <a class="inline-link" href="/imsa-map/?example=1">Try this example week ↗</a>
+</section>
+
           <a class="outbound" href="/imsa-map/">Open the schedule tool</a>
         </article>
         <article class="detail" id="conway" aria-labelledby="conway-title">
