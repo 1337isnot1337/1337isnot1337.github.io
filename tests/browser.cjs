@@ -43,6 +43,8 @@ const server = http.createServer((req,res) => {
    const page = await browser.newPage({viewport:{width,height}, reducedMotion:name === 'desktop' ? 'no-preference' : 'reduce'});
    const errors=[];
    const mediaRequests=[];
+   const mapRequests=[];
+   page.on('request',request=>{if(request.url().includes('/assets/livermore-automatic-mp3'))mapRequests.push(request.url());});
    page.on('request',request=>{if (/\/assets\/livermore\.(mp3|webp)(?:[?#]|$)/.test(request.url())) mediaRequests.push(request.url());});
    page.on('pageerror', e=>errors.push(e.message));
    page.on('response', response => {
@@ -64,6 +66,15 @@ const server = http.createServer((req,res) => {
    assert.deepEqual(mediaRequests.filter(url=>url.includes(".mp3")),[],`${name}: unopened flyover must not download audio`);
    assert.equal(await page.locator("#desk-audio").getAttribute("src"),null);
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth <= innerWidth), `${name}: horizontal page overflow`);
+   assert.deepEqual(mapRequests,[],`${name}: closed map must not request image`);
+   await page.locator('#desk-map summary').click();
+   await page.waitForFunction(()=>{const img=document.querySelector('#desk-map-image img');return img?.complete && img.naturalWidth>0;});
+   assert.equal(mapRequests.length,1,`${name}: one responsive map image`);
+   assert.equal(await page.locator('#desk-audio').getAttribute('src'),null);
+   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+   await page.locator('#desk-map').screenshot({path:`test-results/${name}-location-search.png`});
+   assert.equal(await page.locator('#desk-map a').first().getAttribute('href'),'assets/livermore-automatic-mp3.webp');
+   await page.locator('#desk-map summary').click();
    await page.locator('.index summary').click();
    await page.locator('.index[open]').waitFor();
    assert.equal(await page.locator('.index a img').count(),6);
@@ -459,6 +470,11 @@ const server = http.createServer((req,res) => {
 
   const plain = await browser.newPage({viewport:{width:390,height:844},javaScriptEnabled:false});
   await plain.goto(base);
+  await plain.locator('#desk-map summary').click();
+  assert.ok(await plain.locator('#desk-map .desk-map-links a').first().isVisible());
+  assert.match(await plain.locator('#desk-map').textContent(),/inconclusive/);
+  assert.equal(await plain.locator('#desk-map-image img').count(),0);
+  await plain.locator('#desk-map summary').click();
   assert.equal(await plain.locator('.catalogue-list li:visible').count(),31);
   assert.equal(await plain.locator('.project-details .detail:visible').count(),6);
   assert.equal(await plain.locator('.shelf-controls').isVisible(),false);

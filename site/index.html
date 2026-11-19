@@ -37,11 +37,11 @@
     <link rel="stylesheet" href="vendor/swiper-bundle.min.css" />
     <link rel="stylesheet" href="shelf.css?v=20" />
     <link rel="stylesheet" href="welcome.css?v=1" />
-    <link rel="stylesheet" href="workbench.css?v=4" />
+    <link rel="stylesheet" href="workbench.css?v=5" />
     <link rel="stylesheet" href="notebook.css?v=2" />
     <link rel="stylesheet" href="numberline.css?v=1" />
     <script defer src="numberline.js?v=1"></script>
-    <script defer src="workbench.js?v=3"></script>
+    <script defer src="workbench.js?v=4"></script>
     <script defer src="vendor/swiper-bundle.min.js"></script>
     <script defer src="shelf.js?v=23" onerror="
       const restoreReading = () => {
@@ -281,6 +281,21 @@
     <header class="desk-intro"><a class="desk-project" href="#flyover" data-project="flyover"><img src="assets/prints/flyover.webp" alt="" width="32" height="40" loading="lazy" /><span>DOPPLERGEIST<small>Open project notes ↗</small></span></a><h3>Where was<br> the microphone?</h3></header>
     <figure class="desk-artifact desk-recording"><div class="desk-figure-heading"><span>Livermore recording</span><span>100–400 Hz</span></div><div class="desk-spectrum"><img src="assets/livermore.webp" width="1600" height="550" loading="lazy" alt="Bright harmonics bend downward in the flyover recording as the aircraft pitch falls."/><span class="desk-playhead" aria-hidden="true" hidden></span></div><div class="desk-time"><span>0:00</span><span>Time →</span><span>1:25</span></div><div class="desk-listen" hidden><button type="button" id="desk-play-recording">Play the flyover</button></div><p id="desk-audio-status" role="status" hidden></p><audio id="desk-audio" controls preload="none" data-desk-src="assets/livermore.mp3" aria-label="Livermore aircraft flyover" tabindex="0" hidden></audio><figcaption><strong>Follow the bright curves as you listen.</strong> The pitch drops as the plane passes. A match is a candidate, not automatically a location.</figcaption><small>Recording: <a href="https://doi.org/10.5281/zenodo.23424278">Praveen Pathak</a> · <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a></small></figure>
     <div class="desk-copy"><p>A passing aircraft leaves a curve in a recording. I’m building DOPPLERGEIST to match that changing pitch against historical flight tracks.</p><a href="#flyover" data-project="flyover" class="desk-action">Open recording notes <span aria-hidden="true">↗</span></a><a class="desk-source" href="/DOPPLERGEIST/examples.html#livermore">Read the search for this recording</a></div>
+    <details class="desk-map" id="desk-map">
+      <summary><span>See the location search</span><small>Historical run · inconclusive</small></summary>
+      <div class="desk-map-body">
+        <p class="desk-map-lede">One recording, many possible microphone positions.</p>
+        <p>This search compared the recording with nearby flight tracks in a constrained region and time window. It did not establish a location: 187 track evaluations exceeded the supported trajectory model, leaving the search incomplete.</p>
+        <figure>
+          <div id="desk-map-image"></div>
+          <template id="desk-map-template"><img src="assets/livermore-automatic-mp3.webp" srcset="assets/livermore-automatic-mp3-960.webp 960w, assets/livermore-automatic-mp3.webp 2610w" sizes="(max-width: 680px) 90vw, 1000px" width="2610" height="1278" alt="Measured spectrogram and fitted aircraft curve beside an aerial map of candidate microphone positions. A star marks the highest fit score, a diamond an alternative, and a circle the inferred reference. The map includes its fit-score legend and USGS / USDA NAIP imagery credit." /></template>
+          <p id="desk-map-error" role="status" hidden>The figure could not load. Use the full-size figure or the source notes below.</p>
+          <figcaption>Colors show fit scores, not probabilities. The star is the highest score; the circle is an inferred reference, not surveyed truth. This cropped map does not show every searched point.</figcaption>
+        </figure>
+        <div class="desk-map-links"><a href="assets/livermore-automatic-mp3.webp">Open the full-size figure ↗</a><a href="https://github.com/1337isnot1337/DOPPLERGEIST/blob/250df50211ff78a868e94234aed3a671a6bfa2ca/docs/LIVERMORE_DEMO.md#all-aircraft-archive-mp3-ranking">Read this historical run</a></div>
+        <small class="desk-map-credit">Figure © 2026 Cinna Davis · <a href="https://github.com/1337isnot1337/DOPPLERGEIST/blob/250df50211ff78a868e94234aed3a671a6bfa2ca/LICENSE">PolyForm Noncommercial</a>. Imagery: USGS / USDA NAIP. Recording: <a href="https://doi.org/10.5281/zenodo.23424278">Praveen Pathak</a> · <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.</small>
+      </div>
+    </details>
   </article>
   <article class="desk-sheet desk-cards" data-desk-panel="cards">
     <header class="desk-intro"><a class="desk-project" href="#conjectures" data-project="conjectures"><img src="assets/prints/conjectures.webp" alt="" width="32" height="40" loading="lazy" /><span>A collection of proofs<small>Open project notes ↗</small></span></a><h3>One more round.<br> Forever.</h3></header>

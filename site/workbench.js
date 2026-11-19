@@ -23,6 +23,18 @@
     desk.scrollIntoView({block:'start',behavior:window.matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});
   });
 
+  // Template contents have no active image request until the disclosure opens.
+  const map=desk.querySelector('#desk-map');
+  map.addEventListener('toggle',()=>{
+    const holder=desk.querySelector('#desk-map-image');
+    if(!map.open || holder.childElementCount) return;
+    const fragment=desk.querySelector('#desk-map-template').content.cloneNode(true);
+    fragment.querySelector('img').addEventListener('error',()=>{
+      desk.querySelector('#desk-map-error').hidden=false;
+    });
+    holder.append(fragment);
+  });
+
   const listen=desk.querySelector('.desk-listen');
   const play=desk.querySelector('#desk-play-recording');
   const status=desk.querySelector('#desk-audio-status');

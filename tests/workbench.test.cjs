@@ -137,12 +137,35 @@ test('shelf handoff selects the matching sheet and focuses its heading without s
 test('each desk sheet reads heading, artifact, then explanation in the DOM',()=>{
  const p=desk();
  for(const panel of p.d.querySelectorAll('[data-desk-panel]')){
-  assert.deepEqual([...panel.children].map(el=>el.classList.contains('desk-intro')?'heading':el.classList.contains('desk-artifact')?'artifact':el.classList.contains('desk-copy')?'explanation':'unexpected'),['heading','artifact','explanation']);
+  assert.deepEqual([...panel.children].filter(el=>!el.classList.contains('desk-map')).map(el=>el.classList.contains('desk-intro')?'heading':el.classList.contains('desk-artifact')?'artifact':el.classList.contains('desk-copy')?'explanation':'unexpected'),['heading','artifact','explanation']);
   assert.ok(panel.querySelector('.desk-intro h3'));
   assert.ok(panel.querySelector('.desk-artifact'));
   assert.ok(panel.querySelector('.desk-copy p'));
  }
  assert.match(p.d.querySelector('.desk-numbers .desk-copy').textContent,/not a proof of the general theorem/);
  assert.match(p.d.querySelector('.desk-cards .desk-copy').textContent,/unrefereed; Lean status is recorded per result/);
+ p.dom.window.close();
+});
+
+test('historical map loads only when opened and preserves uncertainty and attribution',()=>{
+ const p=desk(),details=p.d.querySelector('#desk-map'),holder=p.d.querySelector('#desk-map-image');
+ assert.equal(holder.children.length,0);
+ assert.match(details.querySelector('summary').textContent,/inconclusive/);
+ assert.match(details.textContent,/187 track evaluations/);
+ assert.match(details.textContent,/not surveyed truth/);
+ assert.match(details.textContent,/not probabilities/);
+ assert.match(details.textContent,/PolyForm Noncommercial/);
+ assert.match(details.textContent,/USGS \/ USDA NAIP/);
+ details.dispatchEvent(new p.dom.window.Event('toggle'));
+ assert.equal(holder.children.length,0);
+ details.open=true;details.dispatchEvent(new p.dom.window.Event('toggle'));
+ const img=holder.querySelector('img');assert.ok(img);
+ assert.equal(img.width,2610);assert.equal(img.height,1278);
+ assert.ok(fs.existsSync('site/'+img.getAttribute('src')));
+ details.dispatchEvent(new p.dom.window.Event('toggle'));assert.equal(holder.children.length,1);
+ img.dispatchEvent(new p.dom.window.Event('error'));
+ assert.equal(p.d.querySelector('#desk-map-error').hidden,false);
+ assert.ok(details.querySelector('a[href="assets/livermore-automatic-mp3.webp"]'));
+ assert.equal(p.d.querySelector('#desk-audio').getAttribute('src'),null);
  p.dom.window.close();
 });
