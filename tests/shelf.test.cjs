@@ -20,8 +20,8 @@ test('all local resources and project anchors resolve', () => {
   const d = new JSDOM(html).window.document;
   const ids = [...d.querySelectorAll('[id]')].map(e => e.id);
   assert.equal(new Set(ids).size, ids.length, 'duplicate IDs');
-  for (const el of d.querySelectorAll('[src], link[href]')) {
-    const url = el.getAttribute('src') || el.getAttribute('href');
+  for (const el of d.querySelectorAll('[src], [data-src], link[href]')) {
+    const url = el.getAttribute('src') || el.getAttribute('data-src') || el.getAttribute('href');
     if (!url.startsWith('https:')) assert.ok(fs.existsSync('site/' + url.split('?')[0]), url);
   }
   for (const el of d.querySelectorAll('a[href^="#"]')) assert.ok(d.getElementById(el.hash.slice(1)), el.hash);

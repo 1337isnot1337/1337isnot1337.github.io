@@ -1,5 +1,7 @@
 // Browser checks run against site/. CI runs this after the research catalogue build.
-const { chromium } = require('playwright');
+const engines = require('playwright');
+const engineName = process.env.BROWSER || 'chromium';
+if (!['chromium','webkit'].includes(engineName)) throw new Error('BROWSER must be chromium or webkit');
 const assert = require('node:assert/strict');
 const http = require('node:http');
 const fs = require('node:fs');
@@ -34,7 +36,7 @@ const server = http.createServer((req,res) => {
  const partial=await fetch(base + '/assets/livermore.mp3',{headers:{Range:'bytes=0-9'}});
  assert.equal(partial.status,206);
  assert.equal((await partial.arrayBuffer()).byteLength,10);
- const browser = await chromium.launch();
+ const browser = await engines[engineName].launch(process.env.BROWSER_EXECUTABLE ? {executablePath:process.env.BROWSER_EXECUTABLE} : {});
  fs.mkdirSync('test-results', {recursive:true});
  try {
   for (const [name,width,height] of [['desktop',1440,1000],['mobile',390,844],['small-mobile',320,740]]) {
@@ -204,7 +206,7 @@ const server = http.createServer((req,res) => {
     assert.equal(new Set(positions).size,1,'all five day cards share one print row');
     assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'printed schedule fits the page');
     await page.screenshot({path:'test-results/schedule-print.png',fullPage:true});
-    await page.pdf({path:'test-results/schedule-print.pdf',format:'Letter'});
+    if (engineName === 'chromium') await page.pdf({path:'test-results/schedule-print.pdf',format:'Letter'});
     await page.emulateMedia({media:'screen'});
     await page.setViewportSize({width,height});
    }
@@ -225,6 +227,8 @@ const server = http.createServer((req,res) => {
    await page.close();
    console.log(`${name}: layout and interactions passed`);
   }
+  // Playwright exposes real touch-drag injection through Chromium's CDP only.
+  if (engineName === 'chromium') {
   const touch = await browser.newPage({viewport:{width:390,height:844},hasTouch:true,isMobile:true,deviceScaleFactor:2,reducedMotion:'no-preference'});
   const touchErrors=[];
   touch.on('pageerror',error=>touchErrors.push(error.message));
@@ -249,6 +253,7 @@ const server = http.createServer((req,res) => {
   await touch.waitForFunction(()=>!document.body.classList.contains('modal-open'));
   await touch.close();
   console.log('touch-enabled mobile: swipe, momentum and deliberate tap passed');
+  } else console.log('WebKit: native touch-drag injection and PDF export not exercised');
 
   // WCAG text-spacing overrides: content may grow vertically, never disappear.
   const spaced = await browser.newPage({viewport:{width:390,height:844},reducedMotion:'reduce'});
@@ -290,6 +295,8 @@ const server = http.createServer((req,res) => {
   await plain.goto(base + '/#flyover');
   await plain.waitForFunction(()=>[...document.querySelectorAll('#flyover .spectrum img')].some(image=>!image.hidden && image.naturalWidth>0));
   assert.equal(await plain.locator('#flyover .spectrum img:visible').count(),1);
+  assert.equal(await plain.locator('#flyover audio:visible').count(),1);
+  assert.ok((await plain.locator('#flyover audio:visible').getAttribute('src')).endsWith('livermore.mp3'));
   await plain.locator('#flyover .player').screenshot({path:'test-results/no-script-flyover.png'});
   await plain.close();
   console.log('no JavaScript: catalogue and project reading passed');
