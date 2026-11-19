@@ -81,7 +81,8 @@ const server = http.createServer((req,res) => {
    await page.locator('dialog[open]').waitFor();
    await page.keyboard.press('Escape');
    await page.locator('dialog').waitFor({state:'hidden'});
-   assert.equal(await page.locator('body').evaluate(el=>el.classList.contains('modal-open')),false);
+   // Native dialog close events are queued after the open attribute clears.
+   await page.waitForFunction(() => !document.body.classList.contains('modal-open'));
    await page.locator('#find-project').fill('erdos');
    assert.equal(await page.locator('#result-count').textContent(),'1 project');
    await page.locator('#find-project').fill('not-a-project');
