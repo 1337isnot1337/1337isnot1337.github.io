@@ -375,6 +375,7 @@ const server = http.createServer((req,res) => {
    assert.equal(await manualCopy.isVisible(),false);
    await page.getByRole('button',{name:'Submit',exact:true}).click();
    await page.getByRole('heading',{name:'S2 room list'}).waitFor();
+   await page.locator('.schedule-actions button:not([disabled])').first().waitFor();
    assert.equal(await page.getByRole('button',{name:'Copy room list',exact:true}).isEnabled(),true);
 
    const terms = page.locator('.schedule-results > section');

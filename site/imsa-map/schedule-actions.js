@@ -61,6 +61,6 @@ export default function attachScheduleActions() {
     } finally { sync(); }
   });
   print.addEventListener('click', () => { if (!dirty && result()) window.print(); });
-  new MutationObserver(sync).observe(form, { childList: true });
+  new MutationObserver(sync).observe(form, { childList: true, subtree: true });
   sync();
 }
