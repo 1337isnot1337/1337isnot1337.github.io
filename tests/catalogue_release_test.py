@@ -1,5 +1,8 @@
 """Release boundary checks, independent of Pandoc and changing research data."""
 import json
+import contextlib
+import io
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -13,6 +16,11 @@ import release_catalogue as release
 
 class CatalogueRelease(unittest.TestCase):
     def setUp(self):
+        # Fixture failures must not create real workflow summaries or warnings.
+        environment = patch.dict(os.environ, {k: v for k, v in os.environ.items() if k != 'GITHUB_STEP_SUMMARY'}, clear=True)
+        environment.start(); self.addCleanup(environment.stop)
+        silence = contextlib.redirect_stdout(io.StringIO())
+        silence.__enter__(); self.addCleanup(silence.__exit__, None, None, None)
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
         root = Path(self.temp.name)
