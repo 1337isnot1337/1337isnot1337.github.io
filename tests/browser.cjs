@@ -13,11 +13,27 @@ const server = http.createServer((req,res) => {
   if (fs.existsSync(file) && fs.statSync(file).isDirectory()) file = path.join(file,'index.html');
   if (!fs.existsSync(file)) {res.writeHead(404, {'Content-Type':'text/html'});fs.createReadStream(path.join(root,'404.html')).pipe(res);return;}
   res.setHeader('Content-Type', types[path.extname(file)] || 'application/octet-stream');
+  const size = fs.statSync(file).size;
+  res.setHeader('Accept-Ranges', 'bytes');
+  // Match Pages' byte-range behavior so media seeking is tested realistically.
+  const range = req.headers.range?.match(/^bytes=(\d+)-(\d*)$/);
+  if (range) {
+    const start=Number(range[1]);
+    const end=range[2] ? Math.min(Number(range[2]),size-1) : size-1;
+    if (start>end || start>=size) {res.writeHead(416,{'Content-Range':`bytes */${size}`}).end();return;}
+    res.writeHead(206,{'Content-Range':`bytes ${start}-${end}/${size}`,'Content-Length':end-start+1});
+    fs.createReadStream(file,{start,end}).pipe(res);
+    return;
+  }
+  res.setHeader('Content-Length',size);
   fs.createReadStream(file).pipe(res);
 });
 (async () => {
  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
  const base = `http://127.0.0.1:${server.address().port}`;
+ const partial=await fetch(base + '/assets/livermore.mp3',{headers:{Range:'bytes=0-9'}});
+ assert.equal(partial.status,206);
+ assert.equal((await partial.arrayBuffer()).byteLength,10);
  const browser = await chromium.launch();
  fs.mkdirSync('test-results', {recursive:true});
  try {
@@ -65,10 +81,21 @@ const server = http.createServer((req,res) => {
    await page.locator('#open-print').click();
    await page.locator('dialog[open]').waitFor();
    await page.locator('[data-audio-cue="70"]').click();
-   await page.waitForFunction(() => {
-    const audio=document.querySelector('#recording');
-    return !audio.paused && audio.currentTime >= 70 && Number.isFinite(audio.duration);
-   });
+   try {
+    await page.waitForFunction(() => {
+     const audio=document.querySelector('#recording');
+     return !audio.paused && audio.currentTime >= 70 && Number.isFinite(audio.duration);
+    });
+   } catch (error) {
+    console.error(`${name}: media state`, await page.locator('#recording').evaluate(audio => ({
+      currentTime:audio.currentTime,duration:audio.duration,paused:audio.paused,
+      readyState:audio.readyState,networkState:audio.networkState,currentSrc:audio.currentSrc,
+      error:audio.error?.message,seekable:Array.from({length:audio.seekable.length},(_,i)=>[audio.seekable.start(i),audio.seekable.end(i)]),
+      notice:document.querySelector('#audio-status').textContent
+    })));
+    await page.screenshot({path:`test-results/${name}-audio-failure.png`,fullPage:true});
+    throw error;
+   }
    assert.ok(await page.locator('#recording').evaluate(el => Math.abs(el.duration - 85.23) < 1));
    await page.locator('.player').screenshot({path:`test-results/${name}-audio.png`});
    await page.locator('#previous-detail').click();
