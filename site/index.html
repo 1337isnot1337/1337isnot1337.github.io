@@ -35,9 +35,20 @@
       crossorigin
     />
     <link rel="stylesheet" href="vendor/swiper-bundle.min.css" />
-    <link rel="stylesheet" href="shelf.css?v=17" />
+    <link rel="stylesheet" href="shelf.css?v=18" />
     <script defer src="vendor/swiper-bundle.min.js"></script>
-    <script defer src="shelf.js?v=18"></script>
+    <script defer src="shelf.js?v=18" onerror="
+      const restoreReading = () => {
+        document.documentElement.classList.add('script-unavailable');
+        document.querySelector('.shelf-heading p').textContent = 'The interactive shelf could not load. You can still read the project notes below.';
+        for (const media of document.querySelectorAll('img[data-src], audio[data-src]')) {
+          media.src = media.dataset.src;
+          media.hidden = false;
+        }
+      };
+      if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', restoreReading, {once: true});
+      else restoreReading();
+    "></script>
     <noscript
       ><style>
         .shelf-controls,

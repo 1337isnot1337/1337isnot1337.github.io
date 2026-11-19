@@ -1326,3 +1326,10 @@ html {
 .binary-cell.is-one { background: #e2ecdf; border-color: #8aa48a; }
 .binary-cell.instruction-type { border-style: dashed; }
 #binary-sum { font-family: var(--mono); overflow-wrap: anywhere; }
+
+/* A failed enhancement download must leave useful native reading, not dead controls. */
+.script-unavailable .shelf-controls,
+.script-unavailable #factor-form,
+.script-unavailable .war,
+.script-unavailable #cpu .toy,
+.script-unavailable #conway .toy { display: none; }

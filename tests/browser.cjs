@@ -341,5 +341,30 @@ const server = http.createServer((req,res) => {
   await fallback.screenshot({path:'test-results/no-carousel-library.png',fullPage:true});
   await fallback.close();
   console.log('missing carousel library: native shelf and experiments passed');
+
+  const reading = await browser.newPage({viewport:{width:390,height:844},reducedMotion:'reduce'});
+  await reading.route('**/shelf.js*',route=>route.abort());
+  const readingErrors=[];
+  reading.on('pageerror',error=>readingErrors.push(error.message));
+  await reading.goto(base + '/#flyover');
+  await reading.locator('html.script-unavailable').waitFor();
+  assert.match(await reading.locator('.shelf-heading p').textContent(),/could not load.*read the project notes/);
+  assert.equal(await reading.locator('.project-details .detail:visible').count(),6);
+  assert.equal(await reading.locator('.shelf-controls').isVisible(),false);
+  assert.equal(await reading.locator('#factor-form').isVisible(),false);
+  assert.equal(await reading.locator('#cpu .toy:visible').count(),0);
+  assert.equal(await reading.locator('#flyover audio:visible').count(),1);
+  assert.ok((await reading.locator('#recording').getAttribute('src')).endsWith('livermore.mp3'));
+  await reading.locator('#recording').click({position:{x:20,y:16}});
+  await reading.waitForFunction(()=>{const audio=document.querySelector('#recording');return !audio.paused && audio.currentTime>0;});
+  await reading.waitForFunction(()=>document.querySelector('#flyover .spectrum img').naturalWidth>0);
+  assert.equal(await reading.locator('#flyover .spectrum img:visible').count(),1);
+  await reading.locator('#flyover .player').screenshot({path:'test-results/main-script-unavailable.png'});
+  await reading.locator('.index summary').click();
+  await reading.locator('.index a[data-project="cpu"]').click();
+  assert.ok(reading.url().endsWith('#cpu'));
+  assert.deepEqual(readingErrors,[]);
+  await reading.close();
+  console.log('missing main enhancement: native reading, links and media passed');
  } finally {await browser.close();server.close();}
 })().catch(e=>{console.error(e);server.close();process.exitCode=1;});
