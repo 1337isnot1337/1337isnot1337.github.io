@@ -86,3 +86,12 @@ test('factorization, instruction encoding, and rook neighbors handle boundaries'
   }
   p.dom.window.close();
 });
+test('missing-page recovery and schedule loading work before JavaScript', () => {
+  const missing = new JSDOM(fs.readFileSync('site/404.html', 'utf8')).window.document;
+  assert.equal(missing.querySelector('meta[name="robots"]').content, 'noindex');
+  assert.ok(missing.querySelector('a[href="/"]'));
+  const schedule = new JSDOM(fs.readFileSync('site/imsa-map/index.html', 'utf8')).window.document;
+  assert.equal(schedule.querySelector('h1').textContent, 'IMSA schedule map');
+  assert.ok(schedule.querySelector('#schedule-loading[role="status"]'));
+  assert.ok(schedule.querySelector('noscript'));
+});

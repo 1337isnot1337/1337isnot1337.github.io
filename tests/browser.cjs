@@ -55,6 +55,10 @@ const server = http.createServer((req,res) => {
    await page.locator('#reset-predictor').click();
    assert.match(await page.locator('#forecast').textContent(),/^01/);
    await page.screenshot({path:`test-results/${name}-predictor.png`,fullPage:true});
+   await page.goto(base + '/404.html');
+   await page.getByRole('heading',{name:'Nothing at this address.'}).waitFor();
+   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth <= innerWidth), `${name}: 404 overflow`);
+   await page.screenshot({path:`test-results/${name}-404.png`,fullPage:true});
    await page.goto(base + '/imsa-map/?example=1');
    await page.getByRole('heading',{name:'S1 room list'}).waitFor();
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth <= innerWidth), `${name}: schedule overflow`);

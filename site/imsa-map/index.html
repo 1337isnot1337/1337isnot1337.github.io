@@ -22,7 +22,12 @@
         min-height: 160px;
         max-height: 45vh;
         padding: 12px;
-        font: 14px/1.5 var(--mono);
+        font: 16px/1.5 var(--mono);
+        resize: vertical;
+        border: 1px solid var(--hair);
+        border-radius: 4px;
+        background: var(--paper);
+        color: var(--ink);
       }
       button {
         margin: 12px 0;
@@ -36,7 +41,7 @@
       .schedule-days section { background: #f4ebe6; border: 1px solid var(--hair); padding: 14px; border-radius: 4px; }
       .schedule-days ol { padding-left: 24px; margin-bottom: 0; }
       .schedule-days li { padding: 4px 0; font-size: 14px; }
-      [role="alert"] { padding: 12px; border-left: 3px solid var(--berry); }
+      [role="alert"] { padding: 12px; border: 1px solid var(--berry); background: #f4e9f0; }
       form p {
         overflow-wrap: anywhere;
       }
@@ -49,10 +54,17 @@
     </style>
   </head>
   <body>
+    <header>
+      <a href="/">← Cinna Davis’s project shelf</a>
+      <h1>IMSA schedule map</h1>
+      <p>Paste your PowerSchool schedule with the semester and column headings on
+        the first two lines. Keep the tab-separated class rows intact. S1 and S2
+        are shown separately.</p>
+      <p>Your schedule stays in this browser. Nothing is uploaded or saved.</p>
+    </header>
+    <p id="schedule-loading" role="status">Loading the schedule tool…</p>
     <script type="module">
-      const header = document.createElement("header");
-      header.innerHTML =
-        '<a href="/">← Cinna Davis’s project shelf</a><h1>IMSA schedule map</h1><p>Paste your PowerSchool schedule with the semester and column headings on the first two lines. Keep the tab-separated class rows intact. S1 and S2 are shown separately.</p><p>Your schedule stays in this browser. Nothing is uploaded or saved.</p>';
+      const header = document.querySelector("header");
       try {
         const { default: init } = await import("./schedule.js");
         await init();
@@ -74,14 +86,14 @@
             ?.setAttribute("aria-label", "PowerSchool schedule");
         });
       } catch {
-        document.body.append(
-          header,
-          "The schedule tool could not load. Refresh to try again.",
-        );
+        const message = document.querySelector("#schedule-loading") || document.createElement("p");
+        message.setAttribute("role", "alert");
+        message.textContent = "The schedule tool could not load. Refresh to try again.";
+        if (!header.isConnected) document.body.prepend(header);
+        if (!message.isConnected) document.body.append(message);
       }
     </script>
-    <noscript
-      >JavaScript is required to run the schedule tool.
+    <noscript><style>#schedule-loading { display: none; }</style>JavaScript is required to run the schedule tool.
       <a href="/">Return to the shelf</a></noscript
     >
   </body>
