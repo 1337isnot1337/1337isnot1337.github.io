@@ -302,6 +302,14 @@ const server = http.createServer((req,res) => {
    await page.locator('.rook-graph-frame').screenshot({path:`test-results/${name}-rook-board.png`});
    await page.locator('[data-rook-view="graph"]').click();
    await page.locator('#conway .toy').screenshot({path:`test-results/${name}-rook.png`});
+   await page.goto(base + '/#schedule');
+   await page.getByRole('heading',{name:'Schedule map',exact:true}).waitFor();
+   const scheduleExample = page.locator('.schedule-example');
+   assert.ok(await scheduleExample.isVisible());
+   assert.equal(await scheduleExample.locator('[data-example-day]').count(),5);
+   assert.match(await scheduleExample.textContent(),/Example data, not my class schedule/);
+   assert.ok(await scheduleExample.evaluate(node => node.scrollWidth <= node.clientWidth), `${name}: schedule example overflow`);
+   await scheduleExample.screenshot({path:`test-results/${name}-schedule-example.png`});
    const missing = await page.goto(base + '/a-missing-page-for-testing');
    assert.equal(missing.status(),404);
    await page.getByRole('heading',{name:'Nothing at this address.'}).waitFor();
@@ -552,6 +560,8 @@ const server = http.createServer((req,res) => {
   await plain.locator('#conway-title').waitFor();
   assert.ok(plain.url().endsWith('#conway'));
   await plain.locator('#conway').screenshot({path:'test-results/no-script-reading.png'});
+  await plain.goto(base + '/#schedule');
+  assert.ok(await plain.locator('.schedule-example').isVisible(),'the synthetic schedule preview works without JavaScript');
   await plain.goto(base + '/#cpu');
   assert.equal(await plain.locator('#cpu-trace').getAttribute('data-time'),'190');
   assert.ok(await plain.locator('#cpu-trace').isVisible(),'static processor trace remains visible without JavaScript');

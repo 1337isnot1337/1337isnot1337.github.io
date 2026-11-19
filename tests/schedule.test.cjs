@@ -27,6 +27,30 @@ test('published WASM separates terms, expands periods and recovers from invalid 
     await pause();
   }
   const row = (period, term, room) => `${period}\t${term}\tMath\tMath\tExample\t${room}\tstart\tend`;
+  // This public fixture is synthetic. Compare the reader's compact illustration
+  // with the shipped WASM, not a second implementation of schedule parsing.
+  const sampleRows = [
+    "2(A,C-D)\tS1\tMAT101\tMathematics\tExample\tA113\t08/19/2024\t01/19/2025",
+    "3(B,I)\tS1\tPHY101\tPhysics\tExample\tB204\t08/19/2024\t01/19/2025",
+  ];
+  const loader = fs.readFileSync('site/imsa-map/index.html', 'utf8');
+  for (const row of sampleRows) assert.ok(loader.includes(JSON.stringify(row)), 'reader uses the actual public example fixture');
+  await submit('Sample week\nPeriod / Term / Course / Title / Teacher / Room / Start / End\n' + sampleRows.join('\n'));
+  const example = new JSDOM(fs.readFileSync('site/index.html', 'utf8'));
+  const preview = example.window.document.querySelector('.schedule-example');
+  assert.ok(preview);
+  assert.match(preview.textContent, /Example data, not my class schedule/);
+  assert.match(preview.textContent, /Periods 2.3 shown/);
+  const outputDays = [...document.querySelectorAll('.schedule-days > section')];
+  for (const [i, day] of ['A', 'B', 'I', 'C', 'D'].entries()) {
+    const periods = [...outputDays[i].querySelectorAll('li')].map(node => node.textContent);
+    for (const period of [2, 3]) {
+      assert.equal(preview.querySelector(`[data-example-day="${day}"] [data-example-period="${period}"]`).textContent.trim(), periods[period - 1]);
+    }
+    for (const period of [1, 4, 5, 6, 7, 8]) assert.equal(periods[period - 1], 'Free period');
+  }
+  example.window.close();
+
   await submit('Schedule\nHeader\n' + row('2-4(A,C-D)', 'S1', 'A113') + '\n' + row('3(A)', 'S2', 'B204'));
   assert.equal(document.querySelectorAll('.schedule-results > section').length, 2);
   const days = document.querySelectorAll('.schedule-days');
