@@ -41,6 +41,14 @@ test('published WASM separates terms, expands periods and recovers from invalid 
   assert.ok(preview);
   assert.match(preview.textContent, /Example data, not my class schedule/);
   assert.match(preview.textContent, /Periods 2.3 shown/);
+  assert.deepEqual([...preview.querySelectorAll('.schedule-example-input > div')].map(node => [
+    node.querySelector('b').textContent.trim(),
+    node.querySelector('span').textContent.trim().replace(/\s+/g, ' '),
+  ]), [
+    ['Mathematics', '2(A,C-D) · S1 · Room A113'],
+    ['Physics', '3(B,I) · S1 · Room B204'],
+  ], 'displayed input fields match the same public fixture');
+
   const outputDays = [...document.querySelectorAll('.schedule-days > section')];
   for (const [i, day] of ['A', 'B', 'I', 'C', 'D'].entries()) {
     const periods = [...outputDays[i].querySelectorAll('li')].map(node => node.textContent);
