@@ -237,7 +237,7 @@ export function furnish(scene, narrow, repaint, software=false) {
   wire(scope,[[.57,.23,.52],[.76,.065,.75],[.62,.03,1.03],[.34,.026,.98],[.12,.029,1.13]],.021,finish(0x9b493c));
   // A banked propeller plane above a hardwood base. The complete display is one pick target.
   const stand=tag(group(world,narrow?-.11:-.28,.052,narrow?.83:.81),'plane',[0,.55,-.10],2.48,1.30);
-  stand.scale.setScalar(narrow?.82:1.09);
+  stand.scale.setScalar(narrow ? .41 : .545);
   box(stand,2.10,.095,1.15,darkWood,0,.052,.34,.044);
   box(stand,2.02,.049,1.09,wood,0,.119,.34,.023);
   cylinder(stand,.12,.15,.048,brassDark,.12,.16,-.04);
