@@ -1,5 +1,6 @@
 // Units are relative to the desk, with its writing surface at y = 0.
 import * as T from './vendor/three/three.module.min.js';
+import { airframeGeometry } from './model-plane.js';
 import { mergeGeometries } from './vendor/three/BufferGeometryUtils.js';
 import { RoundedBoxGeometry } from './vendor/three/RoundedBoxGeometry.js';
 
@@ -163,8 +164,8 @@ export function furnish(scene, narrow, repaint, software=false) {
     return shelf;
   }
   const proofX=narrow?-.60:-1.12, researchX=narrow?.80:1.58;
-  const proof=collection('proof',proofX,narrow?1.32:1.68,narrow?1.38:1.43,0x694357,'assets/furniture/conjectures-binding.webp');
-  const archive=collection('archive',researchX,narrow?.93:1.25,narrow?1.10:1.25,0x536760,'assets/furniture/research-binding.webp');
+  const proof=collection('proof',proofX,narrow?1.32:1.68,narrow?1.38:1.43,0x694357,'assets/furniture/conjectures-binding.webp?v=2');
+  const archive=collection('archive',researchX,narrow?.93:1.25,narrow?1.10:1.25,0x536760,'assets/furniture/research-binding.webp?v=2');
   const titles=['War','Graph theory','Proofs','Sequences'];
   const companions=narrow?2:4;
   for(let i=0;i<companions;i++){
@@ -200,7 +201,7 @@ export function furnish(scene, narrow, repaint, software=false) {
   });
   // Stitched green leather blotter with a fine inset line.
   const matWidth=width*.75;
-  const pad=tag(group(world,0,0,0),'blotter',[narrow?.24:.85,.043,1.70],.75,.38);
+  const pad=tag(group(world,0,0,0),'blotter',[narrow?.24:1.40,.043,1.70],.75,.38);
   box(pad,matWidth,.034,2.84,finish(0x726347),-.04,.015,.46,.016);
   const hide=loader.load('assets/furniture/blotter.webp',repaint);
   hide.wrapS=hide.wrapT=T.RepeatWrapping;hide.repeat.set(matWidth/1.5,2.8/1.5);hide.anisotropy=4;
@@ -234,35 +235,45 @@ export function furnish(scene, narrow, repaint, software=false) {
   }
   letter(scope,'EXPERIMENTS',1.09,.15,-.17,.176,.499,{bold:true,ink:'#31382e',font:'sans-serif'});
   wire(scope,[[.57,.23,.52],[.76,.065,.75],[.62,.03,1.03],[.34,.026,.98],[.12,.029,1.13]],.021,finish(0x9b493c));
-  // A record half drawn from its printed jacket, propped on a listening stand.
-  const jacket=narrow?1.58:2.05;
-  const stand=tag(group(world,narrow?-.18:-.54,.055,narrow?.93:.98),'record',[jacket*.20,.25,0],jacket*1.55,jacket*.82);
-  stand.rotation.y=narrow?.055:.12;
-  const angle=-1.30;
-  const sleeve=group(stand,0,jacket*Math.cos(angle)/2+.035,0);
-  sleeve.rotation.x=angle;
-  box(stand,jacket*.69,.065,jacket*.65,darkWood,0,.034,-.03,.019);
-  const restHeight=jacket*.73*Math.cos(angle);
-  box(stand,jacket*.63,restHeight,.085,darkWood,0,restHeight/2,-jacket*.32,.014);
-  box(sleeve,jacket*.66,jacket*.76,.055,trim,0,0,-.047,.012);
-  const recordRadius=jacket*.475;
-  const vinyl=document.createElement('canvas');vinyl.width=vinyl.height=512;
-  const grooves=vinyl.getContext('2d');
-  const sheen=grooves.createConicGradient(-.45,256,256);
-  for(const [pos,color] of [[0,'#292431'],[.11,'#53505c'],[.20,'#272632'],[.47,'#23232b'],[.60,'#514855'],[.73,'#27232b'],[1,'#292431']])sheen.addColorStop(pos,color);
-  grooves.fillStyle=sheen;grooves.fillRect(0,0,512,512);
-  grooves.lineWidth=1;
-  for(let r=89;r<254;r+=2.8){
-    grooves.strokeStyle=Math.round(r)%3===0?'#e0c8cf36':'#a49ab333';
-    grooves.beginPath();grooves.arc(256,256,r,0,Math.PI*2);grooves.stroke();
+  // A banked propeller plane above a hardwood base. The complete display is one pick target.
+  const stand=tag(group(world,narrow?-.11:-.28,.052,narrow?.83:.81),'plane',[0,.55,-.10],2.48,1.30);
+  stand.scale.setScalar(narrow?.82:1.09);
+  box(stand,2.10,.095,1.15,darkWood,0,.052,.34,.044);
+  box(stand,2.02,.049,1.09,wood,0,.119,.34,.023);
+  cylinder(stand,.12,.15,.048,brassDark,.12,.16,-.04);
+  wire(stand,[[.12,.173,-.04],[.115,.29,-.07],[.052,.41,-.14],[-.025,.49,-.14]],.029,brass);
+  const plaque=group(stand,0,.165,.81);
+  plaque.rotation.x=-.88;
+  box(plaque,1.98,.32,.043,brassDark,0,0,0,.018);
+  letter(plaque,'DOPPLERGEIST',1.84,.253,0,0,.025,{paper:'#f2deb5',ink:'#4b2936',bold:true,font:'sans-serif'});
+  for(const x of [-.95,.95])bead(plaque,x,0,.024,.018,.018,.009,brass);
+
+  const plane=group(stand,-.04,.58,-.15);
+  plane.rotation.set(-.065,-.59,-.045,'YXZ');
+  mesh(plane,airframeGeometry(),new T.MeshStandardMaterial({vertexColors:true,roughness:.37,metalness:.12}));
+  const ivoryEnamel=finish(0xf2dbac,.47), propMetal=finish(0xafaead,.31,.46);
+  for(const [z,radius,height,y] of [[-.17,.142,.18,.14],[.18,.136,.162,.137]]){
+    const arch=Array.from({length:15},(_,i)=>{
+      const t=i*Math.PI/14;
+      return [radius*Math.cos(t),y+height*Math.sin(t),z];
+    });
+    wire(plane,arch,.009,ivoryEnamel);
   }
-  grooves.fillStyle='#d69c6c';grooves.beginPath();grooves.arc(256,256,83,0,Math.PI*2);grooves.fill();
-  grooves.fillStyle='#542f36';grooves.font='bold 29px Georgia';grooves.textAlign='center';grooves.fillText('A',256,225);
-  const pressing=new T.CanvasTexture(vinyl);pressing.colorSpace=T.SRGBColorSpace;pressing.anisotropy=4;
-  const disc=new T.MeshStandardMaterial({map:pressing,roughness:.38,metalness:.18});
-  mesh(sleeve,new T.RingGeometry(recordRadius*.022,recordRadius,64),disc,jacket*.52,.012,0);
-  box(sleeve,jacket,jacket,.034,cream,0,0,.025,.012);
-  illustration(sleeve,'assets/furniture/dopplergeist-sleeve.webp',jacket-.022,jacket-.022,0,0,.044);
+  // Inset aileron hinge lines follow the changing camber and dihedral out to each tip.
+  const seam=finish(0x92574a,.67);
+  for(const side of [-1,1]){
+    wire(plane,[[.65*side,.007,-.113],[.86*side,.024,-.119],[1.13*side,.047,-.137],[1.32*side,.068,-.148]],.0038,seam);
+    bead(plane,.105*side,-.051,.898,.036,.026,.031,finish(0x473d39,.62));
+  }
+  const prop=group(plane,0,0,.957);
+  prop.rotation.z=.62;
+  for(const sign of [-1,1]){
+    const blade=bead(prop,.020*sign,.23*sign,0,.043,.228,.018,finish(0x51403c,.45));
+    blade.rotation.z=-.095;
+    const tip=bead(prop,.039*sign,.418*sign,0,.026,.040,.015,ivoryEnamel);
+    tip.rotation.z=-.095;
+  }
+  bead(prop,0,0,.022,.099,.099,.135,propMetal);
   // A real three-sided manila folder. Its front cover pivots around the paper fold.
   const file=tag(group(world,narrow?-1.60:-2.79,.061,narrow?.76:.92),'file',[0,.09,0],1.91,1.30);
   file.rotation.y=-.14;file.scale.setScalar(narrow?.52:.70);
@@ -502,7 +513,7 @@ export function furnish(scene, narrow, repaint, software=false) {
     }
     ctx.restore();
   }
-  contactShadow(stand,jacket*.74,jacket*.73,.05);
+  contactShadow(stand,1.99,.87,.05);
   contactShadow(file,1.85,1.26,.05); contactShadow(book,1.19,1.58,.05);
   contactShadow(tape,.99,.58,.035); contactShadow(letters,1.28,.74,.025);
   contactShadow(scope,1.57,.78,.12); contactShadow(lamp,.78,.78,.38); contactShadow(mug,.25,.25,.12);
