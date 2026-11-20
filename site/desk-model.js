@@ -305,7 +305,9 @@ export function furnish(scene, narrow, repaint, software=false) {
     const metal=mesh(clip,new T.TorusGeometry(.023,.004,7,13),brassDark);
     metal.scale.y=1.6;metal.rotation.z=.26;clip.visible=false;
     const pin=narrow?.012:.019;
-    bead(g,0,printH/2-.028,.025,pin,pin,pin,brass);
+    const head=detail('pin-head-'+button.dataset.object,g,0,printH/2-.028,.025);
+    bead(head,0,0,0,pin,pin,pin,brass);
+    cylinder(head,pin*.28,pin*.18,pin*1.8,brass,0,0,-pin*.51,8).rotation.x=Math.PI/2;
     const hole=detail('pin-hole-'+button.dataset.object,pinboard,x,y+printH/2-.028,.040);
     bead(hole,0,0,0,pin*.32,pin*.32,.001,finish(0x57402f));
     hole.visible=false;
@@ -384,6 +386,12 @@ export function furnish(scene, narrow, repaint, software=false) {
     box(knob,.013,r*.59,.008,cream,0,r*.29,.057);
   }
   const screenGlow=detail('scope-glow',scope,-.232,.57,.534);
+  const matchedStrip=detail('scope-strip',scope,-.232,.545,.545);
+  box(matchedStrip,.747,.29,.012,finish(0xdecaa6),0,0,0,.004);
+  illustration(matchedStrip,'assets/studio/flyover-wave.svg',.729,.244,0,-.007,.007);
+  const scopeCursor=detail('scope-cursor',matchedStrip,-.357,0,.012);
+  box(scopeCursor,.007,.245,.004,finish(0xb95f49));
+  matchedStrip.visible=false;
   for(let mode=0;mode<5;mode++){
     const readout=group(screenGlow,0,0,.001*mode);
     drawn(readout,.795,.462,(c,w,h)=>paintScope(c,w,h,mode),0,0,0);

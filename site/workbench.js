@@ -78,6 +78,13 @@
   });
   audio.addEventListener('error',recordingFailed);
   audio.addEventListener('pause',()=>{delete audio.dataset.deskCarry;});
+  audio.addEventListener('loadedmetadata',()=>{
+    const cue=Number(audio.dataset.printCue);
+    if(Number.isFinite(cue)){
+      audio.currentTime=Math.min(audio.duration,cue);
+      delete audio.dataset.printCue;
+    }
+  });
   audio.addEventListener('timeupdate',()=>{
     const valid=Number.isFinite(audio.duration) && audio.duration>0;
     playhead.hidden=!valid || audio.currentTime===0;

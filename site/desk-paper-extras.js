@@ -290,100 +290,150 @@
   sketch.addEventListener('pointercancel',()=>{foldGrip=null;});
   sketch.addEventListener('dblclick',()=>{if(folds===3)turnFold(0);});
 
-  function buildReverse(id,host) {
-    const area=insertOnce(host,'turn','div','','');
-    const content={
-      'flyover-print':['TUNE TO 01:00','A sound originally found in the air.'],
-      'factoring-print':['2 × 337','674. It is doing its best.'],
-      'cpu-print':['MAIN TRACK','The next instruction is already on the train.'],
-      'schedule-print':['A113 → B204','A very small campus expedition.'],
-      'conway-print':['1 / 7','One triangle, two neighbors, zero spare vertices.'],
-      'conjectures-print':['15  ·  10  ·  4','Someone shuffled these for ninety turns.'],
-      'robot-photo':['1 / 3','The bare chassis before the wiring went in.']
-    }[id];
-    if(!content)return;
-    let value=0;
-    area.append(make('b',content[0]));
-    let output=make('small',content[1]);area.append(output);
-    if(id==='conway-print'){
-      const diagram=document.createElementNS(ns,'svg');
-      diagram.setAttribute('viewBox','0 0 106 106');diagram.classList.add('thread-diagram');area.prepend(diagram);
+  function graphic(viewBox,className){
+    const svg=document.createElementNS(ns,'svg');
+    svg.setAttribute('viewBox',viewBox);svg.classList.add(className);
+    svg.setAttribute('aria-hidden','true');return svg;
+  }
+  function svgPart(parent,tag,attrs){
+    const node=document.createElementNS(ns,tag);
+    for(const [key,value] of Object.entries(attrs))node.setAttribute(key,value);
+    parent.append(node);return node;
+  }
+  function buildReverse(id,host){
+    const area=insertOnce(host,'turn','div','');
+    area.dataset.print=id;
+    const title=make('b',''),note=make('small','');
+    area.append(title,note);
+    const put=element=>area.prepend(element);
+    const stop=event=>event.stopPropagation();
+    area.addEventListener('pointerdown',stop);
+    const move=(element,onMove)=>dragSurface(element,(event,grip,done)=>{
+      const bounds=element.getBoundingClientRect();
+      const x=Math.max(0,Math.min(1,(event.clientX-bounds.left)/bounds.width));
+      onMove(x,event,grip,done);
+    });
+    if(id==='robot-photo'){
+      const pair=make('div','','build-comparison');put(pair);
+      const frames=[11,257,503];
+      const captions=[
+        'The left photo shows the full belly pan. The second brings the bundled leads and the 12.6 V display into view.',
+        'The wiring photo shows the power distribution. The close-up points to a single mounted motor controller and its lead.',
+      ];
+      function compare(index){
+        pair.replaceChildren();
+        for(const offset of [index,index+1]){
+          const frame=graphic(frames[offset]+' 13 236 244','comparison-frame');
+          frame.removeAttribute('aria-hidden');frame.setAttribute('role','img');
+          frame.setAttribute('aria-label',['Full belly pan and four corner modules','Wiring and voltage display','Hand pointing to a motor-controller lead'][offset]);
+          svgPart(frame,'image',{href:'assets/studio/reefscape-build.webp',width:750,height:270});
+          pair.append(frame);
+        }
+        title.textContent='Build table · '+(index+1)+' and '+(index+2);
+        note.textContent=captions[index];
+      }
+      compare(0);move(pair,x=>compare(Number(x>.5)));
+    }else if(id==='factoring-print'){
+      const counts=[2,3],rows=make('div','','bead-rows');
+      put(rows);
+      function sum(){title.textContent=counts.join(' × ')+' = '+counts[0]*counts[1];}
+      counts.forEach((count,index)=>{
+        const rod=make('div','','bead-rod');rows.append(rod);
+        function repaint(){[...rod.children].forEach((bead,i)=>bead.classList.toggle('on',i<counts[index]));}
+        for(let i=0;i<7;i++)rod.append(make('i',''));
+        move(rod,x=>{counts[index]=Math.min(7,1+Math.floor(x*7));repaint();sum();});
+        repaint();
+      });
+      sum();note.textContent='Two rods. One extremely qualified cat.';
+    }else if(id==='cpu-print'){
+      const rail=graphic('0 0 180 67','switching-track');put(rail);
+      for(const d of ['M9 43H170','M73 43Q108 42 149 10'])svgPart(rail,'path',{d,class:'rail-bed'});
+      for(const d of ['M9 43H170','M73 43Q108 42 149 10'])svgPart(rail,'path',{d,class:'rail-line'});
+      const engine=svgPart(rail,'g',{});
+      svgPart(engine,'rect',{x:-13,y:-7,width:26,height:13,rx:3});
+      svgPart(engine,'circle',{cx:-7,cy:7,r:3});
+      svgPart(engine,'circle',{cx:7,cy:7,r:3});
+      const lever=svgPart(rail,'path',{class:'rail-switch'});
+      function switchTrack(wrong){
+        engine.setAttribute('transform',wrong?'translate(121 25) rotate(-32)':'translate(115 43)');
+        lever.setAttribute('d',wrong?'M72 43L96 33':'M72 43H96');
+        title.textContent=wrong?'Discard · fetched address 5':'Continue · actual next address 7';
+        note.textContent=wrong?'D = D − A is already in Fetch. D;JGT just resolved with D = 0.':'The branch falls through to 7. The car on the siding was fetched on the prediction.';
+      }
+      switchTrack(true);move(rail,x=>switchTrack(x<.49));
+    }else if(id==='schedule-print'){
+      const map=graphic('0 0 180 78','pocket-map');put(map);
+      svgPart(map,'path',{class:'map-outline',d:'M6 13L61 4L119 13L174 4V64L119 74L61 65L6 74Z'});
+      svgPart(map,'path',{class:'map-route',d:'M25 52H48V29H85V49H127V26H154'});
+      const ends=[[25,52,'A113'],[154,26,'B204']];
+      for(const [x,y,text] of ends){
+        svgPart(map,'circle',{cx:x,cy:y,r:4});
+        svgPart(map,'text',{x,y:y+13,'text-anchor':'middle'}).textContent=text;
+      }
+      let folded=false;
+      move(map,(x,event,start,done)=>{
+        map.style.setProperty('--unfold',String(Math.max(.38,Math.abs(x-.5)*2)));
+        if(done){
+          folded=x<.50;area.toggleAttribute('data-folded',folded);
+          title.textContent=folded?'B204':'A113 → B204';
+          map.style.removeProperty('--unfold');
+        }
+      });
+      title.textContent='A113 → B204';note.textContent='A schematic route for the sample rooms.';
+    }else if(id==='conway-print'){
+      const diagram=graphic('0 0 106 106','thread-diagram');put(diagram);
       for(let i=0;i<7;i++){
-        const triangle=document.createElementNS(ns,'polygon');
         const angle=i*Math.PI*2/7;
         const a=[53+40*Math.cos(angle),53+40*Math.sin(angle)];
         const b=[53+40*Math.cos(angle+.39),53+40*Math.sin(angle+.39)];
-        triangle.setAttribute('points','53,53 '+a.join(',')+' '+b.join(','));
-        triangle.classList.toggle('lit',i===0);diagram.append(triangle);
+        svgPart(diagram,'polygon',{points:'53,53 '+a.join(',')+' '+b.join(',')});
       }
+      function stitch(x){
+        const lit=Math.min(6,Math.floor(x*7));
+        [...diagram.children].forEach((node,i)=>node.classList.toggle('lit',i===lit));
+        title.textContent=(lit+1)+' / 7';
+      }
+      stitch(0);move(diagram,stitch);note.textContent='Two neighbors stitch one triangle.';
+    }else if(id==='conjectures-print'){
+      const ranks=make('div','','mini-ranks');put(ranks);
+      const pocket=make('div','','rank-pocket');ranks.append(pocket);
+      let fan=0;
+      for(const [i,rank] of [15,10,4].entries()){
+        const card=make('button',rank,'pocket-rank');
+        card.type='button';card.style.setProperty('--slot',String(i));pocket.append(card);
+        move(card,(x,event,start,done)=>{
+          fan=Math.max(0,Math.min(1,(start.y-event.clientY)/(ranks.clientHeight||1)+.27));
+          if(done)fan=fan>.42?1:0;
+          ranks.style.setProperty('--pocket-fan',String(fan));
+        });
+        card.addEventListener('keydown',event=>{
+          if(!['ArrowUp','ArrowDown'].includes(event.key))return;
+          event.preventDefault();event.stopPropagation();
+          ranks.style.setProperty('--pocket-fan',event.key==='ArrowUp'?'1':'0');
+        });
+      }
+      title.textContent='Opening deal';note.textContent='Three ranks, all home again in ninety turns.';
+    }else if(id==='flyover-print'){
+      const strip=make('div','','scope-matching-strip');put(strip);
+      const wave=make('img');wave.alt='Waveform of the published Livermore recording';wave.src='assets/studio/flyover-wave.svg';
+      const cursor=make('i','');strip.append(wave,cursor);
+      function place(time){
+        cursor.style.left=time/85*100+'%';
+        title.textContent=Math.floor(time/60)+':'+String(Math.floor(time)%60).padStart(2,'0')+' on the recording';
+      }
+      place(0);note.textContent='Livermore waveform';
+      move(strip,(x,event,start,done)=>{
+        const time=Math.round(x*850)/10;
+        place(time);
+        if(done){
+          document.querySelector('#recording').dataset.deskCue=String(time);
+          const audio=document.querySelector('#desk-audio');
+          if(audio?.readyState)audio.currentTime=Math.min(time,audio.duration);
+          else if(audio)audio.dataset.printCue=String(time);
+          send('desk-wave',time);
+        }
+      });
     }
-    if(id==='factoring-print'){
-      const rows=make('div','','bead-rows');
-      for(const n of [7,7]){
-        const rod=make('div','','bead-rod');
-        for(let j=0;j<n;j++)rod.append(make('i',''));
-        rows.prepend(rod);
-      }
-      area.prepend(rows);
-    }
-    if(id==='conjectures-print'){
-      const ranks=make('div','','mini-ranks');
-      for(const rank of [15,10,4])ranks.append(make('b',rank));
-      area.prepend(ranks);
-    }
-    if(id==='schedule-print'){
-      const map=make('img');
-      map.alt='Folded campus illustration';map.src='assets/prints/schedule.webp';
-      area.prepend(map);
-    }
-    if(id==='robot-photo'){
-      const zoom=make('div','','build-negative');
-      zoom.style.backgroundImage='url(assets/studio/reefscape-build.webp)';area.prepend(zoom);
-    }
-    area.addEventListener('pointerdown',event=>event.stopPropagation());
-    dragSurface(area,(event,grip)=>{
-      value=event.clientX-grip.startX;
-      const width=area.clientWidth||1;
-      const step=Math.round(value/(width/7));
-      const counter=area.querySelector(':scope > b');
-      if(id==='conway-print'){
-        const lit=((step%7)+7)%7;
-        [...area.querySelectorAll('polygon')].forEach((node,i)=>node.classList.toggle('lit',i===lit));
-        counter.textContent=(lit+1)+' / 7';
-      }
-      if(id==='factoring-print'){
-        const a=Math.max(1,Math.min(7,2+step)),b=Math.max(1,Math.min(7,5-step));
-        [...area.querySelectorAll('.bead-rod')].forEach((row,i)=>[...row.children].forEach((bead,j)=>bead.classList.toggle('on',j<(i?a:b))));
-        counter.textContent=a+' × '+b+' = '+(a*b);
-        output.textContent='The cat approves of this arithmetic.';
-      }
-      if(id==='cpu-print'){
-        const side=value<0?'SIDING':'MAIN TRACK';
-        counter.textContent=side;
-        output.textContent=value<0?'Wrong path. Discard the instruction already in Fetch.':'The predictor can keep the instruction it fetched.';
-      }
-      if(id==='schedule-print'){
-        const map=area.querySelector('img');
-        map.style.setProperty('--unfold',Math.max(.25,Math.min(1,Math.abs(value)/width+.35)));
-        counter.textContent=value<0?'B204 → A113':'A113 → B204';
-      }
-      if(id==='robot-photo'){
-        const frame=Math.min(2,Math.max(0,Math.floor((event.clientX-area.getBoundingClientRect().left)*3/width)));
-        area.querySelector('.build-negative').style.backgroundPositionX=50*frame+'%';
-        counter.textContent=(frame+1)+' / 3';
-        output.textContent=['The belly pan on the build table.','Wiring work in progress.','The mounted motor controllers.'][frame];
-      }
-      if(id==='conjectures-print'){
-        area.querySelector('.mini-ranks').style.setProperty('--fan',Math.max(-20,Math.min(20,value))+'deg');
-      }
-      if(id==='flyover-print'){
-        const time=Math.min(84,Math.max(0,Math.round((event.clientX-area.getBoundingClientRect().left)*85/width)));
-        output.textContent=Math.floor(time/60)+':'+String(time%60).padStart(2,'0')+' on the recording';
-        counter.textContent='LIVERMORE';
-        document.querySelector('#recording').dataset.deskCue=time;
-        send('desk-wave',time);
-      }
-    });
   }
   pickup.addEventListener('desk-pickup',event=>{activePrint=event.detail;pictureTurns=0;});
   const photoHand=pickup.querySelector('.photo-hand');

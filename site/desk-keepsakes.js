@@ -94,6 +94,10 @@
         // An older download can only replace its own (possibly detached) preview.
         full.decode().then(()=>preview.replaceWith(full),()=>{});
         back.replaceChildren(document.getElementById('back-'+id).content.cloneNode(true));
+        const signature=document.createElement('small');
+        signature.className='film-signature';
+        signature.textContent=id==='robot-photo'?'Titan Robotics · Feb. 4, 2025':'C. Davis · project print';
+        front.append(signature);
         dialog.style.setProperty('--print-ratio',id==='robot-photo'?'1':'.8');
         link.hidden=!href;
         link.removeAttribute('data-project');

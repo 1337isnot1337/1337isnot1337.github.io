@@ -36,6 +36,7 @@ export function deskLife(stage, getModel, redraw, reduced) {
   let peekFolder=0,folderHeld=false,clipCompression=0;
   const pulledSlips=new Map(),slipHome=new WeakMap();
   const prints = new Map(),printOffsets=new Map(),paperclips=new Map();
+  let printGrip=null,stripTime=null;
   try{
     for(const project of JSON.parse(localStorage.getItem('shelf-paperclips')||'[]'))
       if(['flyover','cpu','schedule','conway','conjectures','factoring'].includes(project))paperclips.set(project+'-print',true);
@@ -68,7 +69,9 @@ export function deskLife(stage, getModel, redraw, reduced) {
   drawing.addEventListener('desk-sketch',onSketch);
   drawing.addEventListener('desk-fold',event=>{folded=event.detail;redraw();});
   drawing.addEventListener('desk-file-out',event=>{deskLeafFile=event.detail;redraw();});
-  document.addEventListener('desk-wave',()=>{tuner=0;tunerAngle=-.75;afterglow=.34;redraw();});
+  document.addEventListener('desk-wave',event=>{
+    stripTime=Number(event.detail);tuner=0;tunerAngle=-.75;afterglow=.34;redraw();
+  });
   document.addEventListener('desk-clip',event=>{
     const {id,on}=event.detail;if(id)paperclips.set(id,on);redraw();
   });
@@ -152,7 +155,7 @@ export function deskLife(stage, getModel, redraw, reduced) {
     },
     'shade-hinge'(dx,dy){gestures.shade(dx,dy);},
     tuner(dx,dy){
-      turningTuner=true;
+      stripTime=null;turningTuner=true;
       tunerAngle=clamp(tunerAngle+(dx-dy)*9,-.82,.82);
       const next=clamp(Math.round((tunerAngle+.75)/.5),0,3);
       rewindGlow(next);
@@ -279,6 +282,11 @@ export function deskLife(stage, getModel, redraw, reduced) {
         if(!part('listen').visible)return false;
         document.dispatchEvent(new CustomEvent('desk-experiment',{detail:'sound'}));
         el('scope').click();break;
+      case 'scope-strip':
+      case 'scope-cursor':
+        if(stripTime===null)return false;
+        document.dispatchEvent(new CustomEvent('desk-experiment',{detail:'sound'}));
+        el('scope').click();break;
       case 'tuner':
         if(tuner<0)return false;
         document.dispatchEvent(new CustomEvent('desk-experiment',{detail:experiment[tuner]}));
@@ -293,12 +301,25 @@ export function deskLife(stage, getModel, redraw, reduced) {
     }
     redraw();return true;
   }
-  function movePrint(id,dx,dy){
+  function movePrint(target,dx,dy){
+    const types=['pin-head-','print-corner-'];
+    const type=types.find(prefix=>target.startsWith(prefix))||'';
+    const id=target.slice(type.length);
     const offset=printOffsets.get(id)||[0,0];
-    offset[0]=clamp(offset[0]+dx*2,-.13,.13);
-    offset[1]=clamp(offset[1]-dy*2,-.12,.12);
+    if(type==='print-corner-'){
+      const angle=prints.get(id)??object(id).rotation.z;
+      const step=Math.min(Math.abs(angle),Math.hypot(dx,dy)*3.8);
+      prints.set(id,angle-Math.sign(angle)*step);
+      return;
+    }
+    if(type==='pin-head-' && printGrip?.id!==id){
+      printGrip={id,original:[...offset],lift:0};
+    }
+    if(printGrip?.id===id)printGrip.lift=clamp(printGrip.lift+Math.hypot(dx,dy)*1.7,0,1);
+    offset[0]=clamp(offset[0]+dx*2.2,-.17,.17);
+    offset[1]=clamp(offset[1]-dy*2.0,-.13,.13);
     printOffsets.set(id,offset);
-    prints.set(id,clamp((prints.get(id)||0)+dx*1.2,-.16,.16));
+    if(type!=='pin-head-')prints.set(id,clamp((prints.get(id)||0)+dx*1.2,-.16,.16));
   }
   function rewindGlow(next){
     if(next===tuner)return;
@@ -308,6 +329,8 @@ export function deskLife(stage, getModel, redraw, reduced) {
   }
   function releaseProps(cancelled){
     planeGrab=false;folderHeld=false;
+    if(printGrip&&cancelled)printOffsets.set(printGrip.id,printGrip.original);
+    printGrip=null;
     pencils.release(cancelled);dropSheet(cancelled);
     if(turningTuner){turningTuner=false;tunerAngle=-.75+.5*tuner;}
     if(cableGrip&&!cancelled){
@@ -494,6 +517,8 @@ export function deskLife(stage, getModel, redraw, reduced) {
     part('service-flap').rotation.x=stickerLift*2.42;
     part('service-diagram').visible=stickerLift>.30;
     if(tuner>=0)part('tuner').rotation.z=tunerAngle;
+    part('scope-strip').visible=Number.isFinite(stripTime);
+    if(Number.isFinite(stripTime))part('scope-cursor').position.x=-.357+.714*clamp(stripTime/85,0,1);
     const resolution=patched ? clamp((time-patchStarted)/400,0,1):1;
     part('scope-glow').children.forEach((readout,i)=>{
       const latest=i===(patched?4:tuner);
@@ -619,7 +644,10 @@ export function deskLife(stage, getModel, redraw, reduced) {
     for(const [id,on] of paperclips)part('pin-clip-'+id).visible=on;
     for(const [id,angle] of prints)object(id).rotation.z=angle;
     for(const [id,[x,y]] of printOffsets){
-      move(id,x,y,0);
+      const peeled=printGrip?.id===id?printGrip.lift:0;
+      move(id,x,y,peeled*.09);
+      object(id).rotation.x=-peeled*.47;
+      part('pin-head-'+id).position.z=.025+peeled*.034;
       part('pin-hole-'+id).visible=Math.hypot(x,y)>.025;
     }
     const warm=warmAt ? clamp((time-warmAt)/750,0,1):1;

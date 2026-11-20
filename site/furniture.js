@@ -1,10 +1,10 @@
 import * as T from './vendor/three/three.module.min.js';
-import { furnish } from './desk-model.js?v=21';
+import { furnish } from './desk-model.js?v=22';
 import { inspectDeskObjects } from './desk-inspect.js?v=8';
 
 import { attachDeskPointer } from './desk-pointer.js?v=13';
 
-import { deskLife } from './desk-life.js?v=7';
+import { deskLife } from './desk-life.js?v=8';
 import { deskView } from './desk-view.js?v=1';
 import { drawerTravel } from './desk-drawer.js?v=1';
 
@@ -240,7 +240,15 @@ export function mountFurniture(stage,showGraphicsFallback) {
       let owner=first.object;
       while(owner){
         lastPart ||= owner.userData.detail||'';
-        if(owner.userData.pick)return owner.userData.pick;
+        if(owner.userData.pick){
+          const id=owner.userData.pick;
+          if(!lastPart&&id.endsWith('-print')){
+            const local=owner.worldToLocal(point.copy(first.point));
+            const {w,h}=model.targets.get(id);
+            if(Math.abs(local.x)>.33*w&&local.y<-.29*h)lastPart='print-corner-'+id;
+          }
+          return id;
+        }
         owner=owner.parent;
       }
       return '';

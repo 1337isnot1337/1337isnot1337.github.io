@@ -172,3 +172,37 @@
   text-decoration-style: dotted;
   text-decoration-thickness: 1px;
 }
+.photo-front::after {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: linear-gradient(119deg,transparent calc(var(--shine,50%) - 14%),#fff5dc calc(var(--shine,50%) - 3%),#fff9ea calc(var(--shine,50%) + 1%),transparent calc(var(--shine,50%) + 13%));
+  opacity: var(--glint,0); mix-blend-mode: screen;
+}
+.photo-front .film-signature {
+  position: absolute; right: 8%; bottom: 7%; color: #514137;
+  padding: .2em .5em; background: #f4e7c4df; font: italic .69em Georgia,serif;
+  opacity: calc(var(--glint,0) * 5); transform: rotate(-5deg);
+}
+.build-comparison { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: .25em; margin-bottom: .35em; }
+.comparison-frame { width: 100%; border: 2px solid #eee0c5; background: #312833; }
+.switching-track,.pocket-map { display: block; margin: auto; width: min(100%,9rem); }
+.switching-track path { fill: none; }
+.rail-bed { stroke: #d4ad81; stroke-width: 7; }
+.rail-line { stroke: #617475; stroke-width: 2; }
+.rail-switch { stroke: #9c463f; stroke-width: 3; }
+.switching-track g { fill: #b05d49; stroke: #554335; }
+.map-outline { fill: #ecdfb0; stroke: #a2936e; stroke-width: 2; }
+.map-route { fill: none; stroke: #a35e4e; stroke-width: 2; stroke-dasharray: 4 2; }
+.pocket-map circle { fill: #a35e4e; }
+.pocket-map text { font: 11px Georgia,serif; fill: #403439; }
+.pocket-map { scale: var(--unfold,1) 1; transform-origin: right; }
+[data-folded] .pocket-map { clip-path: inset(0 0 0 63%); }
+.rank-pocket { position: relative; height: 3.3em; width: 8em; }
+.rank-pocket::after { content: ""; position: absolute; inset: 1.7em 0 0; background: #cfab82; border: 1px solid #a57c69; pointer-events: none; box-shadow: 0 -2px #f7e6c8; }
+.rank-pocket .pocket-rank {
+  position: absolute; top: .95em; left: calc(.75em + var(--slot) * 2.03em); z-index: 0;
+  padding: .22em .4em; background: #fff2d6; color: #793e49; border: 1px solid #a78374;
+  transform: translateY(calc(-1em * var(--pocket-fan,0))); touch-action: none;
+}
+.scope-matching-strip { position: relative; margin-bottom: .3em; }
+.photo-back .scope-matching-strip img { width: 100%; max-height: 3.5em; transform: none; }
+.scope-matching-strip i { height: 100%; width: 1px; position: absolute; top: 0; background: #aa5446; pointer-events: none; }
