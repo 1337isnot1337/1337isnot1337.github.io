@@ -118,7 +118,7 @@
   width: min(24em, 83%); padding: .85em 1em;
   background: #f5e6c9; color: #493644;
   box-shadow: 0 3px 12px #30221e60;
-  rotate: -1.8deg; overflow-wrap: anywhere;
+  rotate: -1.8deg; overflow-wrap: anywhere; touch-action: pan-y;
 }
 .private-book-slip p { margin: .35em 0; }
 .private-book-slip a { display: block; margin-top: .4em; }

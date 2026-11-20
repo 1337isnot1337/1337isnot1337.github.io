@@ -1,6 +1,23 @@
 // Cross-sections of a lacquered single-engine display model. Its nose points along +Z.
 import * as T from './vendor/three/three.module.min.js';
 
+const mainWing=[[0,.41,-.24,.080,-.042],[.22,.40,-.24,.076,-.040],[.65,.32,-.24,.060,-.018],
+  [.80,.291,-.25,.054,-.007],[.86,.279,-.25,.051,0],[.91,.267,-.252,.049,.007],
+  [1.13,.22,-.26,.043,.028],[1.29,.18,-.255,.037,.046],
+  [1.44,.09,-.235,.029,.065],[1.51,-.015,-.18,.019,.070],[1.535,-.095,-.103,.004,.072]];
+
+export function wingUnderside(x,z){
+  const span=Math.abs(x);
+  const i=mainWing.findIndex(([station])=>station>span);
+  const left=mainWing[i-1],right=mainWing[i];
+  function skin([,front,back,thick,rise]){
+    const chord=(z-back)/(front-back);
+    const section=Math.sqrt(Math.max(0,1-(2*chord-1)**2));
+    return rise-thick*section*(.28+.72*chord);
+  }
+  return T.MathUtils.lerp(skin(left),skin(right),(span-left[0])/(right[0]-left[0]));
+}
+
 export function airframeGeometry() {
   const positions=[], normals=[], colors=[];
   const ivory=new T.Color(0xf3dfb4), coral=new T.Color(0xb94c40);
@@ -54,11 +71,7 @@ export function airframeGeometry() {
     const spans=[...half].reverse().concat(half.slice(1).map(([x,...shape])=>[-x,...shape]));
     skin(spans,foil,([a],[b])=>paint(Math.abs((a+b)/2)));
   }
-  wing([[0,.41,-.24,.080,-.042],[.22,.40,-.24,.076,-.040],[.65,.32,-.24,.060,-.018],
-    [.80,.291,-.25,.054,-.007],[.86,.279,-.25,.051,0],[.91,.267,-.252,.049,.007],
-    [1.13,.22,-.26,.043,.028],[1.29,.18,-.255,.037,.046],
-    [1.44,.09,-.235,.029,.065],[1.51,-.015,-.18,.019,.070],[1.535,-.095,-.103,.004,.072]],
-    x=>x>1.13 || (x>.80 && x<.86) ? ivory : coral);
+  wing(mainWing,x=>x>1.13 || (x>.80 && x<.86) ? ivory : coral);
   wing([[0,-.68,-1.03,.042,.063],[.22,-.70,-1.01,.032,.071],
     [.39,-.78,-1.0,.024,.079],[.52,-.87,-.968,.015,.085],[.54,-.931,-.939,.003,.086]],
     x=>x>.39?coral:ivory);

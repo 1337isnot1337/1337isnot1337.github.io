@@ -55,9 +55,10 @@
     try{if(localStorage.getItem(key))slip.dataset.crease='flat';}catch{}
     let gripped=null;
     slip.addEventListener('pointerdown',event=>{
-      if(event.button!==0||event.target.closest('a'))return;
+      if(!event.isPrimary||event.button!==0||event.target.closest('a'))return;
       const bounds=slip.getBoundingClientRect();
       if(event.clientX<bounds.right-42||event.clientY>bounds.top+45)return;
+      event.preventDefault();
       gripped=event.clientX;slip.setPointerCapture(event.pointerId);
     });
     slip.addEventListener('pointerup',event=>{

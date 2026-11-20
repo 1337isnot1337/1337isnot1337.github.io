@@ -3,7 +3,7 @@ import * as T from './vendor/three/three.module.min.js';
 import { leafPoint, caterpillarRadii } from './desk-botany.js?v=1';
 import { lampProjection } from './desk-lamp.js?v=1';
 import { paintScope, followProbe } from './desk-scope.js?v=1';
-import { airframeGeometry } from './model-plane.js';
+import { airframeGeometry, wingUnderside } from './model-plane.js?v=2';
 import { mergeGeometries } from './vendor/three/BufferGeometryUtils.js';
 import { RoundedBoxGeometry } from './vendor/three/RoundedBoxGeometry.js';
 
@@ -457,10 +457,14 @@ export function furnish(scene, narrow, repaint, software=false) {
     bead(plane,.105*side,-.051,.898,.036,.026,.031,finish(0x473d39,.62));
   }
   const prop=detail('propeller',plane,0,0,.957);
-  const wingStamp=letter(plane,'flight tested on desk',.48,.076,.78,-.032,-.012,{flat:true,ink:'#413530'});
-  wingStamp.rotation.set(Math.PI/2,0,-.02);
-  for(const [x,y,z,title] of [[-1.09,.009,-.036,'DG-02'],[-.34,-.110,.079,'INSPECTED']]){
-    letter(plane,title,.245,.064,x,y,z,{flat:true,ink:'#443633',bold:true,font:'monospace'}).rotation.x=Math.PI/2;
+  // Printed markings follow the skin so the wing cannot hide their edges.
+  for(const [x,z,w,h,title] of [[.78,-.012,.52,.093,'flight tested on desk'],[-1.09,-.036,.245,.064,'DG-02'],[-.38,.079,.245,.064,'INSPECTED']]){
+    const stamp=letter(plane,title,w,h,x,0,z,{ink:'#443633',bold:true,font:'monospace'});
+    stamp.geometry.dispose();
+    stamp.geometry=new T.PlaneGeometry(w,h,12,4).rotateX(Math.PI/2);
+    const v=stamp.geometry.attributes.position;
+    for(let i=0;i<v.count;i++)v.setY(i,wingUnderside(x+v.getX(i),z+v.getZ(i))-.004);
+    stamp.geometry.computeVertexNormals();
   }
   const socket=mesh(plane,new T.TorusGeometry(.034,.012,7,18),brassDark,-.026,-.102,-.005);
   socket.rotation.x=Math.PI/2;
