@@ -487,7 +487,11 @@ if (typeof dialog.showModal === "function") {
       opener?.classList.contains("print") && shelf
         ? shelf.slides[shelf.activeIndex].querySelector(".print")
         : opener || openButton;
-    focusTarget.focus({ preventScroll: true });
+    // Closing a modal already restores focus synchronously in some browsers.
+    // The queued close event must not undo a Tab the visitor has pressed since.
+    const focused=document.activeElement;
+    if(focused===document.body||focused===opener||dialog.contains(focused))
+      focusTarget.focus({ preventScroll: true });
   });
   function turnPrint(direction) {
     const current = prints.findIndex(
