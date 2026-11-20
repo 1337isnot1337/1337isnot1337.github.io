@@ -505,6 +505,25 @@ const server = http.createServer((req,res) => {
    await page.close();
    console.log(`${name}: layout and interactions passed`);
   }
+  // Hold both stages of a cold start so an early fallback cannot flash between paints.
+  const cold=await browser.newPage();
+  let releaseStudio,releaseRenderer;
+  const gate=new Promise(resolve=>releaseStudio=resolve);
+  const renderer=new Promise(resolve=>releaseRenderer=resolve);
+  await cold.route('**/studio.js?*',async route=>{await gate;await route.continue();});
+  await cold.route('**/furniture.js?*',async route=>{await renderer;await route.abort();});
+  const rendererRequested=cold.waitForRequest('**/furniture.js?*');
+  await cold.goto(base,{waitUntil:'commit'});
+  await cold.locator('.desk-load-status').waitFor();
+  const coldFallback=cold.locator('.hutch-fallback,.desk-objects,.graphics-warning');
+  assert.equal(await coldFallback.evaluateAll(elements=>elements.filter(el=>el.getClientRects().length).length),0,'static desk stays hidden before deferred startup');
+  releaseStudio();await rendererRequested;
+  assert.equal(await coldFallback.evaluateAll(elements=>elements.filter(el=>el.getClientRects().length).length),0,'renderer download keeps fallback hidden');
+  releaseRenderer();
+  await cold.locator('.graphics-warning:visible').waitFor();
+  await cold.locator('.desk-objects a:visible').first().waitFor();
+  assert.equal(await cold.locator('.desk-load-status').isVisible(),false);
+  await cold.close();
   const shelfMouse=await browser.newPage({viewport:{width:1280,height:850}});
   await shelfMouse.addInitScript(()=>{
     const getContext=HTMLCanvasElement.prototype.getContext;
@@ -531,19 +550,25 @@ const server = http.createServer((req,res) => {
   await shelfMouse.locator('.mode-switch').click();
   await shelfMouse.locator('.graphics-warning:visible').waitFor();
   const pickup=shelfMouse.locator('.pickup');
-  const backs=new Set();
-  for(const object of ['robot-photo','flyover-print','conway-print','pinboard','robot-photo']){
+  for(const [object,caption] of [['robot-photo','Before the bumpers'],['flyover-print','One plane'],['conway-print','fourteen neighbors'],['pinboard','One plane']]){
     await shelfMouse.locator('[data-object="'+object+'"]').click();
+    const hand=pickup.locator('.photo-hand'),print=pickup.locator('.photo-print'),back=pickup.locator('.photo-back');
     await pickup.locator('.photo-front img').evaluate(img=>img.decode());
-    await pickup.locator('.flip-control').click();
-    const art=pickup.locator('.photo-back img');
-    await art.evaluate(img=>img.decode());
-    backs.add(await art.getAttribute('src'));
-    await pickup.locator('.photo-flip').click();
-    assert.equal(await pickup.locator('.photo-front').isVisible(),true);
-    await pickup.locator('.put-down').click();
+    assert.equal(await back.getAttribute('aria-hidden'),'true');
+    const box=await print.boundingBox(),x=box.x+box.width*.10,y=box.y+box.height*.52;
+    await shelfMouse.mouse.move(x,y);await shelfMouse.mouse.down();
+    await shelfMouse.mouse.move(x+box.width*.17,y-6,{steps:3});
+    const angle=await print.evaluate(el=>new DOMMatrix(getComputedStyle(el).transform).m11);
+    assert.ok(angle>.1 && angle<.99,'the paper follows a partial drag before turning over');
+    await shelfMouse.mouse.move(x+box.width*.75,y,{steps:8});await shelfMouse.mouse.up();
+    assert.equal(await back.getAttribute('aria-hidden'),'false');
+    assert.ok((await back.innerText()).includes(caption));
+    await back.locator('img').evaluate(img=>img.decode());
+    for(let i=0;i<8;i++)await hand.press('ArrowLeft');
+    assert.equal(await back.getAttribute('aria-hidden'),'true','arrow keys turn the same sheet');
+    await shelfMouse.mouse.click(5,5);
+    await pickup.waitFor({state:'hidden'});
   }
-  assert.equal(backs.size,5,'five pickups reveal five different illustrated backs');
   // Include the instrument cable and open flap in the clearance test at every degree of travel.
   const clearance=await shelfMouse.evaluate(async()=>{
     const T=await import('/vendor/three/three.module.min.js');
@@ -735,6 +760,16 @@ const server = http.createServer((req,res) => {
   await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
   assert.equal(await touch.locator('.sketch-paper path').count(),1);
   await touch.locator('.pickup .put-down').tap();
+  await touch.locator('.pickup').waitFor({state:'hidden'});
+  await touch.locator('[data-object="robot-photo"]').focus();
+  await touch.keyboard.press('Enter');
+  const photo=await touch.locator('.photo-print').boundingBox();
+  const finger={x:photo.x+photo.width*.12,y:photo.y+photo.height*.5,id:1};
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[finger]});
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{...finger,x:finger.x+photo.width*.7}]});
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+  assert.equal(await touch.locator('.photo-back').getAttribute('aria-hidden'),'false','touch turns the print');
+  await touch.locator('.put-down').tap();
   await touch.locator('.pickup').waitFor({state:'hidden'});
   await touch.close();
   console.log('touch-enabled mobile: swipe, momentum and deliberate tap passed');

@@ -27,12 +27,19 @@
     if(changed)document.dispatchEvent(new Event("portfolio-view"));
   }
   setView(page.dataset.view||"desk");
+  function showGraphicsFallback(message) {
+    stage.classList.remove("is-loading","is-rendered");
+    const warning=stage.querySelector(".graphics-warning");
+    if(message)warning.textContent=message;
+    warning.hidden=false;
+  }
   function showFurniture() {
     if (page.dataset.view!=="desk" || !sceneNearby || sceneStarted || studio.dataset.open || document.querySelector(".open-project[open]")) return;
     sceneStarted=true;
-    import("./furniture.js?v=10").then(module => module.mountFurniture(stage)).catch(() => {
-      stage.querySelector(".graphics-warning").hidden = false;
-    });
+    import("./furniture.js?v=11").then(module => {
+      try { module.mountFurniture(stage,showGraphicsFallback); }
+      catch { showGraphicsFallback(); }
+    }, () => showGraphicsFallback("The 3D desk couldn’t download. Reload to try again."));
   }
   if ("IntersectionObserver" in window) {
     new IntersectionObserver(([entry]) => {

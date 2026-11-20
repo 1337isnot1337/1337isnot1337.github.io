@@ -356,7 +356,7 @@ export function furnish(scene, narrow, repaint, software=false) {
   }
   const frame=tag(group(world,narrow?.96:1.22,1.55,-1.49),'robot-photo',[0,.40,.06],.64,.76);frame.rotation.x=-.12;frame.rotation.y=-.10;
   box(frame,.69,.80,.08,trim,0,.40,0,.024);box(frame,.61,.71,.025,cream,0,.40,.05);
-  illustration(frame,'assets/furniture/prints/roller.webp',.52,.53,0,.421,.068);
+  illustration(frame,'assets/furniture/prints/reefscape.webp',.54,.54,0,.421,.068);
   // Make a real material sample for the folder's contents.
   drawn(file,1.69,1.18,(c,w,h)=>{
     c.fillStyle='#eee4ce';c.fillRect(0,0,w,h);c.strokeStyle='#b9c4b9';c.lineWidth=.0025;

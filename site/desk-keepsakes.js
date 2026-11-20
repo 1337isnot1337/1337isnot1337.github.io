@@ -5,8 +5,8 @@
   const title=dialog.querySelector('h2');
   const front=dialog.querySelector('.photo-front');
   const back=dialog.querySelector('.photo-back');
-  const flip=dialog.querySelector('.photo-flip');
-  const flipControl=dialog.querySelector('.flip-control');
+  const hand=dialog.querySelector('.photo-hand');
+  const print=dialog.querySelector('.photo-print');
   const link=dialog.querySelector('.photo-link');
   const sketch=dialog.querySelector('.sketch-paper');
   const undo=dialog.querySelector('.undo-sketch');
@@ -14,16 +14,10 @@
   const photos={
     'flyover-print':['DOPPLERGEIST','assets/prints/flyover.webp','An illustrated plane banking above a cat listening on a hillside.','#flyover','Listen to the recording'],
     'conway-print':['Conway’s 99-graph','assets/prints/conway.webp','A colorful geometric print from the graph theory shelf.','#conway','Explore the graph'],
-    'robot-photo':['In the robot shop','assets/studio/roller.webp','An intake roller, drive belt and hex key on the robot worktable.','#about','Open the robotics notebook']
+    'robot-photo':['REEFSCAPE, 2025','assets/studio/reefscape.webp','Titan Robotics’ blue-bumpered 2022 robot carrying a white coral pipe on the REEFSCAPE field.','#about','Open the robotics notebook']
   };
-  const doodles=[
-    ['wave','A striped cat waves one paw.','oh hi. you found the back.'],
-    ['airmail','A cat pilots a paper airplane.','Air traffic control has a few questions.'],
-    ['pit-crew','A tiny robot high-fives its cat mechanic.','Passed inspection. Inspector wanted treats.'],
-    ['constellation','A cat naps between the stars of a hand-drawn graph.','One more vertex and she wakes up.'],
-    ['snail-mail','A snail carries a pink envelope.','Express delivery. Eventually.']
-  ];
-  let bag=[],last=null,opener=null,reverse=false,lead='graphite',stroke=null;
+  const doodles=['wave','airmail','pit-crew','constellation','snail-mail'];
+  let bag=[],last=null,opener=null,lead='graphite',stroke=null;
   function surprise(){
     if(!bag.length){
       bag=[...doodles];
@@ -36,16 +30,35 @@
     lead=color;
     for(const button of dialog.querySelectorAll('[data-lead]'))button.setAttribute('aria-pressed',String(color===button.dataset.lead));
   }
-  function side(isBack,animate=false){
-    reverse=isBack;front.hidden=reverse;back.hidden=!reverse;
-    const action=reverse?'See the front':'Turn over';
-    flip.setAttribute('aria-label',action);
-    flip.setAttribute('aria-description',reverse ? back.firstElementChild.alt+' '+back.lastElementChild.textContent : front.firstElementChild.alt);
-    flipControl.textContent=action+' ↻';
-    if(animate && !matchMedia('(prefers-reduced-motion: reduce)').matches){
-      flip.animate([{transform:'perspective(700px) rotateY(-13deg)'},{transform:'none'}],{duration:160,easing:'ease-out'});
-    }
+  let yaw=0,pitch=0,grip=null;
+  function orient() {
+    print.style.transform='rotateX('+pitch+'deg) rotateY('+yaw+'deg)';
+    const facing=Math.cos(pitch*Math.PI/180)*Math.cos(yaw*Math.PI/180);
+    front.setAttribute('aria-hidden',String(facing<0));
+    back.setAttribute('aria-hidden',String(facing>=0));
+    print.style.setProperty('--glint',String((1-Math.abs(facing))*.18));
   }
+  hand.addEventListener('pointerdown',event=>{
+    if(!event.isPrimary || event.button!==0)return;
+    hand.focus({preventScroll:true});
+    hand.setPointerCapture(event.pointerId);
+    grip={id:event.pointerId,x:event.clientX,y:event.clientY,yaw,pitch,scale:240/print.offsetWidth};
+    hand.classList.add('holding');
+  });
+  hand.addEventListener('pointermove',event=>{
+    if(grip?.id!==event.pointerId)return;
+    yaw=grip.yaw+(event.clientX-grip.x)*grip.scale;
+    pitch=grip.pitch-(event.clientY-grip.y)*grip.scale;
+    orient();
+  });
+  function letGo(){grip=null;hand.classList.remove('holding');}
+  hand.addEventListener('lostpointercapture',letGo);
+  const turns={ArrowLeft:[-15,0],ArrowRight:[15,0],ArrowUp:[0,15],ArrowDown:[0,-15]};
+  hand.addEventListener('keydown',event=>{
+    const turn=turns[event.key];
+    if(!turn || event.altKey || event.ctrlKey || event.metaKey)return;
+    event.preventDefault();yaw+=turn[0];pitch+=turn[1];orient();
+  });
   let boardIndex=0;
   for(const item of items){
     if(item.dataset.object==='plant')continue;
@@ -61,26 +74,25 @@
       if(photo){
         const [name,src,alt,href,label]=photo;
         title.textContent=name;
-        front.firstElementChild.loading=back.firstElementChild.loading='eager';
+        front.firstElementChild.loading='eager';
         front.firstElementChild.src=src;front.firstElementChild.alt=alt;
-        const [art,description,caption]=surprise();
-        back.firstElementChild.src='assets/desk-drawings/'+art+'.svg';
-        back.firstElementChild.alt=description;back.lastElementChild.textContent=caption;
+        back.replaceChildren(document.getElementById('back-'+id).content.cloneNode(true));
+        dialog.style.setProperty('--print-ratio',id==='robot-photo'?'1':'.8');
         link.hidden=!href;
         link.removeAttribute('data-project');
         if(href){
           link.href=href;link.textContent=label;
           if(href!=='#about')link.dataset.project=href.slice(1);
         } else link.removeAttribute('href');
-        side(false);
+        yaw=0;pitch=0;orient();
       }else{
         title.textContent='Scratch paper';setLead(id==='rose-pencil'?'rose':id==='pencil'?'graphite':lead);
         undo.disabled=!sketch.childElementCount;
       }
       dialog.showModal();
+      if(photo)hand.focus({preventScroll:true});
     });
   }
-  flip.onclick=flipControl.onclick=()=>side(!reverse,true);
   dialog.querySelector('.put-down').onclick=()=>dialog.close();
   // Let the desk's normal link handlers own history and focus for the next reader.
   link.addEventListener('click',e=>{
@@ -107,11 +119,11 @@
     stroke.path.setAttribute('d',stroke.path.getAttribute('d')+'L'+point(e));
   });
   sketch.addEventListener('lostpointercapture',()=>{stroke=null;});
-  dialog.addEventListener('close',()=>{stroke=null;});
+  dialog.addEventListener('close',()=>{stroke=null;letGo();});
   for(const button of dialog.querySelectorAll('[data-lead]'))button.onclick=()=>setLead(button.dataset.lead);
   dialog.querySelector('.stamp-sketch').onclick=()=>{
     const image=document.createElementNS(ns,'image');
-    image.setAttribute('href','assets/desk-drawings/'+surprise()[0]+'.svg');
+    image.setAttribute('href','assets/desk-drawings/'+surprise()+'.svg');
     image.setAttribute('x',30+Math.floor(Math.random()*180));image.setAttribute('y',20+Math.floor(Math.random()*90));
     image.setAttribute('width','260');image.setAttribute('height','180');sketch.append(image);undo.disabled=false;
   };

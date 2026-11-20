@@ -67,9 +67,9 @@
     "></script>
     <script defer src="rook-graph.js?v=1"></script>
     <script>document.documentElement.dataset.view = /^(#projects|#flyover|#cpu|#schedule|#conjectures|#factoring|#conway)$/.test(location.hash) ? "shelf" : "desk";</script>
-    <link rel="stylesheet" href="studio.css?v=9" />
-    <script defer src="studio.js?v=9" onerror="delete document.documentElement.dataset.view"></script>
-    <script defer src="desk-keepsakes.js?v=5"></script>
+    <link rel="stylesheet" href="studio.css?v=10" />
+    <script defer src="studio.js?v=10" onerror="delete document.documentElement.dataset.view"></script>
+    <script defer src="desk-keepsakes.js?v=6"></script>
     <script defer src="paper-dismiss.js?v=1"></script>
     <noscript
       ><style>
@@ -106,7 +106,8 @@
         <section class="desk-overview" aria-labelledby="studio-title">
 
           <h1 id="studio-title" class="visually-hidden" tabindex="-1">Cinna Davis’s desk</h1>
-          <div class="desktop-picture">
+          <div class="desktop-picture is-loading">
+            <p class="desk-load-status" role="status">Opening the desk…</p>
             <canvas class="furniture-canvas" aria-hidden="true"></canvas>
             <div class="hutch-fallback" aria-hidden="true"></div>
             <nav class="desk-objects" aria-label="Objects on the desk">
@@ -591,7 +592,7 @@
   </nav>
   <div class="notebook-spread">
     <article data-leaf="about" class="notebook-page notebook-robotics" aria-labelledby="robotics-story-title">
-      <div class="leaf-art"><img src="assets/studio/roller.webp" width="500" height="500" loading="lazy" alt="An intake roller, drive belt and hex key on the worktable." /></div>
+      <div class="leaf-art"><img src="assets/studio/reefscape.webp" width="1440" height="1440" loading="lazy" alt="Team 2022’s 2025 REEFSCAPE robot carrying a white coral pipe above its blue bumpers." /></div>
       <div class="leaf-writing">
       <h3 id="robotics-story-title">Code that has to<br> move something.</h3>
       <p>I lead programming for Titan Robotics, FIRST Team 2022. Our team of ten writes the robot’s Java code. I teach rookies, review code, and dig through match logs when the robot does something we didn’t ask it to.</p>
@@ -1264,17 +1265,37 @@
     <dialog class="pickup" aria-labelledby="pickup-title">
       <div class="pickup-head"><h2 id="pickup-title"></h2><button type="button" class="put-down" autofocus>Put back</button></div>
       <div class="photo-piece">
-        <button type="button" class="photo-flip" aria-label="Turn photograph over">
-          <span class="photo-front"><img loading="lazy" src="assets/furniture/prints/flyover.webp" alt="" /></span>
-          <span class="photo-back" hidden><img loading="lazy" src="assets/desk-drawings/wave.svg" alt="" /><span class="pencil-caption"></span></span>
-        </button>
-        <div class="pickup-foot"><button type="button" class="flip-control">Turn over ↻</button><a class="photo-link"></a></div>
+        <div class="photo-hand" tabindex="0" role="group" aria-label="Photograph. Drag to turn, or use the arrow keys.">
+          <div class="photo-print">
+            <div class="photo-front"><img loading="lazy" draggable="false" src="assets/furniture/prints/flyover.webp" alt="" /></div>
+            <div class="photo-back" aria-hidden="true"></div>
+          </div>
+        </div>
+        <div class="pickup-foot"><a class="photo-link"></a></div>
       </div>
       <div class="sketch-piece" hidden>
         <svg class="sketch-paper" viewBox="0 0 480 330" role="img" aria-label="Your sketch on the desk blotter"></svg>
         <div class="sketch-tools" aria-label="Drawing tools"><button type="button" data-lead="graphite">Graphite</button><button type="button" data-lead="rose">Rose</button><button type="button" class="stamp-sketch">Stamp a doodle</button><button type="button" class="undo-sketch">Undo</button></div>
       </div>
     </dialog>
+    <template id="back-robot-photo">
+      <small>Titan Robotics · 2025</small>
+      <img class="contact-strip" src="assets/studio/reefscape-build.webp" width="750" height="270" alt="Three build-table photos showing the belly pan, wiring and motor controllers." />
+      <p>Before the bumpers went on.</p>
+      <small>Build table · February 4</small>
+    </template>
+    <template id="back-flyover-print">
+      <small>DOPPLERGEIST · Livermore</small>
+      <figure><img src="assets/studio/flyover-wave.svg" width="314" height="105" alt="Waveform of the 85-second excerpt. The largest peak comes just after one minute." /><figcaption><span>0:00</span><span>1:25</span></figcaption></figure>
+      <p>One plane passing a microphone.</p>
+      <small>Recording by Praveen Pathak · CC BY 4.0</small>
+    </template>
+    <template id="back-conway-print">
+      <small>Conway’s 99-graph</small>
+      <img class="neighbor-sketch" src="assets/studio/conway-neighbors.svg" width="190" height="174" alt="Fourteen neighbors paired around one vertex, forming seven triangles." />
+      <p>Pick any vertex. Its fourteen neighbors have to pair off.</p>
+      <small>Seven triangles through a point</small>
+    </template>
     <dialog class="open-project" aria-label="Project details">
       <div class="modal-top">
         <button type="button" id="close-dialog">Back to shelf</button>

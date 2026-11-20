@@ -1,10 +1,10 @@
 import * as T from './vendor/three/three.module.min.js';
-import { furnish } from './desk-model.js?v=8';
+import { furnish } from './desk-model.js?v=9';
 import { inspectDeskObjects } from './desk-inspect.js?v=2';
 
 import { attachDeskPointer } from './desk-pointer.js?v=9';
 
-export function mountFurniture(stage) {
+export function mountFurniture(stage,showGraphicsFallback) {
   const canvas = stage.querySelector('canvas');
   if (!document.createElement('canvas').getContext('2d'))throw new Error('Canvas drawing unavailable');
   const engine = new T.WebGLRenderer({canvas,antialias:true,alpha:false,powerPreference:'default'});
@@ -52,7 +52,11 @@ export function mountFurniture(stage) {
   const inspector=inspectDeskObjects(stage,engine,scene,camera,()=>model,redraw);
   function redraw() {
     dirty=true;
-    if (visible && !contextLost && !frame) frame=requestAnimationFrame(paint);
+    if (visible && !contextLost && !frame) frame=requestAnimationFrame(renderFrame);
+  }
+  function renderFrame(time) {
+    try { paint(time); }
+    catch (error) { suspendDesk();console.error("Desk rendering failed",error); }
   }
   function rebuild() {
     if(model){
@@ -138,7 +142,7 @@ export function mountFurniture(stage) {
       boundedModel=model;
     }
     if(!stage.classList.contains('is-rendered')){
-      stage.classList.add('is-rendered');
+      stage.classList.remove('is-loading');stage.classList.add('is-rendered');
       if(software)warning.textContent='The desk is using software rendering. Enable graphics acceleration for smoother movement.';
       warning.hidden=!software;
       lamp.hidden=false;links.get('plant').hidden=false;
@@ -201,7 +205,13 @@ export function mountFurniture(stage) {
   if('ResizeObserver' in window)new ResizeObserver(redraw).observe(stage);
   window.addEventListener('resize',redraw);
   motion.addEventListener('change',redraw);
-  canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();contextLost=true;leaveDesk();warning.textContent=unavailable;warning.hidden=false;stage.classList.remove('is-rendered');links.forEach(el=>el.removeAttribute('data-outside'));inspector.close();lamp.hidden=true;links.get('plant').hidden=true;});
+  function suspendDesk() {
+    contextLost=true;leaveDesk();warning.textContent=unavailable;
+    showGraphicsFallback();
+    links.forEach(el=>el.removeAttribute('data-outside'));
+    inspector.close();lamp.hidden=true;links.get('plant').hidden=true;
+  }
+  canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();suspendDesk();});
   canvas.addEventListener('webglcontextrestored',()=>{contextLost=false;engine.shadowMap.needsUpdate=true;redraw();});
   redraw();
 }
