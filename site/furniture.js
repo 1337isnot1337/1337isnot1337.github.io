@@ -1,5 +1,5 @@
 import * as T from './vendor/three/three.module.min.js';
-import { furnish } from './desk-model.js?v=10';
+import { furnish } from './desk-model.js?v=11';
 import { inspectDeskObjects } from './desk-inspect.js?v=3';
 
 import { attachDeskPointer } from './desk-pointer.js?v=10';
@@ -102,8 +102,8 @@ export function mountFurniture(stage,showGraphicsFallback) {
       const px=height/(2*Math.tan(T.MathUtils.degToRad(camera.fov/2))*cameraZ);
       el.style.setProperty('--screen-x',x.toFixed(1)+'px');
       el.style.setProperty('--screen-y',y.toFixed(1)+'px');
-      el.style.setProperty('--hit-width',Math.max(40,w*px*.83).toFixed(1)+'px');
-      el.style.setProperty('--hit-height',Math.max(37,h*px*.68).toFixed(1)+'px');
+      el.style.setProperty('--hit-width',Math.max(40,w*root.scale.x*px*.83).toFixed(1)+'px');
+      el.style.setProperty('--hit-height',Math.max(37,h*root.scale.y*px*.68).toFixed(1)+'px');
       el.toggleAttribute('data-outside',x<10||x>width-10||y<12||y>height-10);
     }
   }

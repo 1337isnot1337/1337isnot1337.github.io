@@ -138,7 +138,7 @@ export function furnish(scene, narrow, repaint, software=false) {
   box(world,.11,1.61,.90,wood,narrow?.35:.65,2.31,-1.76,.016);
   box(world,width-.35,.075,.89,wood,0,.044,-1.77,.01);
   // The files on the shelf have actual covers, page blocks, foil bands and printed spines.
-  const bookColors=[0x754151,0x50695f,0xb99a6b,0x4d616b,0xb67769,0x695268,0x82774c];
+  const bookColors=[0x754151,0x50695f,0x695268,0x4d616b];
   function shelvedBook(parent,x,y,height,thickness,color,title,tilt=0){
     const g=group(parent,x,y,-1.63);g.rotation.z=tilt;
     const binding=cloth(color);
@@ -149,26 +149,37 @@ export function furnish(scene, narrow, repaint, software=false) {
     if(title){const t=letter(g,title,height*.62,Math.min(.15,thickness*.68),0,height*.53,.284,{ink:'#fff0cd',bold:true});t.rotation.z=Math.PI/2;}
     return g;
   }
-  const shelfBooks=group(world,0,0,0);const titles=['War','Graph theory','Proofs','Sequences','Combinatorics','Analysis','Fractions'];
-  const total=narrow?6:9;
-  for(let i=0;i<total;i++){
-    const w=.21+(i%3)*.048;
-    shelvedBook(shelfBooks,-half+.43+i*.32,1.52,1.00+(i*7%6)*.075,w,bookColors[i%7],titles[i%7],i===total-1?-.12:0);
+  // The two working collections face the visitor. Their companion volumes sit spine-out.
+  function collection(id,x,w,h,color,coverArt){
+    const shelf=tag(group(world,0,0,0),id,[x,1.52+h*.53,-1.38],w,h);
+    const volume=group(shelf,x,1.52,-1.56);
+    volume.rotation.y=id==='proof'?.14:-.12;
+    volume.rotation.x=-.09;
+    const binding=cloth(color);
+    box(volume,w-.05,h-.04,.22,cream,0,h/2,0,.012);
+    for(const z of [-.134,.134])box(volume,w,h,.035,binding,0,h/2,z,.012);
+    box(volume,.055,h,.27,binding,-w/2+.025,h/2,0,.012);
+    illustration(volume,coverArt,w-.024,h-.024,0,h/2,.154);
+    return shelf;
   }
-  tag(shelfBooks,'proof',[-half+.44+(total-1)*.16,2.11,-1.35],narrow?1.4:2.2,.90);
-  const archive=group(world,0,0,0);
-  for(let i=0;i<(narrow?3:6);i++)shelvedBook(archive,half-.51-i*.35,1.52,.99+(i%4)*.11,.29,bookColors[(i+3)%7],['Field notes','Mechanics','Collected papers'][i%3],i===2?.09:0);
-  tag(archive,'archive',[half-(narrow?.85:1.35),2.05,-1.36],narrow?.96:1.95,.90);
-  // Bent brass label holders screw to the shelf lip, immediately below each collection.
-  function shelfLabel(owner, x, title, span) {
-    const holder=group(owner,x,1.475,-1.205);
-    box(holder,span,.242,.032,brassDark,0,0,0,.012);
-    box(holder,span-.055,.209,.014,brass,0,0,.021,.006);
-    letter(holder,title,span-.18,.188,0,.003,.031,{paper:'#eee0bb',ink:'#302e2a',bold:true});
-    for(const side of [-1,1])bead(holder,side*(span/2-.044),0,.027,.016,.016,.011,brassDark);
+  const proofX=narrow?-.60:-1.12, researchX=narrow?.80:1.58;
+  const proof=collection('proof',proofX,narrow?1.32:1.68,narrow?1.38:1.43,0x694357,'assets/furniture/conjectures-binding.webp');
+  const archive=collection('archive',researchX,narrow?.93:1.25,narrow?1.10:1.25,0x536760,'assets/furniture/research-binding.webp');
+  const titles=['War','Graph theory','Proofs','Sequences'];
+  const companions=narrow?2:4;
+  for(let i=0;i<companions;i++){
+    shelvedBook(proof,proofX-(narrow?.84:1.08)-i*.27,1.52,.94+i*.064,.23,bookColors[i],titles[i],i===0?-.075:0);
   }
-  shelfLabel(shelfBooks,-half+.44+(total-1)*.16,'Solved conjectures',narrow?1.48:1.84);
-  shelfLabel(archive,half-(narrow?1.0:2.02),'Research notes',narrow?1.25:1.54);
+  if(!narrow){
+    shelvedBook(archive,2.37,1.52,1.03,.26,bookColors[1],'Field notes');
+    shelvedBook(archive,2.68,1.52,.96,.25,bookColors[3],'Mechanics',.045);
+  }
+  // The club booklet and team photograph share the far end of the shelf.
+  const zine=tag(group(world,narrow?1.54:3.15,1.52,-1.49),'epoch',[0,.25,.05],.51,.53);
+  zine.rotation.set(-.13,-.12,-.035);
+  box(zine,.50,.53,.048,paper,0,.268,0,.008);
+  box(zine,.512,.54,.012,cloth(0x738082),0,.27,.029,.006);
+  letter(zine,'Epoch',.445,.14,0,.30,.039,{ink:'#f2e4ce',bold:true});
   // One row across the wide hutch, two rows in the narrow one.
   const boardWidth=narrow?1.93:4.02,boardHeight=narrow?1.27:1.10;
   const pinboard=tag(group(world,narrow?.24:.08,.75,-1.58),'pinboard',[0,0,.08],boardWidth,boardHeight);
@@ -189,7 +200,7 @@ export function furnish(scene, narrow, repaint, software=false) {
   });
   // Stitched green leather blotter with a fine inset line.
   const matWidth=width*.75;
-  const pad=tag(group(world,0,0,0),'blotter',[0,.043,1.13],.75,.38);
+  const pad=tag(group(world,0,0,0),'blotter',[narrow?.24:.85,.043,1.70],.75,.38);
   box(pad,matWidth,.034,2.84,finish(0x726347),-.04,.015,.46,.016);
   const hide=loader.load('assets/furniture/blotter.webp',repaint);
   hide.wrapS=hide.wrapT=T.RepeatWrapping;hide.repeat.set(matWidth/1.5,2.8/1.5);hide.anisotropy=4;
@@ -201,10 +212,10 @@ export function furnish(scene, narrow, repaint, software=false) {
   },-.04,.046,.46,true);
   // Metal oscilloscope with a glass graticule, waveform, knobs and coiled probe.
   const scope=tag(group(world,narrow?-1.65:-2.84,.054,-1.16),'scope',[0,.53,.32],1.26,.85);
-  scope.rotation.y=.13;const scale=narrow?.78:1;scope.scale.setScalar(scale);
-  box(scope,1.69,.98,.89,finish(0x738e83,.5),0,.55,0,.095);
+  scope.rotation.y=.13;scope.scale.setScalar(narrow?.70:.83);
+  box(scope,1.69,.98,.89,finish(0x677d74,.54),0,.55,0,.095);
   for(const x of [-.62,.62])box(scope,.19,.095,.54,finish(0x393934),x,.075,.01,.025);
-  box(scope,1.57,.86,.075,finish(0xcfcab2,.64),0,.54,.45,.034);
+  box(scope,1.57,.86,.075,finish(0xb9baa6,.68),0,.54,.45,.034);
   box(scope,.92,.58,.04,finish(0x4a534b),-.234,.57,.503,.028);
   drawn(scope,.80,.47,(c,w,h)=>{
     const glass=c.createRadialGradient(w*.42,h*.47,0,w*.48,h*.47,w*.62);
@@ -223,10 +234,39 @@ export function furnish(scene, narrow, repaint, software=false) {
   }
   letter(scope,'EXPERIMENTS',1.09,.15,-.17,.176,.499,{bold:true,ink:'#31382e',font:'sans-serif'});
   wire(scope,[[.57,.23,.52],[.76,.065,.75],[.62,.03,1.03],[.34,.026,.98],[.12,.029,1.13]],.021,finish(0x9b493c));
+  // A record half drawn from its printed jacket, propped on a listening stand.
+  const jacket=narrow?1.58:2.05;
+  const stand=tag(group(world,narrow?-.18:-.54,.055,narrow?.93:.98),'record',[jacket*.20,.25,0],jacket*1.55,jacket*.82);
+  stand.rotation.y=narrow?.055:.12;
+  const angle=-1.30;
+  const sleeve=group(stand,0,jacket*Math.cos(angle)/2+.035,0);
+  sleeve.rotation.x=angle;
+  box(stand,jacket*.69,.065,jacket*.65,darkWood,0,.034,-.03,.019);
+  const restHeight=jacket*.73*Math.cos(angle);
+  box(stand,jacket*.63,restHeight,.085,darkWood,0,restHeight/2,-jacket*.32,.014);
+  box(sleeve,jacket*.66,jacket*.76,.055,trim,0,0,-.047,.012);
+  const recordRadius=jacket*.475;
+  const vinyl=document.createElement('canvas');vinyl.width=vinyl.height=512;
+  const grooves=vinyl.getContext('2d');
+  const sheen=grooves.createConicGradient(-.45,256,256);
+  for(const [pos,color] of [[0,'#292431'],[.11,'#53505c'],[.20,'#272632'],[.47,'#23232b'],[.60,'#514855'],[.73,'#27232b'],[1,'#292431']])sheen.addColorStop(pos,color);
+  grooves.fillStyle=sheen;grooves.fillRect(0,0,512,512);
+  grooves.lineWidth=1;
+  for(let r=89;r<254;r+=2.8){
+    grooves.strokeStyle=Math.round(r)%3===0?'#e0c8cf36':'#a49ab333';
+    grooves.beginPath();grooves.arc(256,256,r,0,Math.PI*2);grooves.stroke();
+  }
+  grooves.fillStyle='#d69c6c';grooves.beginPath();grooves.arc(256,256,83,0,Math.PI*2);grooves.fill();
+  grooves.fillStyle='#542f36';grooves.font='bold 29px Georgia';grooves.textAlign='center';grooves.fillText('A',256,225);
+  const pressing=new T.CanvasTexture(vinyl);pressing.colorSpace=T.SRGBColorSpace;pressing.anisotropy=4;
+  const disc=new T.MeshStandardMaterial({map:pressing,roughness:.38,metalness:.18});
+  mesh(sleeve,new T.RingGeometry(recordRadius*.022,recordRadius,64),disc,jacket*.52,.012,0);
+  box(sleeve,jacket,jacket,.034,cream,0,0,.025,.012);
+  illustration(sleeve,'assets/furniture/dopplergeist-sleeve.webp',jacket-.022,jacket-.022,0,0,.044);
   // A real three-sided manila folder. Its front cover pivots around the paper fold.
-  const file=tag(group(world,narrow?-.88:-1.38,.061,.88),'file',[0,.09,0],1.91,1.30);
-  file.rotation.y=-.18;file.scale.setScalar(narrow?.87:1.08);
-  const stock=finish(0xd7a862,.88), front=finish(0xe5b878,.84);
+  const file=tag(group(world,narrow?-1.60:-2.79,.061,narrow?.76:.92),'file',[0,.09,0],1.91,1.30);
+  file.rotation.y=-.14;file.scale.setScalar(narrow?.52:.70);
+  const stock=finish(0xad9472,.88), front=finish(0xc0a889,.84);
   box(file,1.96,.021,1.36,stock,0,.015,0,.009);
   box(file,.71,.02,.16,stock,-.52,.017,-.70,.009);
   for(let i=0;i<4;i++){const page=box(file,1.79,.012,1.29,paper,(i%2)*.028,.038+i*.015,-.035-i*.017,.005);page.rotation.y=.02*i;}
@@ -239,8 +279,8 @@ export function furnish(scene, narrow, repaint, software=false) {
   for(const z of [.055,.094])box(flap,1.85,.002,.009,stock,0,.013,z);
   drawn(flap,1.22,.08,(c,w)=>{c.fillStyle='#ad855b';c.fillRect(0,.03,w,.008);},.03,.014,.74,true);
   // Cloth binding, visible fore-edge and hinged front board.
-  const book=tag(group(world,narrow?.99:1.28,.056,.20),'book',[0,.20,0],1.22,1.62);
-  book.rotation.y=.22;book.scale.setScalar(narrow?.83:1.01);
+  const book=tag(group(world,narrow?1.53:2.22,.056,narrow?-.45:.21),'book',[0,.20,0],1.22,1.62);
+  book.rotation.y=.22;book.scale.setScalar(narrow?.54:.72);
   box(book,1.27,.039,1.66,plum,0,.029,0,.017);box(book,1.20,.14,1.57,cream,0,.112,.005,.023);
   box(book,.065,.21,1.65,plum,-.605,.115,0,.022);
   const cover=group(book,-.607,.196,0);box(cover,1.27,.042,1.66,plum,.61,0,0,.018);
@@ -252,8 +292,8 @@ export function furnish(scene, narrow, repaint, software=false) {
   },0,.113,.792);
   box(book,.085,.012,.36,finish(0xb46167),.39,.07,.88);
   // Sealed envelopes, with individual folds, twine and postage.
-  const letters=tag(group(world,narrow?1.22:2.55,.056,1.41),'letters',[0,.09,0],1.25,.74);
-  letters.rotation.y=-.25;letters.scale.setScalar(narrow?.82:1.06);
+  const letters=tag(group(world,narrow?1.32:2.59,.056,1.45),'letters',[0,.09,0],1.25,.74);
+  letters.rotation.y=-.25;letters.scale.setScalar(narrow?.60:.73);
   for(let i=0;i<3;i++){const env=box(letters,1.34,.026,.80,finish([0xc5d3c3,0xe4baad,0xf4dfbe][i]),0,.017+i*.029,-.035*i,.012);env.rotation.y=(2-i)*.1;}
   drawn(letters,1.31,.76,(c,w,h)=>{c.strokeStyle='#a99479';c.lineWidth=.007;c.beginPath();c.moveTo(0,0);c.lineTo(w*.48,h*.57);c.lineTo(w,0);c.stroke();c.fillStyle='#947a50';c.fillRect(w*.84,h*.10,w*.105,h*.22);},0,.09,-.065,true);
   const wax=cylinder(letters,.125,.13,.031,finish(0x9e5353,.5),0,.11,-.026,12);
@@ -263,8 +303,8 @@ export function furnish(scene, narrow, repaint, software=false) {
     for(let i=0;i<3;i++){c.beginPath();c.moveTo(.13,.063+i*.04);c.bezierCurveTo(.23,i*.04,.29,.14+i*.04,w,.05+i*.04);c.stroke();}
   },.34,.118,-.252,true);
   // Two actual cassette reels sit behind the transparent window.
-  const tape=tag(group(world,narrow?-.15:-.02,.063,1.78),'tape',[0,.09,0],1.01,.60);
-  tape.rotation.y=.19;tape.scale.setScalar(narrow?.80:1);
+  const tape=tag(group(world,narrow?-1.36:-2.07,.063,1.70),'tape',[0,.09,0],1.01,.60);
+  tape.rotation.y=.19;tape.scale.setScalar(narrow?.56:.68);
   box(tape,1.04,.083,.64,finish(0x65617b),0,.05,0,.032);
   box(tape,.92,.012,.39,finish(0xd4b5bb),0,.098,-.049,.005);
   box(tape,.58,.012,.14,finish(0x525056),0,.106,-.015,.005);
@@ -300,7 +340,7 @@ export function furnish(scene, narrow, repaint, software=false) {
   const glazedLeaves=[0x8ba862,0xa1b064,0x779954,0x9ba761].map(tint=>
     new T.MeshStandardMaterial({color:tint,map:leafMap,roughness:.5,side:T.DoubleSide}));
   const pot=tag(group(world,0,1.53,-1.47),'plant',[0,.35,0],.58,.65);
-  if(narrow){pot.position.set(-.49,1.53,-1.48);pot.scale.setScalar(.65);}else pot.position.x=.03;
+  pot.position.x=narrow?-2.17:-3.78;pot.scale.setScalar(narrow?.58:.80);
   const clayCanvas=document.createElement('canvas');clayCanvas.width=256;clayCanvas.height=128;
   const clay=clayCanvas.getContext('2d');clay.fillStyle='#ebc5a7';clay.fillRect(0,0,256,128);
   for(let i=0;i<3600;i++){
@@ -363,7 +403,7 @@ export function furnish(scene, narrow, repaint, software=false) {
     const stick=cylinder(p,.032,.032,1.07,finish(i?0xc18e55:0x925b65),0,0,0,6);stick.rotation.x=Math.PI/2;
     const tip=cylinder(p,.031,0,.13,cream,0,0,-.60,6);tip.rotation.x=Math.PI/2;
   }
-  const frame=tag(group(world,narrow?.96:1.22,1.55,-1.49),'robot-photo',[0,.40,.06],.64,.76);frame.rotation.x=-.12;frame.rotation.y=-.10;
+  const frame=tag(group(world,narrow?2.07:3.84,1.55,-1.49),'robot-photo',[0,.40,.06],.64,.76);frame.rotation.x=-.12;frame.rotation.y=-.10;frame.scale.setScalar(narrow?.65:.86);
   box(frame,.69,.80,.08,trim,0,.40,0,.024);box(frame,.61,.71,.025,cream,0,.40,.05);
   illustration(frame,'assets/furniture/prints/reefscape.webp',.54,.54,0,.421,.068);
   // Make a real material sample for the folder's contents.
@@ -462,6 +502,7 @@ export function furnish(scene, narrow, repaint, software=false) {
     }
     ctx.restore();
   }
+  contactShadow(stand,jacket*.74,jacket*.73,.05);
   contactShadow(file,1.85,1.26,.05); contactShadow(book,1.19,1.58,.05);
   contactShadow(tape,.99,.58,.035); contactShadow(letters,1.28,.74,.025);
   contactShadow(scope,1.57,.78,.12); contactShadow(lamp,.78,.78,.38); contactShadow(mug,.25,.25,.12);

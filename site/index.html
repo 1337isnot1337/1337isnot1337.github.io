@@ -67,8 +67,8 @@
     "></script>
     <script defer src="rook-graph.js?v=1"></script>
     <script>document.documentElement.dataset.view = /^(#projects|#flyover|#cpu|#schedule|#conjectures|#factoring|#conway)$/.test(location.hash) ? "shelf" : "desk";</script>
-    <link rel="stylesheet" href="studio.css?v=12" />
-    <script defer src="studio.js?v=12" onerror="delete document.documentElement.dataset.view"></script>
+    <link rel="stylesheet" href="studio.css?v=13" />
+    <script defer src="studio.js?v=13" onerror="delete document.documentElement.dataset.view"></script>
     <script defer src="paper-turn.js?v=1"></script>
     <script defer src="desk-keepsakes.js?v=7"></script>
     <script defer src="paper-dismiss.js?v=1"></script>
@@ -112,13 +112,11 @@
             <canvas class="furniture-canvas" aria-hidden="true"></canvas>
             <div class="hutch-fallback" aria-hidden="true"></div>
             <nav class="desk-objects" aria-label="Objects on the desk">
-              <a class="object-proof" data-object="proof" data-project="conjectures" href="#conjectures"><span>Proofs &amp; counterexamples</span></a>
+              <a class="object-record" data-object="record" data-project="flyover" href="#flyover"><span>DOPPLERGEIST</span></a>
+              <a class="object-proof" data-object="proof" data-project="conjectures" href="#conjectures"><span>Solved conjectures</span></a>
               <a class="object-archive" data-object="archive" href="/research-notes/"><span>Research notes</span></a>
               <a class="object-scope" data-object="scope" href="#desk"><span>Experiments</span></a>
               <a class="object-file" data-object="file" href="#catalogue"><span>Project files</span></a>
-              <a class="object-book" data-object="book" href="#about"><span>My notebook</span></a>
-              <a class="object-tape" data-object="tape" href="#off-the-clock"><span>Off the clock</span></a>
-              <a class="object-letters" data-object="letters" href="#elsewhere"><span>Letters</span></a>
               <button type="button" data-object="flyover-print" data-board-print="flyover" data-keepsake aria-haspopup="dialog" hidden><span>DOPPLERGEIST photograph</span></button>
               <button type="button" data-object="factoring-print" data-board-print="factoring-bead" data-keepsake aria-haspopup="dialog" hidden><span>Integer factoring print</span></button>
               <button type="button" data-object="cpu-print" data-board-print="cpu-switch" data-keepsake aria-haspopup="dialog" hidden><span>Hack CPU print</span></button>
@@ -126,6 +124,10 @@
               <button type="button" data-object="conway-print" data-board-print="conway" data-keepsake aria-haspopup="dialog" hidden><span>Conway graph print</span></button>
               <button type="button" data-object="conjectures-print" data-board-print="conjectures" data-keepsake aria-haspopup="dialog" hidden><span>Solved conjectures print</span></button>
               <button type="button" data-object="robot-photo" data-keepsake aria-haspopup="dialog" hidden><span>Titan Robotics photograph</span></button>
+              <a class="object-epoch" data-object="epoch" href="#about-teaching"><span>Epoch computing club</span></a>
+              <a class="object-book" data-object="book" href="#about"><span>My notebook</span></a>
+              <a class="object-tape" data-object="tape" href="#off-the-clock"><span>Off the clock</span></a>
+              <a class="object-letters" data-object="letters" href="#elsewhere"><span>Letters</span></a>
               <button type="button" data-object="plant" data-keepsake aria-haspopup="dialog" hidden><span>Potted plant</span></button>
               <button type="button" data-object="pinboard" data-keepsake aria-haspopup="dialog" hidden><span>Pinboard photographs</span></button>
               <button type="button" data-object="pencil" data-keepsake aria-haspopup="dialog" hidden><span>Graphite pencil</span></button>

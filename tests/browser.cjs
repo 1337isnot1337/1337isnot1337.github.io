@@ -555,6 +555,16 @@ const server = http.createServer((req,res) => {
   await cold.locator('.graphics-warning:visible').waitFor();
   await cold.locator('.desk-objects a:visible').first().waitFor();
   assert.equal(await cold.locator('.desk-load-status').isVisible(),false);
+  const record=cold.locator('.object-record');
+  await record.focus();await cold.keyboard.press('Enter');
+  await cold.locator('.open-project[open] #flyover').waitFor();
+  assert.equal(await cold.locator('#reader-repo').getAttribute('href'),'https://github.com/1337isnot1337/DOPPLERGEIST');
+  await cold.keyboard.press('Escape');
+  await cold.waitForFunction(()=>document.activeElement.dataset.object==='record');
+  for(const next of ['proof','archive','scope']){
+    await cold.keyboard.press('Tab');
+    assert.equal(await cold.evaluate(()=>document.activeElement.dataset.object),next);
+  }
   await cold.close();
   const photos=await browser.newPage();
   let releasePhoto;

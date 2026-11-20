@@ -29,10 +29,12 @@ html[data-view] .is-loading > .desk-load-status {
   box-shadow:2px 3px 0 #37261e4d; color:#35291e; text-align:center; text-decoration:none;
   font:600 clamp(13px,1.3vw,19px)/1.1 var(--headline); cursor:pointer;
 }
+.object-record { left:48%; top:61%; }
 .object-proof { left:20%; top:32%; }
 .object-archive { left:73%; top:32%; }
 .object-scope { left:24%; top:45%; }
 .object-file { left:26%; top:59%; }
+.object-epoch { left:83%; top:28%; }
 .object-book { left:70%; top:61%; }
 .object-tape { left:15%; top:75%; }
 .object-letters { left:68%; top:76%; }
@@ -223,6 +225,9 @@ html[data-view="shelf"] .desk-reading { grid-area:auto; }
 }
 .studio-ready .desktop-picture:not(.is-rendered) .desk-objects :is(a,button) {
   position:static; width:auto; max-width:none; min-height:36px; transform:none;
+}
+.studio-ready .desktop-picture:not(.is-rendered) .object-record {
+  grid-column:1/-1; background:#754457; color:#fff6e4; font-weight:700;
 }
 html[data-view] .is-rendered .desk-objects :is(a,button) { cursor:inherit; }
 .is-rendered .furniture-canvas, .is-rendered .desk-objects { cursor:auto; }
