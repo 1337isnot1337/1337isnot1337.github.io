@@ -4,7 +4,7 @@ import { inspectDeskObjects } from './desk-inspect.js?v=9';
 
 import { attachDeskPointer } from './desk-pointer.js?v=13';
 
-import { deskLife } from './desk-life.js?v=9';
+import { deskLife } from './desk-life.js?v=10';
 import { deskView } from './desk-view.js?v=2';
 import { drawerTravel } from './desk-drawer.js?v=1';
 

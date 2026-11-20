@@ -51,11 +51,6 @@ export function deskLife(stage, getModel, redraw, reduced) {
     if(!home.has(root))home.set(root,root.position.clone());
     root.position.copy(home.get(root)).add(leafDrift.set(x,y,z));
   }
-  function setFile(id) {
-    currentFile=id;
-    part('errata').visible=Boolean(id);
-    redraw();
-  }
   function onSketch(event) {
     currentSketch=event.detail;
     const texture=getModel()?.sketchTexture;
@@ -85,7 +80,7 @@ export function deskLife(stage, getModel, redraw, reduced) {
     prints.set(event.detail.id,event.detail.angle);redraw();
   });
   document.addEventListener('desk-bookmark',event=>{
-    bookmark=event.detail==='notebook';setFile(event.detail==='research'?'research':'');
+    bookmark=event.detail==='notebook';redraw();
   });
   document.addEventListener('play',event=>{
     if(!['desk-audio','recording'].includes(event.target.id))return;
@@ -152,7 +147,7 @@ export function deskLife(stage, getModel, redraw, reduced) {
       const direction=dx>0? .55-lampAngle : lampAngle+1.33;
       const resistance=.23+.77*clamp(direction/.42,0,1);
       lampAngle=clamp(lampAngle+dx*6*resistance,-1.33,.55);
-      lampPitch=clamp(lampPitch+dy*5,-.75,.43);
+      lampPitch=clamp(lampPitch+dy*5,-.88,.43);
     },
     'shade-hinge'(dx,dy){gestures.shade(dx,dy);},
     tuner(dx,dy){
@@ -462,7 +457,7 @@ export function deskLife(stage, getModel, redraw, reduced) {
     part('handle').rotation.x=motion?Math.sin(swing*Math.PI)*handleSpring*(1-swing):0;
     const shade=part('shade');
     part('shade-hinge').rotation.x=lampPitch*.27;
-    shade.rotation.set(-.16+lampPitch*.73,lampAngle,-.36+lampAngle*.29);
+    shade.rotation.set(-.16+lampPitch*.73,lampAngle,-.36+lampAngle*.44);
     shade.updateWorldMatrix(true,false);
     shade.getWorldPosition(lampOrigin);
     lightAxis.set(0,-1,0).transformDirection(shade.matrixWorld);
