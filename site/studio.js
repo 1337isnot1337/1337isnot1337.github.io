@@ -36,7 +36,7 @@
   function showFurniture() {
     if (page.dataset.view!=="desk" || !sceneNearby || sceneStarted || studio.dataset.open || document.querySelector(".open-project[open]")) return;
     sceneStarted=true;
-    import("./furniture.js?v=15").then(module => {
+    import("./furniture.js?v=16").then(module => {
       try { module.mountFurniture(stage,showGraphicsFallback); }
       catch { showGraphicsFallback(); }
     }, () => showGraphicsFallback("The 3D desk couldn’t download. Reload to try again."));

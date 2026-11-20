@@ -200,8 +200,8 @@ export function furnish(scene, narrow, repaint, software=false) {
     bead(g,0,printH/2-.028,.025,pin,pin,pin,brass);
   });
   // Stitched green leather blotter with a fine inset line.
-  const matWidth=width*.75;
-  const pad=tag(group(world,0,0,0),'blotter',[narrow?.24:1.40,.043,1.70],.75,.38);
+  const matWidth=width*(narrow ? .75 : .69);
+  const pad=tag(group(world,0,0,0),'blotter',[.12,.043,1.65],.75,.38);
   box(pad,matWidth,.034,2.84,finish(0x726347),-.04,.015,.46,.016);
   const hide=loader.load('assets/furniture/blotter.webp',repaint);
   hide.wrapS=hide.wrapT=T.RepeatWrapping;hide.repeat.set(matWidth/1.5,2.8/1.5);hide.anisotropy=4;
@@ -236,7 +236,8 @@ export function furnish(scene, narrow, repaint, software=false) {
   letter(scope,'EXPERIMENTS',1.09,.15,-.17,.176,.499,{bold:true,ink:'#31382e',font:'sans-serif'});
   wire(scope,[[.57,.23,.52],[.76,.065,.75],[.62,.03,1.03],[.34,.026,.98],[.12,.029,1.13]],.021,finish(0x9b493c));
   // A banked propeller plane above a hardwood base. The complete display is one pick target.
-  const stand=tag(group(world,narrow?-.11:-.28,.052,narrow?.83:.81),'plane',[0,.55,-.10],2.48,1.30);
+  const stand=tag(group(world,narrow?-.39:-.79,.052,narrow?.64:.61),'plane',[0,.55,-.10],2.48,1.30);
+  stand.rotation.y=.075;
   stand.scale.setScalar(narrow ? .41 : .545);
   box(stand,2.10,.095,1.15,darkWood,0,.052,.34,.044);
   box(stand,2.02,.049,1.09,wood,0,.119,.34,.023);
@@ -275,7 +276,7 @@ export function furnish(scene, narrow, repaint, software=false) {
   }
   bead(prop,0,0,.022,.099,.099,.135,propMetal);
   // A real three-sided manila folder. Its front cover pivots around the paper fold.
-  const file=tag(group(world,narrow?-1.60:-2.79,.061,narrow?.76:.92),'file',[0,.09,0],1.91,1.30);
+  const file=tag(group(world,narrow?-1.49:-2.38,.061,narrow?.42:.47),'file',[0,.09,0],1.91,1.30);
   file.rotation.y=-.14;file.scale.setScalar(narrow?.52:.70);
   const stock=finish(0xad9472,.88), front=finish(0xc0a889,.84);
   box(file,1.96,.021,1.36,stock,0,.015,0,.009);
@@ -290,7 +291,7 @@ export function furnish(scene, narrow, repaint, software=false) {
   for(const z of [.055,.094])box(flap,1.85,.002,.009,stock,0,.013,z);
   drawn(flap,1.22,.08,(c,w)=>{c.fillStyle='#ad855b';c.fillRect(0,.03,w,.008);},.03,.014,.74,true);
   // Cloth binding, visible fore-edge and hinged front board.
-  const book=tag(group(world,narrow?1.53:2.22,.056,narrow?-.45:.21),'book',[0,.20,0],1.22,1.62);
+  const book=tag(group(world,narrow?.72:1.06,.056,narrow?-.34:-.09),'book',[0,.20,0],1.22,1.62);
   book.rotation.y=.22;book.scale.setScalar(narrow?.54:.72);
   box(book,1.27,.039,1.66,plum,0,.029,0,.017);box(book,1.20,.14,1.57,cream,0,.112,.005,.023);
   box(book,.065,.21,1.65,plum,-.605,.115,0,.022);
@@ -303,7 +304,7 @@ export function furnish(scene, narrow, repaint, software=false) {
   },0,.113,.792);
   box(book,.085,.012,.36,finish(0xb46167),.39,.07,.88);
   // Sealed envelopes, with individual folds, twine and postage.
-  const letters=tag(group(world,narrow?1.32:2.59,.056,1.45),'letters',[0,.09,0],1.25,.74);
+  const letters=tag(group(world,narrow?.87:.98,.056,narrow?1.21:1.49),'letters',[0,.09,0],1.25,.74);
   letters.rotation.y=-.25;letters.scale.setScalar(narrow?.60:.73);
   for(let i=0;i<3;i++){const env=box(letters,1.34,.026,.80,finish([0xc5d3c3,0xe4baad,0xf4dfbe][i]),0,.017+i*.029,-.035*i,.012);env.rotation.y=(2-i)*.1;}
   drawn(letters,1.31,.76,(c,w,h)=>{c.strokeStyle='#a99479';c.lineWidth=.007;c.beginPath();c.moveTo(0,0);c.lineTo(w*.48,h*.57);c.lineTo(w,0);c.stroke();c.fillStyle='#947a50';c.fillRect(w*.84,h*.10,w*.105,h*.22);},0,.09,-.065,true);
@@ -314,7 +315,7 @@ export function furnish(scene, narrow, repaint, software=false) {
     for(let i=0;i<3;i++){c.beginPath();c.moveTo(.13,.063+i*.04);c.bezierCurveTo(.23,i*.04,.29,.14+i*.04,w,.05+i*.04);c.stroke();}
   },.34,.118,-.252,true);
   // Two actual cassette reels sit behind the transparent window.
-  const tape=tag(group(world,narrow?-1.36:-2.07,.063,1.70),'tape',[0,.09,0],1.01,.60);
+  const tape=tag(group(world,narrow?-1.04:-1.42,.063,narrow?1.49:1.59),'tape',[0,.09,0],1.01,.60);
   tape.rotation.y=.19;tape.scale.setScalar(narrow?.56:.68);
   box(tape,1.04,.083,.64,finish(0x65617b),0,.05,0,.032);
   box(tape,.92,.012,.39,finish(0xd4b5bb),0,.098,-.049,.005);
@@ -410,7 +411,7 @@ export function furnish(scene, narrow, repaint, software=false) {
   const toggle=cylinder(lamp,.045,.051,.075,brassDark,.22,.117,.08,14);toggle.rotation.z=-.25;
   // Pencils lie against the blotter, and a personal photograph sits on the shelf.
   for(let i=0;i<2;i++){
-    const p=tag(group(world,(narrow?1.83:3.61)+i*.14,.053,.30+i*.11),i?'pencil':'rose-pencil',[0,0,0],.09,.50);p.rotation.y=.14+i*.075;
+    const p=tag(group(world,(narrow?1.53:1.97)+i*.14,.053,.16+i*.11),i?'pencil':'rose-pencil',[0,0,0],.09,.50);p.rotation.y=.14+i*.075;
     const stick=cylinder(p,.032,.032,1.07,finish(i?0xc18e55:0x925b65),0,0,0,6);stick.rotation.x=Math.PI/2;
     const tip=cylinder(p,.031,0,.13,cream,0,0,-.60,6);tip.rotation.x=Math.PI/2;
   }
