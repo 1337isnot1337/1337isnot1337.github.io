@@ -1,10 +1,10 @@
 import * as T from './vendor/three/three.module.min.js';
 import { furnish } from './desk-model.js?v=24';
-import { inspectDeskObjects } from './desk-inspect.js?v=9';
+import { inspectDeskObjects } from './desk-inspect.js?v=10';
 
 import { attachDeskPointer } from './desk-pointer.js?v=13';
 
-import { deskLife } from './desk-life.js?v=10';
+import { deskLife } from './desk-life.js?v=11';
 import { deskView } from './desk-view.js?v=2';
 import { drawerTravel } from './desk-drawer.js?v=1';
 

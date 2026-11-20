@@ -461,6 +461,7 @@
 
   const folder=studio.querySelector('#catalogue');
   let folderPull=null,suppressFileClick=false;
+  folder.addEventListener('dragstart',event=>{if(folderPull)event.preventDefault();});
   folder.addEventListener('pointerdown',event=>{
     const row=event.target.closest('.catalogue-list li');
     if(!row||event.button!==0)return;
@@ -561,7 +562,7 @@
     const delta=x-event.clientX;
     if(delta>Math.min(135,leaf.clientWidth*.40))journal.querySelector('#leaf-next').click();
     else if(delta>22){
-      bookmarked=leaf.id;
+      bookmarked=leaf.dataset.leaf;
       leaf.classList.add('dog-eared');leaf.dataset.crease='';
       send('desk-bookmark','notebook');
     }
@@ -571,12 +572,12 @@
   journal.addEventListener('dblclick',event=>{
     const leaf=event.target.closest('[data-leaf]');
     if(!leaf || event.target.closest('a,button,input'))return;
-    bookmarked=bookmarked===leaf.id?'':leaf.id;
-    for(const page of journal.querySelectorAll('[data-leaf]'))page.classList.toggle('dog-eared',page.id===bookmarked);
+    bookmarked=bookmarked===leaf.dataset.leaf?'':leaf.dataset.leaf;
+    for(const page of journal.querySelectorAll('[data-leaf]'))page.classList.toggle('dog-eared',page.dataset.leaf===bookmarked);
     send('desk-bookmark',bookmarked?'notebook':'');
   });
   document.addEventListener('desk-bookmark-leaf',event=>{
-    bookmarked=journal.querySelectorAll('[data-leaf]')[event.detail]?.id||'';
+    bookmarked=journal.querySelectorAll('[data-leaf]')[event.detail]?.dataset.leaf||'';
   });
   const cover=studio.querySelector('[data-object=book]');
   cover.addEventListener('click',event=>{

@@ -82,15 +82,20 @@ export function deskLife(stage, getModel, redraw, reduced) {
   document.addEventListener('desk-bookmark',event=>{
     bookmark=event.detail==='notebook';redraw();
   });
-  document.addEventListener('play',event=>{
-    if(!['desk-audio','recording'].includes(event.target.id))return;
-    recording=event.target;
+  function trackRecording(audio){
+    recording=audio;
     if(!recording.dataset.deskMarker){
       recording.dataset.deskMarker='';
       for(const action of ['timeupdate','seeked','pause','ended'])recording.addEventListener(action,redraw);
     }
     redraw();
+  }
+  document.addEventListener('play',event=>{
+    if(['desk-audio','recording'].includes(event.target.id))trackRecording(event.target);
   },true);
+  for(const audio of document.querySelectorAll('#desk-audio,#recording')){
+    if(!audio.paused)trackRecording(audio);
+  }
   function drawerChange(open,speed,direct){
     if(open)return;
     const time=performance.now();
@@ -401,7 +406,7 @@ export function deskLife(stage, getModel, redraw, reduced) {
     if(event==='tap' && ['research-question','research-erratum','proof-card'].includes(name)){
       document.dispatchEvent(new CustomEvent('desk-book-slip',{detail:name}));
     }
-    if(id==='tape'&&event==='pose'&&Math.cos(delta.pitch)*Math.cos(delta.yaw)<-.62){
+    if(id==='tape'&&event==='pose'&&Math.sin(delta.pitch)*Math.cos(delta.yaw)<-.50){
       document.dispatchEvent(new Event('desk-cassette-side-b'));
     }
   }

@@ -47,10 +47,6 @@ export function inspectDeskObjects(stage,engine,room,deskCamera,getModel,redraw,
   }
   function rotate(dx,dy){
     life.inspect(part,active,{x:dx,y:dy},'turn');
-    if(active==='pencil'){
-      const flipped=Math.cos(pitch+dy)<-.25;
-      document.dispatchEvent(new CustomEvent('desk-eraser',{detail:flipped}));
-    }
     yaw+=dx;pitch=T.MathUtils.clamp(pitch+dy,-Math.PI*.94,Math.PI*.94);
     life.inspect(part,active,{yaw,pitch},'pose');
     redraw();
@@ -83,9 +79,11 @@ export function inspectDeskObjects(stage,engine,room,deskCamera,getModel,redraw,
   });
   use.onclick=()=>{
     const returning=life.inspect(part,active,null,'use');
+    const graphite=active==='pencil', erase=Math.cos(pitch)<-.25;
     close();
     if(returning)return;
     using=true;try{opener.click();}finally{using=false;}
+    if(graphite)document.dispatchEvent(new CustomEvent('desk-eraser',{detail:erase}));
   };
   surface.addEventListener('keydown',e=>{
     const turn={ArrowLeft:[-.2,0],ArrowRight:[.2,0],ArrowUp:[0,-.2],ArrowDown:[0,.2]}[e.key];
