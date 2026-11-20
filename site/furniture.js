@@ -1,10 +1,10 @@
 import * as T from './vendor/three/three.module.min.js';
-import { furnish } from './desk-model.js?v=20';
-import { inspectDeskObjects } from './desk-inspect.js?v=7';
+import { furnish } from './desk-model.js?v=21';
+import { inspectDeskObjects } from './desk-inspect.js?v=8';
 
 import { attachDeskPointer } from './desk-pointer.js?v=13';
 
-import { deskLife } from './desk-life.js?v=6';
+import { deskLife } from './desk-life.js?v=7';
 import { deskView } from './desk-view.js?v=1';
 import { drawerTravel } from './desk-drawer.js?v=1';
 
@@ -144,7 +144,8 @@ export function mountFurniture(stage,showGraphicsFallback) {
     const drawerMotion=travel.step(dt,motion.matches||software);
     drawerAmount=drawerMotion.amount;
     life.drawerMomentum(drawerMotion.impulse);
-    fileAngle=target(fileAngle,opened==='catalogue'?1:0);bookAngle=target(bookAngle,opened==='about'?1:0);
+    const folderGoal=life.folderPose(opened==='catalogue');
+    fileAngle=target(fileAngle,folderGoal);bookAngle=target(bookAngle,opened==='about'?1:0);
     model.drawer.position.z=2.17+drawerAmount*1.53;
     model.flap.rotation.x=-fileAngle*1.22;model.cover.rotation.z=bookAngle*2.40;
     if((prevDrawer!==drawerAmount && (drawerAmount===0||drawerAmount===1)) ||
@@ -204,7 +205,7 @@ export function mountFurniture(stage,showGraphicsFallback) {
       warning.hidden=!software;
       lamp.hidden=false;links.get('plant').hidden=false;
     }
-    if((events.active && !document.hidden) || returnOffset || posture.move || gazeX!==targetX||gazeY!==targetY||drawerMotion.moving||fileAngle!==(opened==='catalogue'?1:0)||bookAngle!==(opened==='about'?1:0))redraw();
+    if((events.active && !document.hidden) || returnOffset || posture.move || gazeX!==targetX||gazeY!==targetY||drawerMotion.moving||fileAngle!==folderGoal||bookAngle!==(opened==='about'?1:0))redraw();
   }
   function clampReturn(time){
     if(motion.matches)return centerUntil>time?centered:0;

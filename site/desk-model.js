@@ -235,18 +235,37 @@ export function furnish(scene, narrow, repaint, software=false) {
       ['ERDŐS 607','Finite Euler product','The square-root factor stays.'];
     box(rear,w*.75,h*.52,.008,cream);
     notes.forEach((line,i)=>letter(rear,line,w*.68,h*.081,0,h*(.11-i*.12),.006,{italic:i===2}));
-    if(id==='proof'){
-      const tuck=detail('proof-card',rear,w*.20,-h*.20,.014);
-      box(tuck,w*.19,h*.26,.009,finish(0xbd765d));
-      letter(tuck,'15',w*.11,h*.125,0,0,.008,{ink:'#fff0bf'});
-      tuck.rotation.z=.18;
-    }else{
-      const tuck=detail('research-question',rear,w*.21,-h*.22,.024);
-      box(tuck,w*.28,h*.19,.009,finish(0xc8ceab));
-      letter(tuck,'√  ?',w*.23,h*.12,0,0,.008,{ink:'#4d624d'});
-      tuck.rotation.z=-.09;
-    }
     illustration(volume,coverArt,w-.024,h-.024,0,h/2,.154);
+    if(id==='proof'){
+      // The center card rises about as far as the foil on the adjacent cards.
+      const tuck=detail('proof-card',volume,w*.029,h*.258,.158);
+      const enamel=finish(color,.90);
+      box(tuck,w*.137,h*.185,.009,enamel,0,0,0,.005);
+      drawn(tuck,w*.137,h*.185,(c,sw,sh)=>{
+        c.strokeStyle='#ceae78';c.lineWidth=.005;c.strokeRect(.007,.007,sw-.014,sh-.014);
+        c.beginPath();c.moveTo(sw/2,.29*sh);c.lineTo(.63*sw,.51*sh);c.lineTo(sw/2,.69*sh);c.lineTo(.37*sw,.51*sh);c.closePath();c.stroke();
+      },0,0,.006);
+      letter(tuck,'15',w*.098,h*.10,0,0,-.006,{ink:'#f2deab',paper:'#865149'}).rotation.y=Math.PI;
+      tuck.rotation.z=.19;
+    }else{
+      const tuck=detail('research-question',rear,w*.27,-h*.15,.017);
+      box(tuck,w*.29,h*.27,.011,finish(0xd6d8bc),0,0,0,.008);
+      drawn(tuck,w*.26,h*.229,(c,sw,sh)=>{
+        c.strokeStyle='#93a49a';c.lineWidth=.002;
+        for(const i of [.24,.48,.72]){c.beginPath();c.moveTo(.01,sh*i);c.lineTo(sw-.01,sh*i);c.stroke();}
+        for(const i of [.20,.43,.66,.89]){c.beginPath();c.moveTo(sw*i,.01);c.lineTo(sw*i,sh-.01);c.stroke();}
+        c.fillStyle='#4d624d';c.font='italic 0.06px Georgia';c.fillText('√ ?',.028,sh*.59);
+      },0,0,.007);
+      tuck.rotation.z=-.12;
+      const erratum=detail('research-erratum',rear,-w*.278,-h*.227,.016);
+      box(erratum,w*.162,h*.22,.006,paper,0,0,0,.005);
+      letter(erratum,'VII',w*.11,h*.080,0,0,.005,{ink:'#874c4e',italic:true});
+      erratum.rotation.z=.13;
+      const tab=detail('errata',volume,w*.32,h-.025,.059);
+      box(tab,w*.18,.126,.018,finish(0xbd916e),0,.03,0,.014);
+      letter(tab,'↳',w*.10,.055,0,.044,.011,{ink:'#5b413c'});
+      tab.rotation.x=.25;tab.visible=false;
+    }
     return shelf;
   }
   const proofX=narrow?-.60:-1.12, researchX=narrow?.80:1.58;
@@ -463,7 +482,7 @@ export function furnish(scene, narrow, repaint, software=false) {
     page.rotation.y=.02*i;
   }
   letter(file,'PROJECT INDEX',1,.15,0,.10,-.50,{flat:true,bold:true});
-  const flap=group(file,0,.142,-.58);
+  const flap=detail('file-cover',file,0,.142,-.58);
   box(flap,1.96,.022,1.24,front,0,0,.62,.01);
   letter(flap,'Project files',1.58,.34,.01,.014,.54,{flat:true,ink:'#42362e',italic:true});
   letter(file,'INDEX',.50,.11,-.52,.030,-.71,{flat:true,bold:true});
@@ -680,7 +699,11 @@ export function furnish(scene, narrow, repaint, software=false) {
   },.611,.025,0,true);
   const binder=detail('binder',file,-.47,.13,-.62);
   box(binder,.30,.075,.14,finish(0x463f3c,.46,.25),0,-.035,.02,.018);
-  wire(binder,[[-.09,0,0],[-.09,.03,-.15],[.08,.03,-.15],[.08,0,0]],.012,brass);
+  for(const side of [-1,1]){
+    const handle=detail('binder-arm-'+side,binder,0,0,.019*side);
+    wire(handle,[[-.091,0,0],[-.091,.023,-.145],[-.063,.028,-.154],[.064,.028,-.154],[.083,.023,-.145],[.083,0,0]],.010,brass);
+    handle.rotation.x=side*.28;
+  }
   const split=detail('split-wax',letters,-.04,.101,-.026);
   for(const [x,z,r] of [[-.075,-.015,.045],[.065,.009,.060],[.036,-.05,.034]]){
     const chip=cylinder(split,r,r,.012,finish(0x9e5353,.63),x,0,z,5);
@@ -768,8 +791,33 @@ export function furnish(scene, narrow, repaint, software=false) {
   padGuide.visible=false;
   const filed=detail('loose-sheet',world,narrow?.06:.43,.059,.92);
   filed.rotation.y=.27;
-  box(filed,.48,.010,.39,finish(0xe7d1a1),0,0,0,.011);
-  for(let line=0;line<5;line++)box(filed,.29-line*.018,.001,.004,finish(0x98816b),-.018,.006,line*.035-.08);
+  box(filed,.57,.009,.44,finish(0xe7d1a1),0,0,0,.011);
+  box(filed,.543,.005,.418,paper,.007,.006,.003,.009);
+  const fileFace=drawn(filed,.523,.402,()=>{},.006,.010,.005,true);
+  function titleLooseFile(title){
+    const canvas=fileFace.material.map.image;
+    const ctx=canvas.getContext('2d');
+    const {width,height}=canvas;
+    ctx.resetTransform();ctx.clearRect(0,0,width,height);
+    ctx.fillStyle='#917154';ctx.font='9px monospace';ctx.fillText('PROJECT FILE',9,16);
+    ctx.fillStyle='#4b3737';ctx.font='italic bold 14px Georgia';
+    const parts=title.split(' ');
+    let line='',baseline=36;
+    for(const word of parts){
+      const next=[line,word].filter(Boolean).join(' ');
+      if(line&&ctx.measureText(next).width>width-19){
+        ctx.fillText(line,9,baseline,width-19);
+        baseline+=16;line='';
+      }
+      line=[line,word].filter(Boolean).join(' ');
+    }
+    if(line)ctx.fillText(line,9,baseline,width-19);
+    ctx.strokeStyle='#946d574a';ctx.lineWidth=1;
+    for(let y=baseline+9;y<height-6;y+=7){
+      ctx.beginPath();ctx.moveTo(9,y);ctx.lineTo(width-11,y);ctx.stroke();
+    }
+    fileFace.material.map.needsUpdate=true;
+  }
   filed.visible=false;
   const deskPaper=detail('scratch',world,narrow?-.10:.18,.054,1.65);
   box(deskPaper,.58,.012,.39,cream);
@@ -810,9 +858,6 @@ export function furnish(scene, narrow, repaint, software=false) {
   const clip=detail('bookmark',book,.37,.084,.95);
   bead(clip,0,0,0,.039,.018,.11,finish(0x738e56));
   clip.visible=false;
-  const errata=detail('errata',archive,.12,1.115,.04);
-  box(errata,.22,.11,.015,cream);
-  errata.rotation.z=.16;errata.visible=false;
   const crossbeam=box(world,width-.63,.145,.17,darkWood,0,-1.18,1.90,.014);
   crossbeam.castShadow=true;
   const drawerEye=detail('under-eye',world,-.48,-1.18,2.00);
@@ -993,5 +1038,5 @@ export function furnish(scene, narrow, repaint, software=false) {
   }
   source.forEach(g=>g.dispose());
   const flexCable=followProbe(cableWire.children[0],cableTip,probeRest);
-  return {world,targets,details,occluders,drawer,flap,cover,lamp,bulbGlass:fastMaterials.get(bulbGlass)||bulbGlass,contactMap,daylight,projectLampShadow,flexCable,pencilBounds:{book:book.position.x+(narrow?.24:.43),mat:matRight-.10},sketchTexture:sketchFace.material.map};
+  return {world,targets,details,occluders,drawer,flap,cover,lamp,bulbGlass:fastMaterials.get(bulbGlass)||bulbGlass,contactMap,daylight,projectLampShadow,flexCable,titleLooseFile,pencilBounds:{book:book.position.x+(narrow?.24:.43),mat:matRight-.10},sketchTexture:sketchFace.material.map};
 }

@@ -30,7 +30,7 @@ export function inspectDeskObjects(stage,engine,room,deskCamera,getModel,redraw,
   const screen=new T.Mesh(new T.PlaneGeometry(2,2),backdrop);
   screen.frustumCulled=false;screen.renderOrder=-1000;display.add(screen);
   let active='',source=null,snapshot=null,opener=null,using=false,drag=null;
-  let yaw=0,pitch=0,radius=1,aspect=0,backgroundTap=false,part='';
+  let yaw=0,pitch=0,radius=1,aspect=0,backgroundTap=false,dragged=false,part='';
   const ray=new T.Raycaster(),screenPoint=new T.Vector2();
   function hitsObject(e){
     if(!source)return true;
@@ -93,7 +93,7 @@ export function inspectDeskObjects(stage,engine,room,deskCamera,getModel,redraw,
   });
   surface.addEventListener('pointerdown',e=>{
     if(!e.isPrimary||e.button!==0)return;
-    backgroundTap=!hitsObject(e);
+    dragged=false;backgroundTap=!hitsObject(e);
     drag={id:e.pointerId,x:e.clientX,y:e.clientY,startX:e.clientX,startY:e.clientY,part};surface.setPointerCapture(e.pointerId);
   });
   surface.addEventListener('pointermove',e=>{
@@ -103,15 +103,19 @@ export function inspectDeskObjects(stage,engine,room,deskCamera,getModel,redraw,
       }
       return;
     }
-    if(Math.hypot(e.clientX-drag.startX,e.clientY-drag.startY)>6)backgroundTap=false;
+    if(Math.hypot(e.clientX-drag.startX,e.clientY-drag.startY)>6){dragged=true;backgroundTap=false;}
     const x=(e.clientX-drag.x)*.012,y=(e.clientY-drag.y)*.012;
     if(active==='tape'&&drag.part.startsWith('reel-'))
       document.dispatchEvent(new CustomEvent('desk-tape',{detail:x-y}));
     else if(active==='plant'&&life.brushLeaf(drag.part,x,y))redraw();
+    else if((active==='archive'||active==='proof')&&life.pullSlip(drag.part,x,y))redraw();
     else rotate(x,y);
     drag.x=e.clientX;drag.y=e.clientY;
   });
-  surface.addEventListener('click',e=>{if(e.detail && backgroundTap && !hitsObject(e))close();else if(e.detail && hitsObject(e)){life.inspect(part,active,null,'tap');if(active==='cup')use.textContent=life.cupAction();}backgroundTap=false;redraw();});
+  surface.addEventListener('click',e=>{if(e.detail && backgroundTap && !hitsObject(e))close();else if(e.detail && !dragged && hitsObject(e)){life.inspect(part,active,null,'tap');if(active==='cup')use.textContent=life.cupAction();}backgroundTap=false;redraw();});
+  surface.addEventListener('pointerup',()=>{
+    if(drag&&dragged&&(active==='archive'||active==='proof'))life.pullSlip(drag.part,0,0,true);
+  });
   surface.addEventListener('pointercancel',()=>{backgroundTap=false;});
   surface.addEventListener('lostpointercapture',()=>{drag=null;});
   surface.addEventListener('touchmove',e=>{if(drag && e.cancelable)e.preventDefault();},{passive:false});

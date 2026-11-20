@@ -30,9 +30,11 @@ export function deskLife(stage, getModel, redraw, reduced) {
   let ribbonFlick=0,sheetHeld=false,sheetX=0,sheetZ=0,sheetHeight=0;
   const started=performance.now();
   let recording=null,chewed=false,ripple=0,tape=0,folded=false,unclipped=false,split=false,ribbonShift=0;
-  let serviceOpened=false,deskLeafFile=false,tapeUp=0,stowedScrew=false,lookedAtScrew=false;
+  let serviceOpened=false,deskLeafFile=null,drawnFile='',tapeUp=0,stowedScrew=false,lookedAtScrew=false;
 
   const reversedBooks=new Set();
+  let peekFolder=0,folderHeld=false,clipCompression=0;
+  const pulledSlips=new Map(),slipHome=new WeakMap();
   const prints = new Map(),printOffsets=new Map(),paperclips=new Map();
   try{
     for(const project of JSON.parse(localStorage.getItem('shelf-paperclips')||'[]'))
@@ -170,7 +172,9 @@ export function deskLife(stage, getModel, redraw, reduced) {
       const i=clamp(Math.round((ribbonShift+.22)/.17),0,3);
       document.dispatchEvent(new CustomEvent('desk-bookmark-leaf',{detail:i}));
     },
-    binder(dx,dy){if(Math.abs(dx)+Math.abs(dy)>.003)unclipped=true;},
+    binder(dx,dy){moveClip(dx,dy);},
+    'binder-arm--1'(dx,dy){moveClip(dx,dy);},
+    'binder-arm-1'(dx,dy){moveClip(dx,dy);},
     marble(dx,dy){marbleSpeed=dx*13;marbleDepthSpeed=dy*13;},
     liner(){liner=true;},
     'nibbled-leaf'(dx,dy){brushLeaf('nibbled-leaf',dx*40,dy*40);},
@@ -181,9 +185,35 @@ export function deskLife(stage, getModel, redraw, reduced) {
     'folded-sketch'(dx,dy){carrySheet(dx,dy);},
     tape(dx,dy){tapeUp=clamp(tapeUp-dy*9,0,1.54);},
     'pad-corner'(){guide=true;},
-    file(dx,dy){if(dy>.004)sleeve=true;},
+    'file-cover'(dx,dy){liftFolder(dy);},
+    file(dx,dy){liftFolder(dy);},
     book(dx,dy){if(Math.abs(dy)>.004)bookmark=true;}
   };
+  function moveClip(dx,dy){
+    clipCompression=clamp(clipCompression+Math.abs(dx)*7+Math.abs(dy)*7,0,1);
+    if(clipCompression>.46)unclipped=true;
+  }
+  function liftFolder(dy){
+    folderHeld=true;
+    peekFolder=clamp(peekFolder-dy*4.5,0,.89);
+    if(peekFolder>.56)sleeve=true;
+  }
+  function folderPose(full){
+    return full?1:peekFolder;
+  }
+  function pullSlip(id,dx,dy,finished=false){
+    if(!['research-question','research-erratum','proof-card'].includes(id))return false;
+    const before=pulledSlips.get(id)||0;
+    const distance=Math.hypot(dx,dy);
+    const progress=clamp(before+distance*.82,0,1);
+    if(finished){
+      if(progress>.32){
+        pulledSlips.set(id,1);
+        document.dispatchEvent(new CustomEvent('desk-book-slip',{detail:id}));
+      }else pulledSlips.delete(id);
+    }else pulledSlips.set(id,progress);
+    return true;
+  }
   function carrySheet(dx,dy){
     sheetHeld=true;
     sheetX=clamp(sheetX+dx*7.1,-1.65,1.67);
@@ -227,7 +257,11 @@ export function deskLife(stage, getModel, redraw, reduced) {
         drawing.dispatchEvent(new CustomEvent('drawer-stamp',{detail:stampBorrowed}));
         break;
       case 'liner': liner=!liner;break;
-      case 'binder': if(!unclipped)return false;unclipped=false;break;
+      case 'binder':
+      case 'binder-arm--1':
+      case 'binder-arm-1':
+        if(!unclipped)return false;
+        unclipped=false;clipCompression=1;break;
       case 'screw-socket':
         if(!lookedAtScrew)return false;
         stowedScrew=true;break;
@@ -235,6 +269,9 @@ export function deskLife(stage, getModel, redraw, reduced) {
       case 'fallen-leaf':
         if(!fallStart)return false;
         leafSaved=true;bookmark=true;break;
+      case 'loose-sheet':
+        if(!deskLeafFile?.href)return false;
+        location.href=deskLeafFile.href;break;
       case 'errata':
         if(!currentFile.startsWith(location.origin+'/solved-conjectures/docs/'))return false;
         location.href=currentFile;break;
@@ -270,7 +307,7 @@ export function deskLife(stage, getModel, redraw, reduced) {
     afterglow=.42;
   }
   function releaseProps(cancelled){
-    planeGrab=false;
+    planeGrab=false;folderHeld=false;
     pencils.release(cancelled);dropSheet(cancelled);
     if(turningTuner){turningTuner=false;tunerAngle=-.75+.5*tuner;}
     if(cableGrip&&!cancelled){
@@ -321,7 +358,7 @@ export function deskLife(stage, getModel, redraw, reduced) {
       if(name?.startsWith('cup-pencil-')&&event==='tap')return cupPencil(Number(name.at(-1)));
       if(name==='paper-star'&&event==='tap'&&borrowedIndex>=0)return cupPencil(borrowedIndex);
     }
-    if(event==='tap' && ['research-question','proof-card'].includes(name)){
+    if(event==='tap' && ['research-question','research-erratum','proof-card'].includes(name)){
       document.dispatchEvent(new CustomEvent('desk-book-slip',{detail:name}));
     }
     if(id==='tape' && event==='turn'){
@@ -401,7 +438,13 @@ export function deskLife(stage, getModel, redraw, reduced) {
     part('bookmark').visible=bookmark;part('ribbon').position.x=.39+ribbonShift;
     part('wax').visible=!split;part('split-wax').visible=split;
     part('errata').visible=Boolean(currentFile);
-    part('loose-sheet').visible=deskLeafFile;
+    const fileSlip=part('loose-sheet');
+    fileSlip.visible=Boolean(deskLeafFile);
+    const token=deskLeafFile?.title||'';
+    if(token&&(drawnFile!==token||!fileSlip.userData.titled)){
+      model.titleLooseFile(token);
+      fileSlip.userData.titled=true;drawnFile=token;
+    }
     const scratch=part('scratch');
     scratch.visible=wrote;
     if(!home.has(scratch))home.set(scratch,scratch.position.clone());
@@ -541,9 +584,32 @@ export function deskLife(stage, getModel, redraw, reduced) {
     ribbon.position.y=.07+(motion?ribbonFlick*.18:0);
     ribbon.rotation.y=motion?ribbonFlick:0;
     ribbonFlick*=Math.exp(-dt*8);
-    object('file').rotation.y=sleeve?-.03:-.14;
-    part('binder').rotation.x=unclipped?-.85:0;
-    for(let i=0;i<4;i++)part('folder-page-'+i).position.z=(flap*.012+(unclipped||sleeve?.058:0))*i;
+    object('file').rotation.y=-.14;
+    if(!folderHeld){
+      peekFolder=motion&&peekFolder>.003?peekFolder*Math.exp(-dt*12):0;
+      if(peekFolder<.10)sleeve=false;
+    }
+    const clipGoal=unclipped?1:0;
+    clipCompression=Math.abs(clipCompression-clipGoal)<.004||!motion?clipGoal:lerp(clipCompression,clipGoal,dt*13);
+    for(const side of [-1,1]){
+      const arm=part('binder-arm-'+side);
+      arm.rotation.x=side*lerp(.28,.06,clipCompression);
+    }
+    part('binder').rotation.x=-.28*clipCompression;
+    for(let i=0;i<4;i++){
+      const stack=part('folder-page-'+i);
+      stack.position.z=(flap*.019+(unclipped||sleeve?.057:0))*i;
+      stack.position.y=Math.sin(flap*2)*.009*i;
+      stack.rotation.x=Math.sin(flap*1.6)*-.033*i;
+    }
+    for(const [id,t] of pulledSlips){
+      const slip=part(id);
+      if(!slipHome.has(slip))slipHome.set(slip,{position:slip.position.clone(),rotation:slip.rotation.z});
+      const base=slipHome.get(slip);
+      slip.position.set(base.position.x+t*.083,base.position.y+t*.112,base.position.z+t*.062);
+      slip.rotation.y=id==='proof-card'?t*Math.PI:0;
+      slip.rotation.z=base.rotation-t*.23;
+    }
     object('tape').rotation.x=-tapeUp;
     move('tape',0,Math.sin(tapeUp)*.29,0);
     part('stage-lights').visible=lampOn&&tapeUp>1.02&&lampAngle<-.22;
@@ -559,7 +625,7 @@ export function deskLife(stage, getModel, redraw, reduced) {
     const warm=warmAt ? clamp((time-warmAt)/750,0,1):1;
     return { drift, warm, active: Boolean(
       Math.abs(planeSpeed)>.025||propTravel>0||(!planeGrab&&lift>.005)||(!planeGrab&&Math.abs(aimOffset)>.01)||Math.hypot(marbleSpeed,marbleDepthSpeed)>.022||(motion&&swing<1)||linerLift!==linerGoal||
-      afterglow>0||pencilMoving||ribbonFlick>.004||guideLift!==foldGoal||(inHand==='plant'&&time-plantOpen<15600)||(inHand==='plant'&&dewTilt>0&&dew<1)||freeDrop.visible||ripple.visible||hop>0||leafBends.size||falling<1||cableMoving||resolution<1||stickerLift!==sticker||flying||(lampOn&&warm<1)), wakeAt:lampOn&&!moth.visible ? mothIdle+14000 : 0};
+      afterglow>0||pencilMoving||ribbonFlick>.004||guideLift!==foldGoal||(!folderHeld&&peekFolder>0)||clipGoal!==clipCompression||(inHand==='plant'&&time-plantOpen<15600)||(inHand==='plant'&&dewTilt>0&&dew<1)||freeDrop.visible||ripple.visible||hop>0||leafBends.size||falling<1||cableMoving||resolution<1||stickerLift!==sticker||flying||(lampOn&&warm<1)), wakeAt:lampOn&&!moth.visible ? mothIdle+14000 : 0};
   }
-  return {tap,gestures,movePrint,stow,drawerChange,drawerMomentum,pullComplaint,lampChange,brushLeaf,cupAction,pointerMoved,startleMoth,inspect,releaseProps,updateInspection,update};
+  return {tap,gestures,movePrint,stow,drawerChange,drawerMomentum,pullComplaint,lampChange,brushLeaf,cupAction,pointerMoved,startleMoth,inspect,folderPose,pullSlip,releaseProps,updateInspection,update};
 }

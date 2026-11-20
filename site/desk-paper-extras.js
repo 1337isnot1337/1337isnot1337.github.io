@@ -12,27 +12,64 @@
   const posting=post.querySelector('.post-message');
   const seal=post.querySelector('.cat-stamp');
   const letterForm=studio.querySelector('.letter-room');
-  let leafPaper;
+  const researchSource='https://github.com/1337isnot1337/solved-conjectures/blob/892c04046aadc8731dd510bb9c9b3ca1a086bae1/docs/';
   document.addEventListener('desk-book-slip',event=>{
     const object=document.querySelector('.object-view');
-    let slip=object.querySelector('.private-book-slip');
-    if(slip){slip.remove();return;}
-    slip=make('aside','','private-book-slip');
+    const old=object.querySelector('.private-book-slip');
+    if(old){
+      old.remove();
+      if(old.dataset.source===event.detail)return;
+    }
+    const slip=make('aside','','private-book-slip');
+    slip.dataset.source=event.detail;
     if(event.detail==='proof-card'){
       slip.append(make('b','15'),make('p','Player A opens with this rank. It gets back home on turn 90.'));
-      const route=make('a','Open the deal');route.href='#desk-war';
-      route.addEventListener('click',()=>object.close());slip.append(route);
+      const route=make('a','Open the deal');
+      route.href='#desk-war';
+      route.addEventListener('click',()=>object.close());
+      slip.append(route);
+    }else if(event.detail==='research-erratum'){
+      slip.append(make('b','A qualification in red pencil'),
+        make('p','Too broad: the correction preserves the higher residues.'),
+        make('p','With the factor included: inputs divisible by seven retain the full residues they have after multiplication by j. The later seed has to handle that j.'));
+      const source=make('a','Precise statement and original evidence');
+      source.href=researchSource+'verification/prime-filtering-four-exact-44601096014/README.md#the-proved-statement';
+      slip.append(source);
     }else{
       const theorem='LineSize.EulerKernel.finiteProduct_correction_exact';
       slip.append(make('b','What changes at the endpoint?'),
-        make('p','The finite product has a square-root factor. The bound in the Lean notes applies with r·t in a fixed compact positive range.'),
-        make('code',theorem));
-      const source=make('a','Verification and scope');source.href='/solved-conjectures/docs/lean-status/#relation-formulas-euler-correction-and-finite-tuple-reconstruction';
-      slip.append(source);
+        make('p','The finite product has a square-root factor. The bound applies with r·t in a fixed compact positive range.'));
+      const proof=make('a',theorem,'graphite-verification');
+      proof.href=researchSource+'lean-status.md#relation-formulas-euler-correction-and-finite-tuple-reconstruction';
+      proof.setAttribute('aria-label','Verified Lean declaration '+theorem+' and its scope');
+      const argument=make('a','Read the working note');
+      argument.href='/solved-conjectures/docs/line-size-candidates/';
+      slip.append(proof,argument);
     }
+    enableCrease(slip);
     object.append(slip);
     object.addEventListener('close',()=>slip.remove(),{once:true});
   });
+  function enableCrease(slip){
+    const key='desk-fold:'+slip.dataset.source;
+    try{if(localStorage.getItem(key))slip.dataset.crease='flat';}catch{}
+    let gripped=null;
+    slip.addEventListener('pointerdown',event=>{
+      if(event.button!==0||event.target.closest('a'))return;
+      const bounds=slip.getBoundingClientRect();
+      if(event.clientX<bounds.right-42||event.clientY>bounds.top+45)return;
+      gripped=event.clientX;slip.setPointerCapture(event.pointerId);
+    });
+    slip.addEventListener('pointerup',event=>{
+      if(gripped===null)return;
+      if(Math.abs(event.clientX-gripped)>14){
+        slip.dataset.crease=slip.dataset.crease==='folded'?'flat':'folded';
+        try{localStorage.setItem(key,'1');}catch{}
+      }
+      gripped=null;
+    });
+    slip.addEventListener('pointercancel',()=>{gripped=null;});
+  }
 
   function make(tag,text,className='') {
     const element=document.createElement(tag);
@@ -369,30 +406,43 @@
   });
 
   const folder=studio.querySelector('#catalogue');
+  let folderPull=null,suppressFileClick=false;
   folder.addEventListener('pointerdown',event=>{
-    if(event.button!==0)return;
     const row=event.target.closest('.catalogue-list li');
-    if(!row)return;
-    const y=event.clientY;
-    row.addEventListener('pointerup',release=>{
-      if(release.clientY-y>26)looseFile(row);
-    },{once:true});
+    if(!row||event.button!==0)return;
+    suppressFileClick=false;
+    folderPull={row,id:event.pointerId,x:event.clientX,y:event.clientY,pulled:false};
   });
-  folder.addEventListener('dblclick',event=>{
-    const row=event.target.closest('.catalogue-list li');
-    if(row && !event.target.closest('a,input,button,select'))looseFile(row);
+  folder.addEventListener('pointermove',event=>{
+    if(folderPull?.id!==event.pointerId||!event.buttons)return;
+    if(Math.abs(event.clientX-folderPull.x)<22&&event.clientY-folderPull.y<28)return;
+    folderPull.pulled=true;
+    if(!folder.hasPointerCapture(event.pointerId))folder.setPointerCapture(event.pointerId);
+    folderPull.row.style.setProperty('--pull',Math.min(18,Math.max(-9,event.clientY-folderPull.y))+'px');
   });
+  folder.addEventListener('pointerup',event=>{
+    if(folderPull?.id!==event.pointerId)return;
+    const {row,pulled}=folderPull;
+    folderPull=null;
+    row.style.removeProperty('--pull');
+    if(pulled){suppressFileClick=true;looseFile(row);}
+  });
+  folder.addEventListener('pointercancel',()=>{
+    folderPull?.row.style.removeProperty('--pull');
+    folderPull=null;
+  });
+  folder.addEventListener('click',event=>{
+    if(!suppressFileClick||!event.detail)return;
+    suppressFileClick=false;event.preventDefault();event.stopImmediatePropagation();
+  },true);
   function looseFile(row){
     const source=row.querySelector('a');
     if(!source)return;
-    leafPaper?.remove();
-    if(openFolder===source.href){openFolder='';leafPaper=null;send('desk-file-out',false,studio);return;}
-    send('desk-file-out',true,studio);
-    openFolder=source.href;
-    leafPaper=make('a',source.querySelector('strong')?.textContent||source.textContent.trim(),'loose-file-slip');
-    leafPaper.href=source.href;
-    leafPaper.removeAttribute('id');leafPaper.removeAttribute('data-project');
-    studio.querySelector('.desktop-picture')?.append(leafPaper);
+    const destination=new URL(source.href,location.href);
+    if(!['http:','https:'].includes(destination.protocol))return;
+    if(openFolder===destination.href){openFolder='';send('desk-file-out',null,studio);return;}
+    openFolder=destination.href;
+    send('desk-file-out',{href:openFolder,title:source.querySelector('strong')?.textContent.trim()||source.textContent.trim()},studio);
   }
   const journal=studio.querySelector('#about');
   let pageCorner=null;
