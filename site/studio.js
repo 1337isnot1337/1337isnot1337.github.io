@@ -42,7 +42,7 @@
   function showFurniture() {
     if (page.dataset.view!=="desk" || !sceneNearby || sceneStarted || studio.dataset.open || document.querySelector(".open-project[open]")) return;
     sceneStarted=true;
-    import("./furniture.js?v=18").then(module => {
+    import("./furniture.js?v=19").then(module => {
       try { module.mountFurniture(stage,showGraphicsFallback); }
       catch { showGraphicsFallback(); }
     }, () => showGraphicsFallback("The 3D desk couldn’t download. Reload to try again."));
@@ -252,7 +252,10 @@
       (/Mac/.test(ua) && 'macOS') || (/Linux/.test(ua) && 'Linux') || 'an unmarked machine';
     const now=new Date(),hour=now.getHours();
     const reader=hour<5 || hour>=22 ? 'the night owl' : hour<9 ? 'the early bird' : 'the desk detective';
-    recipient.textContent='To '+reader;
+    const hourMinute=now.toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
+    recipient.textContent=hour<5||hour>=23
+      ? 'To the person opening drawers at '+hourMinute
+      : 'To '+reader;
     device.textContent=browser+' on '+os;
     const zone=Intl.DateTimeFormat().resolvedOptions().timeZone || 'local';
     destination.textContent=zone.split('/').pop().replaceAll('_',' ')+' time';
@@ -273,6 +276,11 @@
   const card=stage.querySelector('[data-object="keepsake"]');
   const post=studio.querySelector('.drawer-post');
   drawer.hidden=false;
+  stage.addEventListener('drawer-position',event=>{
+    const reachable=event.detail>=.54;
+    drawer.setAttribute('aria-expanded',String(reachable));
+    card.hidden=!reachable;
+  });
   drawer.addEventListener('click',()=>{
     const open=drawer.getAttribute('aria-expanded')!=='true';
     drawer.setAttribute('aria-expanded',String(open));card.hidden=!open;

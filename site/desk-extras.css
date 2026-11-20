@@ -36,6 +36,25 @@
 .build-negative { width: min(100%, 7rem); aspect-ratio: .93; background-size: 300% 100%; margin: 0 auto .3rem; }
 .post-signature { display: block; width: 100%; height: 3.2em; margin-top: .35em; touch-action: none; }
 .post-signature path { fill: none; stroke-width: .8; stroke-linecap: round; }
+/* Only the upward-facing back catches a stamp or the rose lead. */
+.postcard-back[aria-hidden="false"] .cat-stamp,
+.postcard-back[aria-hidden="false"] .post-signature[data-available],
+.postcard-back[aria-hidden="false"] .post-stamp-tool { pointer-events: auto; }
+.post-signature:not([data-available]):empty { display: none; }
+.post-stamp-tool {
+  --stamp-x: 0px;
+  --stamp-y: 0px;
+  position: absolute;
+  top: 29%; right: 9%;
+  width: clamp(1.5rem,4vw,2.8rem); aspect-ratio: 1;
+  border: 1px solid #855849; border-radius: 50%;
+  padding: 0;
+  background: radial-gradient(circle at 40% 30%,#edbf83 17%,#a36946 53%,#78503c 58%,#c28b59 64%,#87533f 83%,#6e4350 94%);
+  box-shadow: 1px 3px 3px #4d36373b;
+  transform: translate(var(--stamp-x),var(--stamp-y));
+  touch-action: none;
+}
+.post-stamp-tool:active { scale: .91; }
 .post-address [data-private=postmark] {
   position: absolute;
   inset: 24% 0 auto auto;

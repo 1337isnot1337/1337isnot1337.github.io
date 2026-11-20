@@ -10,7 +10,9 @@ export function deskLife(stage, getModel, redraw, reduced) {
   const part = id => getModel().details.get(id);
   const object = id => getModel().targets.get(id)?.root;
   const home = new WeakMap();
-  let drawerClaps=0,lastClose=0,drawerNote=false,marbleX=-.77,marbleSpeed=0,handleSwing=0,liner=false;
+  let drawerClaps=0,lastClose=0,drawerNote=false,complaintTravel=0,liner=false,linerLift=0;
+  let marbleX=-.77,marbleZ=-.43,marbleSpeed=0,marbleDepthSpeed=0,marbleRotation=0;
+  let handleStarted=0,handleSpring=0,stampBorrowed=false,postcardHeld=false;
   let potTurn=0,nibble=0,plantOpen=0,leafLift=0,falling=false,leafSaved=false,dew=0,star=false,borrowed=false,hop=0;
   let lampAngle=0,lampPitch=0,lampClicks=0,lampClickTime=0,warmAt=0,mothIdle=performance.now(),mothRest=false,mothScared=0;
   let pointerSample=null;
@@ -60,8 +62,8 @@ export function deskLife(stage, getModel, redraw, reduced) {
   });
   document.addEventListener('desk-tape',event=>{tape+=event.detail;redraw();});
   drawing.querySelector('.drawer-post').addEventListener('beforetoggle',event=>{
-    const card=object('keepsake');
-    if(card){card.visible=event.newState!=='open';redraw();}
+    postcardHeld=event.newState==='open';
+    redraw();
   });
   document.addEventListener('desk-pin',event=>{
     prints.set(event.detail.id,event.detail.angle);redraw();
@@ -73,14 +75,26 @@ export function deskLife(stage, getModel, redraw, reduced) {
     if(!['desk-audio','recording'].includes(event.target.id))return;
     recording=event.target;redraw();
   },true);
-  function drawerChange(open, speed=0) {
-    if(open){marbleSpeed=.8+2*Math.abs(speed);return;}
+  function drawerChange(open,speed,direct){
+    if(open)return;
     const time=performance.now();
-    drawerClaps=time-lastClose<1350?drawerClaps+1:1;
+    if(direct && speed>-1.35){
+      handleSpring=.14;handleStarted=time;
+      return;
+    }
+    drawerClaps=time-lastClose<2600?drawerClaps+1:1;
     lastClose=time;
-    if(drawerClaps>=3 || (drawerClaps>=2 && speed<-.9))drawerNote=true;
-    handleSwing=Math.abs(speed)*.16+.10;
-    marbleSpeed=-.6;
+    if(drawerClaps>=(direct?3:5)){
+      drawerNote=true;complaintTravel=0;
+    }
+    handleSpring=clamp(.10+Math.abs(speed)*.041,.10,.34);
+    handleStarted=time;
+  }
+  function drawerMomentum(impulse){
+    if(Math.abs(impulse)>.05)marbleDepthSpeed=clamp(marbleDepthSpeed+impulse,-2.3,2.3);
+  }
+  function pullComplaint(amount){
+    complaintTravel=clamp(amount,0,.13);
   }
   function lampChange(on) {
     const time=performance.now();
@@ -122,7 +136,7 @@ export function deskLife(stage, getModel, redraw, reduced) {
       document.dispatchEvent(new CustomEvent('desk-bookmark-leaf',{detail:i}));
     },
     binder(dx,dy){if(Math.abs(dx)+Math.abs(dy)>.003)unclipped=true;},
-    marble(dx){marbleSpeed=dx*12;},
+    marble(dx,dy){marbleSpeed=dx*13;marbleDepthSpeed=dy*13;},
     liner(){liner=true;},
     'nibbled-leaf'(dx,dy){leafLift+=dy*3;},
     plant(dx){potTurn+=dx*3;},
@@ -141,7 +155,10 @@ export function deskLife(stage, getModel, redraw, reduced) {
   }
   function tap(name) {
     switch(name){
-      case 'drawer-note': drawerNote=false;break;
+      case 'drawer-stamp':
+        stampBorrowed=!stampBorrowed;
+        drawing.dispatchEvent(new CustomEvent('drawer-stamp',{detail:stampBorrowed}));
+        break;
       case 'liner': liner=!liner;break;
       case 'binder': if(!unclipped)return false;unclipped=false;break;
       case 'screw-socket':
@@ -183,6 +200,7 @@ export function deskLife(stage, getModel, redraw, reduced) {
   }
   function inspect(name,id,delta,event) {
     if(event==='open'&&id==='screw')lookedAtScrew=true;
+    if(event==='close'&&id==='drawer-note')complaintTravel=.13;
     if(event==='hover'&&name==='springtail')hop=.22;
     if(event==='tap'&&name==='service-label')serviceOpened=!serviceOpened;
     if(id==='plant'){
@@ -226,20 +244,37 @@ export function deskLife(stage, getModel, redraw, reduced) {
     part('rear-screw').visible=rear>0;
     part('rear-pencil').visible=rear>0;
     part('reverse-plaque').visible=rear<0;
-    part('screw').visible=!stowedScrew;part('screw-socket').visible=!stowedScrew;
+    part('screw').visible=!stowedScrew;
+    part('screw-socket').visible=!stowedScrew&&below>.34;
+    part('fitted-screw').visible=stowedScrew;
+    part('drawer-stamp').visible=!stampBorrowed;
+    object('keepsake').visible=!postcardHeld;
+
     part('wall').visible=!behindWall;
     part('under-eye').visible=below>.44;
     part('pupil').position.x=clamp(Math.sin(yaw)*.072,-.047,.047);
     const limit=Math.sqrt(Math.max(0,.05**2-part('pupil').position.x**2));
     part('pupil').position.y=-limit*(.55+below*.45);
     part('drawer-note').visible=drawerNote;
-    part('drawer-note').rotation.x=lerp(-.62,-1.25,drawerAmount);
-    part('liner').rotation.x=liner?1.68:.11;part('crumb-plan').visible=liner;
-    marbleX=clamp(marbleX+marbleSpeed*dt,-.90,.90);marbleSpeed*=Math.exp(-dt*2.8);
-    if(Math.abs(marbleX)===.90)marbleSpeed*=-.46;
-    part('marble').position.x=marbleX;part('marble').rotation.z=-marbleX*10;
-    handleSwing*=Math.exp(-dt*5.3);
-    part('handle').rotation.x=motion?Math.sin(time/78)*handleSwing:0;
+    part('drawer-note').rotation.x=lerp(-.48,-1.02,drawerAmount)+complaintTravel*3.2;
+    part('drawer-note').position.z=.15+complaintTravel*.68;
+    part('drawer-note').position.y=.385+complaintTravel*.48;
+    const linerGoal=Number(liner);
+    linerLift=!motion||Math.abs(linerLift-linerGoal)<.008?linerGoal:lerp(linerLift,linerGoal,dt*10);
+    part('liner').rotation.x=lerp(-.06,-1.31,linerLift);part('crumb-plan').visible=linerLift>.30;
+    const nextX=clamp(marbleX+marbleSpeed*dt,-.97,-.43);
+    const nextZ=clamp(marbleZ+marbleDepthSpeed*dt,-1.01,-.19);
+    marbleRotation+=(nextZ-marbleZ)/.047;
+    part('marble').position.set(nextX,.107,nextZ);
+    part('marble').rotation.x=marbleRotation;
+    part('marble').rotation.z=-nextX/.047;
+    marbleX=nextX;marbleZ=nextZ;
+    const friction=Math.exp(-dt*3.3);
+    marbleSpeed*=friction;marbleDepthSpeed*=friction;
+    if(marbleX===-.97||marbleX===-.43)marbleSpeed*=-.42;
+    if(marbleZ===-1.01||marbleZ===-.19)marbleDepthSpeed*=-.48;
+    const swing=clamp((time-handleStarted)/495,0,1);
+    part('handle').rotation.x=motion?Math.sin(swing*Math.PI)*handleSpring*(1-swing):0;
     part('shade').rotation.set(-.16+lampPitch,lampAngle,-.36+lampAngle*.15);
     part('listen').visible=lampOn && lampAngle<-.22;
     part('lamplit-scratches').visible=lampOn&&lampAngle<-.34;
@@ -335,8 +370,8 @@ export function deskLife(stage, getModel, redraw, reduced) {
     }
     const warm=warmAt ? clamp((time-warmAt)/750,0,1):1;
     return { drift, warm, active: Boolean(
-      Math.abs(planeSpeed)>.025||lift>.005||Math.abs(aimOffset)>.01||Math.abs(marbleSpeed)>.02||handleSwing>.005||
+      Math.abs(planeSpeed)>.025||lift>.005||Math.abs(aimOffset)>.01||Math.hypot(marbleSpeed,marbleDepthSpeed)>.022||(motion&&swing<1)||linerLift!==linerGoal||
       afterglow>0||pencilDrop>.003||(inHand==='plant'&&time-plantOpen<15600)||ripple>0||hop>0||playing||flying||(lampOn&&warm<1)), wakeAt:lampOn&&!moth.visible ? mothIdle+14000 : 0};
   }
-  return {tap,gestures,movePrint,stow,drawerChange,lampChange,pointerMoved,startleMoth,inspect,updateInspection,update};
+  return {tap,gestures,movePrint,stow,drawerChange,drawerMomentum,pullComplaint,lampChange,pointerMoved,startleMoth,inspect,updateInspection,update};
 }

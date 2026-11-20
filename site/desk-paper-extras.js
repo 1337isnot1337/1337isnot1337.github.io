@@ -8,7 +8,7 @@
   const lead={color:'#534954',name:'graphite'};
   const art=document.createElement('canvas');
   art.width=480;art.height=330;
-  let activePrint='',pictureTurns=0,signature=null,stamped='',openFolder='',bookmarked='';
+  let activePrint='',pictureTurns=0,signature=null,stamped=null,openFolder='',bookmarked='';
   const posting=post.querySelector('.post-message');
   const seal=post.querySelector('.cat-stamp');
   const letterForm=studio.querySelector('.letter-room');
@@ -74,39 +74,73 @@
     });
     surface.addEventListener('pointercancel',()=>{grip=null;});
   }
+  const stampArea=seal.closest('.post-address');
+  let stampTool=null;
   function stampPost() {
     if(seal.closest('.postcard-back').getAttribute('aria-hidden')==='true')return;
     const moment=new Date();
-    stamped=moment.toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});
-    const mark=insertOnce(seal.parentElement,'postmark','span','');
-    mark.textContent=stamped+' · drawer office';
-    mark.style.setProperty('--stamp-angle',(-12+Math.random()*16)+'deg');
+    const date=moment.toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});
+    const angle=-12+Math.random()*16;
+    stamped={text:date+' · drawer office',angle};
+    const mark=insertOnce(stampArea,'postmark','span','');
+    mark.textContent=stamped.text;
+    mark.style.setProperty('--stamp-angle',angle+'deg');
     waveAt(mark,2);
   }
+  studio.addEventListener('drawer-stamp',event=>{
+    if(!event.detail){stampTool?.remove();stampTool=null;return;}
+    if(stampTool)return;
+    stampTool=make('button','','post-stamp-tool');
+    stampTool.type='button';
+    stampTool.setAttribute('aria-label','Rubber stamp');
+    stampArea.append(stampTool);
+    let dragged=false;
+    dragSurface(stampTool,(event,grip,end)=>{
+      const dx=event.clientX-grip.startX,dy=event.clientY-grip.startY;
+      dragged ||= Math.hypot(dx,dy)>7;
+      if(end){
+        stampTool.style.removeProperty('--stamp-x');
+        stampTool.style.removeProperty('--stamp-y');
+        if(dragged)stampPost();
+      }else{
+        stampTool.style.setProperty('--stamp-x',dx+'px');
+        stampTool.style.setProperty('--stamp-y',dy+'px');
+      }
+    });
+    stampTool.addEventListener('pointerdown',event=>{dragged=false;event.stopPropagation();});
+    stampTool.addEventListener('click',()=>{if(!dragged)stampPost();});
+  });
   seal.addEventListener('pointerdown',event=>event.stopPropagation());
   seal.addEventListener('click',stampPost);
-  post.addEventListener('beforetoggle',event=>{
-    if(event.newState!=='open')return;
-    const clock=new Date();
-    const t=clock.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'});
-    const recipient=post.querySelector('.post-recipient');
-    if(clock.getHours()<5||clock.getHours()>=23)recipient.textContent='To the person opening drawers at '+t;
-  });
   document.addEventListener('desk-lead',event=>{
     lead.name=event.detail;
     lead.color=lead.name==='rose'?'#a3536d':'#534954';
-    if(signature)return;
+    if(signature){
+      signature.toggleAttribute('data-available',lead.name==='rose');
+      return;
+    }
+    if(lead.name!=='rose')return;
     signature=document.createElementNS(ns,'svg');
     signature.classList.add('post-signature');
+    signature.dataset.available='';
     signature.setAttribute('viewBox','0 0 220 54');
-    signature.setAttribute('aria-label','Your graphite or rose signature');
+    signature.setAttribute('aria-label','Your signature');
     posting.append(signature);
     let path;
+    function positionOnPaper(event){
+      const matrix=signature.getScreenCTM();
+      if(!matrix)return null;
+      const p=new DOMPoint(event.clientX,event.clientY).matrixTransform(matrix.inverse());
+      if(!p.w||!Number.isFinite(p.x)||!Number.isFinite(p.y))return null;
+      const x=Math.max(0,Math.min(220,p.x/p.w));
+      const y=Math.max(0,Math.min(54,p.y/p.w));
+      return x.toFixed(1)+','+y.toFixed(1);
+    }
     dragSurface(signature,(event,grip,end)=>{
       event.stopPropagation();
       if(end){path=null;return;}
-      const p=new DOMPoint(event.clientX,event.clientY).matrixTransform(signature.getScreenCTM().inverse());
-      const position=p.x.toFixed(1)+','+p.y.toFixed(1);
+      const position=positionOnPaper(event);
+      if(!position)return;
       if(!path){
         path=document.createElementNS(ns,'path');
         path.setAttribute('d','M'+position+' l.1 .1');
@@ -114,13 +148,14 @@
         signature.append(path);
       }else path.setAttribute('d',path.getAttribute('d')+'L'+position);
     },true);
+    signature.addEventListener('pointercancel',()=>{path=null;});
     signature.addEventListener('pointerdown',event=>event.stopPropagation());
   });
   studio.addEventListener('desk-post-export',event=>{
     const {ctx}=event.detail;
     if(stamped){
-      ctx.save();ctx.translate(986,1050);ctx.rotate(-.15);
-      ctx.font='22px monospace';ctx.fillStyle='#a4555d';ctx.fillText(stamped+' · drawer office',-120,0,290);
+      ctx.save();ctx.translate(983,1039);ctx.rotate(stamped.angle*Math.PI/180);
+      ctx.font='22px monospace';ctx.fillStyle='#a4555d';ctx.fillText(stamped.text,-115,0,255);
       ctx.strokeStyle='#a4555d';ctx.strokeRect(-125,-30,268,48);ctx.restore();
     }
     if(signature?.childElementCount){

@@ -1,11 +1,12 @@
 import * as T from './vendor/three/three.module.min.js';
-import { furnish } from './desk-model.js?v=16';
+import { furnish } from './desk-model.js?v=17';
 import { inspectDeskObjects } from './desk-inspect.js?v=4';
 
-import { attachDeskPointer } from './desk-pointer.js?v=12';
+import { attachDeskPointer } from './desk-pointer.js?v=13';
 
-import { deskLife } from './desk-life.js?v=2';
+import { deskLife } from './desk-life.js?v=3';
 import { deskView } from './desk-view.js?v=1';
+import { drawerTravel } from './desk-drawer.js?v=1';
 
 export function mountFurniture(stage,showGraphicsFallback) {
   const canvas = stage.querySelector('canvas');
@@ -49,7 +50,9 @@ export function mountFurniture(stage,showGraphicsFallback) {
   const links=new Map([...stage.querySelectorAll('[data-object]')].map(el=>[el.dataset.object,el]));
   const vector=new T.Vector3(), point=new T.Vector3(), aim=new T.Vector3();
   const ray=new T.Raycaster(),mouse=new T.Vector2();
-  let model,frame=0,visible=true,dirty=true,drawerOpen=stage.querySelector('[data-object="drawer"]').getAttribute('aria-expanded')==='true',drawerAmount=0,opened='',fileAngle=0,bookAngle=0;
+  let model,frame=0,visible=true,dirty=true,drawerAmount=0,opened='',fileAngle=0,bookAngle=0;
+  const drawer=links.get('drawer');
+  const travel=drawerTravel(drawer.getAttribute('aria-expanded')==='true');
   const hitGroups=new Map(),bounds=new T.Box3(),intersection=new T.Vector3();
   let lastTime=0,lampOn=false;
   let contextLost=false;
@@ -57,11 +60,8 @@ export function mountFurniture(stage,showGraphicsFallback) {
   let gazeX=0, gazeY=0, targetX=0, targetY=0;
   const life=deskLife(stage,()=>model,redraw,motion);
   const inspector=inspectDeskObjects(stage,engine,scene,camera,()=>model,redraw,life);
-  let drawerGrip=null,ambientTimer=0,drawerVelocity=0;
+  let ambientTimer=0;
   let lastPart='',pickedUp='',pickupTravel=0,centered=0,centerUntil=0;
-  function moveDrawer(open){
-    if(open!==drawerOpen)drawer.click();
-  }
   function redraw() {
     dirty=true;
     if (visible && !contextLost && !frame) frame=requestAnimationFrame(renderFrame);
@@ -140,7 +140,10 @@ export function mountFurniture(stage,showGraphicsFallback) {
     const amount=(motion.matches||software)?1:1-Math.exp(-dt*12);
     const target=(value,goal)=>Math.abs(value-goal)<.004?goal:T.MathUtils.lerp(value,goal,amount);
     const prevDrawer=drawerAmount,prevFile=fileAngle,prevBook=bookAngle;
-    drawerAmount=drawerGrip??target(drawerAmount,Number(drawerOpen));fileAngle=target(fileAngle,opened==='catalogue'?1:0);bookAngle=target(bookAngle,opened==='about'?1:0);
+    const drawerMotion=travel.step(dt,motion.matches||software);
+    drawerAmount=drawerMotion.amount;
+    life.drawerMomentum(drawerMotion.impulse);
+    fileAngle=target(fileAngle,opened==='catalogue'?1:0);bookAngle=target(bookAngle,opened==='about'?1:0);
     model.drawer.position.z=2.17+drawerAmount*1.53;
     model.flap.rotation.x=-fileAngle*1.22;model.cover.rotation.z=bookAngle*2.40;
     if((prevDrawer!==drawerAmount && (drawerAmount===0||drawerAmount===1)) ||
@@ -200,7 +203,7 @@ export function mountFurniture(stage,showGraphicsFallback) {
       warning.hidden=!software;
       lamp.hidden=false;links.get('plant').hidden=false;
     }
-    if((events.active && !document.hidden) || returnOffset || posture.move || gazeX!==targetX||gazeY!==targetY||drawerAmount!==Number(drawerOpen)||fileAngle!==(opened==='catalogue'?1:0)||bookAngle!==(opened==='about'?1:0))redraw();
+    if((events.active && !document.hidden) || returnOffset || posture.move || gazeX!==targetX||gazeY!==targetY||drawerMotion.moving||fileAngle!==(opened==='catalogue'?1:0)||bookAngle!==(opened==='about'?1:0))redraw();
   }
   function clampReturn(time){
     if(motion.matches)return centerUntil>time?centered:0;
@@ -248,15 +251,20 @@ export function mountFurniture(stage,showGraphicsFallback) {
         screw:'The spare screw', shim:'Shims and other published equations'
       };
       if(labels[name]){
+        if(name==='drawer-note')life.pullComplaint(.08);
         inspector.open(name,labels[name]);
         return true;
       }
       return life.tap(name);
     },
-    gesture(name,dx,dy){
+    gesture(name,dx,dy,time){
       if(name==='handle'){
-        drawerGrip=Math.max(0,Math.min(1,(drawerGrip??drawerAmount)+dy*4.5));
-        drawerVelocity=dy;redraw();return true;
+        travel.drag(dy,time);redraw();return true;
+      }
+      if(name==='drawer-note'){
+        pickedUp=name;pickupTravel-=Math.abs(dx)*.45+Math.abs(dy);
+        life.pullComplaint(-pickupTravel);
+        detailMoved=true;redraw();return true;
       }
       if(['airframe','scope','proof-volume','archive-volume'].includes(name)){
         if(pickedUp!==name){pickedUp=name;pickupTravel=0;}
@@ -277,10 +285,17 @@ export function mountFurniture(stage,showGraphicsFallback) {
     },
     endOrbit(time,cancelled) {
       view.release(time,cancelled);
+      const drawerRelease=travel.release(time,cancelled);
+      if(drawerRelease){
+        stage.dispatchEvent(new CustomEvent('drawer-position',{detail:drawerRelease.target}));
+        if(drawerRelease.target===0&&drawerRelease.hadTravel)
+          life.drawerChange(false,drawerRelease.velocity,true);
+      }
       if(cancelled){
-        pickedUp='';pickupTravel=0;drawerGrip=null;drawerVelocity=0;
+        pickedUp='';pickupTravel=0;
         redraw();return;
       }
+      if(pickedUp==='drawer-note'&&pickupTravel<-.038)inspector.open('drawer-note','A complaint from the furniture');
       if(pickupTravel<-.085){
         if(pickedUp==='airframe')inspector.open('plane','DOPPLERGEIST model airplane','Open DOPPLERGEIST');
         if(pickedUp==='scope')inspector.open('scope','Oscilloscope','Open the experiments');
@@ -288,11 +303,6 @@ export function mountFurniture(stage,showGraphicsFallback) {
         if(pickedUp==='archive-volume')inspector.open('archive','Research notes','Open the research notes');
       }
       pickedUp='';pickupTravel=0;
-      if(drawerGrip!==null){
-        const open=drawerGrip>.46;
-        if(drawerOpen===open)life.drawerChange(open,drawerVelocity*40);
-        drawerGrip=null;moveDrawer(open);drawerVelocity=0;
-      }
       redraw();
     }
   });
@@ -303,9 +313,11 @@ export function mountFurniture(stage,showGraphicsFallback) {
     bulb.intensity=lampOn?22:0;sky.intensity=lampOn?.95:1.95;sun.intensity=lampOn?.80:2.12;
     redraw();
   });
-  const drawer=links.get('drawer');
   stage.addEventListener('drawer-change',()=>{
-    drawerOpen=drawer.getAttribute('aria-expanded')==='true';life.drawerChange(drawerOpen,drawerVelocity*40);drawerVelocity=0;redraw();
+    const open=drawer.getAttribute('aria-expanded')==='true';
+    travel.toggle(open);
+    life.drawerChange(open,open?1:-1,false);
+    redraw();
   });
   section.closest('#studio').addEventListener('desk-room',e=>{opened=e.detail||'';if(opened)leaveDesk();redraw();});
   if('IntersectionObserver' in window)new IntersectionObserver(([entry])=>{

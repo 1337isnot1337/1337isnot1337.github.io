@@ -45,7 +45,7 @@ export function attachDeskPointer(stage,{pick,track,orbitBy,endOrbit,part,gestur
       }
       if(press.dragging){
         const x=(e.clientX-press.lastX)/stage.clientWidth,y=(e.clientY-press.lastY)/stage.clientHeight;
-        if(!gesture(press.part,x,y))orbitBy(x,y,e.timeStamp);
+        if(!gesture(press.part,x,y,e.timeStamp))orbitBy(x,y,e.timeStamp);
         press.lastX=e.clientX;press.lastY=e.clientY;return;
       }
     }
