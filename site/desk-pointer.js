@@ -10,11 +10,14 @@ export function attachDeskPointer(stage,{pick,track,orbitBy,endOrbit}) {
     const target=targets.get(pick((clientX-r.left)/r.width,(clientY-r.top)/r.height));
     return target && !target.hidden ? target : null;
   }
-  function leave(){
+  function endPress(){
     if(press && canvas.hasPointerCapture(press.id))canvas.releasePointerCapture(press.id);
     if(press?.dragging)endOrbit();
-    press=null;cancelAnimationFrame(frame);frame=0;
-    delete stage.dataset.aim;stage.classList.remove('looking-around');track(0,0);
+    press=null;stage.classList.remove('looking-around');
+  }
+  function leave(){
+    endPress();cancelAnimationFrame(frame);frame=0;
+    delete stage.dataset.aim;track(0,0);
   }
   function aim(e){
     if(e.pointerType!=='mouse')return;
@@ -49,7 +52,7 @@ export function attachDeskPointer(stage,{pick,track,orbitBy,endOrbit}) {
   stage.addEventListener('pointerup',e=>{
     if(press?.id!==e.pointerId)return;
     suppress=press.dragging;
-    leave();if(active())aim(e);
+    endPress();if(active())aim(e);
   });
   stage.addEventListener('pointercancel',leave);
   stage.addEventListener('pointerleave',()=>{if(!press?.dragging)leave();});

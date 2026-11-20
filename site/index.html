@@ -67,9 +67,10 @@
     "></script>
     <script defer src="rook-graph.js?v=1"></script>
     <script>document.documentElement.dataset.view = /^(#projects|#flyover|#cpu|#schedule|#conjectures|#factoring|#conway)$/.test(location.hash) ? "shelf" : "desk";</script>
-    <link rel="stylesheet" href="studio.css?v=10" />
-    <script defer src="studio.js?v=10" onerror="delete document.documentElement.dataset.view"></script>
-    <script defer src="desk-keepsakes.js?v=6"></script>
+    <link rel="stylesheet" href="studio.css?v=11" />
+    <script defer src="studio.js?v=11" onerror="delete document.documentElement.dataset.view"></script>
+    <script defer src="paper-turn.js?v=1"></script>
+    <script defer src="desk-keepsakes.js?v=7"></script>
     <script defer src="paper-dismiss.js?v=1"></script>
     <noscript
       ><style>
@@ -118,8 +119,12 @@
               <a class="object-book" data-object="book" href="#about"><span>My notebook</span></a>
               <a class="object-tape" data-object="tape" href="#off-the-clock"><span>Off the clock</span></a>
               <a class="object-letters" data-object="letters" href="#elsewhere"><span>Letters</span></a>
-              <button type="button" data-object="flyover-print" data-keepsake aria-haspopup="dialog" hidden><span>DOPPLERGEIST photograph</span></button>
-              <button type="button" data-object="conway-print" data-keepsake aria-haspopup="dialog" hidden><span>Conway graph print</span></button>
+              <button type="button" data-object="flyover-print" data-board-print="flyover" data-keepsake aria-haspopup="dialog" hidden><span>DOPPLERGEIST photograph</span></button>
+              <button type="button" data-object="factoring-print" data-board-print="factoring-bead" data-keepsake aria-haspopup="dialog" hidden><span>Integer factoring print</span></button>
+              <button type="button" data-object="cpu-print" data-board-print="cpu-switch" data-keepsake aria-haspopup="dialog" hidden><span>Hack CPU print</span></button>
+              <button type="button" data-object="schedule-print" data-board-print="schedule" data-keepsake aria-haspopup="dialog" hidden><span>Schedule map print</span></button>
+              <button type="button" data-object="conway-print" data-board-print="conway" data-keepsake aria-haspopup="dialog" hidden><span>Conway graph print</span></button>
+              <button type="button" data-object="conjectures-print" data-board-print="conjectures" data-keepsake aria-haspopup="dialog" hidden><span>Solved conjectures print</span></button>
               <button type="button" data-object="robot-photo" data-keepsake aria-haspopup="dialog" hidden><span>Titan Robotics photograph</span></button>
               <button type="button" data-object="plant" data-keepsake aria-haspopup="dialog" hidden><span>Potted plant</span></button>
               <button type="button" data-object="pinboard" data-keepsake aria-haspopup="dialog" hidden><span>Pinboard photographs</span></button>
@@ -667,14 +672,14 @@
         <dialog class="drawer-post" aria-label="A postcard from Cinna’s desk">
           <form method="dialog"><button class="return-post">Put back</button></form>
   <figure class="post-office">
-    <div class="postcard">
-      <img class="postcard-front" src="assets/studio/night-mail.webp" width="1200" height="800" loading="lazy" alt="A calico mail carrier with a pink envelope at a moonlit window." />
-      <div class="postcard-back" hidden>
+    <div class="post-hand" data-turn-paper tabindex="0" role="group" aria-label="Postcard. Drag to turn, or use the arrow keys."><div class="postcard">
+      <img class="postcard-front" draggable="false" src="assets/studio/night-mail.webp" width="1200" height="800" loading="lazy" alt="A calico mail carrier with a pink envelope at a moonlit window." />
+      <div class="postcard-back" aria-hidden="true">
         <div class="post-message"><h3>From Cinna’s desk</h3><p>Your stops on this visit</p><ol id="post-route"></ol></div>
-        <div class="post-address"><img class="cat-stamp" src="assets/studio/night-mail.webp" alt="" loading="lazy" width="92" height="65" /><p>To whoever<br>picked this up.</p><small>1337isnot1337.github.io</small></div>
+        <div class="post-address"><img class="cat-stamp" src="assets/studio/night-mail.webp" alt="" loading="lazy" width="92" height="65" /><p class="post-recipient"></p><small class="post-location"></small><small class="postmark"></small></div>
       </div>
-    </div>
-    <figcaption><span>A postcard for you.</span><div class="post-controls" hidden><button id="flip-post" type="button">Turn it over ↻</button><button id="save-post" type="button">Save postcard ↓</button></div></figcaption>
+    </div></div>
+    <figcaption><div class="post-controls" hidden><button id="save-post" type="button">Save postcard ↓</button></div></figcaption>
     <p id="post-status" role="status"></p>
   </figure>
         </dialog>
@@ -1256,18 +1261,17 @@
       </div>
     </main>
 
-    <dialog class="object-view" aria-labelledby="held-title">
+    <dialog class="object-view" aria-label="Object in hand">
       <button type="button" class="put-object-back" aria-label="Put back" title="Put back">×</button>
       <div class="turn-surface" tabindex="0" aria-label="Rotate object. Drag or use the arrow keys."></div>
-      <div class="object-caption"><button type="button" class="turn-left" aria-label="Rotate left">↶</button><h2 id="held-title"></h2><button type="button" class="turn-right" aria-label="Rotate right">↷</button></div>
       <button type="button" class="use-object" hidden></button>
     </dialog>
     <dialog class="pickup" aria-labelledby="pickup-title">
       <div class="pickup-head"><h2 id="pickup-title"></h2><button type="button" class="put-down" autofocus>Put back</button></div>
       <div class="photo-piece">
-        <div class="photo-hand" tabindex="0" role="group" aria-label="Photograph. Drag to turn, or use the arrow keys.">
+        <div class="photo-hand" data-turn-paper tabindex="0" role="group" aria-label="Photograph. Drag to turn, or use the arrow keys.">
           <div class="photo-print">
-            <div class="photo-front"><img loading="lazy" draggable="false" src="assets/furniture/prints/flyover.webp" alt="" /></div>
+            <div class="photo-front"></div>
             <div class="photo-back" aria-hidden="true"></div>
           </div>
         </div>
@@ -1278,6 +1282,22 @@
         <div class="sketch-tools" aria-label="Drawing tools"><button type="button" data-lead="graphite">Graphite</button><button type="button" data-lead="rose">Rose</button><button type="button" class="stamp-sketch">Stamp a doodle</button><button type="button" class="undo-sketch">Undo</button></div>
       </div>
     </dialog>
+    <template id="back-factoring-print">
+      <small>Integer factoring</small><b class="print-equation">2 × 3 × 337</b>
+      <p>Three primes hiding inside our team number.</p><small>2022 · factorization</small>
+    </template>
+    <template id="back-cpu-print">
+      <small>The Hack CPU</small><b class="print-equation">0000 0000<br>0010 1010</b>
+      <p>One instruction to put 42 in the A register.</p><small>@42 · Hack assembly</small>
+    </template>
+    <template id="back-schedule-print">
+      <small>Schedule map</small><b class="print-equation">A · B · C · D · E</b>
+      <p>A week of room numbers, folded into one map.</p><small>IMSA · school week</small>
+    </template>
+    <template id="back-conjectures-print">
+      <small>Solved conjectures</small><b class="print-equation">15 · 10 · 4</b>
+      <p>Deal the starting hand. Ninety turns later, every card is back where it began.</p><small>Three-player War</small>
+    </template>
     <template id="back-robot-photo">
       <small>Titan Robotics · 2025</small>
       <img class="contact-strip" src="assets/studio/reefscape-build.webp" width="750" height="270" alt="Three build-table photos showing the belly pan, wiring and motor controllers." />

@@ -3,7 +3,7 @@ import * as T from './vendor/three/three.module.min.js';
 // One renderer serves the room and the object in hand. Capture the room once per pickup.
 export function inspectDeskObjects(stage,engine,room,deskCamera,getModel,redraw){
   const dialog=document.querySelector('.object-view'), surface=dialog.querySelector('.turn-surface');
-  const use=dialog.querySelector('.use-object'), title=dialog.querySelector('h2');
+  const use=dialog.querySelector('.use-object');
   const objects={
     plant:['The windowsill cutting'], cup:['The pencil cup','Borrow a pencil'],
     pencil:['Graphite pencil','Draw with it'], 'rose-pencil':['Rose pencil','Draw with it'],
@@ -47,8 +47,8 @@ export function inspectDeskObjects(stage,engine,room,deskCamera,getModel,redraw)
     button.addEventListener('click',e=>{
       if(using || !stage.classList.contains('is-rendered') || e.metaKey || e.ctrlKey || e.altKey || e.shiftKey)return;
       e.preventDefault();e.stopImmediatePropagation();
-      active=id;opener=button;title.textContent=label;use.hidden=!action;use.textContent=action||'';
-      yaw=id.includes('pencil')?-.72:-.24;pitch=id==='tape'?.90:id.includes('pencil')?.94:.16;
+      active=id;opener=button;dialog.setAttribute('aria-label',label);use.hidden=!action;use.textContent=action||'';
+      yaw=id.includes('pencil')?-.72:-.24;pitch=id==='tape'?.90:id.includes('pencil')?.94:id==='cup'?.32:.16;
       source=null;aspect=0;stage.classList.add('inspecting');dialog.showModal();surface.focus({preventScroll:true});redraw();
     },true);
   }
@@ -59,8 +59,6 @@ export function inspectDeskObjects(stage,engine,room,deskCamera,getModel,redraw)
     backdrop.uniforms.frame.value=null;stage.classList.remove('inspecting');redraw();
   });
   use.onclick=()=>{close();using=true;try{opener.click();}finally{using=false;}};
-  dialog.querySelector('.turn-left').onclick=()=>rotate(-Math.PI/6,0);
-  dialog.querySelector('.turn-right').onclick=()=>rotate(Math.PI/6,0);
   surface.addEventListener('keydown',e=>{
     const turn={ArrowLeft:[-.2,0],ArrowRight:[.2,0],ArrowUp:[0,-.2],ArrowDown:[0,.2]}[e.key];
     if(turn){e.preventDefault();rotate(...turn);}

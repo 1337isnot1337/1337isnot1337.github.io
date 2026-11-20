@@ -36,7 +36,7 @@
   function showFurniture() {
     if (page.dataset.view!=="desk" || !sceneNearby || sceneStarted || studio.dataset.open || document.querySelector(".open-project[open]")) return;
     sceneStarted=true;
-    import("./furniture.js?v=11").then(module => {
+    import("./furniture.js?v=12").then(module => {
       try { module.mountFurniture(stage,showGraphicsFallback); }
       catch { showGraphicsFallback(); }
     }, () => showGraphicsFallback("The 3D desk couldn’t download. Reload to try again."));
@@ -84,9 +84,10 @@
   }
   function addressPostcard() {
     const list = studio.querySelector("#post-route");
-    list.replaceChildren(...route.map(id => {
+    const labels=route.length ? route.map(id=>stops.get(id)) : ['The desk drawer'];
+    list.replaceChildren(...labels.map(label => {
       const item = document.createElement("li");
-      item.textContent = stops.get(id);
+      item.textContent = label;
       return item;
     }));
     const artwork = route.slice().reverse().find(id => stampImages.has(id));
@@ -206,19 +207,38 @@
     if (dialog.open) remember(dialog.querySelector("article")?.id);
   }).observe(dialog, {attributes:true, attributeFilter:["open", "aria-labelledby"]});
 
-  const postcard = studio.querySelector(".postcard");
-  const back = postcard.querySelector(".postcard-back");
-  const flip = studio.querySelector("#flip-post");
-  flip.addEventListener("click", () => {
-    back.hidden = !back.hidden;
-    nightMail.hidden = !back.hidden;
-    flip.textContent = back.hidden ? "Turn it over ↻" : "See the front ↺";
-    if (!back.hidden) addressPostcard();
-    if (!reducedMotion.matches) postcard.animate([
-      {transform:"perspective(900px) rotateY(-17deg) rotate(-1deg)",opacity:.75},
-      {transform:"perspective(900px) rotateY(0) rotate(-1deg)",opacity:1}
-    ], {duration:230, easing:"ease-out"});
-  });
+  const recipient=studio.querySelector('.post-recipient');
+  const destination=studio.querySelector('.post-location');
+  const postmark=studio.querySelector('.postmark');
+  let countryLookup;
+  function addressVisitor(){
+    const ua=navigator.userAgent;
+    const browser=(/Edg(e|A|iOS)?\//.test(ua) && 'Edge') ||
+      (/OPR\//.test(ua) && 'Opera') || (/SamsungBrowser\//.test(ua) && 'Samsung Internet') ||
+      (/Firefox|FxiOS/.test(ua) && 'Firefox') || (/Chrome|CriOS/.test(ua) && 'Chrome') ||
+      (/Safari/.test(ua) && 'Safari') || 'a mystery browser';
+    const os=(/iPad/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints>1)) ? 'iPadOS' :
+      (/iPhone|iPod/.test(ua) && 'iOS') || (/Android/.test(ua) && 'Android') || (/CrOS/.test(ua) && 'ChromeOS') ||
+      navigator.userAgentData?.platform || (/Windows/.test(ua) && 'Windows') ||
+      (/Mac/.test(ua) && 'macOS') || (/Linux/.test(ua) && 'Linux') || 'an unmarked machine';
+    const now=new Date(),hour=now.getHours();
+    const reader=hour<5 || hour>=22 ? 'the night owl' : hour<9 ? 'the early bird' : 'the desk detective';
+    recipient.textContent='To '+reader+' on '+browser;
+    const zone=Intl.DateTimeFormat().resolvedOptions().timeZone || 'local';
+    const clockTown=zone.split('/').pop().replaceAll('_',' ')+' time';
+    destination.textContent='c/o '+os+' · '+clockTown;
+    const ink=stage.classList.contains('is-rendered') ? 'WebGL 2' : 'paper edition';
+    postmark.textContent=now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})+' · '+ink;
+    // The shared Pages host has no server-side request handler. Read only the country code.
+    countryLookup??=fetch('https://www.cloudflare.com/cdn-cgi/trace',{
+      credentials:'omit',referrerPolicy:'no-referrer',signal:AbortSignal.timeout?.(3500)
+    }).then(async response=>{
+      if(!response.ok)return;
+      const code=(await response.text()).match(/^loc=([A-Z]{2})$/m)?.[1];
+      if(code && code!=='XX')return new Intl.DisplayNames([navigator.language],{type:'region'}).of(code);
+    }).catch(()=>undefined);
+    countryLookup.then(country=>{if(country)destination.textContent='c/o '+os+' · '+country;});
+  }
   const drawer=stage.querySelector('[data-object="drawer"]');
   const card=stage.querySelector('[data-object="keepsake"]');
   const post=studio.querySelector('.drawer-post');
@@ -231,8 +251,8 @@
   });
   card.addEventListener('click',()=>{
     if(card.hidden || drawer.getAttribute('aria-expanded')!=='true')return;
-    addressPostcard();back.hidden=true;nightMail.hidden=false;flip.textContent='Turn it over ↻';
-    post.showModal();
+    addressPostcard();addressVisitor();
+    post.showModal();post.querySelector('.post-hand').focus({preventScroll:true});
   });
   window.addEventListener('hashchange',()=>{if(post.open)post.close();});
   const save = studio.querySelector("#save-post");
@@ -261,18 +281,25 @@
       ctx.font = '24px "DM Sans", sans-serif';
       ctx.fillText("Your stops on this visit", 66, 1012);
       ctx.font = '36px "DM Sans", sans-serif';
-      route.forEach((id, index) => {
+      studio.querySelectorAll("#post-route li").forEach((item, index) => {
         const y = 1099 + index * 75;
-        ctx.fillText(stops.get(id), 66, y, 620);
+        ctx.fillText(item.textContent, 66, y, 620);
         ctx.fillRect(66, y + 15, 590, 1);
       });
       const side = Math.min(stamp.naturalWidth, stamp.naturalHeight);
       ctx.drawImage(stamp, (stamp.naturalWidth-side)/2, (stamp.naturalHeight-side)/2, side, side, 971, 864, 160, 160);
       ctx.font = '42px "Bricolage Grotesque", sans-serif';
-      ctx.fillText("To whoever", 786, 1175);
-      ctx.fillText("picked this up.", 786, 1236);
+      const addressWords=recipient.textContent.split(' ');
+      let line='',row=1140;
+      for(const word of addressWords){
+        if(line && ctx.measureText(line+' '+word).width>360){ctx.fillText(line,786,row);row+=53;line='';}
+        line=line?line+' '+word:word;
+      }
+      ctx.fillText(line,786,row,360);
+      ctx.font = '28px "DM Sans", sans-serif';
+      ctx.fillText(destination.textContent,786,row+65,360);
       ctx.font = '21px "IBM Plex Mono", monospace';
-      ctx.fillText("1337isnot1337.github.io", 786, 1490);
+      ctx.fillText(postmark.textContent,786,1490,360);
       const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
       if (!blob) throw new Error("Image export failed");
       const url = URL.createObjectURL(blob);

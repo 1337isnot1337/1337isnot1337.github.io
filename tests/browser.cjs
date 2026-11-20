@@ -56,6 +56,10 @@ const server = http.createServer((req,res) => {
     if (request.url().startsWith(base) && request.failure()?.errorText !== 'net::ERR_ABORTED')
       errors.push(`Failed resource ${request.url()}: ${request.failure()?.errorText}`);
    });
+   let postLookups=0;
+   await page.route('https://www.cloudflare.com/cdn-cgi/trace',route=>{
+     postLookups++;return route.fulfill({status:200,contentType:'text/plain',headers:{'access-control-allow-origin':'*'},body:'loc=CA\n'});
+   });
    await page.goto(base);
    assert.equal(await page.locator('html').getAttribute('data-view'),'desk');
    assert.equal(await page.locator('.shop').isVisible(),false);
@@ -68,6 +72,19 @@ const server = http.createServer((req,res) => {
    if(name==='desktop'){
     await page.waitForFunction(()=>document.querySelector('.desktop-picture').classList.contains('is-rendered') || !document.querySelector('.graphics-warning').hidden);
     if(await page.locator('.is-rendered').count()){
+     const stage=page.locator('.desktop-picture'),lamp=page.locator('[data-object="lamp"]');
+     const r=await lamp.boundingBox();
+     await page.mouse.move(r.x+r.width*.5,r.y+r.height*.95);
+     await page.evaluate(()=>new Promise(done=>requestAnimationFrame(()=>requestAnimationFrame(done))));
+     if(await stage.evaluate(el=>el.classList.contains('soft-pan'))){
+      const heldPan=await stage.evaluate(el=>el.style.getPropertyValue('--pan-x'));
+      assert.notEqual(parseFloat(heldPan),0);
+      await page.evaluate(()=>document.addEventListener('pointerup',()=>{
+       window.panAtLampRelease=document.querySelector('.desktop-picture').style.getPropertyValue('--pan-x');
+      },{once:true}));
+      await page.mouse.down();await page.mouse.up();
+      assert.equal(await page.evaluate(()=>window.panAtLampRelease),heldPan,'lamp click keeps the current viewing angle');
+     }
      await page.locator('[data-object="plant"]').focus();await page.keyboard.press('Enter');
      await page.locator('.object-view[open]').waitFor();
      await page.evaluate(()=>new Promise(done=>requestAnimationFrame(()=>requestAnimationFrame(done))));
@@ -323,9 +340,15 @@ const server = http.createServer((req,res) => {
    await page.locator('.object-drawer').focus();
    await page.keyboard.press('Enter');
    assert.equal(await page.evaluate(()=>document.pointerLockElement),null);
+   assert.equal(postLookups,0,'country is only requested when the postcard is picked up');
    await page.locator('.postcat').focus();
    await page.keyboard.press('Enter');
-   await page.locator('#flip-post').click();
+   const postal=await page.locator('.post-hand').boundingBox();
+   const px=postal.x+postal.width*.12,py=postal.y+postal.height*.50;
+   await page.mouse.move(px,py);await page.mouse.down();
+   await page.mouse.move(px+postal.width*.72,py,{steps:9});await page.mouse.up();
+   assert.equal(await page.locator('.postcard-back').getAttribute('aria-hidden'),'false');
+   await page.waitForFunction(()=>document.querySelector('.post-location').textContent.endsWith(' · Canada'));
    assert.match(await page.locator('#post-route').innerText(),/Particle physics/);
    assert.ok(await page.locator('.postcard-back').evaluate(back =>
      back.offsetWidth <= back.parentElement.clientWidth && document.documentElement.scrollWidth <= innerWidth
@@ -524,6 +547,29 @@ const server = http.createServer((req,res) => {
   await cold.locator('.desk-objects a:visible').first().waitFor();
   assert.equal(await cold.locator('.desk-load-status').isVisible(),false);
   await cold.close();
+  const photos=await browser.newPage();
+  let releasePhoto;
+  const pending=new Promise(resolve=>releasePhoto=resolve);
+  await photos.route('**/assets/prints/conway.webp',async route=>{await pending;await route.continue();});
+  await photos.goto(base,{waitUntil:'domcontentloaded'});
+  const held=photos.locator('.pickup .photo-front img');
+  async function pickPrint(id){
+    await photos.locator('[data-object="'+id+'"]').evaluate(button=>button.click());
+    await photos.locator('.pickup[open]').waitFor();
+  }
+  await pickPrint('robot-photo');
+  await photos.waitForFunction(()=>document.querySelector('.photo-front img')?.naturalWidth===1440);
+  await photos.locator('.put-down').click();
+  await pickPrint('conway-print');
+  await held.evaluate(img=>img.decode());
+  assert.ok((await held.getAttribute('src')).endsWith('/furniture/prints/conway.webp'),'the second print has its own preview while its full image is pending');
+  await photos.locator('.put-down').click();
+  await pickPrint('flyover-print');
+  const graphResponse=photos.waitForResponse('**/assets/prints/conway.webp');
+  releasePhoto();await (await graphResponse).finished();
+  await photos.waitForFunction(()=>document.querySelector('.photo-front img')?.naturalWidth===840);
+  assert.ok((await held.getAttribute('src')).endsWith('/prints/flyover.webp'),'a late download cannot replace the active selection');
+  await photos.close();
   const shelfMouse=await browser.newPage({viewport:{width:1280,height:850}});
   await shelfMouse.addInitScript(()=>{
     const getContext=HTMLCanvasElement.prototype.getContext;
@@ -550,7 +596,7 @@ const server = http.createServer((req,res) => {
   await shelfMouse.locator('.mode-switch').click();
   await shelfMouse.locator('.graphics-warning:visible').waitFor();
   const pickup=shelfMouse.locator('.pickup');
-  for(const [object,caption] of [['robot-photo','Before the bumpers'],['flyover-print','One plane'],['conway-print','fourteen neighbors'],['pinboard','One plane']]){
+  for(const [object,caption] of [['robot-photo','Before the bumpers'],['flyover-print','One plane'],['conway-print','fourteen neighbors'],['pinboard','One plane'],['factoring-print','Three primes'],['cpu-print','A register'],['schedule-print','room numbers'],['conjectures-print','Ninety turns']]){
     await shelfMouse.locator('[data-object="'+object+'"]').click();
     const hand=pickup.locator('.photo-hand'),print=pickup.locator('.photo-print'),back=pickup.locator('.photo-back');
     await pickup.locator('.photo-front img').evaluate(img=>img.decode());
@@ -563,7 +609,7 @@ const server = http.createServer((req,res) => {
     await shelfMouse.mouse.move(x+box.width*.75,y,{steps:8});await shelfMouse.mouse.up();
     assert.equal(await back.getAttribute('aria-hidden'),'false');
     assert.ok((await back.innerText()).includes(caption));
-    await back.locator('img').evaluate(img=>img.decode());
+    if(await back.locator('img').count())await back.locator('img').evaluate(img=>img.decode());
     for(let i=0;i<8;i++)await hand.press('ArrowLeft');
     assert.equal(await back.getAttribute('aria-hidden'),'true','arrow keys turn the same sheet');
     await shelfMouse.mouse.click(5,5);
@@ -612,7 +658,9 @@ const server = http.createServer((req,res) => {
   await shelfMouse.locator('.back-to-desk').click();
   await shelfMouse.locator('[data-object="drawer"]').click();
   await shelfMouse.locator('[data-object="keepsake"]').click();
-  await shelfMouse.locator('#flip-post').click();
+  const postalHand=shelfMouse.locator('.post-hand');
+  for(let i=0;i<12;i++)await postalHand.press('ArrowRight');
+  assert.equal(await shelfMouse.locator('.postcard-back').getAttribute('aria-hidden'),'false');
   assert.deepEqual(await shelfMouse.locator('#post-route li').allTextContents(),
     ['The project files','The workbench','DOPPLERGEIST','Solved conjectures','Letters'],
     'saved visits use the project titles on the postcard');

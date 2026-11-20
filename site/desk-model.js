@@ -169,15 +169,24 @@ export function furnish(scene, narrow, repaint, software=false) {
   }
   shelfLabel(shelfBooks,-half+.44+(total-1)*.16,'Solved conjectures',narrow?1.48:1.84);
   shelfLabel(archive,half-(narrow?1.0:2.02),'Research notes',narrow?1.25:1.54);
-  // Pinned prints tuck behind the work surface.
-  const pinX=narrow?.59:.23;const pinboard=tag(group(world,pinX,.69,-2.04),'pinboard',[0,-.14,.09],.14,.30);
-  box(pinboard,narrow?1.27:2.17,1.10,.09,trim,0,0,0,.025);
-  box(pinboard,narrow?1.17:2.06,1.01,.04,finish(0xb88959),0,0,.061);
-  for(const [i,uri] of ['flyover','conway'].entries()){
-    const g=tag(group(pinboard,(i-.5)*(narrow?.53:.78),i?.06:-.04,.096),uri+'-print',[0,.04,.01],.46,.69);g.rotation.z=i?-.11:.080;
-    box(g,.46,.71,.018,paper);illustration(g,'assets/furniture/prints/'+uri+'.webp',.40,.51,0,.041,.014);
-    bead(g,0,.30,.024,.032,.032,.025,brass);
-  }
+  // One row across the wide hutch, two rows in the narrow one.
+  const boardWidth=narrow?1.93:4.02,boardHeight=narrow?1.27:1.10;
+  const pinboard=tag(group(world,narrow?.24:.08,.75,-1.58),'pinboard',[0,0,.08],boardWidth,boardHeight);
+  box(pinboard,boardWidth,boardHeight,.075,trim,0,0,0,.021);
+  box(pinboard,boardWidth-.06,boardHeight-.06,.035,finish(0xb88959),0,0,.047);
+  const printW=narrow?.351:.52,printH=narrow?.535:.79;
+  const buttons=document.querySelectorAll('[data-board-print]');
+  buttons.forEach((button,i)=>{
+    const x=narrow?(i%3-1)*.595:(i-2.5)*.646;
+    const y=narrow?(i<3?.297:-.297):[.027,-.019,.042,-.023,.015,-.01][i];
+    const g=tag(group(pinboard,x,y,.084),button.dataset.object,[0,0,.016],printW,printH);
+    g.rotation.z=[.040,-.065,.032,-.022,.053,-.042][i];
+    box(g,printW,printH,.012,paper);
+    const artW=printW*.93;
+    illustration(g,'assets/furniture/prints/'+button.dataset.boardPrint+'.webp',artW,artW*1.25,0,.019,.009);
+    const pin=narrow?.012:.019;
+    bead(g,0,printH/2-.028,.025,pin,pin,pin,brass);
+  });
   // Stitched green leather blotter with a fine inset line.
   const matWidth=width*.75;
   const pad=tag(group(world,0,0,0),'blotter',[0,.043,1.13],.75,.38);
@@ -390,15 +399,46 @@ export function furnish(scene, narrow, repaint, software=false) {
     tick.rotation.z=a-Math.PI/2;
   }
   // A small ceramic pencil cup lives beside the lamp.
-  const mug=tag(group(world,half-(narrow?.37:.56),.06,-.57),'cup',[0,.26,0],.34,.52);
-  const glaze=finish(0x93aa99,.24,.09);
-  turned(mug,[[.108,0],[.127,.012],[.139,.05],[.164,.32],[.17,.362],[.166,.376],[.147,.376],[.143,.35]],glaze,0,0,0);
-  wire(mug,[[.14,.30,0],[.235,.30,.008],[.249,.20,.02],[.205,.111,.02],[.136,.12,0]],.025,glaze);
-  cylinder(mug,.143,.14,.012,finish(0x494b3d),0,.37,0);
-  for(let i=0;i<4;i++){
-    const g=group(mug,(i-1.5)*.047,.32,(i%2)*.055);g.rotation.z=(i-1.4)*.15;
-    cylinder(g,.018,.018,.44,finish([0xb57558,0xc09a63,0x8f797d,0x687d79][i]),0,.17,0,6);
-    cylinder(g,0,.018,.067,cream,0,.424,0,6);
+  const mug=tag(group(world,half-(narrow?.71:.56),.06,-.57),'cup',[0,.26,0],.34,.52);
+  const glaze=finish(0x76a29b,.28,.035);
+  // Continue the profile around the lip, down the inside wall, and across the floor.
+  const cupProfile=[[0,.010],[.080,.010],[.089,.003],[.101,.003],[.108,.012],[.113,.020],
+    [.131,.051],[.146,.14],[.158,.26],[.164,.349],[.168,.363],[.167,.371],[.163,.376],
+    [.157,.377],[.152,.373],[.151,.363],[.149,.349],[.143,.264],[.131,.146],[.118,.074],
+    [.110,.054],[.090,.045],[0,.045]];
+  const shell=turned(mug,cupProfile,glaze,0,0,0);
+  // A darker glaze in the well gives depth even on renderers without ambient occlusion.
+  const tint=[],uv=shell.geometry.getAttribute('uv');
+  for(let i=0;i<uv.count;i++){
+    const step=Math.round(uv.getY(i)*(cupProfile.length-1)),depth=step<15?0:1-cupProfile[step][1]/.377;
+    tint.push(1-depth*.66,1-depth*.60,1-depth*.54);
+    uv.setY(i,cupProfile[step][1]/.377);
+    if(step>=15)uv.setX(i,.02);
+  }
+  shell.rotation.y=Math.PI;
+  shell.material=glaze.clone();shell.material.vertexColors=true;
+  shell.material.color.set(0xffffff);shell.material.map=photo('assets/furniture/stoneware.webp');
+  shell.geometry.setAttribute('color',new T.Float32BufferAttribute(tint,3));
+  const handle=new T.CatmullRomCurve3([[.150,.290,0],[.196,.304,0],[.240,.286,0],
+    [.258,.243,0],[.255,.191,0],[.231,.146,0],[.191,.120,0],[.138,.125,0]].map(v=>new T.Vector3(...v)));
+  mesh(mug,new T.TubeGeometry(handle,40,.022,12,false),glaze);
+  const foot=finish(0xba886d,.86);
+  turned(mug,[[.101,.003],[.109,.011],[.112,.018]],foot,0,0,0);
+  const slip=finish(0x476d6c,.36);
+  turned(mug,[[.1380,.092],[.1387,.096]],slip,0,0,0);
+  turned(mug,[[.1396,.103],[.1400,.105]],slip,0,0,0);
+  const cedar=finish(0xd5aa78,.77),lead=finish(0x35313b,.43);
+  // Each pencil rests inside the cup and leans towards its own point on the rim.
+  const pencils=[[.32,.21,.675,0xb46a52],[1.85,.16,.727,0xb6984c],
+    [3.36,.23,.644,0xa07687],[5.03,.18,.707,0x48645b]];
+  for(const [angle,lean,length,paint] of pencils){
+    const holder=group(mug,.052*Math.cos(angle),.048,.052*Math.sin(angle));
+    holder.rotation.y=-angle;
+    const pencil=group(holder,0,0,0);pencil.rotation.z=-lean;
+    const r=.0145;
+    cylinder(pencil,r,r,length,finish(paint,.46),0,length/2,0,6);
+    cylinder(pencil,.0045,r,.043,cedar,0,length+.0215,0,6);
+    cylinder(pencil,.0005,.0045,.017,lead,0,length+.0515,0,6);
   }
   // Faded wallpaper and wainscoting give the room scale on a tall screen.
   const wallMat=finish(0xb9b1a4);
@@ -499,7 +539,7 @@ export function furnish(scene, narrow, repaint, software=false) {
     const combined=mergeGeometries(parts);parts.forEach(g=>g.dispose());
     meshes.forEach(m=>m.removeFromParent());
     let surface=mat;
-    if(software){
+    if(software && parent!==mug){
       if(!fastMaterials.has(mat))fastMaterials.set(mat,new T.MeshLambertMaterial({
         color:mat.color,map:mat.map,side:mat.side,vertexColors:mat.vertexColors,transparent:mat.transparent,
         depthWrite:mat.depthWrite,alphaTest:mat.alphaTest,polygonOffset:mat.polygonOffset,

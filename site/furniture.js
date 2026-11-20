@@ -1,8 +1,8 @@
 import * as T from './vendor/three/three.module.min.js';
-import { furnish } from './desk-model.js?v=9';
-import { inspectDeskObjects } from './desk-inspect.js?v=2';
+import { furnish } from './desk-model.js?v=10';
+import { inspectDeskObjects } from './desk-inspect.js?v=3';
 
-import { attachDeskPointer } from './desk-pointer.js?v=9';
+import { attachDeskPointer } from './desk-pointer.js?v=10';
 
 export function mountFurniture(stage,showGraphicsFallback) {
   const canvas = stage.querySelector('canvas');
@@ -87,7 +87,8 @@ export function mountFurniture(stage,showGraphicsFallback) {
     const compact=w<=660 || w/h<=1.2;
     if(!model || narrow!==compact){narrow=compact;rebuild();}
     engine.setSize(w,h,false);camera.aspect=w/h;
-    camera.fov=narrow?Math.min(73,Math.max(49,2*Math.atan(.355/camera.aspect)*180/Math.PI)):43;
+    camera.fov=narrow?Math.min(73,Math.max(49,2*Math.atan(.355/camera.aspect)*180/Math.PI)):
+      Math.max(43,2*Math.atan(Math.tan(T.MathUtils.degToRad(21.5))*1.60/camera.aspect)*180/Math.PI);
     camera.updateProjectionMatrix();return true;
   }
   function projectTargets() {
