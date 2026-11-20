@@ -49,7 +49,9 @@ export function inspectDeskObjects(stage,engine,room,deskCamera,getModel,redraw,
     life.inspect(part,active,{x:dx,y:dy},'turn');
     if(active==='pencil' && Math.cos(pitch+dy)<-.25)
       document.dispatchEvent(new CustomEvent('desk-eraser',{detail:true}));
-    yaw+=dx;pitch=T.MathUtils.clamp(pitch+dy,-Math.PI*.94,Math.PI*.94);redraw();
+    yaw+=dx;pitch=T.MathUtils.clamp(pitch+dy,-Math.PI*.94,Math.PI*.94);
+    life.inspect(part,active,{yaw,pitch},'pose');
+    redraw();
   }
   function open(id,label,action){
     if(dialog.open)return;
@@ -98,6 +100,7 @@ export function inspectDeskObjects(stage,engine,room,deskCamera,getModel,redraw,
     const x=(e.clientX-drag.x)*.012,y=(e.clientY-drag.y)*.012;
     if(active==='tape'&&drag.part.startsWith('reel-'))
       document.dispatchEvent(new CustomEvent('desk-tape',{detail:x-y}));
+    else if(active==='plant'&&life.brushLeaf(drag.part,x,y))redraw();
     else rotate(x,y);
     drag.x=e.clientX;drag.y=e.clientY;
   });

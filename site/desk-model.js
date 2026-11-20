@@ -1,6 +1,7 @@
 // Units are relative to the desk, with its writing surface at y = 0.
 import * as T from './vendor/three/three.module.min.js';
 import { leafPoint, caterpillarRadii } from './desk-botany.js?v=1';
+import { lampProjection } from './desk-lamp.js?v=1';
 import { airframeGeometry } from './model-plane.js';
 import { mergeGeometries } from './vendor/three/BufferGeometryUtils.js';
 import { RoundedBoxGeometry } from './vendor/three/RoundedBoxGeometry.js';
@@ -369,7 +370,9 @@ export function furnish(scene, narrow, repaint, software=false) {
 
   const plane=detail('airframe',stand,-.04,.58,-.15);
   plane.rotation.set(-.065,-.59,-.045,'YXZ');
-  mesh(plane,airframeGeometry(),new T.MeshStandardMaterial({vertexColors:true,roughness:.37,metalness:.12}));
+  const planeGeometry=airframeGeometry();
+  const shadowAirframe=planeGeometry.attributes.position.clone();
+  mesh(plane,planeGeometry,new T.MeshStandardMaterial({vertexColors:true,roughness:.37,metalness:.12}));
   const ivoryEnamel=finish(0xf2dbac,.47), propMetal=finish(0xafaead,.31,.46);
   for(const [z,radius,height,y] of [[-.17,.142,.18,.14],[.18,.136,.162,.137]]){
     const arch=Array.from({length:15},(_,i)=>{
@@ -527,8 +530,8 @@ export function furnish(scene, narrow, repaint, software=false) {
       const tip=base.clone().add(new T.Vector3(.064*Math.sin(turn),.025,.064*Math.cos(turn)));
       wire(pot,[base.toArray(),base.clone().lerp(tip,.5).add(new T.Vector3(0,.013,0)).toArray(),tip.toArray()],.0045,stem);
       const selected=j===1&&k===3;
-      const branch=selected?detail('nibbled-leaf',pot,tip.x,tip.y,tip.z):pot;
-      const leaf=mesh(branch,leafShape,glazedLeaves[(k+j)%4],...(selected?[0,0,0]:[tip.x,tip.y,tip.z]));
+      const branch=detail(selected?'nibbled-leaf':'leaf-'+j+'-'+k,pot,tip.x,tip.y,tip.z);
+      const leaf=mesh(branch,leafShape,glazedLeaves[(k+j)%4]);
       leaf.rotation.set(.10+t*(.55+.17*(j%3)),turn,(k%2?1:-1)*.21,'YXZ');
       leaf.scale.setScalar(.68+.14*(k%2)+.15*Math.sin(t*Math.PI));
       if(selected)caterpillarLeaf=leaf;
@@ -562,10 +565,16 @@ export function furnish(scene, narrow, repaint, software=false) {
     }
   }
   crawler.visible=false;
-  const dew=detail('dew',leaf,.012,.006,.13);
-  bead(dew,0,0,0,.008,.013,.008,finish(0xcfe9c8,.09,.38));
-  const ripple=detail('ripple',pot,.21,.011,.041);
-  const rip=mesh(ripple,new T.RingGeometry(.021,.025,18),new T.MeshStandardMaterial({color:0xd6c98c,side:T.DoubleSide}));
+  const dewTrack=detail('dew-track',leaf);
+  dewTrack.quaternion.copy(whole.quaternion);dewTrack.scale.copy(whole.scale);
+  const water=finish(0xcfe9c8,.096,.47);
+  const dew=detail('dew',dewTrack);
+  bead(dew,0,0,0,.009,.013,.009,water);
+  const fallingDew=detail('falling-dew',pot);
+  bead(fallingDew,0,0,0,.008,.015,.008,water);
+  fallingDew.visible=false;
+  const ripple=detail('ripple',pot,.181,.002,.091);
+  const rip=mesh(ripple,new T.RingGeometry(.021,.025,18),new T.MeshStandardMaterial({color:0xded3a2,transparent:true,side:T.DoubleSide,depthWrite:false}));
   rip.rotation.x=-Math.PI/2;ripple.visible=false;
   const sprout=detail('sprout',pot,.03,.39,-.038);
   wire(sprout,[[0,0,0],[.03,.093,0],[.055,.145,.02]],.0042,stem);
@@ -587,7 +596,9 @@ export function furnish(scene, narrow, repaint, software=false) {
     const joint=cylinder(lamp,.071,.071,.13,brassDark,x,y,z,22);joint.rotation.x=Math.PI/2;
     const dial=cylinder(lamp,.046,.046,.033,brass,x,y,z+.08,12);dial.rotation.x=Math.PI/2;
   }
-  const shade=detail('shade',lamp,-.24,1.54,.18);shade.rotation.set(-.16,0,-.36);
+  const shadeHinge=detail('shade-hinge',lamp,-.23,1.58,.16);
+  const shade=detail('shade',shadeHinge,-.01,-.04,.02);
+  shade.rotation.set(-.16,0,-.36);
   turned(shade,[[.393,-.28],[.4,-.262],[.37,-.235],[.31,-.20],[.24,-.096],[.183,.042],[.10,.115],[.063,.13],[0,.13]],enamel,0,0,0);
   const lining=finish(0xf1dcc0,.50,.12);lining.side=T.DoubleSide;
   turned(shade,[[.039,.108],[.15,.017],[.22,-.12],[.31,-.224],[.394,-.278]],lining,0,0,0);
@@ -719,18 +730,20 @@ export function furnish(scene, narrow, repaint, software=false) {
   folded.visible=false;
   const flatSketch=detail('flat-sketch',deskPaper);
   for(const child of [...deskPaper.children])if(child!==folded&&child!==flatSketch)flatSketch.add(child);
-  drawn(detail('lamplit-scratches',pad),.52,.19,(c,w,h)=>{
+  const scratched=detail('lamplit-scratches',pad,-.95,.046,1.01);
+  drawn(scratched,.52,.19,(c,w,h)=>{
     c.strokeStyle='#b4a58780';c.lineWidth=.005;
     c.beginPath();c.moveTo(.03,.13);c.bezierCurveTo(.22,.04,.31,.17,.45,.060);
     c.lineTo(.39,.059);c.moveTo(.45,.060);c.lineTo(.43,.11);c.stroke();
-  },-.95,.046,1.01,true).parent.visible=false;
-  const shadow=drawn(detail('rabbit-shadow',pad),.29,.38,(c,w,h)=>{
-    c.fillStyle='#29232160';
-    for(const [x,y,a,b,r] of [[.14,.25,.082,.081,0],[.092,.125,.025,.078,-.23],[.168,.125,.022,.081,.20]]){
-      c.beginPath();c.ellipse(x,y,a,b,r,0,Math.PI*2);c.fill();
-    }
-  },1.39,.048,.80,true);
+  },0,0,0,true).parent.visible=false;
+  const shadow=drawn(detail('rabbit-shadow',pad),.48,.48,()=>{},1.39,.048,.80,true);
+  const projectLampShadow=lampProjection(shadow.material.map,shadowAirframe,()=>leaf.rotation.x*.30);
   shadow.parent.visible=false;
+  const pressedLeaf=detail('pressed-leaf',book,.53,.12,.73);
+  const pressed=mesh(pressedLeaf,leafShape,glazedLeaves[2]);
+  pressed.scale.set(.31,.04,.45);
+  pressed.rotation.y=-.19;
+  pressedLeaf.visible=false;
   const clip=detail('bookmark',book,.37,.084,.95);
   bead(clip,0,0,0,.039,.018,.11,finish(0x738e56));
   clip.visible=false;
@@ -916,5 +929,5 @@ export function furnish(scene, narrow, repaint, software=false) {
     combined.computeBoundingBox();combined.computeBoundingSphere();
   }
   source.forEach(g=>g.dispose());
-  return {world,targets,details,occluders,drawer,flap,cover,lamp,bulbGlass:fastMaterials.get(bulbGlass)||bulbGlass,contactMap,daylight,sketchTexture:sketchFace.material.map};
+  return {world,targets,details,occluders,drawer,flap,cover,lamp,bulbGlass:fastMaterials.get(bulbGlass)||bulbGlass,contactMap,daylight,projectLampShadow,sketchTexture:sketchFace.material.map};
 }

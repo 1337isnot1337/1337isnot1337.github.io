@@ -1,5 +1,5 @@
 import { MathUtils, Vector3 } from './vendor/three/three.module.min.js';
-import { caterpillarPoint, caterpillarRadii } from './desk-botany.js?v=1';
+import { leafPoint, caterpillarPoint, caterpillarRadii } from './desk-botany.js?v=1';
 
 const { clamp, lerp } = MathUtils;
 const experiment = ['sound','cards','bits','numbers'];
@@ -13,7 +13,10 @@ export function deskLife(stage, getModel, redraw, reduced) {
   let drawerClaps=0,lastClose=0,drawerNote=false,complaintTravel=0,liner=false,linerLift=0;
   let marbleX=-.77,marbleZ=-.43,marbleSpeed=0,marbleDepthSpeed=0,marbleRotation=0;
   let handleStarted=0,handleSpring=0,stampBorrowed=false,postcardHeld=false;
-  let potTurn=0,nibble=0,plantOpen=0,leafLift=0,falling=false,leafSaved=false,dew=0,star=false,borrowed=false,hop=0;
+  let potTurn=0,nibble=0,plantOpen=0,leafSaved=false,fallStart=0,dew=0,dewFall=0,dewTilt=0,star=false,borrowed=false,hop=0;
+  const leafBends=new Map(), dewStart=new Vector3(), fragmentStart=new Vector3();
+  const lampOrigin=new Vector3(), lightAxis=new Vector3(), incident=new Vector3();
+  let sproutLean=0;
   let lampAngle=0,lampPitch=0,lampClicks=0,lampClickTime=0,warmAt=0,mothIdle=performance.now(),mothRest=false,mothScared=0;
   let pointerSample=null;
   let planeAngle=.62,planeSpeed=0,lift=0,aimOffset=0,tuner=-1,previousTuner=-1,afterglow=0,patched=false;
@@ -120,7 +123,13 @@ export function deskLife(stage, getModel, redraw, reduced) {
     propeller(dx,dy){planeSpeed=clamp((dx-dy)*150,-34,34);},
     listen(){sendRubbing('DOPPLERGEIST');},
     airframe(dx,dy){lift=clamp(lift-dy*3,0,.55);aimOffset=clamp(aimOffset+dx*4,-1.2,1.2);if(dy>.01)planeSpeed=1.1;},
-    shade(dx,dy){lampAngle=clamp(lampAngle+dx*6,-1.33,.55);lampPitch=clamp(lampPitch+dy*6,-.75,.43);},
+    shade(dx,dy){
+      const direction=dx>0? .55-lampAngle : lampAngle+1.33;
+      const resistance=.23+.77*clamp(direction/.42,0,1);
+      lampAngle=clamp(lampAngle+dx*6*resistance,-1.33,.55);
+      lampPitch=clamp(lampPitch+dy*5,-.75,.43);
+    },
+    'shade-hinge'(dx,dy){gestures.shade(dx,dy);},
     tuner(dx,dy){
       previousTuner=tuner;
       const next=clamp(Math.round((part('tuner').rotation.z+(dx-dy)*7)/.45),-2,1);
@@ -138,7 +147,7 @@ export function deskLife(stage, getModel, redraw, reduced) {
     binder(dx,dy){if(Math.abs(dx)+Math.abs(dy)>.003)unclipped=true;},
     marble(dx,dy){marbleSpeed=dx*13;marbleDepthSpeed=dy*13;},
     liner(){liner=true;},
-    'nibbled-leaf'(dx,dy){leafLift+=dy*3;},
+    'nibbled-leaf'(dx,dy){brushLeaf('nibbled-leaf',dx*40,dy*40);},
     plant(dx){potTurn+=dx*3;},
     pencil(dx,dy){pencilX[0]=clamp(pencilX[0]+dx*1.6,-.32,.30);pencilDrop=clamp(pencilDrop-dy*3,0,.2);},
     'rose-pencil'(dx,dy){pencilX[1]=clamp(pencilX[1]+dx*1.6,-.29,.32);pencilDrop=clamp(pencilDrop-dy*3,0,.2);},
@@ -166,7 +175,7 @@ export function deskLife(stage, getModel, redraw, reduced) {
         stowedScrew=true;break;
       case 'screw': part('screw').rotation.y+=.84;break;
       case 'fallen-leaf':
-        if(!falling)return false;
+        if(!fallStart)return false;
         leafSaved=true;bookmark=true;break;
       case 'errata':
         if(!currentFile.startsWith(location.origin+'/solved-conjectures/docs/'))return false;
@@ -198,6 +207,16 @@ export function deskLife(stage, getModel, redraw, reduced) {
       if(Math.cos(yaw)<0)reversedBooks.add(id);else reversedBooks.delete(id);
     }
   }
+  function brushLeaf(name,dx,dy){
+    if(name==='whole-leaf'||name==='bitten-leaf'||name==='caterpillar')name='nibbled-leaf';
+    if(name!=='nibbled-leaf'&&!name.startsWith('leaf-'))return false;
+    const node=part(name);
+    if(!node)return false;
+    const current=leafBends.get(name)||[0,0];
+    current[0]=clamp(current[0]+dy*.62,-.38,.38);
+    current[1]=clamp(current[1]+dx*.58,-.32,.32);
+    leafBends.set(name,current);return true;
+  }
   function inspect(name,id,delta,event) {
     if(event==='open'&&id==='screw')lookedAtScrew=true;
     if(event==='close'&&id==='drawer-note')complaintTravel=.13;
@@ -205,13 +224,8 @@ export function deskLife(stage, getModel, redraw, reduced) {
     if(event==='tap'&&name==='service-label')serviceOpened=!serviceOpened;
     if(id==='plant'){
       if(event==='open')plantOpen=performance.now();
-      if(event==='turn'){
-        leafLift=clamp(leafLift+delta.y*.10,-.3,.3);
-        dew=clamp(dew+Math.abs(delta.y)*.46,0,1);
-        if(dew>=.99)ripple=.85;
-        hop=.2;
-      }
-      if(event==='close' && nibble>.94)falling=true;
+      if(event==='pose')dewTilt=clamp((Math.sin(delta.pitch)-.45)*2,0,1);
+      if(event==='close')dewTilt=0;
     }
     if(id==='plane' && event==='turn' && delta.y>.03)planeSpeed=delta.y*2+.7;
     if(id==='cup'){
@@ -275,10 +289,20 @@ export function deskLife(stage, getModel, redraw, reduced) {
     if(marbleZ===-1.01||marbleZ===-.19)marbleDepthSpeed*=-.48;
     const swing=clamp((time-handleStarted)/495,0,1);
     part('handle').rotation.x=motion?Math.sin(swing*Math.PI)*handleSpring*(1-swing):0;
-    part('shade').rotation.set(-.16+lampPitch,lampAngle,-.36+lampAngle*.15);
+    const shade=part('shade');
+    part('shade-hinge').rotation.x=lampPitch*.27;
+    shade.rotation.set(-.16+lampPitch*.73,lampAngle,-.36+lampAngle*.29);
+    shade.updateWorldMatrix(true,false);
+    shade.getWorldPosition(lampOrigin);
+    lightAxis.set(0,-1,0).transformDirection(shade.matrixWorld);
     part('listen').visible=lampOn && lampAngle<-.22;
-    part('lamplit-scratches').visible=lampOn&&lampAngle<-.34;
-    part('rabbit-shadow').visible=lampOn&&Math.abs(lampAngle+.83)<.055&&Math.abs(lampPitch-.13)<.15;
+    const scratches=part('lamplit-scratches');
+    scratches.getWorldPosition(incident).sub(lampOrigin).normalize();
+    const hit=lightAxis.dot(incident);
+    scratches.visible=lampOn&&hit>.72&&lightAxis.x<-.43;
+    const projection=part('rabbit-shadow');
+    projection.visible=lampOn&&Math.abs(lampAngle+.83)<.29&&Math.abs(lampPitch-.13)<.30;
+    if(projection.visible)model.projectLampShadow(lampAngle,lampPitch,potTurn,aimOffset);
     part('pad-guide').visible=guide;
     part('pad-corner').rotation.x=guide?-.75:0;
     part('bookmark').visible=bookmark;part('ribbon').position.x=.39+ribbonShift;
@@ -332,17 +356,60 @@ export function deskLife(stage, getModel, redraw, reduced) {
     part('whole-leaf').visible=!bitten;
     part('bitten-leaf').visible=bitten;
     part('caterpillar').visible=inHand==='plant';
-    part('fallen-leaf').visible=falling&&!leafSaved;
-    part('nibbled-leaf').rotation.x=leafLift;
-    if(motion)leafLift*=Math.exp(-dt*4.1);
-    part('dew').position.z=.12+dew*.21;
-    part('dew').visible=dew<.99;
-    part('ripple').visible=ripple>.01;part('ripple').scale.setScalar(1+(1-ripple)*1.9);
-    ripple=Math.max(0,ripple-dt);
-    part('sprout').rotation.z=(lampOn?-.14:.02)+potTurn*.06;
-    part('springtail').position.y=.011+hop*.035;
+    const pot=object('plant');
+    pot.rotation.y=potTurn;
+    if(inHand==='plant'&&nibble>.95&&!fallStart){
+      fallStart=time;
+      part('nibbled-leaf').getWorldPosition(fragmentStart);
+      fragmentStart.x+=.10;fragmentStart.z+=.085;fragmentStart.y-=.03;
+    }
+    const fragment=part('fallen-leaf');
+    fragment.visible=Boolean(fallStart&&!leafSaved);
+    part('pressed-leaf').visible=leafSaved;
+    const falling=fallStart ? clamp((time-fallStart)/780,0,1) : 1;
+    if(fragment.visible){
+      fragment.position.set(
+        lerp(fragmentStart.x,pot.position.x+.43,falling),
+        lerp(fragmentStart.y,1.53,falling*falling),
+        lerp(fragmentStart.z,-1.46,falling));
+      fragment.rotation.set(.8*(1-falling),.45+falling*.8,-.56*(1-falling));
+    }
+    for(const [id,angles] of leafBends){
+      const blade=part(id);
+      blade.rotation.x=angles[0];blade.rotation.z=angles[1];
+      const decay=Math.exp(-dt*6.4);
+      angles[0]*=decay;angles[1]*=decay;
+      if(Math.hypot(...angles)<.002){blade.rotation.set(0,0,0);leafBends.delete(id);}
+    }
+    const drop=part('dew');
+    if(dew<1&&inHand==='plant')dew=clamp(dew+dt*dewTilt*.69,0,1);
+    drop.position.set(...leafPoint(.32+dew*.66,.025));
+    drop.position.y-=.004;
+    drop.visible=dew<1;
+    if(!dewFall&&dew===1){
+      part('dew-track').localToWorld(dewStart.copy(drop.position));
+      pot.worldToLocal(dewStart);
+      dewFall=time;
+    }
+    const fall=dewFall ? clamp((time-dewFall)/370,0,1) : 0;
+    const freeDrop=part('falling-dew'),ripple=part('ripple');
+    freeDrop.visible=fall>0&&fall<1;
+    if(freeDrop.visible){
+      freeDrop.position.set(lerp(dewStart.x,.181,fall),lerp(dewStart.y,.004,fall*fall),lerp(dewStart.z,.091,fall));
+    }
+    const rip=dewFall ? clamp((time-dewFall-370)/760,0,1) : 0;
+    ripple.visible=fall>=1&&rip<1;
+    if(ripple.visible){
+      ripple.scale.setScalar(1+rip*2.3);
+      for(const ring of ripple.children)if(ring.material)ring.material.opacity=(1-rip)*.66;
+    }
+    const leanGoal=lampOn?.20:0;
+    sproutLean=motion?lerp(sproutLean,leanGoal,Math.min(1,dt*.13)):leanGoal;
+    const toward=Math.atan2(model.lamp.position.x-pot.position.x,model.lamp.position.z-pot.position.z)-potTurn;
+    part('sprout').rotation.set(Math.cos(toward)*sproutLean,0,-Math.sin(toward)*sproutLean);
+    const springtail=part('springtail');
+    springtail.position.y=.011+Math.sin(Math.PI*(hop/.22))*.025;
     hop=Math.max(0,hop-dt);
-    object('plant').rotation.y=potTurn+(lampOn?drift*.10:0);
     part('paper-star').visible=star;
     part('cup-pencil-0').visible=!borrowed;
     move('pencil',pencilX[0],0,0);move('rose-pencil',pencilX[1],0,0);
@@ -371,7 +438,7 @@ export function deskLife(stage, getModel, redraw, reduced) {
     const warm=warmAt ? clamp((time-warmAt)/750,0,1):1;
     return { drift, warm, active: Boolean(
       Math.abs(planeSpeed)>.025||lift>.005||Math.abs(aimOffset)>.01||Math.hypot(marbleSpeed,marbleDepthSpeed)>.022||(motion&&swing<1)||linerLift!==linerGoal||
-      afterglow>0||pencilDrop>.003||(inHand==='plant'&&time-plantOpen<15600)||ripple>0||hop>0||playing||flying||(lampOn&&warm<1)), wakeAt:lampOn&&!moth.visible ? mothIdle+14000 : 0};
+      afterglow>0||pencilDrop>.003||(inHand==='plant'&&time-plantOpen<15600)||(inHand==='plant'&&dewTilt>0&&dew<1)||freeDrop.visible||ripple.visible||hop>0||leafBends.size||falling<1||playing||flying||(lampOn&&warm<1)), wakeAt:lampOn&&!moth.visible ? mothIdle+14000 : 0};
   }
-  return {tap,gestures,movePrint,stow,drawerChange,drawerMomentum,pullComplaint,lampChange,pointerMoved,startleMoth,inspect,updateInspection,update};
+  return {tap,gestures,movePrint,stow,drawerChange,drawerMomentum,pullComplaint,lampChange,brushLeaf,pointerMoved,startleMoth,inspect,updateInspection,update};
 }
