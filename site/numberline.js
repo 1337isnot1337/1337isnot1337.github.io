@@ -32,12 +32,12 @@
   }
   const points = [...panel.querySelectorAll('[data-integer]')];
 
-  function firstConflict() {
+  function firstConflict(source=kept) {
     // Check the infinite periodic set, including the next block. Looking only
     // at the drawn points would make validity depend on the viewport.
     for (const gap of forbidden) {
       for (let residue = 0; residue < period; residue++) {
-        if (kept.has(residue) && kept.has((residue + gap) % period))
+        if (source.has(residue) && source.has((residue + gap) % period))
           return [residue, residue + gap, gap];
       }
     }
@@ -49,7 +49,7 @@
   svg.classList.add('numberline-bridge');svg.setAttribute('aria-hidden','true');svg.hidden=true;
   const bridge=document.createElementNS(svg.namespaceURI,'path');svg.append(bridge);
   strips.style.position='relative';strips.append(svg);
-  let extended=null,startX=null,dragNumber=null,suppress=false;
+  let extended=null,grip=null,suppress=false;
   function drawBridge(conflict) {
     if(!conflict || panel.hidden){svg.style.display='none';return;}
     const base=strips.getBoundingClientRect();
@@ -60,35 +60,66 @@
     svg.removeAttribute('hidden');svg.style.display='';
     bridge.setAttribute('d','M'+a.join(',')+' Q'+((a[0]+b[0])/2)+','+(Math.min(a[1],b[1])-24)+' '+b.join(','));
   }
+  function exposeRemainder(){
+    if(extended)return;
+    extended=document.createElement('div');extended.dataset.extraLine='';
+    strips.after(extended);
+  }
+  function displacement(event){
+    const first=controls[0].getBoundingClientRect();
+    const step=controls[1].getBoundingClientRect().left-first.left;
+    return step?Math.round((event.clientX-grip.x)/step):0;
+  }
+  function tentative(residue){
+    const copy=new Set(kept);
+    copy.delete(grip.from);copy.add(residue);
+    return copy;
+  }
   strips.addEventListener('pointerdown',event=>{
-    suppress=false;startX=event.clientX;dragNumber=event.target.closest('[data-integer]')?.dataset.integer;
+    if(event.button!==0||!event.isPrimary)return;
+    suppress=false;
+    const point=event.target.closest('[data-integer]');
+    const from=point?Number(point.dataset.integer):null;
+    grip={id:event.pointerId,x:event.clientX,from,dragged:false,target:null};
+  });
+  strips.addEventListener('pointermove',event=>{
+    if(grip?.id!==event.pointerId||!event.buttons)return;
+    grip.dragged ||= Math.abs(event.clientX-grip.x)>12;
+    if(!grip.dragged)return;
+    if(!strips.hasPointerCapture(event.pointerId))strips.setPointerCapture(event.pointerId);
+    if(grip.from===null||grip.from>=period)return;
+    const destination=(grip.from+displacement(event)%period+period)%period;
+    if(grip.target===destination)return;
+    grip.target=destination;
+    const problem=firstConflict(tentative(destination));
+    controls.forEach((control,i)=>control.classList.toggle('numberline-ghost',i===destination));
+    drawBridge(problem);
+    explanation.textContent=problem
+      ? 'Here '+problem[0]+' and '+problem[1]+' would be '+problem[2]+' apart.'
+      : 'No forbidden gap here.';
   });
   strips.addEventListener('pointerup',event=>{
-    if(startX===null)return;
-    const delta=event.clientX-startX;
-    startX=null;
-    if(Math.abs(delta)<32)return;
+    if(grip?.id!==event.pointerId)return;
+    const finished=grip;grip=null;
+    controls.forEach(control=>control.classList.remove('numberline-ghost'));
+    if(!finished.dragged)return;
     suppress=true;
-    if(dragNumber!==undefined && Number(dragNumber)<period){
-      const n=(Number(dragNumber)+Math.sign(delta)+period)%period;
-      kept.delete(Number(dragNumber));kept.add(n);
-    }else if(!extended){
-      extended=document.createElement('div');extended.dataset.extraLine='';
-      strips.after(extended);
-    }
+    if(finished.from!==null&&finished.from<period&&finished.target!==null){
+      kept.delete(finished.from);kept.add(finished.target);
+    }else if(Math.abs(event.clientX-finished.x)>32)exposeRemainder();
     render();
   });
-  strips.addEventListener('pointercancel',()=>{startX=null;});
+  strips.addEventListener('pointercancel',()=>{
+    grip=null;controls.forEach(control=>control.classList.remove('numberline-ghost'));render();
+  });
   strips.addEventListener('click',event=>{
     if(!suppress||!event.detail)return;
     suppress=false;event.preventDefault();event.stopImmediatePropagation();
   },true);
   panel.addEventListener('dblclick',event=>{
-    if(event.target.closest('.numberline-continuation')&&!extended){
-      extended=document.createElement('div');extended.dataset.extraLine='';
-      strips.after(extended);render();
-    }
+    if(event.target.closest('.numberline-continuation')){exposeRemainder();render();}
   });
+  if(typeof ResizeObserver==='function')new ResizeObserver(()=>drawBridge(firstConflict())).observe(strips);
   function render() {
     const conflict = firstConflict();
     for (const point of points) {
@@ -101,12 +132,24 @@
     if(typeof requestAnimationFrame==='function')requestAnimationFrame(()=>drawBridge(conflict));
     if(extended){
       extended.replaceChildren();
+      const pair=conflict?conflict.slice(0,2).map(value=>value+21):[];
       for(let n=21;n<42;n++){
         const cell=document.createElement('b');
-        cell.textContent=n;
-        cell.classList.toggle('conflict',Boolean(conflict&&(n===conflict[0]+21||n===conflict[1]+21)));
+        cell.textContent=n;cell.dataset.extendedPoint=String(n);
+        cell.classList.toggle('conflict',pair.includes(n));
         if(!kept.has(n%period))cell.style.opacity='.44';
         extended.append(cell);
+      }
+      if(conflict){
+        const jump=document.createElement('button');jump.type='button';
+        jump.textContent=pair[0]+' to '+pair[1]+' · gap '+conflict[2];
+        jump.addEventListener('click',()=>{
+          const problem=extended.querySelector('.conflict');
+          problem.tabIndex=-1;problem.focus({preventScroll:true});
+          problem.scrollIntoView({block:'nearest'});
+          for(const point of extended.querySelectorAll('.conflict'))point.classList.add('jumped');
+        });
+        extended.append(jump);
       }
     }
     density.textContent = `${kept.size}/7`;

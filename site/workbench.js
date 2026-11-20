@@ -96,7 +96,7 @@
     let down=null;
     surface.addEventListener('pointerdown',event=>{
       if(!event.isPrimary || event.button!==0)return;
-      down={id:event.pointerId,x:event.clientX,y:event.clientY,dragged:false};
+      down={id:event.pointerId,x:event.clientX,y:event.clientY,dragged:false,target:event.target};
     });
     surface.addEventListener('pointermove',event=>{
       if(down?.id!==event.pointerId || !event.buttons)return;
@@ -117,44 +117,94 @@
     parent.append(node);return node;
   }
   let loop=null,marker=null,loopBand=null;
-  function position(event){
+  const duration=()=>audio.duration>0?audio.duration:85;
+  function position(clientX,clientY){
     const rect=spectrum.getBoundingClientRect();
-    return [clamp((event.clientX-rect.left)/rect.width,0,1),clamp((event.clientY-rect.top)/rect.height,0,1)];
+    return [clamp((clientX-rect.left)/rect.width,0,1),clamp((clientY-rect.top)/rect.height,0,1)];
+  }
+  function seekLoop(which,time){
+    if(!loop)return;
+    const d=duration();
+    loop[which]=which===0?clamp(time,0,loop[1]-.18):clamp(time,loop[0]+.18,d);
+    paintLoop();
+    if(audio.readyState && (audio.currentTime<loop[0]||audio.currentTime>loop[1]))audio.currentTime=loop[0];
+  }
+  function paintLoop(){
+    if(!loopBand){
+      loopBand=note(spectrum,'spectrum-loop','');
+      for(const [index,description] of ['Loop start','Loop end'].entries()){
+        const handle=document.createElement('button');
+        handle.type='button';handle.className='spectrum-loop-handle';
+        handle.dataset.end=String(index);handle.setAttribute('aria-label',description);
+        handle.addEventListener('keydown',event=>{
+          const delta={ArrowRight:.25,ArrowLeft:-.25}[event.key];
+          if(delta===undefined)return;
+          event.preventDefault();seekLoop(index,loop[index]+delta);
+        });
+        loopBand.append(handle);
+      }
+    }
+    loopBand.style.left=loop[0]/duration()*100+'%';
+    loopBand.style.width=(loop[1]-loop[0])/duration()*100+'%';
   }
   paperGesture(spectrum,(event,down)=>{
-    const [x,y]=position(event),duration=audio.duration||85;
+    const [x,y]=position(event.clientX,event.clientY);
+    const d=duration();
+    const end=down.target.closest('[data-end]');
+    if(end){seekLoop(Number(end.dataset.end),x*d);return;}
     marker??=note(spectrum,'spectrum-note','');
     marker.style.setProperty('--at',clamp(x,.12,.88)*100+'%');
-    marker.textContent=(duration*x).toFixed(1)+' s · ≈'+Math.round(400-y*300)+' Hz';
-    const [start]=position({clientX:down.x,clientY:down.y});
-    if(Math.abs(start-x)>.025){
-      loop=[Math.min(start,x),Math.max(start,x)].map(fraction=>fraction*duration);
+    marker.style.setProperty('--frequency',clamp(y,.13,.88)*100+'%');
+    marker.textContent=(d*x).toFixed(1)+' s · '+Math.round(400-y*300)+' Hz';
+    const [start]=position(down.x,down.y);
+    const measured=(x-start)*d;
+    if(Math.abs(measured)>.85){
+      loop=[Math.min(start,x)*d,Math.max(start,x)*d];
       if(!audio.paused)audio.dataset.deskCarry='';
-      loopBand??=note(spectrum,'spectrum-loop','');
-      loopBand.style.left=Math.min(start,x)*100+'%';loopBand.style.width=Math.abs(start-x)*100+'%';
+      paintLoop();
     }
   },(event,down)=>{
-    if(down.dragged&&loop&&audio.readyState)audio.currentTime=loop[0];
+    if(down.dragged&&loop&&audio.readyState&&!down.target.closest('[data-end]'))audio.currentTime=loop[0];
   });
-  spectrum.addEventListener('dblclick',()=>{delete audio.dataset.deskCarry;loop=null;loopBand?.remove();loopBand=null;marker?.remove();marker=null;});
+  spectrum.addEventListener('dblclick',()=>{
+    delete audio.dataset.deskCarry;loop=null;loopBand?.remove();loopBand=null;marker?.remove();marker=null;
+  });
   audio.addEventListener('timeupdate',()=>{
     if(loop&&audio.currentTime>=loop[1]&&!audio.paused)audio.currentTime=loop[0];
   });
+  audio.addEventListener('play',()=>{
+    if(!loop)return;
+    audio.dataset.deskCarry='';
+    if(audio.currentTime<loop[0] || audio.currentTime>=loop[1])audio.currentTime=loop[0];
+  });
   const figure=map.querySelector('figure');
-  figure.addEventListener('dblclick',event=>{
-    if(!event.target.closest('img'))return;
+  const rankings=[
+    {rank:1,score:'0.935434',offset:'476 m',x:72.10,y:48.0},
+    {rank:10,score:'0.927466',offset:'152 m',x:74.13,y:49.5}
+  ];
+  let shownRank=0,comparison;
+  function compareFits(index){
+    shownRank=index;
     const holder=map.querySelector('#desk-map-image');
-    const side=holder.dataset.fit==='alternative'?'highest':'alternative';
-    holder.dataset.fit=side;
-    holder.querySelector('[data-fit-note]')?.remove();
-    const text=side==='highest'?'Star · highest fit in this run':'Diamond · alternative fit in the same run';
-    const fit=note(holder,'found-paper',text);
-    fit.dataset.fitNote='';
+    const candidate=rankings[index];
     holder.querySelector('.map-pick')?.remove();
     const ring=note(holder,'map-pick','');
-    ring.style.left=(side==='highest'?72.1:74.1)+'%';
-    ring.style.top=(side==='highest'?48.0:49.5)+'%';
-    ring.setAttribute('aria-hidden','true');
+    ring.style.left=candidate.x+'%';ring.style.top=candidate.y+'%';ring.setAttribute('aria-hidden','true');
+    if(!comparison){
+      comparison=document.createElement('div');comparison.className='fit-comparison';
+      rankings.forEach((entry,i)=>{
+        const tab=document.createElement('button');tab.type='button';
+        tab.textContent=(i===0?'★':'◆')+' Rank '+entry.rank+' · '+entry.score;
+        tab.addEventListener('click',()=>compareFits(i));comparison.append(tab);
+      });
+      note(comparison,'found-paper','').dataset.fitNote='';
+      figure.append(comparison);
+    }
+    [...comparison.querySelectorAll('button')].forEach((button,i)=>button.setAttribute('aria-pressed',String(i===index)));
+    comparison.querySelector('[data-fit-note]').textContent=candidate.offset+' from the inferred reference. The spectrogram shows the measured recording and the leading candidate’s plotted curve.';
+  }
+  figure.addEventListener('dblclick',event=>{
+    if(event.target.closest('img'))compareFits(comparison?1-shownRank:1);
   });
   // The homepage player and the full project reader must never talk over
   // each other. Native play does not bubble, so listen in the capture phase.
@@ -173,15 +223,17 @@
   const states=[hands.map(hand=>[...hand])];
   const dealStatus=desk.querySelector('#desk-deal-status');
   const dealCards=desk.querySelector('.desk-playing-cards');
-  let traced=null;
+  let traced=null,cardPreview=null;
+  const stacks=[...dealCards.children];
   function renderDeal(){
     'abc'.split('').forEach((player,i)=>{
       desk.querySelector(`#desk-card-${player}`).textContent=hands[i][0];
       desk.querySelector(`#desk-count-${player}`).textContent=`${hands[i].length} cards`;
     });
     dealCards.toggleAttribute('data-loop',turn===90);
-    if(traced)traced.remove();
-    traced=null;
+    traced?.remove();traced=null;
+    cardPreview?.remove();cardPreview=null;
+    for(const stack of stacks)stack.style.removeProperty('--deal-card-shift');
     desk.querySelector('#desk-turn').textContent=`Turn ${turn} / 90`;
   }
   function deal(){
@@ -192,11 +244,26 @@
     dealStatus.textContent=turn===90?'Exactly the original card order. The next 90 turns will repeat.':`Player ${'ABC'[winner]} wins turn ${turn}. Won cards go underneath, highest first.`;
     renderDeal();
   }
-  paperGesture(dealCards,()=>{},(event,down)=>{
+  paperGesture(dealCards,(event,down)=>{
+    const stack=down.target.closest('.desk-playing-cards > div:not(.dragged-deal)');
+    if(!stack)return;
+    const index=stacks.indexOf(stack),delta=event.clientX-down.x;
+    if(delta<0)return;
+    stack.style.setProperty('--deal-card-shift',Math.min(21,delta*.21)+'px');
+    if(delta<27||cardPreview)return;
+    cardPreview=document.createElement('div');cardPreview.className='dragged-deal';
+    for(const [i,hand] of hands.entries()){
+      if(i===index)continue;
+      note(cardPreview,'found-paper','ABC'[i]+' plays '+hand[0]);
+    }
+    dealCards.append(cardPreview);
+  },(event,down)=>{
     const delta=event.clientX-down.x;
+    cardPreview?.remove();cardPreview=null;
+    for(const stack of stacks)stack.style.removeProperty('--deal-card-shift');
     if(!down.dragged||Math.abs(delta)<20)return;
-    if(delta>0)deal();
-    else if(turn>0){
+    if(delta>0&&down.target.closest('.desk-playing-cards > div'))deal();
+    else if(delta<0&&turn>0){
       turn--;hands=states[turn].map(hand=>[...hand]);renderDeal();
       dealStatus.textContent='Rewound to turn '+turn+'. The cards have agreed to forget.';
     }
@@ -206,18 +273,34 @@
     const card=event.target.closest('.desk-playing-cards > div');
     if(!card)return;
     traced?.remove();
-    const i=[...dealCards.children].indexOf(card);
-    const rank=hands[i][0];
+    const i=stacks.indexOf(card);
+    if(i<0)return;
+    traced=document.createElement('div');traced.className='found-paper queue-sheet';
+    card.append(traced);
     if(turn===6){
-      const now=hands[i].join(' · '),start=initial[i].join(' · ');
-      traced=note(card,'found-paper','Start '+start+' / now '+now);
+      const line=(ranks,className)=>{
+        const row=document.createElement('span');row.className=className;
+        for(const rank of ranks)note(row,'queue-rank',String(rank));
+        traced.append(row);
+      };
+      note(traced,'queue-label',hands[i].length+' cards in both hands');
+      line(initial[i],'queue-start');line(hands[i],'queue-now');
     }else{
-      const visits=states.flatMap((state,n)=>{
-        const location=state.findIndex(hand=>hand.includes(rank));
-        if(n>0&&states[n-1][location].includes(rank))return [];
-        return [n+' '+ 'ABC'[location]];
-      });
-      traced=note(card,'found-paper',rank+' visited '+visits.join(' → '));
+      const ranks=document.createElement('span');ranks.className='queue-picker';traced.append(ranks);
+      const output=note(traced,'queue-route','');
+      function traceRank(rank){
+        const visits=states.flatMap((state,n)=>{
+          const location=state.findIndex(hand=>hand.includes(rank));
+          if(n>0&&states[n-1][location].includes(rank))return [];
+          return [n+' '+ 'ABC'[location]];
+        });
+        output.textContent=rank+' visited '+visits.join(' → ');
+      }
+      for(const rank of initial[i]){
+        const button=document.createElement('button');button.type='button';button.textContent=rank;
+        button.addEventListener('click',()=>traceRank(rank));ranks.append(button);
+      }
+      traceRank(initial[i][0]);
     }
   });
   desk.querySelector('.desk-controls').hidden=false;
@@ -236,8 +319,19 @@
       const before=address;
       address^=2**bit;renderBits();
       if(address>before && window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches === false){
+        const panel=desk.querySelector('.desk-register');
         const label=desk.querySelector('#desk-bit-sum');
-        label.animate([{opacity:.65,transform:'translateY(-3px)'},{opacity:1,transform:'translateY(0)'}],{duration:170});
+        const p=panel.getBoundingClientRect(),a=button.getBoundingClientRect(),b=label.getBoundingClientRect();
+        const addend=note(panel,'bit-addend',String(2**bit));
+        addend.style.left=a.x-p.x+'px';addend.style.top=a.y-p.y+'px';
+        addend.animate([
+          {transform:'translate(0,0)',opacity:1},
+          {transform:'translate('+(b.x-a.x)+'px,'+(b.y-a.y)+'px)',opacity:.1}
+        ],{duration:270,easing:'ease-out'}).finished.then(()=>addend.remove()).catch(()=>addend.remove());
+      }
+      if(address===42){
+        const scribble=note(desk.querySelector('.desk-register'),'bit-margin-note','@42');
+        setTimeout(()=>scribble.remove(),1650);
       }
     });
     row.append(button);bits.push(button);
@@ -246,19 +340,23 @@
     const values=[];
     bits.forEach(button=>{const bit=Number(button.dataset.bit),on=Boolean(address&(2**bit));button.textContent=on?'1':'0';button.setAttribute('aria-pressed',String(on));if(on)values.push(2**bit);});
     desk.querySelector('#desk-address-value').value=String(address);
-    if(!slip.hidden)slip.textContent=slip.hasAttribute('data-hex')?
-      '0x'+address.toString(16).toUpperCase().padStart(4,'0')+' · @'+address:
-      address.toString(2).padStart(16,'0').match(/.{4}/g).join(' ')+' · @'+address+(address===42?' · unusually prepared for this question':'');
+    if(!slip.hidden){
+      slipFront.textContent=address.toString(2).padStart(16,'0').match(/.{4}/g).join(' ');
+      slipBack.textContent='0x'+address.toString(16).toUpperCase().padStart(4,'0')+' · @'+address;
+    }
     desk.querySelector('#desk-bit-sum').textContent=`${values.length?values.join(' + '):'0'} = ${address}`;
   }
   const bitsPaper=desk.querySelector('.desk-register');
-  const slip=note(bitsPaper,'found-paper','');
-  slip.hidden=true;
+  const slip=document.createElement('button');
+  slip.type='button';slip.className='found-paper register-slip';
+  const slipFront=note(slip,'slip-front',''),slipBack=note(slip,'slip-back','');
+  bitsPaper.append(slip);slip.hidden=true;
   bitsPaper.querySelector('.desk-address').addEventListener('dblclick',()=>{
     slip.hidden=!slip.hidden;renderBits();
   });
   slip.addEventListener('click',()=>{
-    slip.toggleAttribute('data-hex');renderBits();
+    const flip=slip.toggleAttribute('data-hex');
+    slip.setAttribute('aria-pressed',String(flip));renderBits();
   });
   const reset=desk.querySelector('.desk-register-reset');reset.hidden=false;reset.addEventListener('click',()=>{address=42;renderBits();});
   desk.querySelector('.desk-bit-hint').textContent='Flip a bit. Watch the address change.';
