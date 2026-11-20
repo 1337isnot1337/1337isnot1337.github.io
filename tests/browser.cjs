@@ -73,6 +73,14 @@ const server = http.createServer((req,res) => {
    assert.equal(await page.locator('svg use[href^="#brand-"]').count(),3);
    if(name==='desktop'){
     await page.waitForFunction(()=>document.querySelector('.desktop-picture').classList.contains('is-rendered') || !document.querySelector('.graphics-warning').hidden);
+    if(!await page.locator('.is-rendered').count()){
+     const webgl = await page.evaluate(()=>{
+      const gl=document.createElement('canvas').getContext('webgl2');
+      gl?.getExtension('WEBGL_lose_context')?.loseContext();
+      return Boolean(gl);
+     });
+     assert.equal(webgl,false,'a browser with WebGL2 renders the desk instead of falling back');
+    }
     if(await page.locator('.is-rendered').count()){
      const stage=page.locator('.desktop-picture'),lamp=page.locator('[data-object="lamp"]');
      const r=await lamp.boundingBox();
@@ -638,6 +646,18 @@ const server = http.createServer((req,res) => {
     assert.equal(await back.getAttribute('aria-hidden'),'false');
     assert.ok((await back.innerText()).includes(caption));
     if(await back.locator('img').count())await back.locator('img').evaluate(img=>img.decode());
+    if(object==='robot-photo'){
+     for(let i=0;i<3;i++)await hand.press('ArrowRight');
+     for(let i=0;i<3;i++)await hand.press('ArrowLeft');
+     const pair=back.locator('.build-comparison');
+     const contact=await pair.boundingBox();
+     const y=contact.y+contact.height/2;
+     await shelfMouse.mouse.move(contact.x+contact.width*.2,y);
+     await shelfMouse.mouse.down();
+     await shelfMouse.mouse.move(contact.x+contact.width*.8,y,{steps:5});
+     await shelfMouse.mouse.up();
+     assert.match(await pair.locator('svg').last().getAttribute('aria-label'),/motor-controller/);
+    }
     for(let i=0;i<8;i++)await hand.press('ArrowLeft');
     assert.equal(await back.getAttribute('aria-hidden'),'true','arrow keys turn the same sheet');
     await shelfMouse.mouse.click(5,5);

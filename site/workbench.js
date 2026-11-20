@@ -91,6 +91,7 @@
     if(valid) playhead.style.left=Math.min(99.8,100*audio.currentTime/audio.duration)+'%';
   });
   const spectrum=desk.querySelector('.desk-spectrum');
+  spectrum.querySelector('img').draggable=false;
   const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
   function paperGesture(surface,onMove,onRelease){
     let down=null;

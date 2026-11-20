@@ -415,7 +415,7 @@
       title.textContent='Opening deal';note.textContent='Three ranks, all home again in ninety turns.';
     }else if(id==='flyover-print'){
       const strip=make('div','','scope-matching-strip');put(strip);
-      const wave=make('img');wave.alt='Waveform of the published Livermore recording';wave.src='assets/studio/flyover-wave.svg';
+      const wave=make('img');wave.alt='Waveform of the published Livermore recording';wave.src='assets/studio/flyover-wave.svg';wave.draggable=false;
       const cursor=make('i','');strip.append(wave,cursor);
       function place(time){
         cursor.style.left=time/85*100+'%';
@@ -522,7 +522,7 @@
       }
     }
     if(!contact.open){
-      contact.showModal();contact.querySelector('.post-hand').focus({preventScroll:true});
+      contact.showModal();contact.querySelector('.calling-card-hand').focus({preventScroll:true});
     }
   });
   window.addEventListener('hashchange',()=>{if(contact.open)contact.close();});

@@ -68,8 +68,8 @@ export function furnish(scene, narrow, repaint, software=false) {
   const weave=new T.CanvasTexture(canvas);weave.colorSpace=T.SRGBColorSpace;
   weave.wrapS=weave.wrapT=T.RepeatWrapping;weave.repeat.set(2,2);weave.anisotropy=4;
   function cloth(color) {const mat=finish(color);mat.map=weave;mat.bumpMap=weave;mat.bumpScale=.012;return mat;}
-  function drawn(parent,w,h,paint,x,y,z,flat=false) {
-    const c=document.createElement('canvas');c.width=T.MathUtils.clamp(T.MathUtils.ceilPowerOfTwo(220*w),96,1024);
+  function drawn(parent,w,h,paint,x,y,z,flat=false,pixelsPerUnit=220) {
+    const c=document.createElement('canvas');c.width=T.MathUtils.clamp(T.MathUtils.ceilPowerOfTwo(pixelsPerUnit*w),96,1024);
     c.height=Math.max(32,Math.round(c.width*h/w));
     const ctx=c.getContext('2d');ctx.scale(c.width/w,c.height/h);paint(ctx,w,h);
     const tex=new T.CanvasTexture(c);tex.colorSpace=T.SRGBColorSpace;tex.anisotropy=4;
@@ -773,9 +773,9 @@ export function furnish(scene, narrow, repaint, software=false) {
   shell.material=glaze.clone();shell.material.vertexColors=true;
   shell.material.color.set(0xffffff);shell.material.map=photo('assets/furniture/stoneware.webp');
   shell.geometry.setAttribute('color',new T.Float32BufferAttribute(tint,3));
-  const handle=new T.CatmullRomCurve3([[.150,.290,0],[.196,.304,0],[.240,.286,0],
+  const cupHandle=new T.CatmullRomCurve3([[.150,.290,0],[.196,.304,0],[.240,.286,0],
     [.258,.243,0],[.255,.191,0],[.231,.146,0],[.191,.120,0],[.138,.125,0]].map(v=>new T.Vector3(...v)));
-  mesh(mug,new T.TubeGeometry(handle,40,.022,12,false),glaze);
+  mesh(mug,new T.TubeGeometry(cupHandle,40,.022,12,false),glaze);
   const foot=finish(0xba886d,.86);
   turned(mug,[[.101,.003],[.109,.011],[.112,.018]],foot,0,0,0);
   const slip=finish(0x476d6c,.36);
@@ -910,9 +910,9 @@ export function furnish(scene, narrow, repaint, software=false) {
   box(floorShim,.405,.006,.294,paper,0,.012,.008);
   const equation=letter(floorShim,'2 + 2 ≈ 5',.29,.096,.018,.016,.057,{flat:true,ink:'#625344',italic:true});
   equation.rotation.z=-.06;
-  const warning=drawn(floorShim,.421,.303,(c,w,h)=>{
-    c.resetTransform();
-    const W=c.canvas.width,H=c.canvas.height;
+  const warning=drawn(floorShim,.421,.303,c=>{
+    const W=96,H=69;
+    c.setTransform(c.canvas.width/W,0,0,c.canvas.height/H,0,0);
     const rim=7;
     c.fillStyle='#ffd35b';c.fillRect(0,0,W,H);
     c.fillStyle='#321d24';
@@ -931,7 +931,7 @@ export function furnish(scene, narrow, repaint, software=false) {
     c.fillText('WARNING!!!',W/2,H*.43,W-10);
     c.font='bold 6.5px sans-serif';
     c.fillText('THIS PAPER IS LOAD-BEARING',W/2,H*.58,W-8);
-  },0,-.016,0);
+  },0,-.016,0,false,1800);
   warning.rotation.x=Math.PI/2;
   const moth=detail('moth',world,0,0,0);
   for(const sign of [-1,1]){

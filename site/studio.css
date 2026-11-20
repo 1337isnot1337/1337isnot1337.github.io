@@ -149,9 +149,9 @@ html[data-view] .is-loading > .desk-load-status {
 .post-office {
   width: min(100%, 720px); margin: 30px auto 0;
 }
-.post-hand { perspective:1100px; cursor:grab; touch-action:none; user-select:none; }
-.post-hand.holding { cursor:grabbing; }
-.post-hand:focus-visible { outline:2px dashed #8c6c65; outline-offset:4px; }
+.post-hand,.calling-card-hand { perspective:1100px; cursor:grab; touch-action:none; user-select:none; }
+.post-hand.holding,.calling-card-hand.holding { cursor:grabbing; }
+.post-hand:focus-visible,.calling-card-hand:focus-visible { outline:2px dashed #8c6c65; outline-offset:4px; }
 .postcard { display:grid; position:relative; transform-style:preserve-3d; pointer-events:none; }
 .postcard::before { content:""; grid-area:1/1; align-self:start; aspect-ratio:3/2; }
 .postcard-front,.postcard-back {
@@ -291,6 +291,7 @@ html[data-view] .is-rendered .desk-objects :is(a,button) { cursor:inherit; }
   padding:clamp(14px,4vmin,32px); color:#443e49; background:#f2eadb;
   transform:rotateY(180deg) translateZ(1px);
 }
+.photo-back[aria-hidden=false] { pointer-events:auto; }
 .photo-back small,.photo-back figcaption { font:500 clamp(10px,1.6vmin,13px)/1.35 var(--mono,monospace); }
 .photo-back small:first-child { border-bottom:1px solid #a69e90; width:100%; padding-bottom:.5em; }
 .photo-back p { margin:0; font:italic clamp(15px,3.2vmin,27px)/1.15 Georgia,serif; }
@@ -348,7 +349,7 @@ html[data-view="desk"] .studio-ready .desk-reading { margin-top:66px; scroll-mar
 .drawer-post { width:min(90vw,85dvh,720px); max-height:94dvh; color:#fff9ef; background:transparent; border:0; padding:0; overflow:visible; }
 .drawer-post::backdrop { background:#211a1ecf; }
 .drawer-post form { text-align:right; }
-.return-post,.put-object-back,.use-object {
+.return-post,.return-calling-card,.put-object-back,.use-object {
   color:#473641; background:#fff8e9; border:1px solid #9a897f; border-radius:6px; padding:10px 14px; font:600 15px var(--headline); touch-action:manipulation;
 }
 .drawer-post .post-office { margin:10px auto; }
