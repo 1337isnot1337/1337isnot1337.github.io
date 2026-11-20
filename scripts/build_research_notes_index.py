@@ -120,10 +120,17 @@ def render(entries: list[dict]) -> str:
   <meta property="og:url" content="{INDEX_URL}">
   <meta property="og:title" content="{escape(TITLE, quote=True)}">
   <meta property="og:description" content="{escape(DESCRIPTION, quote=True)}">
+  <meta property="og:image" content="{SITE}/assets/conjectures-preview.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="Solved conjectures, with illustrated playing cards beside the title.">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="{SITE}/assets/conjectures-preview.jpg">
+  <meta name="twitter:image:alt" content="Solved conjectures, with illustrated playing cards beside the title.">
   <link rel="icon" href="/assets/prints/favicon.png">
   <link rel="stylesheet" href="/shelf.css?v=25">
   <link rel="stylesheet" href="/projects/project-pages.css?v=1">
-  <link rel="stylesheet" href="/research-notes/notes.css?v=1">
+  <link rel="stylesheet" href="/research-notes/notes.css?v=2">
   <link rel="stylesheet" href="/desk-extras.css?v=9">
   <script defer src="/project-paper.js?v=2"></script>
   <script type="application/ld+json">{structured}</script>

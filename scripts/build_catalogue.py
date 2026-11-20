@@ -20,6 +20,8 @@ QUALIFIED_ABELIAN_STATUS = (
     "sharpness example. The general minimum-degree-three conjecture remains "
     "outside this result."
 )
+PREVIEW = "https://1337isnot1337.github.io/assets/conjectures-preview.jpg"
+PREVIEW_ALT = "Solved conjectures, with illustrated playing cards beside the title."
 PLAIN_STATUSES = {
     ("Lean status: " + token + ending).casefold(): canonical
     for token, canonical in [("full", "full"), ("complete", "full"),
@@ -68,6 +70,24 @@ def load_builder(source):
 def install_adapter(module):
     upstream_parser = module.landing_lean_status
     module.landing_lean_status = lambda text: compatible_status(text, upstream_parser)
+    upstream_head = module.Builder.head
+
+    def collection_head(builder, title, description, route, *, noindex=False):
+        head = upstream_head(builder, title, description, route, noindex=noindex)
+        if noindex or 'property="og:image"' in head:
+            return head
+        head = head.replace('content="index,follow"', 'content="index,follow,max-image-preview:large"')
+        head = head.replace('name="twitter:card" content="summary"',
+                            'name="twitter:card" content="summary_large_image"')
+        return head + f'''
+<meta property="og:image" content="{PREVIEW}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="{PREVIEW_ALT}">
+<meta name="twitter:image" content="{PREVIEW}">
+<meta name="twitter:image:alt" content="{PREVIEW_ALT}">'''
+
+    module.Builder.head = collection_head
 
 
 def main():

@@ -39,6 +39,12 @@ test('all independently authored pages are crawlable and have accurate metadata'
     assert.equal(doc.querySelectorAll('h1').length, 1, url);
     assert.ok(doc.title.trim(), url);
     assert.ok(!/noindex/.test(doc.querySelector('meta[name="robots"]')?.content || ''), url);
+    const image = doc.querySelector('meta[property="og:image"]')?.content;
+    assert.equal(doc.querySelector('meta[property="og:url"]')?.content, origin + url, url);
+    assert.ok(image?.startsWith(origin + '/assets/'), url);
+    assert.ok(fs.existsSync(path.join(root, new URL(image).pathname.slice(1))), url);
+    assert.ok(doc.querySelector('meta[property="og:image:alt"]')?.content, url);
+    assert.match(doc.querySelector('meta[name="twitter:card"]')?.content || '', /^summary(_large_image)?$/, url);
     const graph = schemaFor(doc);
     assert.ok(graph.some(node => node.url === origin + url), url);
     for (const node of graph) if (node['@type'] === 'BreadcrumbList') {

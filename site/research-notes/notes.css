@@ -6,7 +6,7 @@
 .notes-list li{padding:17px 0;border-bottom:1px solid #e0d5dd;min-width:0}
 .notes-list a{display:block;font:590 17px/1.35 var(--headline);text-decoration-thickness:1px}
 .notes-list a:hover{color:var(--berry)}
-.notes-list .note-details{display:block;font:11px/1.65 var(--mono);color:var(--muted);overflow-wrap:anywhere;margin-top:7px}
+.notes-list .note-details{display:block;font-size:14px;line-height:1.55;color:var(--muted);overflow-wrap:anywhere;margin-top:7px}
 .notes-list time{display:inline-block;margin-left:8px}
 .notes-section:empty{display:none}
 .collection-intro>p:not(.lead):not(.eyebrow){font-size:15px;line-height:1.65;color:var(--muted);max-width:65ch;margin-top:10px}
