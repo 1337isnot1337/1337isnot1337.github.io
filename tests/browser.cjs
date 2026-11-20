@@ -66,6 +66,8 @@ const server = http.createServer((req,res) => {
    assert.equal(await page.locator('html').getAttribute('data-view'),'desk');
    assert.equal(await page.locator('.shop').isVisible(),false);
    assert.equal(await page.locator('.mast').isVisible(),false);
+   assert.equal(await page.locator('script[src$="/swiper-bundle.min.js"]').count(),0,
+     'the desk does not request the carousel library');
    assert.equal(await page.locator('.mode-switch span:visible').innerText(),'Boring mode');
    const social=page.locator('.desk-profiles a:visible');
    assert.deepEqual(await social.evaluateAll(links=>links.map(a=>[a.getAttribute('aria-label'),a.textContent.trim()])),
@@ -102,11 +104,24 @@ const server = http.createServer((req,res) => {
      await page.locator('.turn-surface').press('ArrowRight');
      await page.evaluate(()=>new Promise(done=>requestAnimationFrame(()=>requestAnimationFrame(done))));
      assert.ok(!first.equals(await view.screenshot()),'rotating changes the rendered 3D plant');
+     await page.evaluate(()=>{
+       document.querySelector('.object-view').close();
+       document.querySelector('[data-object="cup"]').click();
+     });
+     await page.evaluate(()=>new Promise(done=>requestAnimationFrame(()=>requestAnimationFrame(done))));
+     assert.equal(await page.locator('.object-view[open]').getAttribute('aria-label'),'The pencil cup');
+     assert.ok(await stage.evaluate(el=>el.classList.contains('inspecting')),'a late close cannot put down the newly held object');
      await page.keyboard.press('Escape');
     }
    }
    await page.locator('.mode-switch').click();
    await page.locator('.swiper-initialized').waitFor();
+   if(name==='mobile'){
+     const source = await page.locator('.swiper-slide-active .print img').evaluate(async img=>{
+       await img.decode();return img.currentSrc;
+     });
+     assert.match(source,/\/assets\/prints\/shelf\//,'a narrow shelf selects the responsive print');
+   }
    assert.equal(await page.locator('.desktop-picture').isVisible(),false);
    await page.evaluate(() => Promise.all(["DM Sans", "Bricolage Grotesque"].map(family=>document.fonts.load("600 16px '"+family+"'", "Erdős"))));
    await page.evaluate(() => document.fonts.ready);

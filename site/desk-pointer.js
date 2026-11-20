@@ -60,6 +60,11 @@ export function attachDeskPointer(stage,{pick,track,orbitBy,endOrbit,part,gestur
     endPress();if(active())aim(e);
   });
   stage.addEventListener('pointercancel',leave);
+  canvas.addEventListener('lostpointercapture',e=>{
+    if(press?.id!==e.pointerId)return;
+    suppress=true;
+    endPress(true);
+  });
   stage.addEventListener('pointerleave',()=>{if(!press?.dragging)leave();});
   stage.addEventListener('dragstart',e=>{if(active())e.preventDefault();});
   stage.addEventListener('click',e=>{

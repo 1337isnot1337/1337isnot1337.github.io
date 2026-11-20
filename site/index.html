@@ -52,8 +52,7 @@
     <link rel="stylesheet" href="schedule-example.css?v=1" />
     <link rel="stylesheet" href="incident-note.css?v=2" />
     <script defer src="cpu-trace.js?v=3"></script>
-    <script defer src="vendor/swiper-bundle.min.js"></script>
-    <script defer src="shelf.js?v=36" onerror="
+    <script defer src="shelf.js?v=37" onerror="
       const restoreReading = () => {
         document.documentElement.classList.add('script-unavailable');
         document.querySelector('.shelf-heading p').textContent = 'The interactive shelf could not load. You can still read the project notes below.';
@@ -68,11 +67,11 @@
     <script defer src="rook-graph.js?v=3"></script>
     <script>document.documentElement.dataset.view = /^(#projects|#flyover|#cpu|#schedule|#conjectures|#factoring|#conway)$/.test(location.hash) ? "shelf" : "desk";</script>
     <link rel="stylesheet" href="studio.css?v=15" />
-    <script defer src="studio.js?v=30" onerror="delete document.documentElement.dataset.view"></script>
-    <script defer src="paper-turn.js?v=3"></script>
+    <script defer src="studio.js?v=31" onerror="delete document.documentElement.dataset.view"></script>
+    <script defer src="paper-turn.js?v=4"></script>
     <script defer src="desk-keepsakes.js?v=10"></script>
-    <script defer src="paper-dismiss.js?v=1"></script>
-    <script defer src="desk-paper-extras.js?v=11"></script>
+    <script defer src="paper-dismiss.js?v=2"></script>
+    <script defer src="desk-paper-extras.js?v=12"></script>
     <script defer src="project-paper.js?v=2"></script>
     <link rel="stylesheet" href="desk-extras.css?v=11" />
     <noscript
@@ -163,8 +162,8 @@
     <button type="button" data-desk="numbers" aria-pressed="false">Place numbers</button>
   </div>
   <article class="desk-sheet desk-sound" data-desk-panel="sound" id="desk-sound">
-    <header class="desk-intro"><a class="desk-project" href="#flyover" data-project="flyover"><img src="assets/prints/flyover.webp" alt="" width="32" height="40" loading="lazy" /><span>DOPPLERGEIST<small>Open recording notes ↗</small></span></a><h3>Where was<br> the microphone?</h3></header>
-    <figure class="desk-artifact desk-recording"><div class="desk-figure-heading"><span>Livermore recording</span><span>100–400 Hz</span></div><div class="desk-spectrum"><img src="assets/livermore.webp" width="1600" height="550" loading="lazy" alt="Bright harmonics bend downward in the flyover recording as the aircraft pitch falls."/><span class="desk-playhead" aria-hidden="true" hidden></span></div><div class="desk-time"><span>0:00</span><span>Time →</span><span>1:25</span></div><div class="desk-listen" hidden><button type="button" id="desk-play-recording">Play the flyover</button></div><p id="desk-audio-status" role="status" hidden></p><audio id="desk-audio" controls preload="none" data-desk-src="assets/livermore.mp3" aria-label="Livermore aircraft flyover" tabindex="0" hidden></audio><figcaption><strong>Follow the bright curves as you listen.</strong> The pitch drops as the plane passes. A match is a candidate, not automatically a location.</figcaption><small>Recording: <a href="https://doi.org/10.5281/zenodo.23424278">Praveen Pathak</a> · <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a></small></figure>
+    <header class="desk-intro"><a class="desk-project" href="#flyover" data-project="flyover"><img src="assets/furniture/prints/flyover.webp" alt="" width="32" height="40" loading="lazy" /><span>DOPPLERGEIST<small>Open recording notes ↗</small></span></a><h3>Where was<br> the microphone?</h3></header>
+    <figure class="desk-artifact desk-recording"><div class="desk-figure-heading"><span>Livermore recording</span><span>100–400 Hz</span></div><div class="desk-spectrum"><img src="assets/livermore.webp" srcset="assets/livermore-800.webp 800w, assets/livermore.webp 1600w" sizes="(max-width: 680px) 90vw, 640px" width="1600" height="550" loading="lazy" alt="Bright harmonics bend downward in the flyover recording as the aircraft pitch falls."/><span class="desk-playhead" aria-hidden="true" hidden></span></div><div class="desk-time"><span>0:00</span><span>Time →</span><span>1:25</span></div><div class="desk-listen" hidden><button type="button" id="desk-play-recording">Play the flyover</button></div><p id="desk-audio-status" role="status" hidden></p><audio id="desk-audio" controls preload="none" data-desk-src="assets/livermore.mp3" aria-label="Livermore aircraft flyover" tabindex="0" hidden></audio><figcaption><strong>Follow the bright curves as you listen.</strong> The pitch drops as the plane passes. A match is a candidate, not automatically a location.</figcaption><small>Recording: <a href="https://doi.org/10.5281/zenodo.23424278">Praveen Pathak</a> · <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a></small></figure>
     <div class="desk-copy"><p>A passing aircraft leaves a curve in a recording. I’m building DOPPLERGEIST to match that changing pitch against historical flight tracks.</p><a class="desk-permalink" href="#desk-sound" aria-label="Direct link to the flyover experiment">Link to this experiment</a></div>
     <details class="desk-map" id="desk-map">
       <summary><span>See the location search</span><small>Historical run · inconclusive</small></summary>
@@ -183,17 +182,17 @@
     </details>
   </article>
   <article class="desk-sheet desk-cards" data-desk-panel="cards" id="desk-war">
-    <header class="desk-intro"><a class="desk-project" href="#conjectures" data-project="conjectures"><img src="assets/prints/conjectures.webp" alt="" width="32" height="40" loading="lazy" /><span>A collection of proofs<small>Open project notes ↗</small></span></a><h3>One more round.<br> Forever.</h3></header>
+    <header class="desk-intro"><a class="desk-project" href="#conjectures" data-project="conjectures"><img src="assets/furniture/prints/conjectures.webp" alt="" width="32" height="40" loading="lazy" /><span>A collection of proofs<small>Open project notes ↗</small></span></a><h3>One more round.<br> Forever.</h3></header>
     <div class="desk-artifact desk-deal"><div class="desk-figure-heading"><span>The next cards</span><span id="desk-turn">Turn 0 / 90</span></div><div class="desk-playing-cards" aria-label="Next card for each player"><div><small>Player A</small><b id="desk-card-a">15</b><span id="desk-count-a">8 cards</span></div><div><small>Player B</small><b id="desk-card-b">10</b><span id="desk-count-b">8 cards</span></div><div><small>Player C</small><b id="desk-card-c">4</b><span id="desk-count-c">7 cards</span></div></div><div class="desk-controls" hidden><button type="button" id="desk-deal-one">Deal a turn</button><button type="button" id="desk-deal-cycle">Go to turn 90</button><button type="button" id="desk-deal-reset">Reset</button></div><p id="desk-deal-status" role="status">Highest card wins. Won cards go underneath, highest first.</p><p class="desk-small">The numbers are ranks in the actual 23-card deal, not a standard 52-card deck.</p></div>
     <div class="desk-copy"><p>This three-player War deal returns to exactly the same card order after 90 turns. Nobody runs out. Then the whole game repeats.</p><p class="desk-small">It’s one example from my collection of proofs and counterexamples with GPT-6.2 Astra. The notes are unrefereed; Lean status is recorded per result.</p><a href="#conjectures" data-project="conjectures" class="desk-action">Explore the full cycle <span aria-hidden="true">↗</span></a><a class="desk-permalink" href="#desk-war" aria-label="Direct link to the card game experiment">Link to this experiment</a></div>
   </article>
   <article class="desk-sheet desk-bits" data-desk-panel="bits" id="desk-bits">
-    <header class="desk-intro"><a class="desk-project" href="#cpu" data-project="cpu"><img src="assets/prints/cpu-switch.webp" alt="" width="32" height="40" loading="lazy" /><span>Hack CPU<small>Open project notes ↗</small></span></a><h3>A number,<br> one switch at a time.</h3></header>
+    <header class="desk-intro"><a class="desk-project" href="#cpu" data-project="cpu"><img src="assets/furniture/prints/cpu-switch.webp" alt="" width="32" height="40" loading="lazy" /><span>Hack CPU<small>Open project notes ↗</small></span></a><h3>A number,<br> one switch at a time.</h3></header>
     <div class="desk-artifact desk-register"><div class="desk-figure-heading"><span>Hack A-instruction</span><span>15-bit address</span></div><div class="desk-address"><span>@</span><output id="desk-address-value" aria-live="off">42</output></div><p class="desk-bit-hint">Each 1 contributes its place value.</p><div class="desk-bit-row" aria-label="Address bits"><span class="desk-fixed-bit" title="Instruction bit is fixed at zero">0<small>fixed</small></span><span class="desk-bit-fallback">000 0000 0010 1010</span></div><p id="desk-bit-sum" role="status">32 + 8 + 2 = 42</p><button class="desk-register-reset" type="button" hidden>Reset to 42</button></div>
     <div class="desk-copy"><p>I extended the Hack CPU with a two-stage pipeline, branch prediction and fused instructions.</p><p class="desk-small">Start with something smaller: the 16 bits in an A-instruction. The first bit stays zero. The other 15 hold an address.</p><a href="#cpu" data-project="cpu" class="desk-action">Try the branch predictor <span aria-hidden="true">↗</span></a><a class="desk-permalink" href="#desk-bits" aria-label="Direct link to the address-bit experiment">Link to this experiment</a></div>
   </article>
 <article class="desk-sheet desk-numbers" data-desk-panel="numbers" id="desk-numbers">
-    <header class="desk-intro"><a class="desk-project" href="#conjectures" data-project="conjectures"><img src="assets/prints/conjectures.webp" alt="" width="32" height="40" loading="lazy" /><span>A collection of proofs<small>Open project notes ↗</small></span></a>
+    <header class="desk-intro"><a class="desk-project" href="#conjectures" data-project="conjectures"><img src="assets/furniture/prints/conjectures.webp" alt="" width="32" height="40" loading="lazy" /><span>A collection of proofs<small>Open project notes ↗</small></span></a>
     <h3>How tightly can<br> you pack a line?</h3></header>
     <div class="desk-artifact numberline-paper">
     <div class="desk-figure-heading"><span>Forbidden gaps: 2, 5, 9</span><span>Period 7</span></div>
@@ -678,7 +677,7 @@
       <div class="postcard-back" aria-hidden="true">
         <div class="post-message"><h3>From Cinna’s desk</h3><p>Your stops on this visit</p><ol id="post-route"></ol></div>
         <div class="post-address">
-          <img class="cat-stamp" src="assets/studio/night-mail.webp" alt="" loading="lazy" width="92" height="65" />
+          <img class="cat-stamp" src="assets/furniture/prints/night-mail.webp" alt="" loading="lazy" width="92" height="65" />
           <div class="post-delivery">
             <p class="post-recipient"></p>
             <small class="post-device"></small>
@@ -715,37 +714,37 @@
             <ul>
               <li>
                 <a data-project="conjectures" href="#conjectures">
-                  <img src="assets/prints/conjectures.webp" alt="" width="38" height="48" loading="lazy" />
+                  <img src="assets/furniture/prints/conjectures.webp" alt="" width="38" height="48" loading="lazy" />
                   <span><strong>Solved conjectures</strong><small>Deal a game that repeats forever</small></span>
                 </a>
               </li>
               <li>
                 <a data-project="flyover" href="#flyover">
-                  <img src="assets/prints/flyover.webp" alt="" width="38" height="48" loading="lazy" />
+                  <img src="assets/furniture/prints/flyover.webp" alt="" width="38" height="48" loading="lazy" />
                   <span><strong>DOPPLERGEIST</strong><small>Hear the pitch of a passing plane</small></span>
                 </a>
               </li>
               <li>
                 <a data-project="factoring" href="#factoring">
-                  <img src="assets/prints/factoring-bead.webp" alt="" width="38" height="48" loading="lazy" />
+                  <img src="assets/furniture/prints/factoring-bead.webp" alt="" width="38" height="48" loading="lazy" />
                   <span><strong>Integer factoring</strong><small>Split a number into its primes</small></span>
                 </a>
               </li>
               <li>
                 <a data-project="cpu" href="#cpu">
-                  <img src="assets/prints/cpu-switch.webp" alt="" width="38" height="48" loading="lazy" />
+                  <img src="assets/furniture/prints/cpu-switch.webp" alt="" width="38" height="48" loading="lazy" />
                   <span><strong>The Hack CPU</strong><small>Teach a tiny counter to predict</small></span>
                 </a>
               </li>
               <li>
                 <a data-project="schedule" href="#schedule">
-                  <img src="assets/prints/schedule.webp" alt="" width="38" height="48" loading="lazy" />
+                  <img src="assets/furniture/prints/schedule.webp" alt="" width="38" height="48" loading="lazy" />
                   <span><strong>Schedule map</strong><small>Turn a timetable into room lists</small></span>
                 </a>
               </li>
               <li>
                 <a data-project="conway" href="#conway">
-                  <img src="assets/prints/conway.webp" alt="" width="38" height="48" loading="lazy" />
+                  <img src="assets/furniture/prints/conway.webp" alt="" width="38" height="48" loading="lazy" />
                   <span><strong>Conway’s 99-graph</strong><small>Explore the neighbors of a rook</small></span>
                 </a>
               </li>
@@ -771,6 +770,8 @@
                     height="800"
                     draggable="false"
                     src="assets/prints/schedule.webp"
+                    srcset="assets/prints/shelf/schedule.webp 420w, assets/prints/schedule.webp 840w"
+                    sizes="(max-width: 680px) clamp(200px, 62vw, 290px), clamp(238px, 20.6vw, 316px)"
                     alt=""
                   /><span class="print-foot"
                     ><span class="print-type">Campus software</span
@@ -789,6 +790,8 @@
                     height="800"
                     draggable="false"
                     src="assets/prints/conway.webp"
+                    srcset="assets/prints/shelf/conway.webp 420w, assets/prints/conway.webp 840w"
+                    sizes="(max-width: 680px) clamp(200px, 62vw, 290px), clamp(238px, 20.6vw, 316px)"
                     alt=""
                   /><span class="print-foot"
                     ><span class="print-type">Graph theory</span
@@ -806,6 +809,8 @@
                     width="840"
                     height="1050"
                     src="assets/prints/conjectures.webp"
+                    srcset="assets/prints/shelf/conjectures.webp 420w, assets/prints/conjectures.webp 840w"
+                    sizes="(max-width: 680px) clamp(200px, 62vw, 290px), clamp(238px, 20.6vw, 316px)"
                     alt=""
                     draggable="false"
                   /><span class="print-foot"
@@ -825,6 +830,8 @@
                     height="800"
                     draggable="false"
                     src="assets/prints/flyover.webp"
+                    srcset="assets/prints/shelf/flyover.webp 420w, assets/prints/flyover.webp 840w"
+                    sizes="(max-width: 680px) clamp(200px, 62vw, 290px), clamp(238px, 20.6vw, 316px)"
                     alt=""
                   /><span class="print-foot"
                     ><span class="print-type">Aircraft audio</span
@@ -843,6 +850,8 @@
                     height="800"
                     draggable="false"
                     src="assets/prints/factoring-bead.webp"
+                    srcset="assets/prints/shelf/factoring-bead.webp 420w, assets/prints/factoring-bead.webp 840w"
+                    sizes="(max-width: 680px) clamp(200px, 62vw, 290px), clamp(238px, 20.6vw, 316px)"
                     alt=""
                   /><span class="print-foot"
                     ><span class="print-type">Algorithms</span
@@ -861,6 +870,8 @@
                     height="800"
                     draggable="false"
                     src="assets/prints/cpu-switch.webp"
+                    srcset="assets/prints/shelf/cpu-switch.webp 420w, assets/prints/cpu-switch.webp 840w"
+                    sizes="(max-width: 680px) clamp(200px, 62vw, 290px), clamp(238px, 20.6vw, 316px)"
                     alt=""
                   /><span class="print-foot"
                     ><span class="print-type">Hardware</span
@@ -872,7 +883,7 @@
           </div>
           <div class="ledge" aria-hidden="true"></div>
         </div>
-        <div class="shelf-controls">
+        <div class="shelf-controls" hidden>
           <span
             class="visually-hidden"
             id="shelf-status"
@@ -1021,6 +1032,8 @@
                 width="1600"
                 height="550"
                 src="assets/livermore.webp"
+                srcset="assets/livermore-800.webp 800w, assets/livermore.webp 1600w"
+                sizes="(max-width: 680px) 90vw, 720px"
                 loading="lazy"
                 alt="The recorded aircraft’s harmonics slope down as its pitch falls."
               /><span class="playhead" hidden></span

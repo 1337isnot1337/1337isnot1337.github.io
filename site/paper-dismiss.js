@@ -2,6 +2,7 @@
   const surfaces = [
     ['.put-down-surface', '.back-to-desk'],
     ['.drawer-post', '.return-post'],
+    ['.calling-card-dialog', '.return-calling-card'],
     ['.pickup', '.put-down'],
     ['.open-project', '#close-dialog']
   ];

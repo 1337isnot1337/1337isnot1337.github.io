@@ -53,6 +53,7 @@ export function inspectDeskObjects(stage,engine,room,deskCamera,getModel,redraw,
   }
   function open(id,label,action){
     if(dialog.open)return;
+    putBack();
     active=id;
     opener=stage.querySelector('[data-object="'+id+'"]');
     dialog.setAttribute('aria-label',label);
@@ -71,12 +72,18 @@ export function inspectDeskObjects(stage,engine,room,deskCamera,getModel,redraw,
       open(id,label,action);
     },true);
   }
-  function close(){if(dialog.open)dialog.close();}
+  function close(){
+    if(dialog.open)dialog.close();
+    putBack();
+  }
   dialog.querySelector('.put-object-back').onclick=close;
-  dialog.addEventListener('close',()=>{
+  function putBack(){
+    if(!active)return;
     life.stow(active,yaw);life.inspect('',active,null,'close');active='';source=null;drag=null;stand.clear();snapshot?.dispose();snapshot=null;
     backdrop.uniforms.frame.value=null;stage.classList.remove('inspecting');redraw();
-  });
+  }
+  dialog.addEventListener('close',()=>{if(!dialog.open)putBack();});
+  dialog.addEventListener('cancel',event=>{event.preventDefault();close();});
   use.onclick=()=>{
     const returning=life.inspect(part,active,null,'use');
     const graphite=active==='pencil', erase=Math.cos(pitch)<-.25;

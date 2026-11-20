@@ -39,10 +39,14 @@
     if(message)warning.textContent=message;
     warning.hidden=false;
   }
+  function deskIsReadyToMount() {
+    return page.dataset.view==='desk' && sceneNearby && !studio.dataset.open && !document.querySelector('.open-project[open]');
+  }
   function showFurniture() {
-    if (page.dataset.view!=="desk" || !sceneNearby || sceneStarted || studio.dataset.open || document.querySelector(".open-project[open]")) return;
+    if (sceneStarted || !deskIsReadyToMount()) return;
     sceneStarted=true;
-    import("./furniture.js?v=30").then(module => {
+    import("./furniture.js?v=31").then(module => {
+      if (!deskIsReadyToMount()) { sceneStarted=false; return; }
       try { module.mountFurniture(stage,showGraphicsFallback); }
       catch { showGraphicsFallback(); }
     }, () => showGraphicsFallback("The 3D desk couldn’t download. Reload to try again."));

@@ -29,7 +29,7 @@ export function deskLife(stage, getModel, redraw, reduced) {
   const pencils=deskPencils();
   let ribbonFlick=0,sheetHeld=false,sheetX=0,sheetZ=0,sheetHeight=0;
   const started=performance.now();
-  let recording=null,chewed=false,ripple=0,tape=0,folded=false,unclipped=false,split=false,ribbonShift=0;
+  let recording=null,chewed=false,tape=0,folded=false,unclipped=false,split=false,ribbonShift=0;
   let envelopeLift=0,tapePencilSeated=false,tapePencilPull=0;
   let serviceOpened=false,deskLeafFile=null,drawnFile='',tapeUp=0,stowedScrew=false,lookedAtScrew=false;
 

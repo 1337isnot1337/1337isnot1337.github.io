@@ -13,8 +13,10 @@
   const seal=post.querySelector('.cat-stamp');
   const letterForm=studio.querySelector('.letter-room');
   const researchSource='https://github.com/1337isnot1337/solved-conjectures/blob/892c04046aadc8731dd510bb9c9b3ca1a086bae1/docs/';
+  const object=document.querySelector('.object-view');
+  object.addEventListener('close',()=>{if(!object.open)object.querySelector('.private-book-slip')?.remove();});
   document.addEventListener('desk-book-slip',event=>{
-    const object=document.querySelector('.object-view');
+    if(!object.open)return;
     const old=object.querySelector('.private-book-slip');
     if(old){
       old.remove();
@@ -48,7 +50,6 @@
     }
     enableCrease(slip);
     object.append(slip);
-    object.addEventListener('close',()=>slip.remove(),{once:true});
   });
   function enableCrease(slip){
     const key='desk-fold:'+slip.dataset.source;
@@ -586,24 +587,32 @@
     cover.href=bookmarked?'#'+bookmarked:'#about';
   },true);
   function prepareAddress(link) {
-    let didCopy=false;
+    let swallowClick=false;
     link.addEventListener('click',event=>{
-      if(didCopy){didCopy=false;event.preventDefault();}
+      if(swallowClick && event.detail){swallowClick=false;event.preventDefault();}
     });
     const copy=()=>{
       if(!navigator.clipboard)return;
-      didCopy=true;
+      swallowClick=true;
       navigator.clipboard.writeText(link.href).then(()=>{
         link.classList.add('copied-address');
         setTimeout(()=>link.classList.remove('copied-address'),950);
-      }).catch(()=>{didCopy=false;});
+      }).catch(()=>{swallowClick=false;});
     };
-    link.querySelector('small')?.addEventListener('pointerdown',event=>{
-      if(event.button!==0)return;
+    link.addEventListener('pointerdown',event=>{
+      if(!event.isPrimary||event.button!==0)return;
+      swallowClick=false;
+      if(!event.target.closest('small'))return;
       const timer=setTimeout(copy,470);
-      const stop=()=>clearTimeout(timer);
-      window.addEventListener('pointerup',stop,{once:true});
-      window.addEventListener('pointercancel',stop,{once:true});
+      const stop=()=>{
+        clearTimeout(timer);
+        window.removeEventListener('pointerup',stop);
+        window.removeEventListener('pointercancel',stop);
+        window.removeEventListener('blur',stop);
+      };
+      window.addEventListener('pointerup',stop);
+      window.addEventListener('pointercancel',stop);
+      window.addEventListener('blur',stop);
     });
   }
   letterForm.querySelectorAll('.address-links a').forEach(prepareAddress);

@@ -27,6 +27,7 @@ let returningToShelf = false;
 // Adapted from Swiper's Coverflow demo. Keep an ordinary scrollable shelf if
 // the enhancement is unavailable, and keep every print addressable by a link.
 let shelf = null;
+let requestedShelf = false;
 let coastFrame = 0;
 let lastProject = '';
 let shelfDistance = 0;
@@ -69,7 +70,6 @@ function stopCoast() {
   coastFrame = 0;
 }
 function startShelf() {
-  if (shelf || !window.Swiper || document.documentElement.dataset.view === "desk") return;
   // A wide shelf shows five prints at once. A second run gives Swiper room to
   // move paper around the back without exposing an empty end of the ledge.
   const track = carousel.querySelector(".swiper-wrapper");
@@ -291,6 +291,7 @@ function startShelf() {
       },
     },
   });
+  shop.querySelector('.shelf-controls').hidden = false;
   // Consume the click generated on release after a drag or a tap that stops a glide.
   carousel.addEventListener("click", (event) => {
     if (suppressShelfClick && event.detail > 0) {
@@ -333,19 +334,29 @@ function startShelf() {
         .focus({ preventScroll: true });
   });
 }
-startShelf();
+function showShelf() {
+  if (document.documentElement.dataset.view === "desk") return;
+  if (!window.Swiper) {
+    if (!requestedShelf) {
+      requestedShelf = true;
+      const script = document.createElement('script');
+      script.src = 'vendor/swiper-bundle.min.js';
+      script.addEventListener('load', showShelf, {once: true});
+      document.head.append(script);
+    }
+    return;
+  }
+  if (shelf) shelf.update();
+  else startShelf();
+  const project = activeArticle?.id || lastProject;
+  const i = prints.findIndex(print => print.dataset.project === project);
+  if (i >= 0) shelf.slideToLoop(i, 0);
+}
+showShelf();
 document.addEventListener("portfolio-view", () => {
   stopCoast();
-  if (document.documentElement.dataset.view === "shelf") {
-    if (shelf) shelf.update();
-    else startShelf();
-    if(shelf&&lastProject){
-      const i=prints.findIndex(link=>link.dataset.project===lastProject);
-      if(i>=0)shelf.slideToLoop(i,0);
-    }
-  }
+  showShelf();
 });
-if (!window.Swiper) document.querySelector(".shelf-controls").hidden = true;
 
 function loadArticleMedia(article) {
   for (const media of article.querySelectorAll('audio[data-src]')) {
@@ -410,6 +421,8 @@ function displayFromHash() {
     }
   }
   const art = print.querySelector("img").cloneNode();
+  art.removeAttribute('srcset');
+  art.removeAttribute('sizes');
   art.className = "detail-art";
   slot.replaceChildren(art, article);
   let deskReturn=article.querySelector('.reader-return');

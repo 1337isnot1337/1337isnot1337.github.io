@@ -51,7 +51,7 @@ export function furnish(scene, narrow, repaint, software=false) {
     const path=new T.CatmullRomCurve3(points.map(v=>new T.Vector3(...v)));
     return mesh(p,new T.TubeGeometry(path,Math.max(10,points.length*3),r,6,false),mat);
   }
-  const loader = new T.TextureLoader();
+  const loader = new T.TextureLoader().setCrossOrigin(undefined);
   function photo(uri,onLoad) {
     const t=loader.load(uri,()=>{onLoad?.();repaint();});t.colorSpace=T.SRGBColorSpace;t.anisotropy=4;return t;
   }
@@ -194,7 +194,7 @@ export function furnish(scene, narrow, repaint, software=false) {
   box(drawer,1.10,.003,.68,finish(0xafbaa3),0,.074,-.65);
   drawerNote.visible=false;
   const keepsake=tag(group(drawer,0,.087,-.65),'keepsake',[0,.03,0],1.02,.58);
-  box(keepsake,1.12,.022,.70,cream);illustration(keepsake,'assets/studio/night-mail.webp',1.04,.62,0,.013,0,true);
+  box(keepsake,1.12,.022,.70,cream);illustration(keepsake,'assets/furniture/prints/night-mail.webp',1.04,.62,0,.013,0,true);
   keepsake.rotation.y=-.10;
   // Rear hutch, upright shelves, and a pinboard live in the same coordinate system as the desk.
   box(world,width-.16,3.21,.11,darkWood,0,1.59,-2.22);
@@ -1041,6 +1041,25 @@ export function furnish(scene, narrow, repaint, software=false) {
     batches.get(key).meshes.push(m);source.add(m.geometry);
   });
   for(const {parent,mat,cast,meshes} of batches.values()){
+    let surface=mat;
+    if(software && parent!==mug){
+      if(!fastMaterials.has(mat))fastMaterials.set(mat,new T.MeshLambertMaterial({
+        color:mat.color,map:mat.map,side:mat.side,vertexColors:mat.vertexColors,transparent:mat.transparent,
+        depthWrite:mat.depthWrite,alphaTest:mat.alphaTest,polygonOffset:mat.polygonOffset,
+        polygonOffsetFactor:mat.polygonOffsetFactor,polygonOffsetUnits:mat.polygonOffsetUnits,
+        emissive:mat.emissive,emissiveIntensity:mat.emissiveIntensity
+      }));
+      surface=fastMaterials.get(mat);
+    }
+    const [first]=meshes;
+    if(meshes.length===1 && first.parent===parent && first.material===mat){
+      // A single, already-local mesh needs no transform bake or index expansion.
+      first.material=surface;
+      source.delete(first.geometry);
+      if(!first.geometry.boundingBox)first.geometry.computeBoundingBox();
+      if(!first.geometry.boundingSphere)first.geometry.computeBoundingSphere();
+      continue;
+    }
     const inverse=parent.matrixWorld.clone().invert();
     const parts=meshes.map(m=>{
       const g=m.geometry.index?m.geometry.toNonIndexed():m.geometry.clone();
@@ -1054,16 +1073,6 @@ export function furnish(scene, narrow, repaint, software=false) {
     });
     const combined=mergeGeometries(parts);parts.forEach(g=>g.dispose());
     meshes.forEach(m=>m.removeFromParent());
-    let surface=mat;
-    if(software && parent!==mug){
-      if(!fastMaterials.has(mat))fastMaterials.set(mat,new T.MeshLambertMaterial({
-        color:mat.color,map:mat.map,side:mat.side,vertexColors:mat.vertexColors,transparent:mat.transparent,
-        depthWrite:mat.depthWrite,alphaTest:mat.alphaTest,polygonOffset:mat.polygonOffset,
-        polygonOffsetFactor:mat.polygonOffsetFactor,polygonOffsetUnits:mat.polygonOffsetUnits,
-        emissive:mat.emissive,emissiveIntensity:mat.emissiveIntensity
-      }));
-      surface=fastMaterials.get(mat);
-    }
     const done=mesh(parent,combined,surface);done.castShadow=cast;
     combined.computeBoundingBox();combined.computeBoundingSphere();
   }

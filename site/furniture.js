@@ -1,10 +1,10 @@
 import * as T from './vendor/three/three.module.min.js';
-import { furnish } from './desk-model.js?v=25';
-import { inspectDeskObjects } from './desk-inspect.js?v=10';
+import { furnish } from './desk-model.js?v=26';
+import { inspectDeskObjects } from './desk-inspect.js?v=11';
 
-import { attachDeskPointer } from './desk-pointer.js?v=13';
+import { attachDeskPointer } from './desk-pointer.js?v=14';
 
-import { deskLife } from './desk-life.js?v=11';
+import { deskLife } from './desk-life.js?v=12';
 import { deskView } from './desk-view.js?v=2';
 import { drawerTravel } from './desk-drawer.js?v=1';
 
@@ -46,7 +46,7 @@ export function mountFurniture(stage,showGraphicsFallback) {
   },undefined,()=>{lightReady=true;redraw();});
   const section=stage.closest('.desk-overview');
   const motion=matchMedia('(prefers-reduced-motion: reduce)');
-  let narrow=false,viewWidth=0,viewHeight=0;
+  let narrow=false,viewWidth=0,viewHeight=0,needsLayout=true;
   const links=new Map([...stage.querySelectorAll('[data-object]')].map(el=>[el.dataset.object,el]));
   const vector=new T.Vector3(), point=new T.Vector3(), aim=new T.Vector3();
   const ray=new T.Raycaster(),mouse=new T.Vector2();
@@ -64,7 +64,7 @@ export function mountFurniture(stage,showGraphicsFallback) {
   let lastPart='',pickedUp='',pickupTravel=0,centered='',centerUntil=0;
   function redraw() {
     dirty=true;
-    if (visible && !contextLost && !frame) frame=requestAnimationFrame(renderFrame);
+    if (visible && !contextLost && !document.hidden && !frame) frame=requestAnimationFrame(renderFrame);
   }
   function renderFrame(time) {
     try { paint(time); }
@@ -102,9 +102,11 @@ export function mountFurniture(stage,showGraphicsFallback) {
     model.lamp.localToWorld(bulb.position.set(-.24,1.13,.24));engine.shadowMap.needsUpdate=true;
   }
   function layout() {
+    if(!needsLayout)return true;
     const w=stage.clientWidth,h=stage.clientHeight;
     // Some browsers briefly collapse a background or captured page to a 1px viewport.
     if(w<2 || h<2 || window.innerHeight<2)return false;
+    needsLayout=false;
     if(w===viewWidth && h===viewHeight)return true;
     viewWidth=w;viewHeight=h;
     const compact=w<=660 || w/h<=1.2;
@@ -114,26 +116,32 @@ export function mountFurniture(stage,showGraphicsFallback) {
       Math.max(43,2*Math.atan(Math.tan(T.MathUtils.degToRad(21.5))*1.60/camera.aspect)*180/Math.PI);
     camera.updateProjectionMatrix();return true;
   }
+  const targetStyles=new Map();
+  const targetProperties=['--screen-x','--screen-y','--hit-width','--hit-height'];
   function projectTargets() {
-    const width=stage.clientWidth,height=stage.clientHeight;
-    if(!width||!height)return;
+    const lens=viewHeight/(2*Math.tan(T.MathUtils.degToRad(camera.fov/2)));
     for(const [id,{root,point:local,w,h}] of model.targets) {
       const el=links.get(id);
-      point.copy(local);root.localToWorld(point);vector.copy(point).project(camera);
-      const x=(vector.x+1)*.5*width,y=(1-vector.y)*.5*height;
-      const cameraZ=-point.applyMatrix4(camera.matrixWorldInverse).z;
-      const px=height/(2*Math.tan(T.MathUtils.degToRad(camera.fov/2))*cameraZ);
-      el.style.setProperty('--screen-x',x.toFixed(1)+'px');
-      el.style.setProperty('--screen-y',y.toFixed(1)+'px');
-      el.style.setProperty('--hit-width',Math.max(40,w*root.scale.x*px*.83).toFixed(1)+'px');
-      el.style.setProperty('--hit-height',Math.max(37,h*root.scale.y*px*.68).toFixed(1)+'px');
-      el.toggleAttribute('data-outside',x<10||x>width-10||y<12||y>height-10);
+      point.copy(local).applyMatrix4(root.matrixWorld);
+      const depth=-vector.copy(point).applyMatrix4(camera.matrixWorldInverse).z;
+      vector.copy(point).project(camera);
+      const x=(vector.x+1)*.5*viewWidth,y=(1-vector.y)*.5*viewHeight;
+      const outside=depth<=camera.near||x<10||x>viewWidth-10||y<12||y>viewHeight-10;
+      if(el.hasAttribute('data-outside')!==outside)el.toggleAttribute('data-outside',outside);
+      if(outside)continue;
+      const px=lens/depth;
+      const next=[x,y,Math.max(40,w*root.scale.x*px*.83),Math.max(37,h*root.scale.y*px*.68)].map(value=>Math.round(value*10));
+      const old=targetStyles.get(id);
+      for(const [i,property] of targetProperties.entries()){
+        if(old?.[i]!==next[i])el.style.setProperty(property,(next[i]/10)+'px');
+      }
+      targetStyles.set(id,next);
     }
   }
   let boundedModel=null;
   function paint(time) {
     frame=0;
-    if(!visible||contextLost||!dirty||!layout()||!lightReady)return;
+    if(!visible||contextLost||document.hidden||!dirty||!layout()||!lightReady)return;
     dirty=false;
 
     const dt=Math.min(.06,Math.max(.016,(time-lastTime)/1000));lastTime=time;
@@ -223,6 +231,7 @@ export function mountFurniture(stage,showGraphicsFallback) {
   let detailMoved=false;
   const extraMeshes=[];
   const shown=mesh=>{for(let n=mesh;n;n=n.parent)if(!n.visible)return false;return true;};
+  const candidates=[],hits=[];
   const leaveDesk=attachDeskPointer(stage,{
     track(x,y) {
       life.pointerMoved(x,y,performance.now());
@@ -236,12 +245,13 @@ export function mountFurniture(stage,showGraphicsFallback) {
     pick(x,y) {
       mouse.set(x*2-1,1-y*2);
       ray.setFromCamera(mouse,camera);
-      const hits=[];lastPart='';
+      candidates.length=0;hits.length=0;lastPart='';
       for(const [id,{meshes,box}] of hitGroups){
-        if(!links.get(id).hidden && ray.ray.intersectsBox(box))ray.intersectObjects(meshes,false,hits);
+        if(links.get(id).hidden || !ray.ray.intersectsBox(box))continue;
+        for(const mesh of meshes)if(shown(mesh))candidates.push(mesh);
       }
-      ray.intersectObjects(extraMeshes,false,hits);
-      const first=hits.find(hit=>shown(hit.object));
+      for(const mesh of extraMeshes)if(shown(mesh))candidates.push(mesh);
+      const [first]=ray.intersectObjects(candidates,false,hits);
       if(!first)return '';
       for(const box of model.occluders){
         if(ray.ray.intersectBox(box,intersection) && ray.ray.origin.distanceTo(intersection)<first.distance-.012)return '';
@@ -344,11 +354,13 @@ export function mountFurniture(stage,showGraphicsFallback) {
     redraw();
   });
   section.closest('#studio').addEventListener('desk-room',e=>{opened=e.detail||'';if(opened)leaveDesk();redraw();});
+  function resized(){needsLayout=true;redraw();}
   if('IntersectionObserver' in window)new IntersectionObserver(([entry])=>{
-    visible=entry.isIntersecting;if(visible)redraw();else leaveDesk();
+    visible=entry.isIntersecting;if(visible)resized();else leaveDesk();
   }).observe(stage);
-  if('ResizeObserver' in window)new ResizeObserver(redraw).observe(stage);
-  window.addEventListener('resize',redraw);
+  if('ResizeObserver' in window)new ResizeObserver(resized).observe(stage);
+  window.addEventListener('resize',resized);
+  document.addEventListener('portfolio-view',resized);
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)redraw();});
   motion.addEventListener('change',redraw);
   function suspendDesk() {
