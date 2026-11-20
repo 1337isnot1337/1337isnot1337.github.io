@@ -1,10 +1,11 @@
 import * as T from './vendor/three/three.module.min.js';
-import { furnish } from './desk-model.js?v=15';
+import { furnish } from './desk-model.js?v=16';
 import { inspectDeskObjects } from './desk-inspect.js?v=4';
 
-import { attachDeskPointer } from './desk-pointer.js?v=11';
+import { attachDeskPointer } from './desk-pointer.js?v=12';
 
-import { deskLife } from './desk-life.js?v=1';
+import { deskLife } from './desk-life.js?v=2';
+import { deskView } from './desk-view.js?v=1';
 
 export function mountFurniture(stage,showGraphicsFallback) {
   const canvas = stage.querySelector('canvas');
@@ -51,11 +52,12 @@ export function mountFurniture(stage,showGraphicsFallback) {
   let model,frame=0,visible=true,dirty=true,drawerOpen=stage.querySelector('[data-object="drawer"]').getAttribute('aria-expanded')==='true',drawerAmount=0,opened='',fileAngle=0,bookAngle=0;
   const hitGroups=new Map(),bounds=new T.Box3(),intersection=new T.Vector3();
   let lastTime=0,lampOn=false;
-  let orbit=0, contextLost=false;
-  let orbitPreview=0, gazeX=0, gazeY=0, targetX=0, targetY=0;
+  let contextLost=false;
+  const view=deskView();
+  let gazeX=0, gazeY=0, targetX=0, targetY=0;
   const life=deskLife(stage,()=>model,redraw,motion);
   const inspector=inspectDeskObjects(stage,engine,scene,camera,()=>model,redraw,life);
-  let peekOrbit=null,settle=0,drawerGrip=null,mothWake=0,bufferedOrbit=0;
+  let drawerGrip=null,ambientTimer=0,drawerVelocity=0;
   let lastPart='',pickedUp='',pickupTravel=0,centered=0,centerUntil=0;
   function moveDrawer(open){
     if(open!==drawerOpen)drawer.click();
@@ -144,7 +146,9 @@ export function mountFurniture(stage,showGraphicsFallback) {
     if((prevDrawer!==drawerAmount && (drawerAmount===0||drawerAmount===1)) ||
        (prevFile!==fileAngle && (fileAngle===0||fileAngle===1)) ||
        (prevBook!==bookAngle && (bookAngle===0||bookAngle===1)))engine.shadowMap.needsUpdate=true;
-    const events=life.update(time,dt,drawerAmount,lampOn,inspector.active(),orbit,fileAngle);
+    const posture=view.step(dt,motion.matches);
+    const held=inspector.active();
+    const events=life.update(time,dt,drawerAmount,lampOn,held,posture,fileAngle);
     const shade=model.details.get('shade');
     shade.localToWorld(bulb.position.set(0,-.22,0));
     shade.localToWorld(beam.target.position.set(0,-2.8,0));
@@ -155,8 +159,11 @@ export function mountFurniture(stage,showGraphicsFallback) {
       if(events.active && !document.hidden)redraw();
       return;
     }
-    if(lampOn&&events.redrawMoth&&!mothWake)
-      mothWake=setTimeout(()=>{mothWake=0;if(lampOn&&!document.hidden)redraw();},14500);
+    // A sun patch and the resting moth can advance without an idle render loop.
+    if(!ambientTimer&&!document.hidden&&!opened){
+      const delay=Math.min(events.wakeAt ? Math.max(90,events.wakeAt-time) : Infinity,motion.matches?Infinity:9000);
+      if(Number.isFinite(delay))ambientTimer=setTimeout(()=>{ambientTimer=0;redraw();},delay);
+    }
     const phone=narrow;
     camera.position.set(phone?.22:.70, (phone?4.19:4.06)+drawerAmount*.12, (phone?6.13:6.47)+drawerAmount*1.52);
     aim.set(phone?0:.025,(phone?.40:.67)-drawerAmount*.53,.21+drawerAmount*.77);
@@ -165,16 +172,16 @@ export function mountFurniture(stage,showGraphicsFallback) {
     gazeY=Math.abs(gazeY-targetY)<.009?targetY:T.MathUtils.lerp(gazeY,targetY,ease);
     camera.position.x+=gazeX*.30;camera.position.y-=gazeY*.17;
     aim.x+=gazeX*.125;aim.y-=gazeY*.065;
-    const looking=peekOrbit??orbit;
-    const lookBelow=events.below;
-    camera.position.y-=lookBelow*5.88;
-    aim.y-=lookBelow*2.83;
-    const reach=camera.position.z-aim.z;
-    camera.position.x+=Math.sin(looking+settle)*reach;
-    camera.position.z-=reach*(1-Math.cos(looking+settle));
-    settle=target(settle,0);
+    camera.position.y-=posture.below*5.88;
+    aim.y-=posture.below*2.83;
+    const offsetX=camera.position.x-aim.x;
+    const offsetZ=camera.position.z-aim.z;
+    const sin=Math.sin(posture.yaw),cos=Math.cos(posture.yaw);
+    camera.position.x=aim.x+offsetX*cos+offsetZ*sin;
+    camera.position.z=aim.z+offsetZ*cos-offsetX*sin;
     const sunChanged=Math.abs(sun.position.x+4.7-events.drift)>.045;
     if(sunChanged)sun.position.x=-4.7+events.drift;
+    model.daylight.value=events.drift;
     const returnOffset=clampReturn(time);
     camera.position.x+=returnOffset*.48;aim.x+=returnOffset;
     if(!software&&(detailMoved||sunChanged))engine.shadowMap.needsUpdate=true;
@@ -193,7 +200,7 @@ export function mountFurniture(stage,showGraphicsFallback) {
       warning.hidden=!software;
       lamp.hidden=false;links.get('plant').hidden=false;
     }
-    if((events.active && !document.hidden) || returnOffset || settle || gazeX!==targetX||gazeY!==targetY||drawerAmount!==Number(drawerOpen)||fileAngle!==(opened==='catalogue'?1:0)||bookAngle!==(opened==='about'?1:0))redraw();
+    if((events.active && !document.hidden) || returnOffset || posture.move || gazeX!==targetX||gazeY!==targetY||drawerAmount!==Number(drawerOpen)||fileAngle!==(opened==='catalogue'?1:0)||bookAngle!==(opened==='about'?1:0))redraw();
   }
   function clampReturn(time){
     if(motion.matches)return centerUntil>time?centered:0;
@@ -204,7 +211,7 @@ export function mountFurniture(stage,showGraphicsFallback) {
   const shown=mesh=>{for(let n=mesh;n;n=n.parent)if(!n.visible)return false;return true;};
   const leaveDesk=attachDeskPointer(stage,{
     track(x,y) {
-      life.pointerMoved(x,y);
+      life.pointerMoved(x,y,performance.now());
       if(motion.matches){x=0;y=0;}
       if(software){
         stage.style.setProperty('--pan-x',(x*0.6)+'%');
@@ -249,7 +256,7 @@ export function mountFurniture(stage,showGraphicsFallback) {
     gesture(name,dx,dy){
       if(name==='handle'){
         drawerGrip=Math.max(0,Math.min(1,(drawerGrip??drawerAmount)+dy*4.5));
-        bufferedOrbit=dy;redraw();return true;
+        drawerVelocity=dy;redraw();return true;
       }
       if(['airframe','scope','proof-volume','archive-volume'].includes(name)){
         if(pickedUp!==name){pickedUp=name;pickupTravel=0;}
@@ -263,18 +270,17 @@ export function mountFurniture(stage,showGraphicsFallback) {
       if(!gesture)return false;
       gesture(dx,dy);detailMoved=true;redraw();return true;
     },
-    orbitBy(delta,vertical) {
-      const next=T.MathUtils.clamp(orbit-delta*.87,-.33,.33);
-      peekOrbit=life.orbitMove(delta,vertical,next);
-      bufferedOrbit=delta;
-      if(software){
-        // Keep slow CPU rasterizers off the pointer path. The compositor previews the pan.
-        orbitPreview+=next-orbit;
-        canvas.style.transform='scale(1.045) translateX('+(-orbitPreview*3.2)+'%)';
-      } else redraw();
-      orbit=next;
+    orbitBy(delta,vertical,time) {
+      view.drag(delta,vertical,time);
+      if(Math.abs(delta)+Math.abs(vertical)>.035)life.startleMoth(time);
+      redraw();
     },
-    endOrbit() {
+    endOrbit(time,cancelled) {
+      view.release(time,cancelled);
+      if(cancelled){
+        pickedUp='';pickupTravel=0;drawerGrip=null;drawerVelocity=0;
+        redraw();return;
+      }
       if(pickupTravel<-.085){
         if(pickedUp==='airframe')inspector.open('plane','DOPPLERGEIST model airplane','Open DOPPLERGEIST');
         if(pickedUp==='scope')inspector.open('scope','Oscilloscope','Open the experiments');
@@ -284,12 +290,9 @@ export function mountFurniture(stage,showGraphicsFallback) {
       pickedUp='';pickupTravel=0;
       if(drawerGrip!==null){
         const open=drawerGrip>.46;
-        if(drawerOpen===open)life.drawerChange(open,bufferedOrbit*40);
-        drawerGrip=null;moveDrawer(open);
-      }else if(!peekOrbit&&!motion.matches){
-        settle=T.MathUtils.clamp(bufferedOrbit*-.32,-.035,.035);
+        if(drawerOpen===open)life.drawerChange(open,drawerVelocity*40);
+        drawerGrip=null;moveDrawer(open);drawerVelocity=0;
       }
-      if(software){orbitPreview=0;canvas.style.transform='';}
       redraw();
     }
   });
@@ -302,7 +305,7 @@ export function mountFurniture(stage,showGraphicsFallback) {
   });
   const drawer=links.get('drawer');
   stage.addEventListener('drawer-change',()=>{
-    drawerOpen=drawer.getAttribute('aria-expanded')==='true';life.drawerChange(drawerOpen,bufferedOrbit*40);bufferedOrbit=0;redraw();
+    drawerOpen=drawer.getAttribute('aria-expanded')==='true';life.drawerChange(drawerOpen,drawerVelocity*40);drawerVelocity=0;redraw();
   });
   section.closest('#studio').addEventListener('desk-room',e=>{opened=e.detail||'';if(opened)leaveDesk();redraw();});
   if('IntersectionObserver' in window)new IntersectionObserver(([entry])=>{

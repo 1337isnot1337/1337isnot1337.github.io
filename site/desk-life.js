@@ -1,4 +1,5 @@
 import { MathUtils, Vector3 } from './vendor/three/three.module.min.js';
+import { caterpillarPoint, caterpillarRadii } from './desk-botany.js?v=1';
 
 const { clamp, lerp } = MathUtils;
 const experiment = ['sound','cards','bits','numbers'];
@@ -11,11 +12,12 @@ export function deskLife(stage, getModel, redraw, reduced) {
   const home = new WeakMap();
   let drawerClaps=0,lastClose=0,drawerNote=false,marbleX=-.77,marbleSpeed=0,handleSwing=0,liner=false;
   let potTurn=0,nibble=0,plantOpen=0,leafLift=0,falling=false,leafSaved=false,dew=0,star=false,borrowed=false,hop=0;
-  let lampAngle=0,lampPitch=0,lampClicks=0,lampClickTime=0,warmAt=0,mothIdle=performance.now(),mothRest=false;
+  let lampAngle=0,lampPitch=0,lampClicks=0,lampClickTime=0,warmAt=0,mothIdle=performance.now(),mothRest=false,mothScared=0;
+  let pointerSample=null;
   let planeAngle=.62,planeSpeed=0,lift=0,aimOffset=0,tuner=-1,previousTuner=-1,afterglow=0,patched=false;
-  let pencilX=[0,0],clip=false,guide=false,bookmark=false,currentFile='',sleeve=false,orbitScore=0,below=0,lastOrbit=0,wrote=false;
+  let pencilX=[0,0],guide=false,bookmark=false,currentFile='',sleeve=false,wrote=false;
   const started=performance.now();
-  let recording=null,showBack=0,chewed=false,ripple=0,tape=0,folded=false,unclipped=false,split=false,ribbonShift=0;
+  let recording=null,chewed=false,ripple=0,tape=0,folded=false,unclipped=false,split=false,ribbonShift=0;
   let serviceOpened=false,deskLeafFile=false,tapeUp=0,pencilDrop=0,stowedScrew=false,lookedAtScrew=false;
   let scratching=false;
   const reversedBooks=new Set();
@@ -85,12 +87,20 @@ export function deskLife(stage, getModel, redraw, reduced) {
     lampClicks=time-lampClickTime<1000?lampClicks+1:1;
     lampClickTime=time;
     warmAt=on && lampClicks>=4?time+250:0;
-    mothIdle=time;mothRest=false;
+    mothIdle=time;mothRest=false;mothScared=0;pointerSample=null;
   }
-  function pointerMoved(x,y) {
-    if(Math.abs(x)+Math.abs(y)<=1.3)return;
-    mothRest ||= performance.now()-mothIdle>14000;
-    mothIdle=performance.now();
+  function startleMoth(time){
+    if(!mothRest && time-mothIdle>=14000){mothScared=time;mothRest=true;}
+    mothIdle=time;
+  }
+  function pointerMoved(x,y,time) {
+    if(pointerSample){
+      const distance=Math.hypot(x-pointerSample.x,y-pointerSample.y);
+      const elapsed=time-pointerSample.time;
+      if(elapsed<130&&distance>.16)startleMoth(time);
+      else if(distance>.025 && time-mothIdle<14000)mothIdle=time;
+    }
+    pointerSample={x,y,time};
   }
   const gestures = {
     propeller(dx,dy){planeSpeed=clamp((dx-dy)*150,-34,34);},
@@ -128,15 +138,6 @@ export function deskLife(stage, getModel, redraw, reduced) {
     scratching=true;
     drawing.dispatchEvent(new CustomEvent('desk-rubbing',{detail:label}));
     setTimeout(()=>{scratching=false;},1300);
-  }
-  function orbitMove(delta,vertical,orbit) {
-    if(Math.abs(orbit)>.29&&Math.sign(delta)===-Math.sign(orbit))orbitScore+=Math.abs(delta);
-    else if(Math.sign(delta)===Math.sign(orbit))orbitScore=Math.max(0,orbitScore-Math.abs(delta)*1.9);
-    below=clamp(below+vertical*3.7,0,1);
-    if(orbitScore>.21)showBack=Math.sign(orbit);
-    if(orbitScore<.09)showBack=0;
-    lastOrbit=clamp(delta*-.56,-.12,.12);
-    return showBack?showBack*(Math.PI-.17):null;
   }
   function tap(name) {
     switch(name){
@@ -215,20 +216,22 @@ export function deskLife(stage, getModel, redraw, reduced) {
       node.position.copy(original.position);node.quaternion.copy(original.quaternion);
     });
   }
-  function update(time,dt,drawerAmount,lampOn,inHand,orbit,flap) {
+  function update(time,dt,drawerAmount,lampOn,inHand,{yaw,below,rear,behindWall},flap) {
     const model=getModel(),motion=!reduced.matches;
     const drift=motion?Math.sin((time-started)/90000)*.32:0;
     if(wrote&&currentSketch&&model.sketchTexture.image!==currentSketch && !part('scratch').userData.drawn){
       part('scratch').userData.drawn=true;onSketch({detail:currentSketch});
     }
-    part('hutch-back').visible=Boolean(showBack);
-    part('hutch-back').position.x=showBack<0?.55:-.22;
-    part('reverse-plaque').visible=showBack<0;
+    part('hutch-back').visible=Boolean(rear);
+    part('rear-screw').visible=rear>0;
+    part('rear-pencil').visible=rear>0;
+    part('reverse-plaque').visible=rear<0;
     part('screw').visible=!stowedScrew;part('screw-socket').visible=!stowedScrew;
-    part('wall').visible=!showBack;
-    part('under-eye').visible=below>.28;part('brass-aside').visible=below>.55||showBack<0;
-    part('pupil').position.x=clamp(orbit*.14,-.047,.047);
-    part('pupil').position.y=below*.038-.021;
+    part('wall').visible=!behindWall;
+    part('under-eye').visible=below>.44;
+    part('pupil').position.x=clamp(Math.sin(yaw)*.072,-.047,.047);
+    const limit=Math.sqrt(Math.max(0,.05**2-part('pupil').position.x**2));
+    part('pupil').position.y=-limit*(.55+below*.45);
     part('drawer-note').visible=drawerNote;
     part('drawer-note').rotation.x=lerp(-.62,-1.25,drawerAmount);
     part('liner').rotation.x=liner?1.68:.11;part('crumb-plan').visible=liner;
@@ -250,10 +253,18 @@ export function deskLife(stage, getModel, redraw, reduced) {
     part('scratch').visible=wrote;part('flat-sketch').visible=!folded;part('folded-sketch').visible=folded;
     const moth=part('moth');
     const elapsed=time-mothIdle;
-    moth.visible=lampOn && (elapsed>14000||mothRest);
-    const flying=moth.visible && elapsed>14000 && elapsed<22000 && !inHand && motion;
-    if(flying)moth.position.set(model.lamp.position.x-.42+Math.sin(time/635)*.29,1.2+Math.sin(time/300)*.19,-.73+Math.cos(time/700)*.22);
-    else moth.position.set(model.lamp.position.x-.85,1.63,-1.26);
+    moth.visible=lampOn && (elapsed>=14000||mothRest);
+    const retreat=mothScared ? clamp((time-mothScared)/380,0,1) : 1;
+    const arrival=clamp((elapsed-14000)/1200,0,1);
+    const settling=clamp((22000-elapsed)/1500,0,1);
+    const flying=moth.visible && !inHand && motion && (mothRest?retreat<1:elapsed<22000);
+    const amount=flying ? (mothRest?1-retreat:arrival*settling) : 0;
+    const base=model.lamp.position.x;
+    moth.position.set(
+      lerp(base-.79,base-.42+Math.sin(time/635)*.24,amount),
+      lerp(1.55,1.2+Math.sin(time/310)*.16,amount),
+      lerp(-1.245,-.73+Math.cos(time/700)*.17,amount));
+    moth.rotation.y=Math.sin(time/712)*amount*.72;
     for(const sign of [-1,1])part('moth-wing-'+sign).rotation.z=flying?sign*Math.sin(time/32)*.79:sign*.22;
     part('propeller').rotation.z=planeAngle;
     if(motion)planeAngle+=planeSpeed*dt;
@@ -263,8 +274,8 @@ export function deskLife(stage, getModel, redraw, reduced) {
     const playing=recording&&!recording.paused;
     part('flyover').visible=Boolean(playing);
     if(playing)part('flyover').position.x=clamp(recording.currentTime/(recording.duration||85),0,1)*1.45-.72;
-    part('glass-glare').rotation.y=-orbit*.17;
-    part('glass-glare').visible=Math.abs(orbit)<.21;
+    const glass=part('glass-glare').children[0]?.material?.map;
+    if(glass)glass.offset.x=clamp(Math.sin(yaw)*2.9,-1,1);
     part('service-diagram').visible=serviceOpened;
     part('scope-glow').children.forEach((readout,i)=>{
       const latest=i===(patched?4:tuner);
@@ -277,8 +288,10 @@ export function deskLife(stage, getModel, redraw, reduced) {
     part('cable-wire').visible=!patched;part('plugged-wire').visible=patched;
     if(inHand==='plant'){
       nibble=clamp((time-plantOpen)/14500,0,1);
-      part('caterpillar').position.set(.015+Math.sin(time/650)*.011,.013,.285*nibble);
-      part('caterpillar').rotation.z=Math.sin(time/340)*.09;
+      for(let i=0;i<caterpillarRadii.length;i++){
+        const segment=part('caterpillar-segment-'+i);
+        segment.position.set(...caterpillarPoint(nibble,i,motion?time:0));
+      }
     }
     const bitten=chewed ||= (inHand==='plant'&&nibble>.89);
     part('whole-leaf').visible=!bitten;
@@ -321,9 +334,9 @@ export function deskLife(stage, getModel, redraw, reduced) {
       part('pin-hole-'+id).visible=Math.hypot(x,y)>.025;
     }
     const warm=warmAt ? clamp((time-warmAt)/750,0,1):1;
-    return { below, drift, warm, active: Boolean(
+    return { drift, warm, active: Boolean(
       Math.abs(planeSpeed)>.025||lift>.005||Math.abs(aimOffset)>.01||Math.abs(marbleSpeed)>.02||handleSwing>.005||
-      afterglow>0||pencilDrop>.003||(inHand==='plant'&&time-plantOpen<15600)||ripple>0||hop>0||playing||flying||(lampOn&&warm<1)), redrawMoth:lampOn && !moth.visible};
+      afterglow>0||pencilDrop>.003||(inHand==='plant'&&time-plantOpen<15600)||ripple>0||hop>0||playing||flying||(lampOn&&warm<1)), wakeAt:lampOn&&!moth.visible ? mothIdle+14000 : 0};
   }
-  return {tap,gestures,movePrint,orbitMove,stow,drawerChange,lampChange,pointerMoved,inspect,updateInspection,update};
+  return {tap,gestures,movePrint,stow,drawerChange,lampChange,pointerMoved,startleMoth,inspect,updateInspection,update};
 }
