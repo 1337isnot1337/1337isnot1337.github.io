@@ -124,6 +124,8 @@ def render(entries: list[dict]) -> str:
   <link rel="stylesheet" href="/shelf.css?v=25">
   <link rel="stylesheet" href="/projects/project-pages.css?v=1">
   <link rel="stylesheet" href="/research-notes/notes.css?v=1">
+  <link rel="stylesheet" href="/desk-extras.css?v=1">
+  <script defer src="/project-paper.js?v=1"></script>
   <script type="application/ld+json">{structured}</script>
 </head>
 <body>

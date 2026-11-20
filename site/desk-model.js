@@ -10,6 +10,13 @@ export function furnish(scene, narrow, repaint, software=false) {
   const world = new T.Group();
   scene.add(world);
   const targets = new Map();
+  const details = new Map();
+  function detail(name,parent,x=0,y=0,z=0) {
+    const part=group(parent,x,y,z);
+    part.userData.detail=name;
+    details.set(name,part);
+    return part;
+  }
   const cache = new Map();
   const geometry = new Map();
   const group = (parent, x, y, z) => {
@@ -124,7 +131,33 @@ export function furnish(scene, narrow, repaint, software=false) {
   box(drawer,dw,.54,.13,wood,0,.11,.06,.028);
   box(drawer,dw-.14,.40,.026,trim,0,.11,.136,.016);
   for(const x of [-.31,.31])bead(drawer,x,.15,.18,.09,.083,.035,brassDark);
-  wire(drawer,[[-.31,.15,.18],[-.29,.11,.29],[-.18,.066,.33],[.18,.066,.33],[.29,.11,.29],[.31,.15,.18]],.034,brass);
+  const screwSocket=detail('screw-socket',world,drawerX+.26,-.91,2.06);
+  bead(screwSocket,0,0,0,.035,.031,.006,finish(0x372819));
+  wire(detail('handle',drawer),[[-.31,.15,.18],[-.29,.11,.29],[-.18,.066,.33],[.18,.066,.33],[.29,.11,.29],[.31,.15,.18]],.034,brass);
+  const drawerNote=detail('drawer-note',drawer,.11,.389,.181);
+  box(drawerNote,.60,.014,.14,cream,0,0,.02,.005);
+  letter(drawerNote,'i live here too',.56,.106,0,.009,.020,{flat:true,italic:true});
+  const marble=detail('marble',drawer,-.77,.106,-.43);
+  bead(marble,0,0,0,.047,.047,.047,finish(0x8bbeb3,.17,.15));
+  bead(marble,0,.020,0,.041,.010,.041,finish(0xf7ce78,.24));
+  const liner=detail('liner',drawer,dw*.40,.077,-1.26);
+  box(liner,.24,.012,.24,finish(0xb8c5aa),0,0,0);
+  const crumbPlan=detail('crumb-plan',drawer,dw*.40,.081,-1.25);
+  box(crumbPlan,.23,.012,.16,cream);
+  drawn(crumbPlan,.23,.16,(c,w,h)=>{
+    c.strokeStyle='#997271';c.lineWidth=.003;c.strokeRect(.01,.01,w-.02,h-.02);
+    c.strokeRect(.02,.038,w-.04,h-.072);
+    c.beginPath();c.moveTo(w*.64,.038);c.lineTo(w*.64,h-.034);c.stroke();
+    c.font='.023px monospace';c.fillStyle='#5a4648';c.fillText('misc',.03,.082);c.fillText('crumb',.15,.082);
+  },0,.008,0,true);
+  crumbPlan.visible=false;
+  letter(liner,'structural crumbs',.245,.112,0,.009,0,{flat:true,italic:true});
+  liner.rotation.x=.11;
+  const screw=detail('screw',drawer,dw*.38,.078,-.52);
+  cylinder(screw,.034,.028,.026,brassDark,0,.014,0,14);
+  letter(screw,'?',.034,.04,0,.029,0,{flat:true,ink:'#f0d39b'});
+  box(drawer,1.10,.003,.68,finish(0xafbaa3),0,.074,-.65);
+  drawerNote.visible=false;
   const keepsake=tag(group(drawer,0,.087,-.65),'keepsake',[0,.03,0],1.02,.58);
   box(keepsake,1.12,.022,.70,cream);illustration(keepsake,'assets/studio/night-mail.webp',1.04,.62,0,.013,0,true);
   keepsake.rotation.y=-.10;
@@ -153,13 +186,31 @@ export function furnish(scene, narrow, repaint, software=false) {
   // The two working collections face the visitor. Their companion volumes sit spine-out.
   function collection(id,x,w,h,color,coverArt){
     const shelf=tag(group(world,0,0,0),id,[x,1.52+h*.53,-1.38],w,h);
-    const volume=group(shelf,x,1.52,-1.56);
+    const volume=detail(id+'-volume',shelf,x,1.52,-1.56);
     volume.rotation.y=id==='proof'?.14:-.12;
     volume.rotation.x=-.09;
     const binding=cloth(color);
     box(volume,w-.05,h-.04,.22,cream,0,h/2,0,.012);
     for(const z of [-.134,.134])box(volume,w,h,.035,binding,0,h/2,z,.012);
     box(volume,.055,h,.27,binding,-w/2+.025,h/2,0,.012);
+    const rear=detail(id+'-rear',volume,0,h*.57,-.155);
+    rear.rotation.y=Math.PI;
+    const notes=id==='proof'?
+      ['REFERENCE ONLY','639.4 · arguments still in transit','Please return all counterexamples.']:
+      ['ERDŐS 607','Finite Euler product','The square-root factor stays.'];
+    box(rear,w*.75,h*.52,.008,cream);
+    notes.forEach((line,i)=>letter(rear,line,w*.68,h*.081,0,h*(.11-i*.12),.006,{italic:i===2}));
+    if(id==='proof'){
+      const tuck=detail('proof-card',rear,w*.20,-h*.20,.014);
+      box(tuck,w*.19,h*.26,.009,finish(0xbd765d));
+      letter(tuck,'15',w*.11,h*.125,0,0,.008,{ink:'#fff0bf'});
+      tuck.rotation.z=.18;
+    }else{
+      const tuck=detail('research-question',rear,w*.21,-h*.22,.024);
+      box(tuck,w*.28,h*.19,.009,finish(0xc8ceab));
+      letter(tuck,'√  ?',w*.23,h*.12,0,0,.008,{ink:'#4d624d'});
+      tuck.rotation.z=-.09;
+    }
     illustration(volume,coverArt,w-.024,h-.024,0,h/2,.154);
     return shelf;
   }
@@ -196,8 +247,14 @@ export function furnish(scene, narrow, repaint, software=false) {
     box(g,printW,printH,.012,paper);
     const artW=printW*.93;
     illustration(g,'assets/furniture/prints/'+button.dataset.boardPrint+'.webp',artW,artW*1.25,0,.019,.009);
+    const clip=detail('pin-clip-'+button.dataset.object,g,-printW*.32,printH*.39,.025);
+    const metal=mesh(clip,new T.TorusGeometry(.023,.004,7,13),brassDark);
+    metal.scale.y=1.6;metal.rotation.z=.26;clip.visible=false;
     const pin=narrow?.012:.019;
     bead(g,0,printH/2-.028,.025,pin,pin,pin,brass);
+    const hole=detail('pin-hole-'+button.dataset.object,pinboard,x,y+printH/2-.028,.040);
+    bead(hole,0,0,0,pin*.32,pin*.32,.001,finish(0x57402f));
+    hole.visible=false;
   });
   // Stitched green leather blotter with a fine inset line.
   const matWidth=width*(narrow ? .75 : .69);
@@ -229,12 +286,38 @@ export function furnish(scene, narrow, repaint, software=false) {
     const reflect=c.createLinearGradient(0,0,w*.43,h);reflect.addColorStop(0,'#e4f4fb30');reflect.addColorStop(.61,'#dce8e509');reflect.addColorStop(.62,'transparent');
     c.fillStyle=reflect;c.fillRect(0,0,w,h);
   },-.232,.57,.53);
+  drawn(detail('glass-glare',scope,-.234,.57,.536),.79,.47,(c,w,h)=>{
+    const light=c.createLinearGradient(0,0,w,h);
+    light.addColorStop(.13,'#e5eee900');light.addColorStop(.47,'#e5eee922');light.addColorStop(.67,'#e5eee900');
+    c.fillStyle=light;c.fillRect(0,0,w,h);
+  },0,0,0);
   for(const [x,y,r] of [[.49,.66,.109],[.41,.40,.067],[.62,.40,.067]]){
-    const k=cylinder(scope,r,r,.10,finish(0x474d46),x,y,.53);k.rotation.x=Math.PI/2;
-    box(scope,.013,r*.59,.008,cream,x,y+r*.29,.587);
+    const knob=x===.49?detail('tuner',scope,x,y,.53):group(scope,x,y,.53);
+    const k=cylinder(knob,r,r,.10,finish(0x474d46),0,0,0);k.rotation.x=Math.PI/2;
+    box(knob,.013,r*.59,.008,cream,0,r*.29,.057);
   }
+  const screenGlow=detail('scope-glow',scope,-.232,.57,.534);
+  for(const [index,label] of ['SOUND','15  10  4','0000 0010 1010','0   1      4','( =^..^= )'].entries()){
+    const readout=group(screenGlow,0,0,.001*index);
+    letter(readout,label,.75,.38,0,0,0,{ink:'#d3eda4',paper:'#183c2e',font:'monospace'});
+    readout.visible=false;
+  }
+  const plugged=detail('plugged-wire',scope);
+  wire(plugged,[[.57,.23,.52],[.76,.11,.73],[.87,.25,.74],[.75,.40,.67],[.62,.40,.583]],.021,finish(0x9b493c));
+  plugged.visible=false;
+  const cableTip=detail('cable',scope,.12,.032,1.13);
+  bead(cableTip,0,0,0,.05,.033,.030,brassDark);
+  const warranty=detail('service-label',scope,.05,.53,-.455);
+  warranty.rotation.y=Math.PI;
+  letter(warranty,'five minute fix department',1.15,.14,0,0,0,{paper:'#ead9a5'});
+  const circuit=drawn(detail('service-diagram',warranty),.57,.24,(c,w,h)=>{
+    c.fillStyle='#e9d6a8';c.fillRect(0,0,w,h);c.strokeStyle='#72564c';c.lineWidth=.008;
+    c.beginPath();c.moveTo(.06,.06);c.lineTo(.50,.06);c.lineTo(.50,.17);c.lineTo(.06,.17);c.closePath();c.stroke();
+    c.font='0.043px monospace';c.fillStyle='#644654';c.fillText('wait → blame cable',.075,.133);
+  },.23,-.16,.003);
+  circuit.parent.visible=false;
   letter(scope,'EXPERIMENTS',1.09,.15,-.17,.176,.499,{bold:true,ink:'#31382e',font:'sans-serif'});
-  wire(scope,[[.57,.23,.52],[.76,.065,.75],[.62,.03,1.03],[.34,.026,.98],[.12,.029,1.13]],.021,finish(0x9b493c));
+  wire(detail('cable-wire',scope),[[.57,.23,.52],[.76,.065,.75],[.62,.03,1.03],[.34,.026,.98],[.12,.029,1.13]],.021,finish(0x9b493c));
   // A banked propeller plane above a hardwood base. The complete display is one pick target.
   const stand=tag(group(world,narrow?-.39:-.79,.052,narrow?.64:.61),'plane',[0,.55,-.10],2.48,1.30);
   stand.rotation.y=.075;
@@ -249,7 +332,7 @@ export function furnish(scene, narrow, repaint, software=false) {
   letter(plaque,'DOPPLERGEIST',1.84,.253,0,0,.025,{paper:'#f2deb5',ink:'#4b2936',bold:true,font:'sans-serif'});
   for(const x of [-.95,.95])bead(plaque,x,0,.024,.018,.018,.009,brass);
 
-  const plane=group(stand,-.04,.58,-.15);
+  const plane=detail('airframe',stand,-.04,.58,-.15);
   plane.rotation.set(-.065,-.59,-.045,'YXZ');
   mesh(plane,airframeGeometry(),new T.MeshStandardMaterial({vertexColors:true,roughness:.37,metalness:.12}));
   const ivoryEnamel=finish(0xf2dbac,.47), propMetal=finish(0xafaead,.31,.46);
@@ -266,7 +349,14 @@ export function furnish(scene, narrow, repaint, software=false) {
     wire(plane,[[.65*side,.007,-.113],[.86*side,.024,-.119],[1.13*side,.047,-.137],[1.32*side,.068,-.148]],.0038,seam);
     bead(plane,.105*side,-.051,.898,.036,.026,.031,finish(0x473d39,.62));
   }
-  const prop=group(plane,0,0,.957);
+  const prop=detail('propeller',plane,0,0,.957);
+  letter(plane,'flight tested on desk',.46,.076,.75,-.025,.02,{flat:true,ink:'#413530'}).rotation.x=Math.PI/2;
+  const listen=detail('listen',plaque,0,-.096,.028);
+  letter(listen,'listen first',.64,.045,0,0,.001,{ink:'#8d623c',italic:true});
+  listen.visible=false;
+  const flyover=detail('flyover',stand,0,.151,.778);
+  bead(flyover,0,0,0,.023,.018,.022,finish(0xda854e,.24));
+  flyover.visible=false;
   prop.rotation.z=.62;
   for(const sign of [-1,1]){
     const blade=bead(prop,.020*sign,.23*sign,0,.043,.228,.018,finish(0x51403c,.45));
@@ -281,7 +371,11 @@ export function furnish(scene, narrow, repaint, software=false) {
   const stock=finish(0xad9472,.88), front=finish(0xc0a889,.84);
   box(file,1.96,.021,1.36,stock,0,.015,0,.009);
   box(file,.71,.02,.16,stock,-.52,.017,-.70,.009);
-  for(let i=0;i<4;i++){const page=box(file,1.79,.012,1.29,paper,(i%2)*.028,.038+i*.015,-.035-i*.017,.005);page.rotation.y=.02*i;}
+  const stockPages=detail('folder-pages',file);
+  for(let i=0;i<4;i++){
+    const page=box(detail('folder-page-'+i,stockPages),1.79,.012,1.29,paper,(i%2)*.028,.038+i*.015,-.035-i*.017,.005);
+    page.rotation.y=.02*i;
+  }
   letter(file,'PROJECT INDEX',1,.15,0,.10,-.50,{flat:true,bold:true});
   const flap=group(file,0,.142,-.58);
   box(flap,1.96,.022,1.24,front,0,0,.62,.01);
@@ -302,13 +396,14 @@ export function furnish(scene, narrow, repaint, software=false) {
     c.fillStyle='#e6d7bc';c.fillRect(0,0,w,h);
     for(let i=0;i<17;i++){c.fillStyle=i%3?'#aa977b':'#d1bda2';c.fillRect(random()*.09,i*h/17,w-random()*.12,.002);}
   },0,.113,.792);
-  box(book,.085,.012,.36,finish(0xb46167),.39,.07,.88);
+  box(detail('ribbon',book,.39,.07,.88),.085,.012,.36,finish(0xb46167));
   // Sealed envelopes, with individual folds, twine and postage.
   const letters=tag(group(world,narrow?.87:.98,.056,narrow?1.21:1.49),'letters',[0,.09,0],1.25,.74);
   letters.rotation.y=-.25;letters.scale.setScalar(narrow?.60:.73);
   for(let i=0;i<3;i++){const env=box(letters,1.34,.026,.80,finish([0xc5d3c3,0xe4baad,0xf4dfbe][i]),0,.017+i*.029,-.035*i,.012);env.rotation.y=(2-i)*.1;}
   drawn(letters,1.31,.76,(c,w,h)=>{c.strokeStyle='#a99479';c.lineWidth=.007;c.beginPath();c.moveTo(0,0);c.lineTo(w*.48,h*.57);c.lineTo(w,0);c.stroke();c.fillStyle='#947a50';c.fillRect(w*.84,h*.10,w*.105,h*.22);},0,.09,-.065,true);
-  const wax=cylinder(letters,.125,.13,.031,finish(0x9e5353,.5),0,.11,-.026,12);
+  const envelope=detail('wax',letters,0,0,0);
+  const wax=cylinder(envelope,.125,.13,.031,finish(0x9e5353,.5),0,.11,-.026,12);
   letter(letters,'Letters',.80,.214,.21,.100,.20,{flat:true,italic:true});
   drawn(letters,.46,.22,(c,w,h)=>{
     c.strokeStyle='#796c6f';c.lineWidth=.009;c.beginPath();c.arc(.085,h*.50,.077,0,2*Math.PI);c.stroke();
@@ -320,7 +415,19 @@ export function furnish(scene, narrow, repaint, software=false) {
   box(tape,1.04,.083,.64,finish(0x65617b),0,.05,0,.032);
   box(tape,.92,.012,.39,finish(0xd4b5bb),0,.098,-.049,.005);
   box(tape,.58,.012,.14,finish(0x525056),0,.106,-.015,.005);
-  for(const x of [-.22,.22]){cylinder(tape,.068,.068,.017,cream,x,.125,-.017);cylinder(tape,.029,.029,.019,finish(0x3d3437),x,.137,-.017);}
+  for(const [index,x] of [-.22,.22].entries()){
+    const reel=detail('reel-'+index,tape,x,.137,-.017);
+    cylinder(reel,.068,.068,.017,cream,0,-.012,0);
+    cylinder(reel,.029,.029,.019,finish(0x3d3437),0,0,0);
+    for(let tooth=0;tooth<6;tooth++){
+      const a=tooth*Math.PI/3;
+      box(reel,.012,.010,.014,brassDark,.046*Math.sin(a),-.002,.046*Math.cos(a));
+    }
+  }
+  const eatenTape=detail('eaten-tape',tape,0,.088,.31);
+  wire(eatenTape,[[-.12,0,0],[-.05,.01,.14],[.10,.004,.18],[.13,.008,.07],[.07,0,0]],.008,finish(0x51423c));
+  eatenTape.visible=false;
+  letter(tape,'side b · one very long loop',.65,.089,0,.005,-.12,{flat:true,ink:'#ddbdd4',italic:true}).rotation.x=Math.PI/2;
   letter(tape,'off the clock',.82,.119,0,.109,-.178,{flat:true,italic:true});
   for(const x of [-.43,.43])for(const z of [-.23,.23])cylinder(tape,.017,.017,.009,brass,x,.099,z,8);
   // One curved blade and a painted vein texture are shared by every leaf on the cutting.
@@ -373,6 +480,12 @@ export function furnish(scene, narrow, repaint, software=false) {
     const ring=mesh(pot,new T.TorusGeometry(r,.0018,5,48),terracotta,0,y,0);ring.rotation.x=Math.PI/2;
   }
   const stem=finish(0x758149,.72);
+  letter(pot,'rotate occasionally',.285,.09,0,.003,0,{flat:true,ink:'#8a5e42'}).rotation.x=Math.PI/2;
+  cylinder(pot,.218,.206,.015,finish(0x986444),0,-.014,0,28);
+  const fallen=detail('fallen-leaf',world,pot.position.x+.42,1.529,-1.46);
+  mesh(fallen,leafShape,glazedLeaves[2],0,0,0).scale.setScalar(.33);
+  fallen.visible=false;
+  let caterpillarLeaf;
   for(let j=0;j<5;j++){
     const a=j*2.40+.3,dx=Math.sin(a),dz=Math.cos(a),height=.66+.055*(j%3);
     const path=new T.CatmullRomCurve3([[.044*dx,.39,.044*dz],[.105*dx,height-.06,.105*dz],[.23*dx,height,.23*dz],[.36*dx,height-.13,.37*dz]].map(v=>new T.Vector3(...v)));
@@ -381,11 +494,47 @@ export function furnish(scene, narrow, repaint, software=false) {
       const t=.30+k*.23,base=path.getPoint(t),turn=a+(k%2?-.86:.82);
       const tip=base.clone().add(new T.Vector3(.064*Math.sin(turn),.025,.064*Math.cos(turn)));
       wire(pot,[base.toArray(),base.clone().lerp(tip,.5).add(new T.Vector3(0,.013,0)).toArray(),tip.toArray()],.0045,stem);
-      const leaf=mesh(pot,leafShape,glazedLeaves[(k+j)%4],tip.x,tip.y,tip.z);
+      const selected=j===1&&k===3;
+      const branch=selected?detail('nibbled-leaf',pot,tip.x,tip.y,tip.z):pot;
+      const leaf=mesh(branch,leafShape,glazedLeaves[(k+j)%4],...(selected?[0,0,0]:[tip.x,tip.y,tip.z]));
       leaf.rotation.set(.10+t*(.55+.17*(j%3)),turn,(k%2?1:-1)*.21,'YXZ');
       leaf.scale.setScalar(.68+.14*(k%2)+.15*Math.sin(t*Math.PI));
+      if(selected)caterpillarLeaf=leaf;
     }
   }
+  const leaf=details.get('nibbled-leaf');
+  const whole=caterpillarLeaf;
+  const bitten=detail('bitten-leaf',leaf);
+  const bittenMaterial=whole.material.clone();
+  const eaten=document.createElement('canvas');eaten.width=blade.width;eaten.height=blade.height;
+  const bite=eaten.getContext('2d');bite.drawImage(blade,0,0);
+  bite.globalCompositeOperation='destination-out';
+  for(const [x,y,r] of [[187,132,23],[175,111,18],[189,89,21],[191,66,20]]){
+    bite.beginPath();bite.arc(x,y,r,0,Math.PI*2);bite.fill();
+  }
+  bittenMaterial.map=new T.CanvasTexture(eaten);bittenMaterial.map.colorSpace=T.SRGBColorSpace;bittenMaterial.alphaTest=.5;
+  const bittenMesh=mesh(bitten,leafShape,bittenMaterial);
+  bittenMesh.rotation.copy(whole.rotation);bittenMesh.scale.copy(whole.scale);
+  const complete=detail('whole-leaf',leaf);complete.add(whole);
+  bitten.visible=false;
+  const crawler=detail('caterpillar',leaf);
+  crawler.rotation.copy(whole.rotation);
+  for(let i=0;i<7;i++){
+    const r=.013+i*.0008;
+    bead(crawler,0,0,-i*.016,r,r*.85,r,finish(i%2?0xa0ac57:0xb5bc6d,.61));
+  }
+  for(const x of [-.009,.009])bead(crawler,x,.005,.011,.0025,.003,.002,finish(0x323020));
+  crawler.visible=false;
+  const dew=detail('dew',leaf,.012,.006,.13);
+  bead(dew,0,0,0,.008,.013,.008,finish(0xcfe9c8,.09,.38));
+  const ripple=detail('ripple',pot,.21,.011,.041);
+  const rip=mesh(ripple,new T.RingGeometry(.021,.025,18),new T.MeshStandardMaterial({color:0xd6c98c,side:T.DoubleSide}));
+  rip.rotation.x=-Math.PI/2;ripple.visible=false;
+  const sprout=detail('sprout',pot,.03,.39,-.038);
+  wire(sprout,[[0,0,0],[.03,.093,0],[.055,.145,.02]],.0042,stem);
+  mesh(sprout,leafShape,glazedLeaves[2],.055,.145,.02).scale.setScalar(.20);
+  const springtail=detail('springtail',pot,.19,.011,.069);
+  bead(springtail,0,0,0,.005,.004,.009,finish(0x533a43));
   // A jointed task lamp, thumb screws and a domed enamel shade.
   const lamp=tag(group(world,half-(narrow?.52:.89),.018,-1.38),"lamp",[0,.90,.12],.78,1.13);lamp.scale.setScalar(narrow?.71:.94);
   // Spun enamel and a folded rim, with a hollow shade and its own milk-glass bulb.
@@ -401,7 +550,7 @@ export function furnish(scene, narrow, repaint, software=false) {
     const joint=cylinder(lamp,.071,.071,.13,brassDark,x,y,z,22);joint.rotation.x=Math.PI/2;
     const dial=cylinder(lamp,.046,.046,.033,brass,x,y,z+.08,12);dial.rotation.x=Math.PI/2;
   }
-  const shade=group(lamp,-.24,1.54,.18);shade.rotation.set(-.16,0,-.36);
+  const shade=detail('shade',lamp,-.24,1.54,.18);shade.rotation.set(-.16,0,-.36);
   turned(shade,[[.393,-.28],[.4,-.262],[.37,-.235],[.31,-.20],[.24,-.096],[.183,.042],[.10,.115],[.063,.13],[0,.13]],enamel,0,0,0);
   const lining=finish(0xf1dcc0,.50,.12);lining.side=T.DoubleSide;
   turned(shade,[[.039,.108],[.15,.017],[.22,-.12],[.31,-.224],[.394,-.278]],lining,0,0,0);
@@ -433,12 +582,19 @@ export function furnish(scene, narrow, repaint, software=false) {
     c.lineWidth=.003;c.strokeRect(.062,.062,w-.124,h-.124);
     c.beginPath();c.moveTo(w*.43,h*.76);c.quadraticCurveTo(w*.54,h*.68,w*.65,h*.75);c.quadraticCurveTo(w*.54,h*.84,w*.43,h*.76);c.stroke();
   },.611,.025,0,true);
-  box(file,.30,.075,.14,finish(0x463f3c,.46,.25),-.47,.095,-.60,.018);
-  wire(file,[[-.56,.13,-.62],[-.56,.16,-.77],[-.39,.16,-.77],[-.39,.13,-.62]],.012,brass);
+  const binder=detail('binder',file,-.47,.13,-.62);
+  box(binder,.30,.075,.14,finish(0x463f3c,.46,.25),0,-.035,.02,.018);
+  wire(binder,[[-.09,0,0],[-.09,.03,-.15],[.08,.03,-.15],[.08,0,0]],.012,brass);
+  const split=detail('split-wax',letters,-.04,.101,-.026);
+  for(const [x,z,r] of [[-.075,-.015,.045],[.065,.009,.060],[.036,-.05,.034]]){
+    const chip=cylinder(split,r,r,.012,finish(0x9e5353,.63),x,0,z,5);
+    chip.rotation.y=.49+x*6;
+  }
+  split.visible=false;
   const stamp=group(letters,.44,.107,-.285);
   box(stamp,.205,.009,.215,cream);illustration(stamp,'assets/furniture/prints/flyover.webp',.167,.182,0,.006,0,true);
-  const seal=cylinder(letters,.079,.082,.009,finish(0xbb7971,.53),0,.130,-.026,18);
-  letter(letters,'✿',.108,.10,0,.139,-.026,{flat:true,ink:'#7d3f40'});
+  const seal=cylinder(envelope,.079,.082,.009,finish(0xbb7971,.53),0,.130,-.026,18);
+  letter(envelope,'✿',.108,.10,0,.139,-.026,{flat:true,ink:'#7d3f40'});
   // Engraved instrument markings and the recessed carry handle.
   for(let i=0;i<8;i++)box(scope,.024,.006,.23,finish(0x46574c),.04+i*.057,1.045,-.06,.002);
   for(const x of [-.716,.716])for(const y of [.218,.867]){
@@ -483,8 +639,8 @@ export function furnish(scene, narrow, repaint, software=false) {
   // Each pencil rests inside the cup and leans towards its own point on the rim.
   const pencils=[[.32,.21,.675,0xb46a52],[1.85,.16,.727,0xb6984c],
     [3.36,.23,.644,0xa07687],[5.03,.18,.707,0x48645b]];
-  for(const [angle,lean,length,paint] of pencils){
-    const holder=group(mug,.052*Math.cos(angle),.048,.052*Math.sin(angle));
+  for(const [index,[angle,lean,length,paint]] of pencils.entries()){
+    const holder=detail('cup-pencil-'+index,mug,.052*Math.cos(angle),.048,.052*Math.sin(angle));
     holder.rotation.y=-angle;
     const pencil=group(holder,0,0,0);pencil.rotation.z=-lean;
     const r=.0145;
@@ -492,14 +648,100 @@ export function furnish(scene, narrow, repaint, software=false) {
     cylinder(pencil,.0045,r,.043,cedar,0,length+.0215,0,6);
     cylinder(pencil,.0005,.0045,.017,lead,0,length+.0515,0,6);
   }
+  const paperStar=detail('paper-star',mug,0,.045,0);
+  const starShape=new T.Shape();
+  for(let i=0;i<10;i++){
+    const a=Math.PI*i/5,r=i%2===0?.063:.031;
+    starShape[i?'lineTo':'moveTo'](r*Math.cos(a),r*Math.sin(a));
+  }
+  starShape.closePath();
+  mesh(paperStar,new T.ExtrudeGeometry(starShape,{depth:.010,bevelEnabled:false}),finish(0xe7b47f)).rotation.x=-Math.PI/2;
+  letter(mug,'♡',.10,.085,0,.002,0,{flat:true,ink:'#925a4b'}).rotation.x=Math.PI/2;
+  const padCorner=detail('pad-corner',pad,matWidth/2-.15,.044,1.72);
+  box(padCorner,.25,.011,.22,blotter);
+  const padGuide=detail('pad-guide',pad,matWidth/2-.16,.046,1.72);
+  letter(padGuide,'close enough',.28,.08,0,0,0,{flat:true,ink:'#ad997a'});
+  padGuide.visible=false;
+  const filed=detail('loose-sheet',world,narrow?.06:.43,.059,.92);
+  filed.rotation.y=.27;
+  box(filed,.48,.010,.39,finish(0xe7d1a1),0,0,0,.011);
+  for(let line=0;line<5;line++)box(filed,.29-line*.018,.001,.004,finish(0x98816b),-.018,.006,line*.035-.08);
+  filed.visible=false;
+  const deskPaper=detail('scratch',world,narrow?-.10:.18,.054,1.65);
+  box(deskPaper,.58,.012,.39,cream);
+  const sketchFace=drawn(deskPaper,.56,.37,()=>{},0,.007,0,true);
+  deskPaper.rotation.y=.14;deskPaper.visible=false;
+  const folded=detail('folded-sketch',deskPaper,0,.04,0);
+  const foldedGeometry=new T.BufferGeometry();
+  foldedGeometry.setAttribute('position',new T.Float32BufferAttribute([-.26,0,.12,.29,.045,0,-.12,.045,0,.29,.045,0,-.26,0,-.12,-.12,.045,0],3));
+  foldedGeometry.setAttribute('uv',new T.Float32BufferAttribute([0,0,1,.5,.23,.5,1,.5,0,1,.23,.5],2));
+  foldedGeometry.computeVertexNormals();
+  mesh(folded,foldedGeometry,new T.MeshStandardMaterial({side:T.DoubleSide,color:0xfae8be,roughness:.86}));
+  const drawingFace=new T.MeshStandardMaterial({side:T.DoubleSide,map:sketchFace.material.map,transparent:true,alphaTest:.14,polygonOffset:true,polygonOffsetFactor:-2});
+  mesh(folded,foldedGeometry,drawingFace,0,.003,0);
+  folded.visible=false;
+  const flatSketch=detail('flat-sketch',deskPaper);
+  for(const child of [...deskPaper.children])if(child!==folded&&child!==flatSketch)flatSketch.add(child);
+  drawn(detail('lamplit-scratches',pad),.52,.19,(c,w,h)=>{
+    c.strokeStyle='#b4a58780';c.lineWidth=.005;
+    c.beginPath();c.moveTo(.03,.13);c.bezierCurveTo(.22,.04,.31,.17,.45,.060);
+    c.lineTo(.39,.059);c.moveTo(.45,.060);c.lineTo(.43,.11);c.stroke();
+  },-.95,.046,1.01,true).parent.visible=false;
+  const shadow=drawn(detail('rabbit-shadow',pad),.29,.38,(c,w,h)=>{
+    c.fillStyle='#29232160';
+    for(const [x,y,a,b,r] of [[.14,.25,.082,.081,0],[.092,.125,.025,.078,-.23],[.168,.125,.022,.081,.20]]){
+      c.beginPath();c.ellipse(x,y,a,b,r,0,Math.PI*2);c.fill();
+    }
+  },1.39,.048,.80,true);
+  shadow.parent.visible=false;
+  const clip=detail('bookmark',book,.37,.084,.95);
+  bead(clip,0,0,0,.039,.018,.11,finish(0x738e56));
+  clip.visible=false;
+  const errata=detail('errata',archive,.12,1.115,.04);
+  box(errata,.22,.11,.015,cream);
+  errata.rotation.z=.16;errata.visible=false;
+  const drawerEye=detail('under-eye',world,-.48,-.94,1.99);
+  bead(drawerEye,0,0,0,.14,.104,.028,cream);
+  const pupil=detail('pupil',drawerEye,0,0,.027);
+  bead(pupil,0,0,0,.055,.056,.015,finish(0x2e2825));
+  drawerEye.visible=false;
+  const hutchBack=detail('hutch-back',world,0,1.72,-2.286);
+  const rearLabel=letter(hutchBack,'this side faces the wall',1.66,.19,-.72,.03,0,{ink:'#e8c997',italic:true});
+  rearLabel.rotation.y=Math.PI;
+  letter(hutchBack,'•  ◡  •',.48,.18,.40,.02,0,{ink:'#e8c997'}).rotation.y=Math.PI;
+  const reversePlaque=detail('reverse-plaque',hutchBack,.65,-.68,0);
+  letter(reversePlaque,'pretty ambitious for a drawer',1.02,.14,0,0,0,{paper:'#b79b56'}).rotation.y=Math.PI;
+  hutchBack.visible=false;
+  const brassAside=detail('brass-aside',world,1.50,-.28,1.98);
+  letter(brassAside,'pretty ambitious for a drawer',1.20,.15,0,0,0,{paper:'#b79b56'}).rotation.x=Math.PI/2;
+  brassAside.visible=false;
+  const floorShim=detail('shim',world,-half+.37,-3.057,1.84);
+  box(floorShim,.34,.035,.27,cream);
+  letter(floorShim,'2 + 2 ≈ 5',.25,.10,0,.018,0,{flat:true,ink:'#625344'});
+  const moth=detail('moth',world,0,0,0);
+  for(const sign of [-1,1]){
+    const wing=detail('moth-wing-'+sign,moth,0,0,0);
+    bead(wing,sign*.045,0,0,.041,.009,.045,finish(0x9e7957,.77));
+  }
+  bead(moth,0,0,0,.011,.011,.051,finish(0x685341));
+  moth.visible=false;
   // Faded wallpaper and wainscoting give the room scale on a tall screen.
+  const stageLights=detail('stage-lights',world,1.63,.82,-2.128);
+  drawn(stageLights,.50,.30,(c,w,h)=>{
+    const glow=c.createRadialGradient(w*.40,h*.5,.017,w*.40,h*.5,.17);
+    glow.addColorStop(0,'#f4c488a8');glow.addColorStop(1,'#f4c48800');c.fillStyle=glow;c.fillRect(0,0,w,h);
+    const beam=c.createRadialGradient(w*.73,h*.5,.01,w*.73,h*.5,.15);
+    beam.addColorStop(0,'#eab9cb99');beam.addColorStop(1,'#eab9cb00');c.fillStyle=beam;c.fillRect(0,0,w,h);
+  },0,0,0);
+  stageLights.visible=false;
+  const wall=detail('wall',world);
   const wallMat=finish(0xb9b1a4);
   for(let i=-7;i<8;i++){
-    box(world,.027,6,.025,finish(0xa6a193),i*.88,1.67,-2.473);
+    box(wall,.027,6,.025,finish(0xa6a193),i*.88,1.67,-2.473);
   }
-  box(world,29,.11,.16,cream,0,3.82,-2.47,.018);
+  box(wall,29,.11,.16,cream,0,3.82,-2.47,.018);
   // The room extends beyond the camera; the shelf and desk never float on a blank page.
-  box(world,32,11,.18,wallMat,0,1,-2.59);
+  box(wall,32,11,.18,wallMat,0,1,-2.59);
   box(world,32,.16,24,floorMat,0,-3.15,3);
   // Bake short-range occlusion onto the work surface once. No full-screen AO pass.
   const contact=document.createElement('canvas');contact.width=512;contact.height=256;
@@ -550,7 +792,7 @@ export function furnish(scene, narrow, repaint, software=false) {
     };
   }
   // Combine rigid geometry between joints; hinges, drawer travel and picking remain independent.
-  const rigid=new Set([world,flap,cover,...[...targets.values()].map(item=>item.root)]);
+  const rigid=new Set([world,flap,cover,...details.values(),...Array.from(targets.values(),item=>item.root)]);
   const batches=new Map(),source=new Set(),solidVariants=new Map(),fastMaterials=new Map();
   const occluders=[];
   // One draw can paint several solid colors on the same rigid part.
@@ -605,5 +847,5 @@ export function furnish(scene, narrow, repaint, software=false) {
     combined.computeBoundingBox();combined.computeBoundingSphere();
   }
   source.forEach(g=>g.dispose());
-  return {world,targets,occluders,drawer,flap,cover,lamp,bulbGlass:fastMaterials.get(bulbGlass)||bulbGlass,contactMap};
+  return {world,targets,details,occluders,drawer,flap,cover,lamp,bulbGlass:fastMaterials.get(bulbGlass)||bulbGlass,contactMap,sketchTexture:sketchFace.material.map};
 }

@@ -104,12 +104,60 @@
   }
   board.before(frame);frame.append(svg,board);
   const key=document.querySelector('.rook-graph-key');
+  const vertices=new Map([...board.children].map((button,i)=>[
+    button.textContent,{button,x:60+90*(i%3),y:60+90*Math.floor(i/3)}
+  ]));
+  function restoreCurves(graph){
+    for(const [from,to,curve] of edges){
+      const path=svg.querySelector('[data-from="'+from+'"][data-to="'+to+'"]');
+      path.setAttribute('d',curve);
+    }
+    for(const {button} of vertices.values()){
+      button.style.translate=graph?(button.dataset.rookTranslate||''):'';
+    }
+    if(graph && frame.hasAttribute('data-custom'))redrawEdges();
+  }
+  function redrawEdges(){
+    for(const path of svg.children){
+      const a=vertices.get(path.dataset.from),b=vertices.get(path.dataset.to);
+      path.setAttribute('d','M'+a.x+','+a.y+'L'+b.x+','+b.y);
+    }
+  }
+  let dragging=null,suppress=false;
+  board.addEventListener('pointerdown',event=>{
+    const button=event.target.closest('button');
+    if(!button || frame.dataset.view!=='graph'||event.button!==0)return;
+    suppress=false;
+    const vertex=vertices.get(button.textContent);
+    dragging={id:event.pointerId,vertex,x:vertex.x,y:vertex.y,px:event.clientX,py:event.clientY};
+    button.setPointerCapture(event.pointerId);
+  });
+  board.addEventListener('pointermove',event=>{
+    if(dragging?.id!==event.pointerId)return;
+    const dx=event.clientX-dragging.px,dy=event.clientY-dragging.py;
+    if(Math.hypot(dx,dy)<7&&!suppress)return;
+    suppress=true;frame.dataset.custom='';
+    const rect=frame.getBoundingClientRect();
+    const v=dragging.vertex;
+    v.x=Math.min(266,Math.max(34,dragging.x+300*dx/rect.width));
+    v.y=Math.min(266,Math.max(34,dragging.y+300*dy/rect.height));
+    const i=[...board.children].indexOf(v.button);
+    const pos=[(v.x-60-90*(i%3))*rect.width/300,(v.y-60-90*Math.floor(i/3))*rect.height/300];
+    v.button.dataset.rookTranslate=pos.map(n=>n+'px').join(' ');
+    v.button.style.translate=v.button.dataset.rookTranslate;
+    redrawEdges();
+  });
+  board.addEventListener('lostpointercapture',()=>{dragging=null;});
+  board.addEventListener('click',event=>{
+    if(!suppress||!event.detail)return;
+    event.preventDefault();event.stopImmediatePropagation();suppress=false;
+  },true);
   function render(){
     const selected=new Set([...board.children].filter(button=>button.getAttribute('aria-pressed')==='true').map(button=>button.textContent));
     for(const path of svg.children)path.classList.toggle('is-incident',selected.has(path.dataset.from)||selected.has(path.dataset.to));
   }
   function view(name){
-    frame.dataset.view=name;
+    frame.dataset.view=name;restoreCurves(name==='graph');
     controls.querySelectorAll('[data-rook-view]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.rookView===name)));
     board.setAttribute('aria-label',name==='graph'?'Choose a vertex in the nine-vertex rook graph':'Choose a rook position on the board');
     key.hidden=name!=='graph';

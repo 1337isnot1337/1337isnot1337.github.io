@@ -1,8 +1,10 @@
 import * as T from './vendor/three/three.module.min.js';
-import { furnish } from './desk-model.js?v=14';
-import { inspectDeskObjects } from './desk-inspect.js?v=3';
+import { furnish } from './desk-model.js?v=15';
+import { inspectDeskObjects } from './desk-inspect.js?v=4';
 
-import { attachDeskPointer } from './desk-pointer.js?v=10';
+import { attachDeskPointer } from './desk-pointer.js?v=11';
+
+import { deskLife } from './desk-life.js?v=1';
 
 export function mountFurniture(stage,showGraphicsFallback) {
   const canvas = stage.querySelector('canvas');
@@ -28,7 +30,9 @@ export function mountFurniture(stage,showGraphicsFallback) {
   sun.shadow.bias=-.00025;sun.shadow.normalBias=.012;sun.shadow.radius=2;
   scene.add(sun,sun.target);
   const fill=new T.DirectionalLight(0xe3ecff,.49);fill.position.set(5,3,-1);scene.add(fill);
-  const bulb=new T.PointLight(0xffce8a,0,8,2);scene.add(bulb);
+  const bulb=new T.PointLight(0xffce8a,0,8,2);
+  const beam=new T.SpotLight(0xffd39a,0,8,.72,.85,1.9);
+  scene.add(bulb,beam,beam.target);
   // The workshop panorama is already convolved for each roughness level.
   // The atlas stores linear radiance / 16 encoded as sRGB, with row zero at the bottom.
   let lightReady=Boolean(software);
@@ -49,7 +53,13 @@ export function mountFurniture(stage,showGraphicsFallback) {
   let lastTime=0,lampOn=false;
   let orbit=0, contextLost=false;
   let orbitPreview=0, gazeX=0, gazeY=0, targetX=0, targetY=0;
-  const inspector=inspectDeskObjects(stage,engine,scene,camera,()=>model,redraw);
+  const life=deskLife(stage,()=>model,redraw,motion);
+  const inspector=inspectDeskObjects(stage,engine,scene,camera,()=>model,redraw,life);
+  let peekOrbit=null,settle=0,drawerGrip=null,mothWake=0,bufferedOrbit=0;
+  let lastPart='',pickedUp='',pickupTravel=0,centered=0,centerUntil=0;
+  function moveDrawer(open){
+    if(open!==drawerOpen)drawer.click();
+  }
   function redraw() {
     dirty=true;
     if (visible && !contextLost && !frame) frame=requestAnimationFrame(renderFrame);
@@ -65,12 +75,23 @@ export function mountFurniture(stage,showGraphicsFallback) {
       model.world.traverse(m=>{if(m.isMesh){geometries.add(m.geometry);materials.add(m.material);for(const value of Object.values(m.material))if(value?.isTexture)textures.add(value);}});
       textures.forEach(t=>t.dispose());materials.forEach(m=>m.dispose());geometries.forEach(g=>g.dispose());
     }
-    model=furnish(scene,narrow,redraw,software);hitGroups.clear();
+    model=furnish(scene,narrow,redraw,software);hitGroups.clear();extraMeshes.length=0;
+    try{
+      const destination=sessionStorage.getItem('desk-return');
+      if(destination && model.targets.has(destination)){
+        centered=model.targets.get(destination).root.getWorldPosition(new T.Vector3()).x*.40;
+        centerUntil=performance.now()+3500;
+        sessionStorage.removeItem('desk-return');
+      }
+    }catch{}
     model.world.traverse(mesh=>{
       if(!mesh.isMesh)return;
       let owner=mesh.parent;
       while(owner && !owner.userData.pick)owner=owner.parent;
-      if(!owner)return;
+      if(!owner){
+        if(mesh.parent.userData.detail && !['wall','hutch-back','under-eye','pupil','brass-aside','moth'].includes(mesh.parent.userData.detail))extraMeshes.push(mesh);
+        return;
+      }
       const id=owner.userData.pick;
       if(!hitGroups.has(id))hitGroups.set(id,{meshes:[],box:new T.Box3()});
       hitGroups.get(id).meshes.push(mesh);
@@ -112,17 +133,30 @@ export function mountFurniture(stage,showGraphicsFallback) {
     frame=0;
     if(!visible||contextLost||!dirty||!layout()||!lightReady)return;
     dirty=false;
-    if(inspector.paint())return;
+
     const dt=Math.min(.06,Math.max(.016,(time-lastTime)/1000));lastTime=time;
     const amount=(motion.matches||software)?1:1-Math.exp(-dt*12);
     const target=(value,goal)=>Math.abs(value-goal)<.004?goal:T.MathUtils.lerp(value,goal,amount);
     const prevDrawer=drawerAmount,prevFile=fileAngle,prevBook=bookAngle;
-    drawerAmount=target(drawerAmount,Number(drawerOpen));fileAngle=target(fileAngle,opened==='catalogue'?1:0);bookAngle=target(bookAngle,opened==='about'?1:0);
+    drawerAmount=drawerGrip??target(drawerAmount,Number(drawerOpen));fileAngle=target(fileAngle,opened==='catalogue'?1:0);bookAngle=target(bookAngle,opened==='about'?1:0);
     model.drawer.position.z=2.17+drawerAmount*1.53;
     model.flap.rotation.x=-fileAngle*1.22;model.cover.rotation.z=bookAngle*2.40;
     if((prevDrawer!==drawerAmount && (drawerAmount===0||drawerAmount===1)) ||
        (prevFile!==fileAngle && (fileAngle===0||fileAngle===1)) ||
        (prevBook!==bookAngle && (bookAngle===0||bookAngle===1)))engine.shadowMap.needsUpdate=true;
+    const events=life.update(time,dt,drawerAmount,lampOn,inspector.active(),orbit,fileAngle);
+    const shade=model.details.get('shade');
+    shade.localToWorld(bulb.position.set(0,-.22,0));
+    shade.localToWorld(beam.target.position.set(0,-2.8,0));
+    beam.position.copy(bulb.position);
+    bulb.intensity=lampOn?13*events.warm:0;
+    beam.intensity=lampOn?11*events.warm:0;
+    if(inspector.paint()){
+      if(events.active && !document.hidden)redraw();
+      return;
+    }
+    if(lampOn&&events.redrawMoth&&!mothWake)
+      mothWake=setTimeout(()=>{mothWake=0;if(lampOn&&!document.hidden)redraw();},14500);
     const phone=narrow;
     camera.position.set(phone?.22:.70, (phone?4.19:4.06)+drawerAmount*.12, (phone?6.13:6.47)+drawerAmount*1.52);
     aim.set(phone?0:.025,(phone?.40:.67)-drawerAmount*.53,.21+drawerAmount*.77);
@@ -131,11 +165,22 @@ export function mountFurniture(stage,showGraphicsFallback) {
     gazeY=Math.abs(gazeY-targetY)<.009?targetY:T.MathUtils.lerp(gazeY,targetY,ease);
     camera.position.x+=gazeX*.30;camera.position.y-=gazeY*.17;
     aim.x+=gazeX*.125;aim.y-=gazeY*.065;
+    const looking=peekOrbit??orbit;
+    const lookBelow=events.below;
+    camera.position.y-=lookBelow*5.88;
+    aim.y-=lookBelow*2.83;
     const reach=camera.position.z-aim.z;
-    camera.position.x+=Math.sin(orbit)*reach;
-    camera.position.z-=reach*(1-Math.cos(orbit));
+    camera.position.x+=Math.sin(looking+settle)*reach;
+    camera.position.z-=reach*(1-Math.cos(looking+settle));
+    settle=target(settle,0);
+    const sunChanged=Math.abs(sun.position.x+4.7-events.drift)>.045;
+    if(sunChanged)sun.position.x=-4.7+events.drift;
+    const returnOffset=clampReturn(time);
+    camera.position.x+=returnOffset*.48;aim.x+=returnOffset;
+    if(!software&&(detailMoved||sunChanged))engine.shadowMap.needsUpdate=true;
     camera.lookAt(aim);engine.render(scene,camera);projectTargets();
-    if(!stage.classList.contains('is-rendered') || prevDrawer!==drawerAmount || prevFile!==fileAngle || prevBook!==bookAngle || model!==boundedModel){
+    if(!stage.classList.contains('is-rendered') || prevDrawer!==drawerAmount || prevFile!==fileAngle || prevBook!==bookAngle || model!==boundedModel || events.active || detailMoved){
+      detailMoved=false;
       for(const group of hitGroups.values()){
         group.box.makeEmpty();
         for(const mesh of group.meshes)group.box.union(bounds.copy(mesh.geometry.boundingBox).applyMatrix4(mesh.matrixWorld));
@@ -148,10 +193,18 @@ export function mountFurniture(stage,showGraphicsFallback) {
       warning.hidden=!software;
       lamp.hidden=false;links.get('plant').hidden=false;
     }
-    if(gazeX!==targetX||gazeY!==targetY||drawerAmount!==Number(drawerOpen)||fileAngle!==(opened==='catalogue'?1:0)||bookAngle!==(opened==='about'?1:0))redraw();
+    if((events.active && !document.hidden) || returnOffset || settle || gazeX!==targetX||gazeY!==targetY||drawerAmount!==Number(drawerOpen)||fileAngle!==(opened==='catalogue'?1:0)||bookAngle!==(opened==='about'?1:0))redraw();
   }
+  function clampReturn(time){
+    if(motion.matches)return centerUntil>time?centered:0;
+    return centered*Math.max(0,Math.min(1,(centerUntil-time)/700));
+  }
+  let detailMoved=false;
+  const extraMeshes=[];
+  const shown=mesh=>{for(let n=mesh;n;n=n.parent)if(!n.visible)return false;return true;};
   const leaveDesk=attachDeskPointer(stage,{
     track(x,y) {
+      life.pointerMoved(x,y);
       if(motion.matches){x=0;y=0;}
       if(software){
         stage.style.setProperty('--pan-x',(x*0.6)+'%');
@@ -162,21 +215,58 @@ export function mountFurniture(stage,showGraphicsFallback) {
     pick(x,y) {
       mouse.set(x*2-1,1-y*2);
       ray.setFromCamera(mouse,camera);
-      const hits=[];
+      const hits=[];lastPart='';
       for(const [id,{meshes,box}] of hitGroups){
         if(!links.get(id).hidden && ray.ray.intersectsBox(box))ray.intersectObjects(meshes,false,hits);
       }
-      if(!hits.length)return '';
-      const first=hits[0];
+      ray.intersectObjects(extraMeshes,false,hits);
+      const first=hits.find(hit=>shown(hit.object));
+      if(!first)return '';
       for(const box of model.occluders){
         if(ray.ray.intersectBox(box,intersection) && ray.ray.origin.distanceTo(intersection)<first.distance-.012)return '';
       }
       let owner=first.object;
-      while(!owner.userData.pick)owner=owner.parent;
-      return owner.userData.pick;
+      while(owner){
+        lastPart ||= owner.userData.detail||'';
+        if(owner.userData.pick)return owner.userData.pick;
+        owner=owner.parent;
+      }
+      return '';
     },
-    orbitBy(delta) {
+    part(){return lastPart;},
+    tapPart(name){
+      const labels={
+        'drawer-note':'A complaint from the furniture',
+        'crumb-plan':'The drawer’s structural plans',
+        screw:'The spare screw', shim:'Shims and other published equations'
+      };
+      if(labels[name]){
+        inspector.open(name,labels[name]);
+        return true;
+      }
+      return life.tap(name);
+    },
+    gesture(name,dx,dy){
+      if(name==='handle'){
+        drawerGrip=Math.max(0,Math.min(1,(drawerGrip??drawerAmount)+dy*4.5));
+        bufferedOrbit=dy;redraw();return true;
+      }
+      if(['airframe','scope','proof-volume','archive-volume'].includes(name)){
+        if(pickedUp!==name){pickedUp=name;pickupTravel=0;}
+        pickupTravel+=dy;
+        if(name!=='airframe')return true;
+      }
+      if(name?.endsWith('-print') && !name.startsWith('pin-clip-')){
+        life.movePrint(name,dx,dy);detailMoved=true;redraw();return true;
+      }
+      const gesture=life.gestures[name];
+      if(!gesture)return false;
+      gesture(dx,dy);detailMoved=true;redraw();return true;
+    },
+    orbitBy(delta,vertical) {
       const next=T.MathUtils.clamp(orbit-delta*.87,-.33,.33);
+      peekOrbit=life.orbitMove(delta,vertical,next);
+      bufferedOrbit=delta;
       if(software){
         // Keep slow CPU rasterizers off the pointer path. The compositor previews the pan.
         orbitPreview+=next-orbit;
@@ -185,19 +275,34 @@ export function mountFurniture(stage,showGraphicsFallback) {
       orbit=next;
     },
     endOrbit() {
-      if(software){orbitPreview=0;canvas.style.transform='';redraw();}
+      if(pickupTravel<-.085){
+        if(pickedUp==='airframe')inspector.open('plane','DOPPLERGEIST model airplane','Open DOPPLERGEIST');
+        if(pickedUp==='scope')inspector.open('scope','Oscilloscope','Open the experiments');
+        if(pickedUp==='proof-volume')inspector.open('proof','Solved conjectures','Open Solved Conjectures');
+        if(pickedUp==='archive-volume')inspector.open('archive','Research notes','Open the research notes');
+      }
+      pickedUp='';pickupTravel=0;
+      if(drawerGrip!==null){
+        const open=drawerGrip>.46;
+        if(drawerOpen===open)life.drawerChange(open,bufferedOrbit*40);
+        drawerGrip=null;moveDrawer(open);
+      }else if(!peekOrbit&&!motion.matches){
+        settle=T.MathUtils.clamp(bufferedOrbit*-.32,-.035,.035);
+      }
+      if(software){orbitPreview=0;canvas.style.transform='';}
+      redraw();
     }
   });
   const lamp=links.get('lamp');
   lamp.addEventListener('click',()=>{
-    lampOn=!lampOn;lamp.setAttribute('aria-pressed',String(lampOn));
+    lampOn=!lampOn;life.lampChange(lampOn);lamp.setAttribute('aria-pressed',String(lampOn));
     model.bulbGlass.emissiveIntensity=lampOn?2.2:.08;
     bulb.intensity=lampOn?22:0;sky.intensity=lampOn?.95:1.95;sun.intensity=lampOn?.80:2.12;
     redraw();
   });
   const drawer=links.get('drawer');
   stage.addEventListener('drawer-change',()=>{
-    drawerOpen=drawer.getAttribute('aria-expanded')==='true';redraw();
+    drawerOpen=drawer.getAttribute('aria-expanded')==='true';life.drawerChange(drawerOpen,bufferedOrbit*40);bufferedOrbit=0;redraw();
   });
   section.closest('#studio').addEventListener('desk-room',e=>{opened=e.detail||'';if(opened)leaveDesk();redraw();});
   if('IntersectionObserver' in window)new IntersectionObserver(([entry])=>{
@@ -205,6 +310,7 @@ export function mountFurniture(stage,showGraphicsFallback) {
   }).observe(stage);
   if('ResizeObserver' in window)new ResizeObserver(redraw).observe(stage);
   window.addEventListener('resize',redraw);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)redraw();});
   motion.addEventListener('change',redraw);
   function suspendDesk() {
     contextLost=true;leaveDesk();warning.textContent=unavailable;

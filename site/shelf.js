@@ -28,6 +28,35 @@ let returningToShelf = false;
 // the enhancement is unavailable, and keep every print addressable by a link.
 let shelf = null;
 let coastFrame = 0;
+let lastProject = '';
+let shelfDistance = 0;
+let previousSelection = null;
+let savedClips=[];
+try{savedClips=JSON.parse(localStorage.getItem('shelf-paperclips')||'[]');}catch{}
+const clipped=new Set(Array.isArray(savedClips)?savedClips:[]);
+const boardObjects = {
+  flyover:'flyover-print',conjectures:'conjectures-print',factoring:'factoring-print',
+  cpu:'cpu-print',schedule:'schedule-print',conway:'conway-print'
+};
+function syncClip(project,on){
+  if(on)clipped.add(project);else clipped.delete(project);
+  try{localStorage.setItem('shelf-paperclips',JSON.stringify([...clipped]));}catch{}
+  for(const print of carousel.querySelectorAll('.print'))
+    if(print.dataset.project===project)print.toggleAttribute('data-clipped',on);
+  document.dispatchEvent(new CustomEvent('desk-clip',{detail:{id:boardObjects[project],on}}));
+}
+document.addEventListener('desk-project-selected',event=>{if(Object.hasOwn(boardObjects,event.detail))lastProject=event.detail;});
+document.addEventListener('press-paperclip',event=>{
+  const project=Object.keys(boardObjects).find(key=>boardObjects[key]===event.detail);
+  if(project)syncClip(project,!clipped.has(project));
+});
+function ledgeNote(text){
+  let label=shop.querySelector('.shelf-hidden-joke');
+  if(!label){label=document.createElement('span');label.className='shelf-hidden-joke';shop.append(label);}
+  label.textContent=text;
+  if(text==='✓')setTimeout(()=>{if(label.textContent==='✓')label.remove();},1850);
+}
+
 function stopCoast() {
   cancelAnimationFrame(coastFrame);
   coastFrame = 0;
@@ -38,9 +67,70 @@ function startShelf() {
   // move paper around the back without exposing an empty end of the ledge.
   const track = carousel.querySelector(".swiper-wrapper");
   for (const slide of [...track.children]) track.append(slide.cloneNode(true));
+  for(const project of clipped)syncClip(project,true);
   let blurTimer;
   let suppressShelfClick = false;
   let selectedSlide = null;
+  let hold=null,lastCorner=0,ledgePress=null;
+  let priorCornerPrint=null;
+  const screw=document.createElement('i');
+  screw.className='shelf-screw';screw.setAttribute('aria-hidden','true');
+  shop.append(screw);
+  carousel.addEventListener('pointerdown',event=>{
+    const print=event.target.closest('.print');
+    if(!print||event.button!==0)return;
+    const box=print.getBoundingClientRect();
+    hold={print,x:event.clientX,y:event.clientY,id:event.pointerId,peek:false,corner:false,started:performance.now()};
+    if(event.clientX<box.left+box.width*.14&&event.clientY<box.top+box.height*.16){
+      hold.corner=true;
+      const now=performance.now();
+      if(now-lastCorner<400 && priorCornerPrint===print){
+        syncClip(print.dataset.project,!clipped.has(print.dataset.project));
+        suppressShelfClick=true;event.preventDefault();event.stopPropagation();hold=null;
+      }
+      lastCorner=now;priorCornerPrint=print;
+    }
+  },true);
+  carousel.addEventListener('pointermove',event=>{
+    if(!hold||hold.id!==event.pointerId||!event.buttons)return;
+    const dx=event.clientX-hold.x,dy=event.clientY-hold.y;
+    if(dy>-23||Math.abs(dx)>Math.abs(dy)*.6)return;
+    hold.peek=true;suppressShelfClick=true;
+    hold.print.classList.add('paper-held');
+    hold.print.style.setProperty('--peek',Math.min(65,-dy*.6)+'deg');
+    if(hold.print.querySelector('.reverse-peek'))return;
+    const id=boardObjects[hold.print.dataset.project];
+    const source=id&&document.getElementById('back-'+id);
+    if(source){
+      const slip=document.createElement('span');slip.className='reverse-peek';
+      slip.textContent=source.content.querySelector('p')?.textContent||source.content.querySelector('small')?.textContent;
+      hold.print.append(slip);
+    }
+  },true);
+  function finishPeek(){
+    if(!hold)return;
+    if(hold.corner&&hold.peek&&performance.now()-hold.started>430){
+      const project=hold.print.dataset.project;
+      syncClip(project,!clipped.has(project));
+    }
+    hold.print.classList.remove('paper-held');
+    hold.print.querySelector('.reverse-peek')?.remove();
+    hold=null;
+  }
+  for(const event of ['pointerup','pointercancel'])window.addEventListener(event,finishPeek);
+  shop.addEventListener('pointerdown',event=>{
+    if(event.target.closest('a,button,input,summary,.print'))return;
+    const r=shop.getBoundingClientRect();
+    if(event.clientY>r.bottom-60 && event.clientX>r.left+r.width*.47 && event.clientX<r.left+r.width*.55)
+      ledgePress=[event.clientX,event.clientY];
+  });
+  shop.addEventListener('pointerup',event=>{
+    if(ledgePress&&Math.hypot(event.clientX-ledgePress[0],event.clientY-ledgePress[1])>20){
+      screw.style.setProperty('--turned','92deg');
+      ledgeNote('shelf installed as requested');
+    }
+    ledgePress=null;
+  });
   function showMotion(duration) {
     if (!duration || reducedMotion.matches) return;
     carousel.classList.add("moving");
@@ -145,6 +235,16 @@ function startShelf() {
         const activeSlide = instance.slides[instance.activeIndex];
         if (activeSlide === selectedSlide) return;
         selectedSlide = activeSlide;
+        if(previousSelection!==null){
+          let step=(instance.realIndex-previousSelection+prints.length)%prints.length;
+          if(step>prints.length/2)step-=prints.length;
+          shelfDistance+=step;
+          if(Math.abs(shelfDistance)>=prints.length){
+            ledgeNote('✓');
+            shelfDistance%=prints.length;
+          }
+        }
+        previousSelection=instance.realIndex;
         activeSlide.removeAttribute("aria-hidden");
         if (!carousel.classList.contains('handling') && carousel.contains(document.activeElement) && document.activeElement.matches(':focus-visible')) {
           activeSlide.querySelector(".print").focus({ preventScroll: true });
@@ -217,6 +317,10 @@ document.addEventListener("portfolio-view", () => {
   if (document.documentElement.dataset.view === "shelf") {
     if (shelf) shelf.update();
     else startShelf();
+    if(shelf&&lastProject){
+      const i=prints.findIndex(link=>link.dataset.project===lastProject);
+      if(i>=0)shelf.slideToLoop(i,0);
+    }
   }
 });
 if (!window.Swiper) document.querySelector(".shelf-controls").hidden = true;
@@ -251,6 +355,7 @@ function displayFromHash() {
     catalog.append(activeArticle);
   }
   activeArticle = article;
+  lastProject=article.id;
   const print = prints.find((link) => link.dataset.project === article.id);
   const index = prints.indexOf(print);
   if (shelf && shelf.realIndex % prints.length !== index) {
@@ -268,10 +373,29 @@ function displayFromHash() {
   document.querySelector("#close-dialog").textContent = opener?.closest("#studio") ? "Back to desk" : "Back to shelf";
   loadArticleMedia(article);
   const recording = article.querySelector("audio");
-  if (recording) recording.preload = "metadata";
+  if (recording){
+    recording.preload = "metadata";
+    if(recording.dataset.deskCue){
+      const cue=Number(recording.dataset.deskCue);
+      const align=()=>{recording.currentTime=Math.min(recording.duration,cue);};
+      if(recording.readyState)align();
+      else recording.addEventListener('loadedmetadata',align,{once:true});
+      delete recording.dataset.deskCue;
+    }
+  }
   const art = print.querySelector("img").cloneNode();
   art.className = "detail-art";
   slot.replaceChildren(art, article);
+  let deskReturn=article.querySelector('.reader-return');
+  if(!opener && !deskReturn){
+    deskReturn=document.createElement('a');
+    deskReturn.className='reader-return inline-link';
+    deskReturn.href='/#studio';
+    const thumbnail=art.cloneNode();thumbnail.className='';thumbnail.alt='';
+    deskReturn.append(thumbnail,'Find this on the desk');
+    deskReturn.addEventListener('click',()=>{try{sessionStorage.setItem('desk-return',boardObjects[article.id]);}catch{}});
+    article.querySelector('.detail-heading').append(deskReturn);
+  }
   dialog.setAttribute("aria-labelledby", article.id + "-title");
   if (!dialog.open) dialog.showModal();
   updateReaderScrollPadding();
@@ -513,9 +637,11 @@ document.querySelector("#factor-form").addEventListener("submit", (event) => {
   let remainder = value;
   const factors = [];
   const steps = [];
+  const trialDivisors=[];
   const ledger = document.querySelector('#factor-steps');
   ledger.replaceChildren();
   for (let divisor = 2; divisor * divisor <= remainder; divisor++) {
+    if(trialDivisors.length<3)trialDivisors.push([remainder,divisor,remainder%divisor]);
     while (remainder % divisor === 0) {
       factors.push(divisor);
       steps.push([remainder, divisor, remainder / divisor]);
@@ -535,10 +661,22 @@ document.querySelector("#factor-form").addEventListener("submit", (event) => {
   document.querySelector('#factor-ending').textContent =
     factors.length === 1 ? `${value} is already prime.` :
     remainder > 1 ? `${remainder} is prime, so it is the last factor.` : 'Nothing left to split.';
+  const trialNote=document.querySelector('[data-factor-attempts]');
+  if(trialNote)trialNote.remove();
+  document.querySelector("#factors").dataset.attempts=trialDivisors.map(([n,d,rem])=>n+' ÷ '+d+' leaves '+rem).join(' · ');
   document.querySelector("#factors").value =
     factors.length === 1
       ? value + " is prime."
       : value + " = " + factors.join(" × ");
+});
+document.querySelector('#factors').addEventListener('dblclick',event=>{
+  const field=event.currentTarget;
+  if(!field.dataset.attempts)return;
+  let note=document.querySelector('[data-factor-attempts]');
+  if(note){note.remove();return;}
+  note=document.createElement('small');note.dataset.factorAttempts='';note.className='found-paper';
+  note.textContent=field.dataset.attempts;
+  field.after(note);
 });
 // One PHT entry in the Hack CPU starts at 01. It saturates at either end.
 let counter = 1;

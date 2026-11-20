@@ -1,5 +1,5 @@
 // Keep the browser cursor at its real hotspot. Only an orbit owns the pointer.
-export function attachDeskPointer(stage,{pick,track,orbitBy,endOrbit}) {
+export function attachDeskPointer(stage,{pick,track,orbitBy,endOrbit,part,gesture,tapPart}) {
   const canvas=stage.querySelector('canvas');
   const targets=new Map([...stage.querySelectorAll('[data-object]')].map(el=>[el.dataset.object,el]));
   let press=null, frame=0, x=0, y=0, suppress=false;
@@ -31,18 +31,23 @@ export function attachDeskPointer(stage,{pick,track,orbitBy,endOrbit}) {
     });
   }
   stage.addEventListener('pointerdown',e=>{
-    if(!active()||!e.isPrimary||e.button!==0)return;
+    if(!active()||!e.isPrimary||e.button!==0||e.target.closest('.loose-file-slip'))return;
     suppress=false;
-    press={id:e.pointerId,x:e.clientX,y:e.clientY,lastX:e.clientX,dragging:false};
+    const target=targetAt(e.clientX,e.clientY);
+    press={id:e.pointerId,x:e.clientX,y:e.clientY,lastX:e.clientX,lastY:e.clientY,dragging:false,part:part()||target?.dataset.object};
   });
   stage.addEventListener('pointermove',e=>{
     if(!active())return;
     if(press?.id===e.pointerId && e.buttons){
       const dx=e.clientX-press.x,dy=e.clientY-press.y;
-      if(!press.dragging && Math.abs(dx)>6 && Math.abs(dx)>Math.abs(dy)){
+      if(!press.dragging && Math.hypot(dx,dy)>7){
         press.dragging=true;canvas.setPointerCapture(e.pointerId);stage.classList.add('looking-around');
       }
-      if(press.dragging){orbitBy((e.clientX-press.lastX)/stage.clientWidth);press.lastX=e.clientX;return;}
+      if(press.dragging){
+        const x=(e.clientX-press.lastX)/stage.clientWidth,y=(e.clientY-press.lastY)/stage.clientHeight;
+        if(!gesture(press.part,x,y))orbitBy(x,y);
+        press.lastX=e.clientX;press.lastY=e.clientY;return;
+      }
     }
     aim(e);
   });
@@ -51,14 +56,14 @@ export function attachDeskPointer(stage,{pick,track,orbitBy,endOrbit}) {
   },{passive:false});
   stage.addEventListener('pointerup',e=>{
     if(press?.id!==e.pointerId)return;
-    suppress=press.dragging;
+    suppress=press.dragging || Boolean(press.part && tapPart(press.part));
     endPress();if(active())aim(e);
   });
   stage.addEventListener('pointercancel',leave);
   stage.addEventListener('pointerleave',()=>{if(!press?.dragging)leave();});
   stage.addEventListener('dragstart',e=>{if(active())e.preventDefault();});
   stage.addEventListener('click',e=>{
-    if(!active() || !e.detail || e.button!==0)return;
+    if(!active() || !e.detail || e.button!==0 || e.target.closest('.loose-file-slip'))return;
     const target=suppress ? null : targetAt(e.clientX,e.clientY);
     suppress=false;
     if(target===e.target.closest('[data-object]') && target)return;

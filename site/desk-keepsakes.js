@@ -21,7 +21,20 @@
     'robot-photo':['REEFSCAPE, 2025','assets/studio/reefscape.webp','Titan Robotics’ blue-bumpered 2022 robot carrying a white coral pipe on the REEFSCAPE field.','#about','Open the robotics notebook']
   };
   const doodles=['wave','airmail','pit-crew','constellation','snail-mail'];
-  let bag=[],last=null,opener=null,lead='graphite',stroke=null;
+  let bag=[],last=null,opener=null,lead='graphite',stroke=null,eraser=false;
+  document.addEventListener('desk-eraser',event=>{eraser=event.detail;});
+  function eraseAt(e){
+    const at=document.elementFromPoint(e.clientX,e.clientY)?.closest('.sketch-paper path');
+    if(!at)return;
+    const [x,y]=point(e).split(',').map(Number);
+    at.remove();
+    for(let i=0;i<4;i++){
+      const dust=document.createElementNS(ns,'circle');
+      dust.classList.add('eraser-dust');dust.setAttribute('cx',x+Math.random()*13-6);
+      dust.setAttribute('cy',y+Math.random()*6);dust.setAttribute('r',1.1);
+      sketch.append(dust);
+    }
+  }
   function surprise(){
     if(!bag.length){
       bag=[...doodles];
@@ -31,7 +44,7 @@
     last=bag.pop();return last;
   }
   function setLead(color){
-    lead=color;
+    if(lead!==color)eraser=false;lead=color;document.dispatchEvent(new CustomEvent('desk-lead',{detail:color}));
     for(const button of dialog.querySelectorAll('[data-lead]'))button.setAttribute('aria-pressed',String(color===button.dataset.lead));
   }
   let boardIndex=0;
@@ -69,6 +82,7 @@
         title.textContent='Scratch paper';setLead(id==='rose-pencil'?'rose':id==='pencil'?'graphite':lead);
         undo.disabled=!sketch.childElementCount;
       }
+      dialog.dispatchEvent(new CustomEvent('desk-pickup',{detail:id}));
       dialog.showModal();
       if(photo)hand.focus({preventScroll:true});
     });
@@ -87,15 +101,22 @@
   // A native fling after a paper gesture can swallow the next tap on Put back.
   sketch.addEventListener('touchstart',e=>{if(e.cancelable)e.preventDefault();},{passive:false});
   sketch.addEventListener('pointerdown',e=>{
-    if(!e.isPrimary||e.button!==0)return;
+    if(!e.isPrimary||(e.button!==0&&e.button!==5))return;
     sketch.setPointerCapture(e.pointerId);
+    if(eraser || e.button===5 || e.buttons===32){
+      stroke={id:e.pointerId,erase:true};
+      eraseAt(e);undo.disabled=!sketch.childElementCount;return;
+    }
     const path=document.createElementNS(ns,'path');
     path.setAttribute('stroke',lead==='rose'?'#a3536d':'#534954');
+    const weight=lead==='rose'?Math.max(2.5,Math.abs(e.tiltX||0)/14):Math.max(.95,e.pressure*2.7);
+    path.setAttribute('stroke-width',weight);path.style.strokeWidth=weight;
     path.setAttribute('d','M'+point(e)+'l.1 .1');sketch.append(path);
     stroke={path,id:e.pointerId};undo.disabled=false;
   });
   sketch.addEventListener('pointermove',e=>{
     if(stroke?.id!==e.pointerId)return;
+    if(stroke.erase){eraseAt(e);return;}
     stroke.path.setAttribute('d',stroke.path.getAttribute('d')+'L'+point(e));
   });
   sketch.addEventListener('lostpointercapture',()=>{stroke=null;});

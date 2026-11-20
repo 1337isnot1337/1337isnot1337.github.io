@@ -7,10 +7,11 @@ for(const hand of document.querySelectorAll('[data-turn-paper]')){
     const facing=Math.cos(pitch*Math.PI/180)*Math.cos(yaw*Math.PI/180);
     front.setAttribute('aria-hidden',String(facing<0));
     back.setAttribute('aria-hidden',String(facing>=0));
+    hand.dispatchEvent(new CustomEvent('paper-turn',{detail:{yaw,pitch,back:facing<0}}));
     print.style.setProperty('--glint',String((1-Math.abs(facing))*.18));
   }
   hand.addEventListener('pointerdown',event=>{
-    if(!event.isPrimary || event.button!==0)return;
+    if(!event.isPrimary || event.button!==0 || event.target.closest('a,button,input,[data-private],.post-signature,.cat-stamp'))return;
     hand.focus({preventScroll:true});
     hand.setPointerCapture(event.pointerId);
     grip={id:event.pointerId,x:event.clientX,y:event.clientY,yaw,pitch,scale:240/print.offsetWidth};

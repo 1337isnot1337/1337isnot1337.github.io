@@ -588,6 +588,15 @@ const server = http.createServer((req,res) => {
   releasePhoto();await (await graphResponse).finished();
   await photos.waitForFunction(()=>document.querySelector('.photo-front img')?.naturalWidth===840);
   assert.ok((await held.getAttribute('src')).endsWith('/prints/flyover.webp'),'a late download cannot replace the active selection');
+  await photos.locator('.put-down').click();
+  await pickPrint('conway-print');
+  const reverse=photos.locator('.photo-back');
+  for(let turn=0;turn<12;turn++)await photos.keyboard.press('ArrowRight');
+  assert.equal(await reverse.getAttribute('aria-hidden'),'false');
+  assert.equal(await reverse.locator('.thread-diagram').count(),0,'a normal look at the back has no cue');
+  for(let turn=0;turn<3;turn++)await photos.keyboard.press('ArrowRight');
+  await reverse.locator('.thread-diagram').waitFor();
+  assert.equal(await reverse.locator('.thread-diagram polygon').count(),7);
   await photos.close();
   const shelfMouse=await browser.newPage({viewport:{width:1280,height:850}});
   await shelfMouse.addInitScript(()=>{

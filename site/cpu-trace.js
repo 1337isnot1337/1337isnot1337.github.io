@@ -10,10 +10,18 @@
     {time:200,fetch:7,fetchInstruction:'NOP',execute:null,executeInstruction:'Inserted NOP',d:0,predicted:null,actual:null,state:'bubble',explanation:'At the 195 ns rising edge, the processor discarded the wrong-path instruction and redirected fetch to 7. Execute now contains an inserted no-op bubble. D stays 0.'},
     {time:210,fetch:8,fetchInstruction:'@1',execute:7,executeInstruction:'NOP',d:0,predicted:8,actual:8,state:'recovered',explanation:'Execution resumes on the correct path. Address 7 contains the program’s own NOP, distinct from the inserted bubble in the previous snapshot. D remains 0.'}
   ];
-  let index=0;
+  let index=0,discard=null;
   const set=(id,value)=>trace.querySelector(id).textContent=value;
   function render(){
-    const f=frames[index];trace.dataset.time=f.time;trace.dataset.state=f.state;
+    const f=frames[index];
+    discard?.remove();
+    if(index===3){
+      discard=document.createElement('s');discard.className='trace-discard';
+      discard.textContent='Address 5 · '+frames[2].fetchInstruction;
+      trace.querySelector('#cpu-trace-fetch').append(discard);
+      if(window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches === false)
+        discard.animate([{transform:'translateX(-12px)',opacity:.2},{transform:'translateX(0)',opacity:1}],{duration:200,easing:'ease-out'});
+    }trace.dataset.time=f.time;trace.dataset.state=f.state;
     set('#trace-time',`${f.time} ns`);
     set('#trace-fetch-address',`Address ${f.fetch}`);set('#trace-fetch-instruction',f.fetchInstruction);
     set('#trace-execute-address',f.execute===null?'Bubble · no program address':`Address ${f.execute}`);

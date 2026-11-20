@@ -24,7 +24,13 @@
     const back=rail.querySelector(".back-to-desk");
     back.hash=view==="desk" ? "#studio" : "#projects";
     back.querySelector("span").textContent=view==="desk" ? "Put it back" : "Back to shelf";
-    if(changed)document.dispatchEvent(new Event("portfolio-view"));
+    if(changed){
+      if(view==='shelf'){
+        const audio=workbench.querySelector('audio');
+        if(!audio.paused && audio.hasAttribute('data-desk-carry'))audio.pause();
+      }
+      document.dispatchEvent(new Event("portfolio-view"));
+    }
   }
   setView(page.dataset.view||"desk");
   function showGraphicsFallback(message) {
@@ -36,7 +42,7 @@
   function showFurniture() {
     if (page.dataset.view!=="desk" || !sceneNearby || sceneStarted || studio.dataset.open || document.querySelector(".open-project[open]")) return;
     sceneStarted=true;
-    import("./furniture.js?v=16").then(module => {
+    import("./furniture.js?v=17").then(module => {
       try { module.mountFurniture(stage,showGraphicsFallback); }
       catch { showGraphicsFallback(); }
     }, () => showGraphicsFallback("The 3D desk couldn’t download. Reload to try again."));
@@ -128,7 +134,7 @@
     }
     if (previous === workbench && room !== workbench) {
       const audio = workbench.querySelector("audio");
-      if (!audio.paused) audio.pause();
+      if (!audio.paused && (room || !audio.hasAttribute('data-desk-carry'))) audio.pause();
     }
     if (room) {
       remember(activeLeaf?.dataset.leaf || deskStops[target.dataset.deskPanel] || room.id);
@@ -346,6 +352,7 @@
       ctx.restore();
       ctx.font='21px "IBM Plex Mono", monospace';
       ctx.fillText(postmark.textContent,786,1490,360);
+      studio.dispatchEvent(new CustomEvent('desk-post-export',{detail:{ctx}}));
       const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
       if (!blob) throw new Error("Image export failed");
       const url = URL.createObjectURL(blob);
