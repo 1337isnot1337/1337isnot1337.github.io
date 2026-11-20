@@ -2,6 +2,7 @@
 import * as T from './vendor/three/three.module.min.js';
 import { leafPoint, caterpillarRadii } from './desk-botany.js?v=1';
 import { lampProjection } from './desk-lamp.js?v=1';
+import { paintScope, followProbe } from './desk-scope.js?v=1';
 import { airframeGeometry } from './model-plane.js';
 import { mergeGeometries } from './vendor/three/BufferGeometryUtils.js';
 import { RoundedBoxGeometry } from './vendor/three/RoundedBoxGeometry.js';
@@ -329,31 +330,42 @@ export function furnish(scene, narrow, repaint, software=false) {
   },0,0,0);
   for(const [x,y,r] of [[.49,.66,.109],[.41,.40,.067],[.62,.40,.067]]){
     const knob=x===.49?detail('tuner',scope,x,y,.53):group(scope,x,y,.53);
+    if(x===.49){
+      for(const a of [-.75,-.25,.25,.75]){
+        bead(scope,x-Math.sin(a)*.136,y+Math.cos(a)*.136,.504,.006,.006,.003,brassDark);
+      }
+    }
     const k=cylinder(knob,r,r,.10,finish(0x474d46),0,0,0);k.rotation.x=Math.PI/2;
     box(knob,.013,r*.59,.008,cream,0,r*.29,.057);
   }
   const screenGlow=detail('scope-glow',scope,-.232,.57,.534);
-  for(const [index,label] of ['SOUND','15  10  4','0000 0010 1010','0   1      4','( =^..^= )'].entries()){
-    const readout=group(screenGlow,0,0,.001*index);
-    letter(readout,label,.75,.38,0,0,0,{ink:'#d3eda4',paper:'#183c2e',font:'monospace'});
+  for(let mode=0;mode<5;mode++){
+    const readout=group(screenGlow,0,0,.001*mode);
+    drawn(readout,.795,.462,(c,w,h)=>paintScope(c,w,h,mode),0,0,0);
     readout.visible=false;
   }
-  const plugged=detail('plugged-wire',scope);
-  wire(plugged,[[.57,.23,.52],[.76,.11,.73],[.87,.25,.74],[.75,.40,.67],[.62,.40,.583]],.021,finish(0x9b493c));
-  plugged.visible=false;
-  const cableTip=detail('cable',scope,.12,.032,1.13);
-  bead(cableTip,0,0,0,.05,.033,.030,brassDark);
+  const jack=detail('probe-jack',scope,.689,.252,.507);
+  const rim=cylinder(jack,.048,.046,.024,brassDark,0,0,.008,14);rim.rotation.x=Math.PI/2;
+  bead(jack,0,0,.020,.028,.028,.007,finish(0x1f2828));
+  const probeRest=[.12,.032,1.13];
+  const cableTip=detail('cable',scope,...probeRest);
+  const boot=cylinder(cableTip,.031,.025,.058,finish(0x695044),0,0,.006,14);boot.rotation.x=Math.PI/2;
+  const axle=cylinder(cableTip,.015,.015,.038,brass,0,0,-.038,12);axle.rotation.x=Math.PI/2;
   const warranty=detail('service-label',scope,.05,.53,-.455);
   warranty.rotation.y=Math.PI;
   letter(warranty,'five minute fix department',1.15,.14,0,0,0,{paper:'#ead9a5'});
-  const circuit=drawn(detail('service-diagram',warranty),.57,.24,(c,w,h)=>{
+  const stickerFlap=detail('service-flap',warranty,.42,-.039,.005);
+  box(stickerFlap,.18,.12,.006,finish(0xe9d3a0),-.076,-.025,.002).rotation.z=-.09;
+  const circuit=drawn(detail('service-diagram',warranty,.29,-.061,.011),.57,.24,(c,w,h)=>{
     c.fillStyle='#e9d6a8';c.fillRect(0,0,w,h);c.strokeStyle='#72564c';c.lineWidth=.008;
     c.beginPath();c.moveTo(.06,.06);c.lineTo(.50,.06);c.lineTo(.50,.17);c.lineTo(.06,.17);c.closePath();c.stroke();
     c.font='0.043px monospace';c.fillStyle='#644654';c.fillText('wait → blame cable',.075,.133);
-  },.23,-.16,.003);
+    c.beginPath();c.moveTo(.24,.061);c.lineTo(.26,.034);c.lineTo(.29,.083);c.lineTo(.32,.058);c.stroke();
+  },-.03,-.11,.003);
   circuit.parent.visible=false;
   letter(scope,'EXPERIMENTS',1.09,.15,-.17,.176,.499,{bold:true,ink:'#31382e',font:'sans-serif'});
-  wire(detail('cable-wire',scope),[[.57,.23,.52],[.76,.065,.75],[.62,.03,1.03],[.34,.026,.98],[.12,.029,1.13]],.021,finish(0x9b493c));
+  const cableWire=detail('cable-wire',scope);
+  wire(cableWire,[[.57,.23,.52],[.76,.065,.75],[.62,.03,1.03],[.34,.026,.98],probeRest],.019,finish(0x9b493c));
   // A banked propeller plane above a hardwood base. The complete display is one pick target.
   const stand=tag(group(world,narrow?-.39:-.79,.052,narrow?.64:.61),'plane',[0,.55,-.10],2.48,1.30);
   stand.rotation.y=.075;
@@ -362,6 +374,10 @@ export function furnish(scene, narrow, repaint, software=false) {
   box(stand,2.02,.049,1.09,wood,0,.119,.34,.023);
   cylinder(stand,.12,.15,.048,brassDark,.12,.16,-.04);
   wire(stand,[[.12,.173,-.04],[.115,.29,-.07],[.052,.41,-.14],[-.025,.49,-.14]],.029,brass);
+  bead(stand,-.025,.502,-.14,.031,.029,.028,brass);
+  const markerTrack=detail('flight-marker-track',stand,0,.137,.74);
+  box(markerTrack,1.46,.006,.023,brassDark,0,0,0,.003);
+  markerTrack.visible=false;
   const plaque=group(stand,0,.165,.81);
   plaque.rotation.x=-.88;
   box(plaque,1.98,.32,.043,brassDark,0,0,0,.018);
@@ -388,11 +404,17 @@ export function furnish(scene, narrow, repaint, software=false) {
     bead(plane,.105*side,-.051,.898,.036,.026,.031,finish(0x473d39,.62));
   }
   const prop=detail('propeller',plane,0,0,.957);
-  letter(plane,'flight tested on desk',.46,.076,.75,-.025,.02,{flat:true,ink:'#413530'}).rotation.x=Math.PI/2;
+  const wingStamp=letter(plane,'flight tested on desk',.48,.076,.78,-.032,-.012,{flat:true,ink:'#413530'});
+  wingStamp.rotation.set(Math.PI/2,0,-.02);
+  for(const [x,y,z,title] of [[-1.09,.009,-.036,'DG-02'],[-.34,-.110,.079,'INSPECTED']]){
+    letter(plane,title,.245,.064,x,y,z,{flat:true,ink:'#443633',bold:true,font:'monospace'}).rotation.x=Math.PI/2;
+  }
+  const socket=mesh(plane,new T.TorusGeometry(.034,.012,7,18),brassDark,-.026,-.102,-.005);
+  socket.rotation.x=Math.PI/2;
   const listen=detail('listen',plaque,0,-.096,.028);
   letter(listen,'listen first',.64,.045,0,0,.001,{ink:'#8d623c',italic:true});
   listen.visible=false;
-  const flyover=detail('flyover',stand,0,.151,.778);
+  const flyover=detail('flyover',stand,0,.153,.74);
   bead(flyover,0,0,0,.023,.018,.022,finish(0xda854e,.24));
   flyover.visible=false;
   prop.rotation.z=.62;
@@ -929,5 +951,6 @@ export function furnish(scene, narrow, repaint, software=false) {
     combined.computeBoundingBox();combined.computeBoundingSphere();
   }
   source.forEach(g=>g.dispose());
-  return {world,targets,details,occluders,drawer,flap,cover,lamp,bulbGlass:fastMaterials.get(bulbGlass)||bulbGlass,contactMap,daylight,projectLampShadow,sketchTexture:sketchFace.material.map};
+  const flexCable=followProbe(cableWire.children[0],cableTip,probeRest);
+  return {world,targets,details,occluders,drawer,flap,cover,lamp,bulbGlass:fastMaterials.get(bulbGlass)||bulbGlass,contactMap,daylight,projectLampShadow,flexCable,sketchTexture:sketchFace.material.map};
 }

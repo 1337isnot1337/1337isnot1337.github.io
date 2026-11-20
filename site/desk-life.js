@@ -19,7 +19,11 @@ export function deskLife(stage, getModel, redraw, reduced) {
   let sproutLean=0;
   let lampAngle=0,lampPitch=0,lampClicks=0,lampClickTime=0,warmAt=0,mothIdle=performance.now(),mothRest=false,mothScared=0;
   let pointerSample=null;
-  let planeAngle=.62,planeSpeed=0,lift=0,aimOffset=0,tuner=-1,previousTuner=-1,afterglow=0,patched=false;
+  let planeAngle=.62,planeSpeed=0,propTravel=0,noseDown=false,lift=0,aimOffset=0,planeGrab=false;
+  let tuner=-1,previousTuner=-1,turningTuner=false,tunerAngle=-.75,afterglow=0,patchStarted=0,patched=false;
+  const probeRest=[.12,.032,1.13],probeJack=[.689,.252,.568];
+  const probe=new Vector3(...probeRest);
+  let cableGrip=false,stickerLift=0;
   let pencilX=[0,0],guide=false,bookmark=false,currentFile='',sleeve=false,wrote=false;
   const started=performance.now();
   let recording=null,chewed=false,ripple=0,tape=0,folded=false,unclipped=false,split=false,ribbonShift=0;
@@ -59,7 +63,7 @@ export function deskLife(stage, getModel, redraw, reduced) {
   drawing.addEventListener('desk-sketch',onSketch);
   drawing.addEventListener('desk-fold',event=>{folded=event.detail;redraw();});
   drawing.addEventListener('desk-file-out',event=>{deskLeafFile=event.detail;redraw();});
-  document.addEventListener('desk-wave',event=>{tuner=0;afterglow=.34;redraw();});
+  document.addEventListener('desk-wave',()=>{tuner=0;tunerAngle=-.75;afterglow=.34;redraw();});
   document.addEventListener('desk-clip',event=>{
     const {id,on}=event.detail;if(id)paperclips.set(id,on);redraw();
   });
@@ -76,7 +80,12 @@ export function deskLife(stage, getModel, redraw, reduced) {
   });
   document.addEventListener('play',event=>{
     if(!['desk-audio','recording'].includes(event.target.id))return;
-    recording=event.target;redraw();
+    recording=event.target;
+    if(!recording.dataset.deskMarker){
+      recording.dataset.deskMarker='';
+      for(const action of ['timeupdate','seeked','pause','ended'])recording.addEventListener(action,redraw);
+    }
+    redraw();
   },true);
   function drawerChange(open,speed,direct){
     if(open)return;
@@ -120,9 +129,16 @@ export function deskLife(stage, getModel, redraw, reduced) {
     pointerSample={x,y,time};
   }
   const gestures = {
-    propeller(dx,dy){planeSpeed=clamp((dx-dy)*150,-34,34);},
+    propeller(dx,dy){
+      if(reduced.matches)planeAngle+=(dx-dy)*12;
+      else planeSpeed=clamp(planeSpeed*.35+(dx-dy)*190,-35,35);
+    },
     listen(){sendRubbing('DOPPLERGEIST');},
-    airframe(dx,dy){lift=clamp(lift-dy*3,0,.55);aimOffset=clamp(aimOffset+dx*4,-1.2,1.2);if(dy>.01)planeSpeed=1.1;},
+    airframe(dx,dy){
+      planeGrab=true;
+      lift=clamp(lift-dy*4.8,0,.65);
+      aimOffset=clamp(aimOffset+dx*4,-1.2,1.2);
+    },
     shade(dx,dy){
       const direction=dx>0? .55-lampAngle : lampAngle+1.33;
       const resistance=.23+.77*clamp(direction/.42,0,1);
@@ -131,13 +147,20 @@ export function deskLife(stage, getModel, redraw, reduced) {
     },
     'shade-hinge'(dx,dy){gestures.shade(dx,dy);},
     tuner(dx,dy){
-      previousTuner=tuner;
-      const next=clamp(Math.round((part('tuner').rotation.z+(dx-dy)*7)/.45),-2,1);
-      tuner=next+2;
-      part('tuner').rotation.z=clamp(part('tuner').rotation.z+(dx-dy)*7,-.94,.68);
-      if(previousTuner!==tuner)afterglow=.19;
+      turningTuner=true;
+      tunerAngle=clamp(tunerAngle+(dx-dy)*9,-.82,.82);
+      const next=clamp(Math.round((tunerAngle+.75)/.5),0,3);
+      rewindGlow(next);
     },
-    cable(dx,dy){if(Math.abs(dx)+Math.abs(dy)>.003)patched=true;},
+    cable(dx,dy){
+      if(patched&&Math.hypot(dx,dy)<.011)return;
+      cableGrip=true;
+      patched=false;
+      probe.x=clamp(probe.x+dx*7.4,-.13,1.03);
+      probe.y=clamp(probe.y-dy*5.5,.032,.61);
+      probe.z=lerp(1.13,.58,clamp((probe.y-.032)/.22,0,1));
+    },
+    'service-flap'(dx,dy){serviceOpened ||= Math.hypot(dx,dy)>.012;},
     wax(dx,dy){if(Math.abs(dx)+Math.abs(dy)>.003)split=true;},
     ribbon(dx){
       ribbonShift=clamp(ribbonShift+dx*7,-.22,.31);bookmark=true;
@@ -202,6 +225,21 @@ export function deskLife(stage, getModel, redraw, reduced) {
     printOffsets.set(id,offset);
     prints.set(id,clamp((prints.get(id)||0)+dx*1.2,-.16,.16));
   }
+  function rewindGlow(next){
+    if(next===tuner)return;
+    previousTuner=tuner;
+    tuner=next;
+    afterglow=.42;
+  }
+  function releaseProps(cancelled){
+    planeGrab=false;
+    if(turningTuner){turningTuner=false;tunerAngle=-.75+.5*tuner;}
+    if(cableGrip&&!cancelled){
+      patched=Math.hypot(probe.x-probeJack[0],probe.y-probeJack[1],probe.z-probeJack[2])<.18;
+      if(patched){patchStarted=performance.now();afterglow=.42;}
+    }
+    cableGrip=false;
+  }
   function stow(id,yaw){
     if(['proof','archive'].includes(id)){
       if(Math.cos(yaw)<0)reversedBooks.add(id);else reversedBooks.delete(id);
@@ -221,13 +259,24 @@ export function deskLife(stage, getModel, redraw, reduced) {
     if(event==='open'&&id==='screw')lookedAtScrew=true;
     if(event==='close'&&id==='drawer-note')complaintTravel=.13;
     if(event==='hover'&&name==='springtail')hop=.22;
-    if(event==='tap'&&name==='service-label')serviceOpened=!serviceOpened;
+    if(event==='tap'&&(name==='service-label'||name==='service-flap'))serviceOpened=!serviceOpened;
     if(id==='plant'){
       if(event==='open')plantOpen=performance.now();
       if(event==='pose')dewTilt=clamp((Math.sin(delta.pitch)-.45)*2,0,1);
       if(event==='close')dewTilt=0;
     }
-    if(id==='plane' && event==='turn' && delta.y>.03)planeSpeed=delta.y*2+.7;
+    if(id==='plane'){
+      if(event==='open')noseDown=false;
+      if(event==='close'&&!reduced.matches)lift=Math.max(lift,.34);
+      if(event==='pose'){
+        if(delta.pitch<.30)noseDown=false;
+        if(delta.pitch>.72&&!noseDown){
+          noseDown=true;planeSpeed=0;
+          if(reduced.matches)planeAngle+=Math.PI/2;
+          else propTravel=2*Math.PI;
+        }
+      }
+    }
     if(id==='cup'){
       if(event==='use'){borrowed=!borrowed;star=borrowed;}
       if(name?.startsWith('cup-pencil-') && event==='tap'){borrowed=!borrowed;star=borrowed;}
@@ -295,7 +344,9 @@ export function deskLife(stage, getModel, redraw, reduced) {
     shade.updateWorldMatrix(true,false);
     shade.getWorldPosition(lampOrigin);
     lightAxis.set(0,-1,0).transformDirection(shade.matrixWorld);
-    part('listen').visible=lampOn && lampAngle<-.22;
+    const inscription=part('listen');
+    inscription.getWorldPosition(incident).sub(lampOrigin).normalize();
+    inscription.visible=lampOn&&lightAxis.dot(incident)>.81&&lightAxis.x<-.42;
     const scratches=part('lamplit-scratches');
     scratches.getWorldPosition(incident).sub(lampOrigin).normalize();
     const hit=lightAxis.dot(incident);
@@ -325,26 +376,48 @@ export function deskLife(stage, getModel, redraw, reduced) {
       lerp(-1.245,-.73+Math.cos(time/700)*.17,amount));
     moth.rotation.y=Math.sin(time/712)*amount*.72;
     for(const sign of [-1,1])part('moth-wing-'+sign).rotation.z=flying?sign*Math.sin(time/32)*.79:sign*.22;
+    if(motion){
+      const remaining=Math.min(propTravel,dt*(4+propTravel*.95));
+      propTravel-=remaining;
+      planeAngle+=planeSpeed*dt+remaining;
+      planeSpeed*=Math.exp(-dt*1.52);
+    }
     part('propeller').rotation.z=planeAngle;
-    if(motion)planeAngle+=planeSpeed*dt;
-    planeSpeed*=Math.exp(-dt*1.85);
-    lift=lerp(lift,0,motion?.12:1);aimOffset=lerp(aimOffset,0,motion?.12:1);
-    part('airframe').position.y=.58+lift;part('airframe').rotation.y=-.59+aimOffset;
+    if(!planeGrab){
+      const blend=motion?1-Math.exp(-dt*12):1;
+      lift=Math.abs(lift)<.003?0:lerp(lift,0,blend);
+      aimOffset=Math.abs(aimOffset)<.003?0:lerp(aimOffset,0,blend);
+    }
+    part('airframe').position.y=.58+lift;
+    part('airframe').rotation.y=-.59+aimOffset;
+    part('airframe').rotation.z=-.045+aimOffset*.15;
     const playing=recording&&!recording.paused;
+    part('flight-marker-track').visible=Boolean(playing);
     part('flyover').visible=Boolean(playing);
     if(playing)part('flyover').position.x=clamp(recording.currentTime/(recording.duration||85),0,1)*1.45-.72;
     const glass=part('glass-glare').children[0]?.material?.map;
     if(glass)glass.offset.x=clamp(Math.sin(yaw)*2.9,-1,1);
-    part('service-diagram').visible=serviceOpened;
+    const sticker=Number(serviceOpened);
+    stickerLift=Math.abs(stickerLift-sticker)<.003||!motion?sticker:lerp(stickerLift,sticker,dt*12);
+    part('service-flap').rotation.x=stickerLift*2.42;
+    part('service-diagram').visible=stickerLift>.30;
+    if(tuner>=0)part('tuner').rotation.z=tunerAngle;
+    const resolution=patched ? clamp((time-patchStarted)/400,0,1):1;
     part('scope-glow').children.forEach((readout,i)=>{
       const latest=i===(patched?4:tuner);
-      readout.visible=latest||(afterglow>0&&i===previousTuner&&previousTuner!==tuner);
-      readout.position.z=latest?0:.008;
-      for(const layer of readout.children)if(layer.material)layer.material.opacity=latest?1:afterglow*1.4;
+      const lingering=afterglow>0&&i===previousTuner&&previousTuner!==tuner;
+      readout.visible=latest||lingering;
+      readout.position.z=latest?0:.009;
+      for(const layer of readout.children)if(layer.material)layer.material.opacity=latest?resolution:afterglow*1.07;
     });
     afterglow=Math.max(0,afterglow-dt);
-    part('cable').position.set(patched?.62:.12,patched?.40:.032,patched?.59:1.13);
-    part('cable-wire').visible=!patched;part('plugged-wire').visible=patched;
+    const destination=patched?probeJack:probeRest;
+    if(!cableGrip){
+      const ease=motion?1-Math.exp(-dt*11):1;
+      probe.x=lerp(probe.x,destination[0],ease);probe.y=lerp(probe.y,destination[1],ease);probe.z=lerp(probe.z,destination[2],ease);
+    }
+    part('cable').position.copy(probe);model.flexCable();
+    const cableMoving=!cableGrip&&Math.hypot(probe.x-destination[0],probe.y-destination[1],probe.z-destination[2])>.003;
     if(inHand==='plant'){
       nibble=clamp((time-plantOpen)/14500,0,1);
       for(let i=0;i<caterpillarRadii.length;i++){
@@ -437,8 +510,8 @@ export function deskLife(stage, getModel, redraw, reduced) {
     }
     const warm=warmAt ? clamp((time-warmAt)/750,0,1):1;
     return { drift, warm, active: Boolean(
-      Math.abs(planeSpeed)>.025||lift>.005||Math.abs(aimOffset)>.01||Math.hypot(marbleSpeed,marbleDepthSpeed)>.022||(motion&&swing<1)||linerLift!==linerGoal||
-      afterglow>0||pencilDrop>.003||(inHand==='plant'&&time-plantOpen<15600)||(inHand==='plant'&&dewTilt>0&&dew<1)||freeDrop.visible||ripple.visible||hop>0||leafBends.size||falling<1||playing||flying||(lampOn&&warm<1)), wakeAt:lampOn&&!moth.visible ? mothIdle+14000 : 0};
+      Math.abs(planeSpeed)>.025||propTravel>0||(!planeGrab&&lift>.005)||(!planeGrab&&Math.abs(aimOffset)>.01)||Math.hypot(marbleSpeed,marbleDepthSpeed)>.022||(motion&&swing<1)||linerLift!==linerGoal||
+      afterglow>0||pencilDrop>.003||(inHand==='plant'&&time-plantOpen<15600)||(inHand==='plant'&&dewTilt>0&&dew<1)||freeDrop.visible||ripple.visible||hop>0||leafBends.size||falling<1||cableMoving||resolution<1||stickerLift!==sticker||flying||(lampOn&&warm<1)), wakeAt:lampOn&&!moth.visible ? mothIdle+14000 : 0};
   }
-  return {tap,gestures,movePrint,stow,drawerChange,drawerMomentum,pullComplaint,lampChange,brushLeaf,pointerMoved,startleMoth,inspect,updateInspection,update};
+  return {tap,gestures,movePrint,stow,drawerChange,drawerMomentum,pullComplaint,lampChange,brushLeaf,pointerMoved,startleMoth,inspect,releaseProps,updateInspection,update};
 }

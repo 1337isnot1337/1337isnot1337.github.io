@@ -1,10 +1,10 @@
 import * as T from './vendor/three/three.module.min.js';
-import { furnish } from './desk-model.js?v=18';
-import { inspectDeskObjects } from './desk-inspect.js?v=5';
+import { furnish } from './desk-model.js?v=19';
+import { inspectDeskObjects } from './desk-inspect.js?v=6';
 
 import { attachDeskPointer } from './desk-pointer.js?v=13';
 
-import { deskLife } from './desk-life.js?v=4';
+import { deskLife } from './desk-life.js?v=5';
 import { deskView } from './desk-view.js?v=1';
 import { drawerTravel } from './desk-drawer.js?v=1';
 
@@ -288,6 +288,7 @@ export function mountFurniture(stage,showGraphicsFallback) {
     },
     endOrbit(time,cancelled) {
       view.release(time,cancelled);
+      life.releaseProps(cancelled);
       const drawerRelease=travel.release(time,cancelled);
       if(drawerRelease){
         stage.dispatchEvent(new CustomEvent('drawer-position',{detail:drawerRelease.target}));

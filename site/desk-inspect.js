@@ -112,7 +112,8 @@ export function inspectDeskObjects(stage,engine,room,deskCamera,getModel,redraw,
   function paint(){
     if(!active || !dialog.open)return false;
     const model=getModel();
-    const item=model.details.get(active+'-volume')||model.targets.get(active)?.root||model.details.get(active);
+    const detail=active==='plane'?'airframe':active+'-volume';
+    const item=model.details.get(detail)||model.targets.get(active)?.root||model.details.get(active);
     const ratio=stage.clientWidth/stage.clientHeight;
     if(source!==item || ratio!==aspect){
       aspect=ratio;source=item;stand.clear();
