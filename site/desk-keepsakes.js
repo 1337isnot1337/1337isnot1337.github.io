@@ -22,16 +22,39 @@
   };
   const doodles=['wave','airmail','pit-crew','constellation','snail-mail'];
   let bag=[],last=null,opener=null,lead='graphite',stroke=null,eraser=false;
+  const linePoints=new WeakMap();
   document.addEventListener('desk-eraser',event=>{eraser=event.detail;});
+  document.addEventListener('desk-borrow-lead',event=>setLead(event.detail));
+  function outputLine(path,points){
+    let d='',connect=false;
+    for(const point of points){
+      if(!point){connect=false;continue;}
+      d+=(connect?'L':'M')+point.map(value=>Math.round(value*10)/10).join(',');
+      if(!connect)d+='l.1 .1';
+      connect=true;
+    }
+    if(d)path.setAttribute('d',d);
+    else path.remove();
+  }
   function eraseAt(e){
-    const at=document.elementFromPoint(e.clientX,e.clientY)?.closest('.sketch-paper path');
-    if(!at)return;
-    const [x,y]=point(e).split(',').map(Number);
-    at.remove();
-    for(let i=0;i<4;i++){
+    const [x,y]=point(e);
+    let erased=false;
+    for(const path of sketch.querySelectorAll('path')){
+      const points=linePoints.get(path);
+      if(!points)continue;
+      let changed=false;
+      for(let i=0;i<points.length;i++){
+        const p=points[i];
+        if(!p||Math.hypot(x-p[0],y-p[1])>9)continue;
+        points[i]=null;changed=true;
+      }
+      if(changed){erased=true;outputLine(path,points);}
+    }
+    if(!erased)return;
+    for(let i=0;i<3;i++){
       const dust=document.createElementNS(ns,'circle');
       dust.classList.add('eraser-dust');dust.setAttribute('cx',x+Math.random()*13-6);
-      dust.setAttribute('cy',y+Math.random()*6);dust.setAttribute('r',1.1);
+      dust.setAttribute('cy',y+Math.random()*6);dust.setAttribute('r',.75+Math.random()*.65);
       sketch.append(dust);
     }
   }
@@ -80,7 +103,7 @@
         } else link.removeAttribute('href');
       }else{
         title.textContent='Scratch paper';setLead(id==='rose-pencil'?'rose':id==='pencil'?'graphite':lead);
-        undo.disabled=!sketch.childElementCount;
+        undo.disabled=!sketch.querySelector('path,image');
       }
       dialog.dispatchEvent(new CustomEvent('desk-pickup',{detail:id}));
       dialog.showModal();
@@ -96,7 +119,7 @@
   window.addEventListener('hashchange',()=>{if(dialog.open)dialog.close();});
   function point(e){
     const p=new DOMPoint(e.clientX,e.clientY).matrixTransform(sketch.getScreenCTM().inverse());
-    return Math.round(p.x)+','+Math.round(p.y);
+    return [p.x,p.y];
   }
   // A native fling after a paper gesture can swallow the next tap on Put back.
   sketch.addEventListener('touchstart',e=>{if(e.cancelable)e.preventDefault();},{passive:false});
@@ -105,19 +128,40 @@
     sketch.setPointerCapture(e.pointerId);
     if(eraser || e.button===5 || e.buttons===32){
       stroke={id:e.pointerId,erase:true};
-      eraseAt(e);undo.disabled=!sketch.childElementCount;return;
+      eraseAt(e);undo.disabled=!sketch.querySelector('path,image');return;
     }
     const path=document.createElementNS(ns,'path');
+    path.dataset.lead=lead;
     path.setAttribute('stroke',lead==='rose'?'#a3536d':'#534954');
-    const weight=lead==='rose'?Math.max(2.5,Math.abs(e.tiltX||0)/14):Math.max(.95,e.pressure*2.7);
+    path.setAttribute('opacity',lead==='rose'?'.87':'.95');
+    const weight=strokeWeight(e);
     path.setAttribute('stroke-width',weight);path.style.strokeWidth=weight;
-    path.setAttribute('d','M'+point(e)+'l.1 .1');sketch.append(path);
-    stroke={path,id:e.pointerId};undo.disabled=false;
+    const points=[point(e)];
+    linePoints.set(path,points);
+    outputLine(path,points);sketch.append(path);
+    stroke={path,points,id:e.pointerId,weight};undo.disabled=false;
   });
+  function strokeWeight(e){
+    const pressure=e.pressure||.42;
+    if(lead==='rose')return Math.max(2.5,2.3+Math.hypot(e.tiltX||0,e.tiltY||0)/10+pressure);
+    return Math.max(.86,pressure*2.55);
+  }
   sketch.addEventListener('pointermove',e=>{
     if(stroke?.id!==e.pointerId)return;
     if(stroke.erase){eraseAt(e);return;}
-    stroke.path.setAttribute('d',stroke.path.getAttribute('d')+'L'+point(e));
+    const next=point(e),last=stroke.points.at(-1);
+    if(!last)stroke.points.push(next);
+    else{
+      const steps=Math.max(1,Math.ceil(Math.hypot(next[0]-last[0],next[1]-last[1])/5));
+      for(let i=1;i<=steps;i++)stroke.points.push([
+        last[0]+(next[0]-last[0])*i/steps,
+        last[1]+(next[1]-last[1])*i/steps
+      ]);
+    }
+    stroke.weight=(stroke.weight*3+strokeWeight(e))/4;
+    stroke.path.setAttribute('stroke-width',stroke.weight);
+    stroke.path.style.strokeWidth=stroke.weight;
+    outputLine(stroke.path,stroke.points);
   });
   sketch.addEventListener('lostpointercapture',()=>{stroke=null;});
   dialog.addEventListener('close',()=>{stroke=null;});
@@ -128,5 +172,8 @@
     image.setAttribute('x',30+Math.floor(Math.random()*180));image.setAttribute('y',20+Math.floor(Math.random()*90));
     image.setAttribute('width','260');image.setAttribute('height','180');sketch.append(image);undo.disabled=false;
   };
-  undo.onclick=()=>{sketch.lastElementChild?.remove();undo.disabled=!sketch.childElementCount;};
+  undo.onclick=()=>{
+    [...sketch.querySelectorAll('path,image')].at(-1)?.remove();
+    undo.disabled=!sketch.querySelector('path,image');
+  };
 })();

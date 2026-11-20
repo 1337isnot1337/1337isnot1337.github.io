@@ -168,70 +168,90 @@
     }
   });
   const sketch=pickup.querySelector('.sketch-paper');
-  let sketchRevision=0;
-  studio.addEventListener('desk-rubbing',event=>{
-    if(sketch.querySelector('[data-rubbing]'))return;
-    const text=document.createElementNS(ns,'text');
-    text.dataset.rubbing='';
-    text.setAttribute('x',240);text.setAttribute('y',280);
-    text.setAttribute('fill','#695750');text.setAttribute('text-anchor','middle');
-    text.textContent=event.detail;
-    sketch.prepend(text);
-  });
-  new MutationObserver(()=>{
+  const sketchPage=pickup.querySelector('.sketch-piece');
+  const surface=make('div','','sketch-surface');
+  const rubbing=document.createElement('canvas');
+  rubbing.width=480;rubbing.height=330;
+  rubbing.className='rubbing-impression';rubbing.setAttribute('aria-hidden','true');
+  surface.append(rubbing);
+  sketch.before(surface);surface.prepend(sketch);
+  const impressions=new Map();
+  let freshLabel='',sketchRevision=0,folds=0,foldGrip=null;
+  studio.addEventListener('desk-rubbing',event=>{freshLabel=event.detail||'';});
+  function graphiteRubbing(path,label){
+    const scratch=make('canvas');scratch.width=art.width;scratch.height=art.height;
+    const c=scratch.getContext('2d');
+    c.strokeStyle='#5c4c43';c.lineWidth=14;c.lineCap='round';
+    c.stroke(new Path2D(path.getAttribute('d')));
+    c.globalCompositeOperation='source-in';
+    c.fillStyle='#69534f';
+    c.font=label==='DOPPLERGEIST'?'bold 58px sans-serif':'italic 54px Georgia';
+    c.textAlign='center';c.textBaseline='middle';
+    c.fillText(label,240,165,415);
+    return scratch;
+  }
+  function renderPaper(){
     const ctx=art.getContext('2d');
+    const rub=rubbing.getContext('2d');
     const key=++sketchRevision;
-    ctx.clearRect(0,0,art.width,art.height);
+    ctx.clearRect(0,0,art.width,art.height);rub.clearRect(0,0,art.width,art.height);
     const paths=[...sketch.querySelectorAll('path')];
     const stamps=[...sketch.querySelectorAll('image')];
     for(const stroke of paths){
       ctx.strokeStyle=stroke.getAttribute('stroke')||'#534954';
-      ctx.lineWidth=stroke.getAttribute('stroke-width')||1.8;
-      ctx.lineCap='round';
+      ctx.lineWidth=Number(stroke.getAttribute('stroke-width'))||1.8;
+      ctx.lineCap='round';ctx.globalAlpha=Number(stroke.getAttribute('opacity')||1);
       ctx.stroke(new Path2D(stroke.getAttribute('d')));
+      if(impressions.has(stroke))rub.drawImage(graphiteRubbing(stroke,impressions.get(stroke)),0,0);
     }
-    for(const rub of sketch.querySelectorAll('[data-rubbing]')){
-      ctx.font='italic 28px Georgia';ctx.fillStyle='#695750';ctx.textAlign='center';
-      ctx.fillText(rub.textContent,240,280,390);ctx.textAlign='start';
-    }
+    ctx.globalAlpha=1;ctx.drawImage(rubbing,0,0);
     const pending=stamps.map(node=>{
-      const image=new Image();
-      image.src=node.getAttribute('href');
+      const image=new Image();image.src=node.getAttribute('href');
       return image.decode().then(()=>{
         if(key===sketchRevision)ctx.drawImage(image,...['x','y','width','height'].map(attr=>Number(node.getAttribute(attr))));
       }).catch(()=>{});
     });
-    const deliver=()=>send('desk-sketch',sketch.childElementCount?art:null,studio);
+    const deliver=()=>send('desk-sketch',paths.length||stamps.length?art:null,studio);
     if(pending.length)Promise.all(pending).then(()=>{if(key===sketchRevision)deliver();});
     else deliver();
-  }).observe(sketch,{subtree:true,childList:true,attributes:true,attributeFilter:['d','stroke-width']});
-  sketch.addEventListener('dblclick',event=>{
-    if(!event.target.closest('path') || !sketch.childElementCount)return;
-    const p=new DOMPoint(event.clientX,event.clientY).matrixTransform(sketch.getScreenCTM().inverse());
-    const erase=event.target.closest('path');
-    erase.remove();
-    for(let i=0;i<4;i++){
-      const dust=document.createElementNS(ns,'circle');
-      dust.classList.add('eraser-dust');dust.setAttribute('cx',p.x+Math.random()*18-9);
-      dust.setAttribute('cy',p.y+Math.random()*9);dust.setAttribute('r',.9+Math.random());
-      sketch.append(dust);
+  }
+  new MutationObserver(records=>{
+    for(const change of records){
+      for(const node of change.addedNodes){
+        if(freshLabel&&node.nodeName.toLowerCase()==='path'&&node.dataset.lead==='graphite')
+          impressions.set(node,freshLabel);
+      }
     }
-  });
+    for(const stroke of impressions.keys())if(!stroke.isConnected)impressions.delete(stroke);
+    renderPaper();
+  }).observe(sketch,{subtree:true,childList:true,attributes:true,attributeFilter:['d','stroke-width']});
+  studio.addEventListener('desk-sketch-request',renderPaper);
   sketch.addEventListener('pointermove',event=>{
-    if(event.buttons && Math.abs(event.movementX)>15)
+    if(event.buttons && Math.abs(event.movementX)>17)
       sketch.querySelectorAll('.eraser-dust').forEach(dust=>dust.remove());
   });
-  const sketchPage=pickup.querySelector('.sketch-piece');
-  let folds=0;
-  sketch.addEventListener('pointerup',event=>{
-    const area=sketch.getBoundingClientRect();
-    if(event.clientX<area.right-12 || event.clientY>area.top+20)return;
-    if(sketch.childElementCount<5)return;
-    folds=(folds+1)%4;
+  function turnFold(count){
+    folds=count;
     sketchPage.dataset.folds=String(folds);
-    if(folds===3)send('desk-fold',true,studio);
-    if(folds===0)send('desk-fold',false,studio);
+    send('desk-fold',folds===3,studio);
+  }
+  sketch.addEventListener('pointerdown',event=>{
+    if(!event.isPrimary||event.button!==0||folds===3||!sketch.querySelector('path,image'))return;
+    const bounds=sketch.getBoundingClientRect();
+    const x=(event.clientX-bounds.left)/bounds.width,y=(event.clientY-bounds.top)/bounds.height;
+    const corner=folds===0?x>.89&&y<.15:folds===1?x<.12&&y<.16:x<.14&&y>.77;
+    if(!corner)return;
+    foldGrip={id:event.pointerId,x:event.clientX,y:event.clientY};
+    sketch.setPointerCapture(event.pointerId);
+    event.stopImmediatePropagation();
+  },true);
+  sketch.addEventListener('pointerup',event=>{
+    if(foldGrip?.id!==event.pointerId)return;
+    if(Math.hypot(event.clientX-foldGrip.x,event.clientY-foldGrip.y)>25)turnFold(folds+1);
+    foldGrip=null;
   });
+  sketch.addEventListener('pointercancel',()=>{foldGrip=null;});
+  sketch.addEventListener('dblclick',()=>{if(folds===3)turnFold(0);});
 
   function buildReverse(id,host) {
     const area=insertOnce(host,'turn','div','','');

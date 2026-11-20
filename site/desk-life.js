@@ -1,5 +1,6 @@
 import { MathUtils, Vector3 } from './vendor/three/three.module.min.js';
 import { leafPoint, caterpillarPoint, caterpillarRadii } from './desk-botany.js?v=1';
+import { deskPencils } from './desk-pencils.js?v=1';
 
 const { clamp, lerp } = MathUtils;
 const experiment = ['sound','cards','bits','numbers'];
@@ -13,7 +14,7 @@ export function deskLife(stage, getModel, redraw, reduced) {
   let drawerClaps=0,lastClose=0,drawerNote=false,complaintTravel=0,liner=false,linerLift=0;
   let marbleX=-.77,marbleZ=-.43,marbleSpeed=0,marbleDepthSpeed=0,marbleRotation=0;
   let handleStarted=0,handleSpring=0,stampBorrowed=false,postcardHeld=false;
-  let potTurn=0,nibble=0,plantOpen=0,leafSaved=false,fallStart=0,dew=0,dewFall=0,dewTilt=0,star=false,borrowed=false,hop=0;
+  let potTurn=0,nibble=0,plantOpen=0,leafSaved=false,fallStart=0,dew=0,dewFall=0,dewTilt=0,borrowedIndex=-1,hop=0;
   const leafBends=new Map(), dewStart=new Vector3(), fragmentStart=new Vector3();
   const lampOrigin=new Vector3(), lightAxis=new Vector3(), incident=new Vector3();
   let sproutLean=0;
@@ -24,11 +25,13 @@ export function deskLife(stage, getModel, redraw, reduced) {
   const probeRest=[.12,.032,1.13],probeJack=[.689,.252,.568];
   const probe=new Vector3(...probeRest);
   let cableGrip=false,stickerLift=0;
-  let pencilX=[0,0],guide=false,bookmark=false,currentFile='',sleeve=false,wrote=false;
+  let guide=false,guideLift=0,bookmark=false,currentFile='',sleeve=false,wrote=false;
+  const pencils=deskPencils();
+  let ribbonFlick=0,sheetHeld=false,sheetX=0,sheetZ=0,sheetHeight=0;
   const started=performance.now();
   let recording=null,chewed=false,ripple=0,tape=0,folded=false,unclipped=false,split=false,ribbonShift=0;
-  let serviceOpened=false,deskLeafFile=false,tapeUp=0,pencilDrop=0,stowedScrew=false,lookedAtScrew=false;
-  let scratching=false;
+  let serviceOpened=false,deskLeafFile=false,tapeUp=0,stowedScrew=false,lookedAtScrew=false;
+
   const reversedBooks=new Set();
   const prints = new Map(),printOffsets=new Map(),paperclips=new Map();
   try{
@@ -133,7 +136,7 @@ export function deskLife(stage, getModel, redraw, reduced) {
       if(reduced.matches)planeAngle+=(dx-dy)*12;
       else planeSpeed=clamp(planeSpeed*.35+(dx-dy)*190,-35,35);
     },
-    listen(){sendRubbing('DOPPLERGEIST');},
+
     airframe(dx,dy){
       planeGrab=true;
       lift=clamp(lift-dy*4.8,0,.65);
@@ -172,18 +175,50 @@ export function deskLife(stage, getModel, redraw, reduced) {
     liner(){liner=true;},
     'nibbled-leaf'(dx,dy){brushLeaf('nibbled-leaf',dx*40,dy*40);},
     plant(dx){potTurn+=dx*3;},
-    pencil(dx,dy){pencilX[0]=clamp(pencilX[0]+dx*1.6,-.32,.30);pencilDrop=clamp(pencilDrop-dy*3,0,.2);},
-    'rose-pencil'(dx,dy){pencilX[1]=clamp(pencilX[1]+dx*1.6,-.29,.32);pencilDrop=clamp(pencilDrop-dy*3,0,.2);},
+    pencil(dx,dy,time){pencils.drag('pencil',dx,dy,time);},
+    'rose-pencil'(dx,dy,time){pencils.drag('rose-pencil',dx,dy,time);},
+    'flat-sketch'(dx,dy){carrySheet(dx,dy);},
+    'folded-sketch'(dx,dy){carrySheet(dx,dy);},
     tape(dx,dy){tapeUp=clamp(tapeUp-dy*9,0,1.54);},
     'pad-corner'(){guide=true;},
     file(dx,dy){if(dy>.004)sleeve=true;},
-    book(dx,dy){if(Math.abs(dy)>.004)bookmark=true;if(Math.abs(dx)>.01)sendRubbing('Cinna’s notebook');}
+    book(dx,dy){if(Math.abs(dy)>.004)bookmark=true;}
   };
-  function sendRubbing(label){
-    if(!wrote||scratching)return;
-    scratching=true;
-    drawing.dispatchEvent(new CustomEvent('desk-rubbing',{detail:label}));
-    setTimeout(()=>{scratching=false;},1300);
+  function carrySheet(dx,dy){
+    sheetHeld=true;
+    sheetX=clamp(sheetX+dx*7.1,-1.65,1.67);
+    sheetZ=clamp(sheetZ+dy*4.9,-1.74,0);
+    sheetHeight=.047;
+  }
+  function dropSheet(cancelled){
+    if(!sheetHeld)return;
+    sheetHeld=false;
+    if(cancelled||folded)return;
+    const at=part('scratch').position;
+    const near=(x,z,d)=>Math.hypot(at.x-x,at.z-z)<d;
+    const book=object('book'),plane=object('plane');
+    if(near(book.position.x,book.position.z,.58)){
+      sheetHeight=.162;
+      drawing.dispatchEvent(new CustomEvent('desk-rubbing',{detail:'Cinna’s notebook'}));
+    }else if(near(plane.position.x,plane.position.z+.40,.50)){
+      sheetHeight=.105;
+      drawing.dispatchEvent(new CustomEvent('desk-rubbing',{detail:'DOPPLERGEIST'}));
+    }else{
+      sheetHeight=0;
+      drawing.dispatchEvent(new CustomEvent('desk-rubbing',{detail:null}));
+    }
+  }
+  function cupPencil(id){
+    const previous=borrowedIndex;
+    borrowedIndex=borrowedIndex===id?-1:id;
+    if(borrowedIndex>=0){
+      const lead=[0,2].includes(borrowedIndex)?'rose':'graphite';
+      document.dispatchEvent(new CustomEvent('desk-borrow-lead',{detail:lead}));
+    }
+    return previous>=0&&borrowedIndex<0;
+  }
+  function cupAction(){
+    return borrowedIndex>=0?'Return the pencil':'Borrow a pencil';
   }
   function tap(name) {
     switch(name){
@@ -211,6 +246,9 @@ export function deskLife(stage, getModel, redraw, reduced) {
         if(tuner<0)return false;
         document.dispatchEvent(new CustomEvent('desk-experiment',{detail:experiment[tuner]}));
         return false;
+      case 'flat-sketch':
+      case 'folded-sketch':
+        el('blotter').click();break;
       case 'pad-corner':
         if(!guide)return false;
         guide=false;break;
@@ -233,6 +271,7 @@ export function deskLife(stage, getModel, redraw, reduced) {
   }
   function releaseProps(cancelled){
     planeGrab=false;
+    pencils.release(cancelled);dropSheet(cancelled);
     if(turningTuner){turningTuner=false;tunerAngle=-.75+.5*tuner;}
     if(cableGrip&&!cancelled){
       patched=Math.hypot(probe.x-probeJack[0],probe.y-probeJack[1],probe.z-probeJack[2])<.18;
@@ -278,8 +317,9 @@ export function deskLife(stage, getModel, redraw, reduced) {
       }
     }
     if(id==='cup'){
-      if(event==='use'){borrowed=!borrowed;star=borrowed;}
-      if(name?.startsWith('cup-pencil-') && event==='tap'){borrowed=!borrowed;star=borrowed;}
+      if(event==='use')return cupPencil(borrowedIndex<0?0:borrowedIndex);
+      if(name?.startsWith('cup-pencil-')&&event==='tap')return cupPencil(Number(name.at(-1)));
+      if(name==='paper-star'&&event==='tap'&&borrowedIndex>=0)return cupPencil(borrowedIndex);
     }
     if(event==='tap' && ['research-question','proof-card'].includes(name)){
       document.dispatchEvent(new CustomEvent('desk-book-slip',{detail:name}));
@@ -354,13 +394,22 @@ export function deskLife(stage, getModel, redraw, reduced) {
     const projection=part('rabbit-shadow');
     projection.visible=lampOn&&Math.abs(lampAngle+.83)<.29&&Math.abs(lampPitch-.13)<.30;
     if(projection.visible)model.projectLampShadow(lampAngle,lampPitch,potTurn,aimOffset);
-    part('pad-guide').visible=guide;
-    part('pad-corner').rotation.x=guide?-.75:0;
+    const foldGoal=Number(guide);
+    guideLift=!motion||Math.abs(guideLift-foldGoal)<.004?foldGoal:lerp(guideLift,foldGoal,dt*11);
+    part('pad-guide').visible=guideLift>.11;
+    part('pad-corner').rotation.x=-guideLift*1.36;
     part('bookmark').visible=bookmark;part('ribbon').position.x=.39+ribbonShift;
     part('wax').visible=!split;part('split-wax').visible=split;
     part('errata').visible=Boolean(currentFile);
     part('loose-sheet').visible=deskLeafFile;
-    part('scratch').visible=wrote;part('flat-sketch').visible=!folded;part('folded-sketch').visible=folded;
+    const scratch=part('scratch');
+    scratch.visible=wrote;
+    if(!home.has(scratch))home.set(scratch,scratch.position.clone());
+    const scrapBase=home.get(scratch);
+    scratch.position.set(scrapBase.x+sheetX,scrapBase.y+sheetHeight,scrapBase.z+sheetZ);
+    scratch.rotation.y=sheetHeld?.19:.14;
+    part('flat-sketch').visible=!folded;
+    part('folded-sketch').visible=folded;
     const moth=part('moth');
     const elapsed=time-mothIdle;
     moth.visible=lampOn && (elapsed>=14000||mothRest);
@@ -483,16 +532,15 @@ export function deskLife(stage, getModel, redraw, reduced) {
     const springtail=part('springtail');
     springtail.position.y=.011+Math.sin(Math.PI*(hop/.22))*.025;
     hop=Math.max(0,hop-dt);
-    part('paper-star').visible=star;
-    part('cup-pencil-0').visible=!borrowed;
-    move('pencil',pencilX[0],0,0);move('rose-pencil',pencilX[1],0,0);
-    if(pencilDrop>.003){
-      const height=motion?Math.abs(Math.sin(time/45))*pencilDrop:0;
-      move('pencil',pencilX[0],height,0);move('rose-pencil',pencilX[1],height*.55,0);
-      pencilDrop*=.83;
-      part('ribbon').position.y=.07+height*.18;
-    }
-    object('pencil').rotation.z=pencilX[0]*17;object('rose-pencil').rotation.z=pencilX[1]*17;
+    part('paper-star').visible=borrowedIndex>=0;
+    for(let i=0;i<4;i++)part('cup-pencil-'+i).visible=i!==borrowedIndex;
+    const pencilMoving=pencils.update(dt,!motion,model,speed=>{
+      ribbonFlick=Math.max(ribbonFlick,Math.min(.19,.027+Math.abs(speed)*.05));
+    });
+    const ribbon=part('ribbon');
+    ribbon.position.y=.07+(motion?ribbonFlick*.18:0);
+    ribbon.rotation.y=motion?ribbonFlick:0;
+    ribbonFlick*=Math.exp(-dt*8);
     object('file').rotation.y=sleeve?-.03:-.14;
     part('binder').rotation.x=unclipped?-.85:0;
     for(let i=0;i<4;i++)part('folder-page-'+i).position.z=(flap*.012+(unclipped||sleeve?.058:0))*i;
@@ -511,7 +559,7 @@ export function deskLife(stage, getModel, redraw, reduced) {
     const warm=warmAt ? clamp((time-warmAt)/750,0,1):1;
     return { drift, warm, active: Boolean(
       Math.abs(planeSpeed)>.025||propTravel>0||(!planeGrab&&lift>.005)||(!planeGrab&&Math.abs(aimOffset)>.01)||Math.hypot(marbleSpeed,marbleDepthSpeed)>.022||(motion&&swing<1)||linerLift!==linerGoal||
-      afterglow>0||pencilDrop>.003||(inHand==='plant'&&time-plantOpen<15600)||(inHand==='plant'&&dewTilt>0&&dew<1)||freeDrop.visible||ripple.visible||hop>0||leafBends.size||falling<1||cableMoving||resolution<1||stickerLift!==sticker||flying||(lampOn&&warm<1)), wakeAt:lampOn&&!moth.visible ? mothIdle+14000 : 0};
+      afterglow>0||pencilMoving||ribbonFlick>.004||guideLift!==foldGoal||(inHand==='plant'&&time-plantOpen<15600)||(inHand==='plant'&&dewTilt>0&&dew<1)||freeDrop.visible||ripple.visible||hop>0||leafBends.size||falling<1||cableMoving||resolution<1||stickerLift!==sticker||flying||(lampOn&&warm<1)), wakeAt:lampOn&&!moth.visible ? mothIdle+14000 : 0};
   }
-  return {tap,gestures,movePrint,stow,drawerChange,drawerMomentum,pullComplaint,lampChange,brushLeaf,pointerMoved,startleMoth,inspect,releaseProps,updateInspection,update};
+  return {tap,gestures,movePrint,stow,drawerChange,drawerMomentum,pullComplaint,lampChange,brushLeaf,cupAction,pointerMoved,startleMoth,inspect,releaseProps,updateInspection,update};
 }

@@ -47,8 +47,10 @@ export function inspectDeskObjects(stage,engine,room,deskCamera,getModel,redraw,
   }
   function rotate(dx,dy){
     life.inspect(part,active,{x:dx,y:dy},'turn');
-    if(active==='pencil' && Math.cos(pitch+dy)<-.25)
-      document.dispatchEvent(new CustomEvent('desk-eraser',{detail:true}));
+    if(active==='pencil'){
+      const flipped=Math.cos(pitch+dy)<-.25;
+      document.dispatchEvent(new CustomEvent('desk-eraser',{detail:flipped}));
+    }
     yaw+=dx;pitch=T.MathUtils.clamp(pitch+dy,-Math.PI*.94,Math.PI*.94);
     life.inspect(part,active,{yaw,pitch},'pose');
     redraw();
@@ -58,7 +60,7 @@ export function inspectDeskObjects(stage,engine,room,deskCamera,getModel,redraw,
     active=id;
     opener=stage.querySelector('[data-object="'+id+'"]');
     dialog.setAttribute('aria-label',label);
-    use.hidden=!action;use.textContent=action||'';
+    use.hidden=!action;use.textContent=id==='cup'?life.cupAction():action||'';
     yaw=id.includes('pencil')?-.72:-.24;
     pitch=id==='tape'||['drawer-note','crumb-plan','shim','screw'].includes(id)?.90:id.includes('pencil')?.94:id==='cup'?.32:.16;
     life.inspect('',active,null,'open');
@@ -79,7 +81,12 @@ export function inspectDeskObjects(stage,engine,room,deskCamera,getModel,redraw,
     life.stow(active,yaw);life.inspect('',active,null,'close');active='';source=null;drag=null;stand.clear();snapshot?.dispose();snapshot=null;
     backdrop.uniforms.frame.value=null;stage.classList.remove('inspecting');redraw();
   });
-  use.onclick=()=>{life.inspect(part,active,null,'use');close();using=true;try{opener.click();}finally{using=false;}};
+  use.onclick=()=>{
+    const returning=life.inspect(part,active,null,'use');
+    close();
+    if(returning)return;
+    using=true;try{opener.click();}finally{using=false;}
+  };
   surface.addEventListener('keydown',e=>{
     const turn={ArrowLeft:[-.2,0],ArrowRight:[.2,0],ArrowUp:[0,-.2],ArrowDown:[0,.2]}[e.key];
     if(turn){e.preventDefault();rotate(...turn);}
@@ -104,7 +111,7 @@ export function inspectDeskObjects(stage,engine,room,deskCamera,getModel,redraw,
     else rotate(x,y);
     drag.x=e.clientX;drag.y=e.clientY;
   });
-  surface.addEventListener('click',e=>{if(e.detail && backgroundTap && !hitsObject(e))close();else if(e.detail && hitsObject(e))life.inspect(part,active,null,'tap');backgroundTap=false;redraw();});
+  surface.addEventListener('click',e=>{if(e.detail && backgroundTap && !hitsObject(e))close();else if(e.detail && hitsObject(e)){life.inspect(part,active,null,'tap');if(active==='cup')use.textContent=life.cupAction();}backgroundTap=false;redraw();});
   surface.addEventListener('pointercancel',()=>{backgroundTap=false;});
   surface.addEventListener('lostpointercapture',()=>{drag=null;});
   surface.addEventListener('touchmove',e=>{if(drag && e.cancelable)e.preventDefault();},{passive:false});

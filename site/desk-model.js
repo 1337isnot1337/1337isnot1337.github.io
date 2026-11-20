@@ -294,14 +294,40 @@ export function furnish(scene, narrow, repaint, software=false) {
   // Stitched green leather blotter with a fine inset line.
   const matWidth=width*(narrow ? .75 : .69);
   const pad=tag(group(world,0,0,0),'blotter',[.12,.043,1.65],.75,.38);
-  box(pad,matWidth,.034,2.84,finish(0x726347),-.04,.015,.46,.016);
+  const matLeft=-matWidth/2-.04,matRight=matWidth/2-.04;
+  const matFar=-.96,matNear=1.88,cornerCut=.28;
+  function matStock(parent,corners,height,material,x=0,y=0,z=0){
+    const shape=new T.Shape(corners.map(([x,z])=>new T.Vector2(x,-z)));
+    const geometry=new T.ExtrudeGeometry(shape,{depth:height,bevelEnabled:false});
+    geometry.rotateX(-Math.PI/2);
+    const position=geometry.attributes.position,uv=geometry.attributes.uv;
+    for(let i=0;i<position.count;i++)uv.setXY(i,(x+position.getX(i)-matLeft)/matWidth,(z+position.getZ(i)-matFar)/2.84);
+    return mesh(parent,geometry,material,x,y,z);
+  }
+  const mainMat=[[matLeft,matFar],[matRight,matFar],[matRight,matNear-cornerCut],[matRight-cornerCut,matNear],[matLeft,matNear]];
+  const leatherUnder=finish(0x726347);
+  matStock(pad,mainMat,.030,leatherUnder);
   const hide=loader.load('assets/furniture/blotter.webp',repaint);
   hide.wrapS=hide.wrapT=T.RepeatWrapping;hide.repeat.set(matWidth/1.5,2.8/1.5);hide.anisotropy=4;
   const blotter=new T.MeshStandardMaterial({color:0x697a67,map:hide,bumpMap:hide,bumpScale:.012,roughness:.83,roughnessMap:hide});
-  box(pad,matWidth-.038,.015,2.80,blotter,-.04,.036,.46,.007);
+  matStock(pad,mainMat,.013,blotter,0,.030,0);
+  const hinge=detail('pad-hinge',pad,matRight-cornerCut/2,.034,matNear-cornerCut/2);
+  hinge.rotation.y=Math.PI/4;
+  const patch=detail('pad-corner',hinge);
+  const diagonal=cornerCut/Math.SQRT2;
+  matStock(patch,[[-diagonal,0],[diagonal,0],[0,diagonal]],.009,blotter);
+  matStock(patch,[[-diagonal,0],[diagonal,0],[0,diagonal]],.030,leatherUnder,0,-.030,0);
+  drawn(patch,diagonal*2,diagonal,(c,w,h)=>{
+    c.strokeStyle='#b6a482';c.lineWidth=.010;c.setLineDash([.029,.019]);
+    c.beginPath();c.moveTo(.034,.012);c.lineTo(w/2,h-.033);c.lineTo(w-.034,.012);c.stroke();
+  },0,.011,diagonal/2,true);
   drawn(pad,matWidth-.12,2.70,(c,w,h)=>{
     c.strokeStyle='#b6a482';c.lineWidth=.010;c.setLineDash([.029,.019]);
-    c.beginPath();c.roundRect(.025,.025,w-.05,h-.05,.09);c.stroke();
+    c.beginPath();
+    c.moveTo(.03,h-.033);c.lineTo(.03,.077);c.quadraticCurveTo(.032,.030,.086,.030);
+    c.lineTo(w-.08,.030);c.quadraticCurveTo(w-.033,.033,w-.033,.080);
+    c.lineTo(w-.033,h-.253);
+    c.moveTo(w-.255,h-.033);c.lineTo(.03,h-.033);c.stroke();
   },-.04,.046,.46,true);
   // Metal oscilloscope with a glass graticule, waveform, knobs and coiled probe.
   const scope=tag(group(world,narrow?-1.65:-2.84,.054,-1.16),'scope',[0,.53,.32],1.26,.85);
@@ -726,11 +752,19 @@ export function furnish(scene, narrow, repaint, software=false) {
   }
   starShape.closePath();
   mesh(paperStar,new T.ExtrudeGeometry(starShape,{depth:.010,bevelEnabled:false}),finish(0xe7b47f)).rotation.x=-Math.PI/2;
-  letter(mug,'♡',.10,.085,0,.002,0,{flat:true,ink:'#925a4b'}).rotation.x=Math.PI/2;
-  const padCorner=detail('pad-corner',pad,matWidth/2-.15,.044,1.72);
-  box(padCorner,.25,.011,.22,blotter);
-  const padGuide=detail('pad-guide',pad,matWidth/2-.16,.046,1.72);
-  letter(padGuide,'close enough',.28,.08,0,0,0,{flat:true,ink:'#ad997a'});
+  drawn(mug,.103,.103,(c,w,h)=>{
+    c.strokeStyle='#8c584a';c.lineWidth=.005;c.lineCap='round';
+    c.beginPath();c.moveTo(.053,.086);c.quadraticCurveTo(.064,.052,.053,.025);
+    c.quadraticCurveTo(.039,.012,.022,.022);c.quadraticCurveTo(.031,.047,.056,.047);
+    c.quadraticCurveTo(.061,.026,.082,.023);c.quadraticCurveTo(.077,.045,.057,.056);c.stroke();
+    c.beginPath();c.moveTo(.038,.085);c.lineTo(.066,.085);c.stroke();
+  },0,.002,0).rotation.x=Math.PI/2;
+  const padGuide=detail('pad-guide',pad,matRight-.072,.002,matNear-.083);
+  drawn(padGuide,.15,.14,(c,w,h)=>{
+    c.strokeStyle='#795c43';c.lineWidth=.006;
+    c.beginPath();c.moveTo(.031,.025);c.lineTo(.117,.039);c.lineTo(.119,.113);c.stroke();
+    c.font='0.021px Georgia';c.fillStyle='#644d3e';c.fillText('close enough',.007,.08);
+  },0,0,0,true);
   padGuide.visible=false;
   const filed=detail('loose-sheet',world,narrow?.06:.43,.059,.92);
   filed.rotation.y=.27;
@@ -743,8 +777,15 @@ export function furnish(scene, narrow, repaint, software=false) {
   deskPaper.rotation.y=.14;deskPaper.visible=false;
   const folded=detail('folded-sketch',deskPaper,0,.04,0);
   const foldedGeometry=new T.BufferGeometry();
-  foldedGeometry.setAttribute('position',new T.Float32BufferAttribute([-.26,0,.12,.29,.045,0,-.12,.045,0,.29,.045,0,-.26,0,-.12,-.12,.045,0],3));
-  foldedGeometry.setAttribute('uv',new T.Float32BufferAttribute([0,0,1,.5,.23,.5,1,.5,0,1,.23,.5],2));
+  // Inverse UVs follow the original sheet through the center crease and wings.
+  const folds=[
+    [-.26,.049,.16,.04,.06],[.29,.034,0,1,.50],[-.11,.008,0,.26,.50],
+    [.29,.034,0,1,.50],[-.26,.049,-.16,.04,.94],[-.11,.008,0,.26,.50],
+    [.29,.034,0,1,.50],[-.24,.037,.075,.09,.28],[-.11,.008,0,.26,.50],
+    [.29,.034,0,1,.50],[-.11,.008,0,.26,.50],[-.24,.037,-.075,.09,.72]
+  ];
+  foldedGeometry.setAttribute('position',new T.Float32BufferAttribute(folds.flatMap(row=>row.slice(0,3)),3));
+  foldedGeometry.setAttribute('uv',new T.Float32BufferAttribute(folds.flatMap(row=>row.slice(3)),2));
   foldedGeometry.computeVertexNormals();
   mesh(folded,foldedGeometry,new T.MeshStandardMaterial({side:T.DoubleSide,color:0xfae8be,roughness:.86}));
   const drawingFace=new T.MeshStandardMaterial({side:T.DoubleSide,map:sketchFace.material.map,transparent:true,alphaTest:.14,polygonOffset:true,polygonOffsetFactor:-2});
@@ -952,5 +993,5 @@ export function furnish(scene, narrow, repaint, software=false) {
   }
   source.forEach(g=>g.dispose());
   const flexCable=followProbe(cableWire.children[0],cableTip,probeRest);
-  return {world,targets,details,occluders,drawer,flap,cover,lamp,bulbGlass:fastMaterials.get(bulbGlass)||bulbGlass,contactMap,daylight,projectLampShadow,flexCable,sketchTexture:sketchFace.material.map};
+  return {world,targets,details,occluders,drawer,flap,cover,lamp,bulbGlass:fastMaterials.get(bulbGlass)||bulbGlass,contactMap,daylight,projectLampShadow,flexCable,pencilBounds:{book:book.position.x+(narrow?.24:.43),mat:matRight-.10},sketchTexture:sketchFace.material.map};
 }

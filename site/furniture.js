@@ -1,10 +1,10 @@
 import * as T from './vendor/three/three.module.min.js';
-import { furnish } from './desk-model.js?v=19';
-import { inspectDeskObjects } from './desk-inspect.js?v=6';
+import { furnish } from './desk-model.js?v=20';
+import { inspectDeskObjects } from './desk-inspect.js?v=7';
 
 import { attachDeskPointer } from './desk-pointer.js?v=13';
 
-import { deskLife } from './desk-life.js?v=5';
+import { deskLife } from './desk-life.js?v=6';
 import { deskView } from './desk-view.js?v=1';
 import { drawerTravel } from './desk-drawer.js?v=1';
 
@@ -78,6 +78,7 @@ export function mountFurniture(stage,showGraphicsFallback) {
       textures.forEach(t=>t.dispose());materials.forEach(m=>m.dispose());geometries.forEach(g=>g.dispose());
     }
     model=furnish(scene,narrow,redraw,software);hitGroups.clear();extraMeshes.length=0;
+    stage.closest('#studio').dispatchEvent(new Event('desk-sketch-request'));
     try{
       const destination=sessionStorage.getItem('desk-return');
       if(destination && model.targets.has(destination)){
@@ -279,7 +280,7 @@ export function mountFurniture(stage,showGraphicsFallback) {
       }
       const gesture=life.gestures[name];
       if(!gesture)return false;
-      gesture(dx,dy);detailMoved=true;redraw();return true;
+      gesture(dx,dy,time);detailMoved=true;redraw();return true;
     },
     orbitBy(delta,vertical,time) {
       view.drag(delta,vertical,time);
