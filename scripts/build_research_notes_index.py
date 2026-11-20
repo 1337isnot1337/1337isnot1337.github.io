@@ -130,7 +130,7 @@ def render(entries: list[dict]) -> str:
   <link rel="icon" href="/assets/prints/favicon.png">
   <link rel="stylesheet" href="/shelf.css?v=25">
   <link rel="stylesheet" href="/projects/project-pages.css?v=1">
-  <link rel="stylesheet" href="/research-notes/notes.css?v=2">
+  <link rel="stylesheet" href="/research-notes/notes.css?v=3">
   <link rel="stylesheet" href="/desk-extras.css?v=9">
   <script defer src="/project-paper.js?v=2"></script>
   <script type="application/ld+json">{structured}</script>

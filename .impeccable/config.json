@@ -56,6 +56,24 @@
         ],
         "createdAt": "2026-11-19T20:06:43.732Z",
         "reason": "Browser verification: the reported pair is inherited body ink on a desk gradient stop. The visible shelf-return link, graphics notice and fallback object labels use their own backgrounds and measured at least 11.0:1 with WebGL on, WebGL blocked and JavaScript off."
+      },
+      {
+        "rule": "cream-palette",
+        "value": "*",
+        "files": [
+          "site/research-notes/index.html"
+        ],
+        "createdAt": "2026-11-20T06:52:19.179Z",
+        "reason": "DESIGN.md pairs warm ivory paper with plum ink. The research-notes page uses that documented shared paper token."
+      },
+      {
+        "rule": "organic-clip-path",
+        "value": "*",
+        "files": [
+          "site/research-notes/index.html"
+        ],
+        "createdAt": "2026-11-20T06:52:19.186Z",
+        "reason": "The flagged eleven-vertex clip is on the .favorites tape pseudo-element in shelf.css. The research-notes index contains no .favorites element and does not render the tape."
       }
     ]
   }
