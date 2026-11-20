@@ -107,9 +107,9 @@ Inside the workshop, paper tabs select an asymmetric working spread with the art
 
 ## Personal notebook
 
-The book opens to one illustrated leaf at a time. Bookmarks and previous/next links turn between robotics, particle physics, teaching and off-the-clock interests. The 2025 REEFSCAPE photograph, particle tracks, terminal and cassette identify their respective leaves. Robotics is paired with an actual Java excerpt from Cinna’s merged intake-subsystem contribution; particle physics is paired with the title, authors and date of the public IMSAloquium abstract. These are source artifacts, not illustrative performance data. The code link is pinned to its original commit so the displayed excerpt remains traceable. The abstract is not presented as a downloadable paper, and no research plot is invented. The teaching leaf covers the Linux workshops and computing classes. The cassette leaf links to ALIEN STAGE and the Avatar series. Keep the story and its primary source together when adapting a leaf for a phone.
+The book opens to one illustrated leaf at a time. Bookmarks and previous/next links turn between robotics, particle physics, teaching and off-the-clock interests. The 2025 REEFSCAPE photograph, particle tracks, terminal and cassette identify their respective leaves. The robotics leaf covers Cinna’s programming lead role on Team 2022. The physics leaf gives the title, authors and date of the public IMSAloquium abstract. The abstract is not presented as a downloadable paper, and no research plot is invented. The teaching leaf covers the Linux workshops and computing classes. The cassette leaf links to ALIEN STAGE and the Avatar series. Keep the story and its primary source together when adapting a leaf for a phone.
 
-Sources: [robot code at its original commit](https://github.com/titan2022/FRC-2026-JAVA/blob/275a9639b7a768b2026bf9e56adfdf6069d0093e/src/main/java/frc/robot/subsystems/base/VoltageControlledBase.java), [IMSAloquium abstract](https://digitalcommons.imsa.edu/sir_presentations/2026/session2/5/).
+The physics entry links to the [IMSAloquium abstract](https://digitalcommons.imsa.edu/sir_presentations/2026/session2/5/).
 
 ## In-place sound
 
