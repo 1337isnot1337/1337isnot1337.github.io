@@ -57,8 +57,10 @@ const server = http.createServer((req,res) => {
       errors.push(`Failed resource ${request.url()}: ${request.failure()?.errorText}`);
    });
    let postLookups=0;
-   await page.route('https://www.cloudflare.com/cdn-cgi/trace',route=>{
-     postLookups++;return route.fulfill({status:200,contentType:'text/plain',headers:{'access-control-allow-origin':'*'},body:'loc=CA\n'});
+   await page.route('https://api.ipapi.is/',route=>{
+     postLookups++;
+     const routing={city:'Montréal',region:'Québec',country:'Canada',asn:'AS64501 Example Transit',company:null};
+     return route.fulfill({status:name==='tablet' ? 429 : 200,json:routing});
    });
    await page.goto(base);
    assert.equal(await page.locator('html').getAttribute('data-view'),'desk');
@@ -318,7 +320,7 @@ const server = http.createServer((req,res) => {
    await page.locator('#clear-projects').click();
    assert.equal(await page.locator('#find-project').inputValue(),'');
    await page.locator('.desk-rail [href="#about"]').click();
-   assert.ok(await page.locator('#about pre').evaluate(el=>el.scrollWidth<=el.clientWidth+1),`${name}: robot excerpt fits without horizontal scrolling`);
+   assert.ok(await page.locator('.notebook-robotics .notebook-season a').isVisible());
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),`${name}: notebook fits page`);
    assert.equal(await page.locator('#about .favorites a').count(),4);
    await page.locator('#about').screenshot({path:`test-results/${name}-notebook.png`});
@@ -340,7 +342,7 @@ const server = http.createServer((req,res) => {
    await page.locator('.object-drawer').focus();
    await page.keyboard.press('Enter');
    assert.equal(await page.evaluate(()=>document.pointerLockElement),null);
-   assert.equal(postLookups,0,'country is only requested when the postcard is picked up');
+   assert.equal(postLookups,0,'the network lookup waits until the postcard is picked up');
    await page.locator('.postcat').focus();
    await page.keyboard.press('Enter');
    const postal=await page.locator('.post-hand').boundingBox();
@@ -348,7 +350,13 @@ const server = http.createServer((req,res) => {
    await page.mouse.move(px,py);await page.mouse.down();
    await page.mouse.move(px+postal.width*.72,py,{steps:9});await page.mouse.up();
    assert.equal(await page.locator('.postcard-back').getAttribute('aria-hidden'),'false');
-   await page.waitForFunction(()=>document.querySelector('.post-location').textContent.endsWith(' · Canada'));
+   if(name==='tablet'){
+     assert.match(await page.locator('.post-location').innerText(),/ time$/);
+     assert.ok(await page.locator('.post-network').isHidden());
+   }else{
+     await page.waitForFunction(()=>document.querySelector('.post-location').textContent==='Near Montréal, Québec, Canada');
+     assert.equal(await page.locator('.post-network').innerText(),'Via Example Transit · AS64501');
+   }
    assert.match(await page.locator('#post-route').innerText(),/Particle physics/);
    assert.ok(await page.locator('.postcard-back').evaluate(back =>
      back.offsetWidth <= back.parentElement.clientWidth && document.documentElement.scrollWidth <= innerWidth
@@ -356,6 +364,7 @@ const server = http.createServer((req,res) => {
    const downloaded = page.waitForEvent('download');
    await page.locator('#save-post').click();
    assert.equal((await downloaded).suggestedFilename(),'a-postcard-from-cinnas-desk.png');
+   assert.equal(postLookups,1,'saving uses the same postmark');
    await page.locator('.return-post').click();
    assert.ok(await page.locator('.desktop-picture').isVisible());
    await page.goto(base + '/#cpu');

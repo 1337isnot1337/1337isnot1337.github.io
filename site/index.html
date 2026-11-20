@@ -67,8 +67,8 @@
     "></script>
     <script defer src="rook-graph.js?v=1"></script>
     <script>document.documentElement.dataset.view = /^(#projects|#flyover|#cpu|#schedule|#conjectures|#factoring|#conway)$/.test(location.hash) ? "shelf" : "desk";</script>
-    <link rel="stylesheet" href="studio.css?v=11" />
-    <script defer src="studio.js?v=11" onerror="delete document.documentElement.dataset.view"></script>
+    <link rel="stylesheet" href="studio.css?v=12" />
+    <script defer src="studio.js?v=12" onerror="delete document.documentElement.dataset.view"></script>
     <script defer src="paper-turn.js?v=1"></script>
     <script defer src="desk-keepsakes.js?v=7"></script>
     <script defer src="paper-dismiss.js?v=1"></script>
@@ -660,7 +660,16 @@
       <img class="postcard-front" draggable="false" src="assets/studio/night-mail.webp" width="1200" height="800" loading="lazy" alt="A calico mail carrier with a pink envelope at a moonlit window." />
       <div class="postcard-back" aria-hidden="true">
         <div class="post-message"><h3>From Cinna’s desk</h3><p>Your stops on this visit</p><ol id="post-route"></ol></div>
-        <div class="post-address"><img class="cat-stamp" src="assets/studio/night-mail.webp" alt="" loading="lazy" width="92" height="65" /><p class="post-recipient"></p><small class="post-location"></small><small class="postmark"></small></div>
+        <div class="post-address">
+          <img class="cat-stamp" src="assets/studio/night-mail.webp" alt="" loading="lazy" width="92" height="65" />
+          <div class="post-delivery">
+            <p class="post-recipient"></p>
+            <small class="post-device"></small>
+            <strong class="post-location"></strong>
+            <small class="post-network" hidden></small>
+          </div>
+          <small class="postmark"></small>
+        </div>
       </div>
     </div></div>
     <figcaption><div class="post-controls" hidden><button id="save-post" type="button">Save postcard ↓</button></div></figcaption>

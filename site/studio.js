@@ -210,7 +210,30 @@
   const recipient=studio.querySelector('.post-recipient');
   const destination=studio.querySelector('.post-location');
   const postmark=studio.querySelector('.postmark');
-  let countryLookup;
+  const device=studio.querySelector('.post-device');
+  const network=studio.querySelector('.post-network');
+  let routingLookup;
+  async function lookupPostmark(){
+    const controller=new AbortController();
+    const timeout=setTimeout(()=>controller.abort(),3500);
+    try{
+      const response=await fetch('https://api.ipapi.is/',{
+        credentials:'omit',referrerPolicy:'no-referrer',signal:controller.signal
+      });
+      if(!response.ok)return;
+      const {city,region,country,asn,company}=await response.json();
+      const place=[...new Set([city,region,country].filter(Boolean))].join(', ');
+      const [,number,operator]=/^\s*(AS\d+)\b\s*(.*)$/i.exec(asn || '') || [];
+      return {
+        place:city ? 'Near '+place : place,
+        route:[company || operator,number].filter(Boolean).join(' · ')
+      };
+    }catch{
+      // The local clock and time zone are already on the paper.
+    }finally{
+      clearTimeout(timeout);
+    }
+  }
   function addressVisitor(){
     const ua=navigator.userAgent;
     const browser=(/Edg(e|A|iOS)?\//.test(ua) && 'Edge') ||
@@ -223,21 +246,22 @@
       (/Mac/.test(ua) && 'macOS') || (/Linux/.test(ua) && 'Linux') || 'an unmarked machine';
     const now=new Date(),hour=now.getHours();
     const reader=hour<5 || hour>=22 ? 'the night owl' : hour<9 ? 'the early bird' : 'the desk detective';
-    recipient.textContent='To '+reader+' on '+browser;
+    recipient.textContent='To '+reader;
+    device.textContent=browser+' on '+os;
     const zone=Intl.DateTimeFormat().resolvedOptions().timeZone || 'local';
-    const clockTown=zone.split('/').pop().replaceAll('_',' ')+' time';
-    destination.textContent='c/o '+os+' · '+clockTown;
+    destination.textContent=zone.split('/').pop().replaceAll('_',' ')+' time';
     const ink=stage.classList.contains('is-rendered') ? 'WebGL 2' : 'paper edition';
-    postmark.textContent=now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'})+' · '+ink;
-    // The shared Pages host has no server-side request handler. Read only the country code.
-    countryLookup??=fetch('https://www.cloudflare.com/cdn-cgi/trace',{
-      credentials:'omit',referrerPolicy:'no-referrer',signal:AbortSignal.timeout?.(3500)
-    }).then(async response=>{
-      if(!response.ok)return;
-      const code=(await response.text()).match(/^loc=([A-Z]{2})$/m)?.[1];
-      if(code && code!=='XX')return new Intl.DisplayNames([navigator.language],{type:'region'}).of(code);
-    }).catch(()=>undefined);
-    countryLookup.then(country=>{if(country)destination.textContent='c/o '+os+' · '+country;});
+    const clock=now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',timeZoneName:'short'});
+    postmark.textContent=clock+' · '+ink;
+
+    routingLookup??=lookupPostmark();
+    routingLookup.then(address=>{
+      if(address?.place)destination.textContent=address.place;
+      if(address?.route){
+        network.textContent='Via '+address.route;
+        network.hidden=false;
+      }
+    });
   }
   const drawer=stage.querySelector('[data-object="drawer"]');
   const card=stage.querySelector('[data-object="keepsake"]');
@@ -262,7 +286,7 @@
     status.textContent = "";
     try {
       addressPostcard();
-      await Promise.all([nightMail.decode(), stamp.decode(), document.fonts.ready]);
+      await Promise.all([nightMail.decode(), stamp.decode(), document.fonts.ready, routingLookup]);
       const canvas = document.createElement("canvas");
       canvas.width = 1200;
       canvas.height = 1600;
@@ -288,17 +312,39 @@
       });
       const side = Math.min(stamp.naturalWidth, stamp.naturalHeight);
       ctx.drawImage(stamp, (stamp.naturalWidth-side)/2, (stamp.naturalHeight-side)/2, side, side, 971, 864, 160, 160);
-      ctx.font = '42px "Bricolage Grotesque", sans-serif';
-      const addressWords=recipient.textContent.split(' ');
-      let line='',row=1140;
-      for(const word of addressWords){
-        if(line && ctx.measureText(line+' '+word).width>360){ctx.fillText(line,786,row);row+=53;line='';}
-        line=line?line+' '+word:word;
+      // Lay out the same address as the paper, including wrapped place and carrier names.
+      const lines=[];
+      let baseline=0;
+      for(const [field,fontSize,family] of [
+        [recipient,38,'Bricolage Grotesque'],[device,24,'IBM Plex Mono'],
+        [destination,30,'DM Sans'],[network,23,'IBM Plex Mono']
+      ]){
+        if(!field.textContent)continue;
+        const font=fontSize+'px "'+family+'"';
+        ctx.font=font;
+        let line='';
+        for(const word of field.textContent.split(/\s+/)){
+          if(line && ctx.measureText(line+' '+word).width>360){
+            baseline+=fontSize*1.25;
+            lines.push({line,font,baseline});
+            line='';
+          }
+          line=line ? line+' '+word : word;
+        }
+        baseline+=fontSize*1.25;
+        lines.push({line,font,baseline});
+        baseline+=10;
       }
-      ctx.fillText(line,786,row,360);
-      ctx.font = '28px "DM Sans", sans-serif';
-      ctx.fillText(destination.textContent,786,row+65,360);
-      ctx.font = '21px "IBM Plex Mono", monospace';
+      ctx.save();
+      ctx.translate(786,1045);
+      const scale=Math.min(1,405/baseline);
+      ctx.scale(scale,scale);
+      for(const row of lines){
+        ctx.font=row.font;
+        ctx.fillText(row.line,0,row.baseline,360);
+      }
+      ctx.restore();
+      ctx.font='21px "IBM Plex Mono", monospace';
       ctx.fillText(postmark.textContent,786,1490,360);
       const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/png"));
       if (!blob) throw new Error("Image export failed");
