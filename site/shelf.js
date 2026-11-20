@@ -392,13 +392,17 @@ function displayFromHash() {
     index + 1 + " / " + prints.length;
   const repo = article.querySelector(".project-repo");
   document.querySelector("#reader-repo").href = repo.href;
+  const paperColor=getComputedStyle(print).getPropertyValue('--stock').trim();
+  dialog.style.setProperty('--reader-stock',paperColor||'#f7e9d3');
   document.querySelector("#close-dialog").textContent = opener?.closest("#studio") ? "Back to desk" : "Back to shelf";
   loadArticleMedia(article);
   const recording = article.querySelector("audio");
   if (recording){
     recording.preload = "metadata";
-    if(recording.dataset.deskCue){
-      const cue=Number(recording.dataset.deskCue);
+    const requested=new URLSearchParams(location.search).get('t');
+    const input=recording.dataset.deskCue??requested;
+    if(input!==null&&Number.isFinite(Number(input))){
+      const cue=Math.max(0,Math.min(85,Number(input)));
       const align=()=>{recording.currentTime=Math.min(recording.duration,cue);};
       if(recording.readyState)align();
       else recording.addEventListener('loadedmetadata',align,{once:true});
@@ -415,7 +419,11 @@ function displayFromHash() {
     deskReturn.href='/#studio';
     const thumbnail=art.cloneNode();thumbnail.className='';thumbnail.alt='';
     deskReturn.append(thumbnail,'Find this on the desk');
-    deskReturn.addEventListener('click',()=>{try{sessionStorage.setItem('desk-return',boardObjects[article.id]);}catch{}});
+    deskReturn.addEventListener('click',()=>{
+      const prop=boardObjects[article.id];
+      try{sessionStorage.setItem('desk-return',prop);}catch{}
+      requestAnimationFrame(()=>document.dispatchEvent(new CustomEvent('desk-return-target',{detail:prop})));
+    });
     article.querySelector('.detail-heading').append(deskReturn);
   }
   dialog.setAttribute("aria-labelledby", article.id + "-title");
@@ -702,6 +710,15 @@ document.querySelector('#factors').addEventListener('dblclick',event=>{
   if(note){note.remove();return;}
   note=document.createElement('small');note.dataset.factorAttempts='';note.className='found-paper';
   note.textContent=field.dataset.attempts;
+  const first=document.querySelector('#factor-steps li');
+  const [left,divisor,right]=first?[...first.children].map(element=>element.textContent):[];
+  if(left&&divisor&&right){
+    const circle=document.createElement('strong');circle.className='factor-pair-circle';
+    circle.textContent=divisor.replace(/[^0-9]/g,'')+' × '+right+' = '+left;
+    note.append(document.createTextNode(' '),circle);
+  }
+  const source=document.createElement('a');source.href='/projects/integer-factoring/#lean-verification';
+  source.textContent='Lean statement';note.append(document.createTextNode(' '),source);
   field.after(note);
 });
 // One PHT entry in the Hack CPU starts at 01. It saturates at either end.

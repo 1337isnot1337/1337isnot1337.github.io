@@ -5,7 +5,7 @@ import { inspectDeskObjects } from './desk-inspect.js?v=9';
 import { attachDeskPointer } from './desk-pointer.js?v=13';
 
 import { deskLife } from './desk-life.js?v=9';
-import { deskView } from './desk-view.js?v=1';
+import { deskView } from './desk-view.js?v=2';
 import { drawerTravel } from './desk-drawer.js?v=1';
 
 export function mountFurniture(stage,showGraphicsFallback) {
@@ -61,7 +61,7 @@ export function mountFurniture(stage,showGraphicsFallback) {
   const life=deskLife(stage,()=>model,redraw,motion);
   const inspector=inspectDeskObjects(stage,engine,scene,camera,()=>model,redraw,life);
   let ambientTimer=0;
-  let lastPart='',pickedUp='',pickupTravel=0,centered=0,centerUntil=0;
+  let lastPart='',pickedUp='',pickupTravel=0,centered='',centerUntil=0;
   function redraw() {
     dirty=true;
     if (visible && !contextLost && !frame) frame=requestAnimationFrame(renderFrame);
@@ -82,8 +82,7 @@ export function mountFurniture(stage,showGraphicsFallback) {
     try{
       const destination=sessionStorage.getItem('desk-return');
       if(destination && model.targets.has(destination)){
-        centered=model.targets.get(destination).root.getWorldPosition(new T.Vector3()).x*.40;
-        centerUntil=performance.now()+3500;
+        faceObject(destination);
         sessionStorage.removeItem('desk-return');
       }
     }catch{}
@@ -187,8 +186,12 @@ export function mountFurniture(stage,showGraphicsFallback) {
     const sunChanged=Math.abs(sun.position.x+4.7-events.drift)>.045;
     if(sunChanged)sun.position.x=-4.7+events.drift;
     model.daylight.value=events.drift;
-    const returnOffset=clampReturn(time);
-    camera.position.x+=returnOffset*.48;aim.x+=returnOffset;
+    const centeredObject=centerUntil>time&&model.targets.get(centered);
+    if(centeredObject){
+      const focus=centeredObject.root.localToWorld(point.copy(centeredObject.point));
+      const strength=motion.matches?1:Math.max(0,Math.min(1,(centerUntil-time)/740));
+      aim.lerp(focus,strength);
+    }
     if(!software&&(detailMoved||sunChanged))engine.shadowMap.needsUpdate=true;
     camera.lookAt(aim);engine.render(scene,camera);projectTargets();
     if(!stage.classList.contains('is-rendered') || prevDrawer!==drawerAmount || prevFile!==fileAngle || prevBook!==bookAngle || model!==boundedModel || events.active || detailMoved){
@@ -205,12 +208,18 @@ export function mountFurniture(stage,showGraphicsFallback) {
       warning.hidden=!software;
       lamp.hidden=false;links.get('plant').hidden=false;
     }
-    if((events.active && !document.hidden) || returnOffset || posture.move || gazeX!==targetX||gazeY!==targetY||drawerMotion.moving||fileAngle!==folderGoal||bookAngle!==(opened==='about'?1:0))redraw();
+    if((events.active && !document.hidden) || (centeredObject && !motion.matches) || posture.move || gazeX!==targetX||gazeY!==targetY||drawerMotion.moving||fileAngle!==folderGoal||bookAngle!==(opened==='about'?1:0))redraw();
   }
-  function clampReturn(time){
-    if(motion.matches)return centerUntil>time?centered:0;
-    return centered*Math.max(0,Math.min(1,(centerUntil-time)/700));
+  function faceObject(id){
+    if(!model?.targets.has(id))return;
+    view.faceFront();
+    centered=id;
+    centerUntil=performance.now()+3150;
+    redraw();
   }
+  document.addEventListener('desk-return-target',event=>{
+    if(document.documentElement.dataset.view==='desk')faceObject(event.detail);
+  });
   let detailMoved=false;
   const extraMeshes=[];
   const shown=mesh=>{for(let n=mesh;n;n=n.parent)if(!n.visible)return false;return true;};
@@ -292,6 +301,7 @@ export function mountFurniture(stage,showGraphicsFallback) {
       gesture(dx,dy,time);detailMoved=true;redraw();return true;
     },
     orbitBy(delta,vertical,time) {
+      centerUntil=0;
       view.drag(delta,vertical,time);
       if(Math.abs(delta)+Math.abs(vertical)>.035)life.startleMoth(time);
       redraw();

@@ -112,8 +112,9 @@
       const path=svg.querySelector('[data-from="'+from+'"][data-to="'+to+'"]');
       path.setAttribute('d',curve);
     }
-    for(const {button} of vertices.values()){
-      button.style.translate=graph?(button.dataset.rookTranslate||''):'';
+    for(const vertex of vertices.values()){
+      if(graph)positionVertex(vertex);
+      else vertex.button.style.translate='';
     }
     if(graph && frame.hasAttribute('data-custom'))redrawEdges();
   }
@@ -123,6 +124,16 @@
       path.setAttribute('d','M'+a.x+','+a.y+'L'+b.x+','+b.y);
     }
   }
+  function positionVertex(vertex){
+    const i=[...board.children].indexOf(vertex.button);
+    const rect=frame.getBoundingClientRect();
+    const x=(vertex.x-60-90*(i%3))*rect.width/300;
+    const y=(vertex.y-60-90*Math.floor(i/3))*rect.height/300;
+    vertex.button.style.translate=x+'px '+y+'px';
+  }
+  if(typeof ResizeObserver==='function')new ResizeObserver(()=>{
+    if(frame.dataset.view==='graph')for(const vertex of vertices.values())positionVertex(vertex);
+  }).observe(frame);
   let dragging=null,suppress=false;
   board.addEventListener('pointerdown',event=>{
     const button=event.target.closest('button');
@@ -141,10 +152,7 @@
     const v=dragging.vertex;
     v.x=Math.min(266,Math.max(34,dragging.x+300*dx/rect.width));
     v.y=Math.min(266,Math.max(34,dragging.y+300*dy/rect.height));
-    const i=[...board.children].indexOf(v.button);
-    const pos=[(v.x-60-90*(i%3))*rect.width/300,(v.y-60-90*Math.floor(i/3))*rect.height/300];
-    v.button.dataset.rookTranslate=pos.map(n=>n+'px').join(' ');
-    v.button.style.translate=v.button.dataset.rookTranslate;
+    positionVertex(v);
     redrawEdges();
   });
   board.addEventListener('lostpointercapture',()=>{dragging=null;});

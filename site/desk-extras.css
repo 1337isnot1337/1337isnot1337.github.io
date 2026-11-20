@@ -309,3 +309,22 @@
   rotate: 17deg; background: #614940; border-radius: 35%; opacity: .8;
 }
 @media (prefers-reduced-motion: reduce) { .print .print-sheet { transition: none; } }
+.open-project .project-repo { box-shadow: inset 0 -2px color-mix(in srgb,var(--reader-stock,#f7e9d3),#584047 35%); }
+.reference-copy-receipt { margin-inline-start: .4em; color: #724954; font-weight: 650; }
+.theorem-slip { padding: .6em .8em; background: #f1e3c8; border-block: 1px solid #b69e80; }
+.theorem-slip pre { font-size: .81em; white-space: pre-wrap; overflow-wrap: anywhere; }
+.trace-discard { border-top: 1px dashed #a9867f; padding-top: .25em; }
+.trace-discard small,.trace-discard s { display: block; }
+.factor-pair-circle { display: inline-block; border: 1px solid #ad695c; border-radius: 56% 44% 49% 51%; padding: .1em .62em; rotate: -2deg; }
+.schedule-example-input > div { translate: var(--strip-drift,0) 0; }
+.print-research-slip { display: block; margin-top: .6em; padding: .3em .65em; border: 1px solid #a89276; border-radius: 4px; background: #f7edda; color: #40323d; }
+.research-paper-print { display: none; }
+@media print {
+  body[data-print-research] > :not(.research-paper-print) { display: none !important; }
+  body[data-print-research] .research-paper-print {
+    display: block; break-inside: avoid; margin: 0; padding: 10mm;
+    max-width: 175mm; background: #fff; color: #17141a; font: 11pt/1.45 Georgia,serif;
+  }
+  .research-paper-print figure { margin: 8mm 0; max-width: 65mm; }
+  .research-paper-print math { display: block; }
+}

@@ -46,5 +46,9 @@ export function deskView(){
     };
   }
 
-  return {drag,release,step};
+  function faceFront(){
+    travel=0;depth=0;rear=0;yaw=0;pitch=0;overshoot=0;
+    speed=0;lastMove=-Infinity;
+  }
+  return {drag,release,step,faceFront};
 }

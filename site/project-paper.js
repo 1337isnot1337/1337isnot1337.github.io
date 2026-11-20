@@ -22,75 +22,139 @@
         grip={id:event.pointerId,x:event.clientX,y:event.clientY};
         row.setPointerCapture(event.pointerId);
       });
+      row.addEventListener('pointermove',event=>{
+        if(grip?.id!==event.pointerId||!event.buttons)return;
+        const travel=Math.max(-18,Math.min(18,event.clientX-grip.x));
+        row.style.setProperty('--strip-drift',travel+'px');
+      });
       row.addEventListener('pointerup',event=>{
         if(grip?.id!==event.pointerId)return;
         const delta=(event.clientX-grip.x)+(event.clientY-grip.y);
-        grip=null;
+        grip=null;row.style.removeProperty('--strip-drift');
         if(Math.abs(delta)<20)return;
         periods[i]=delta<0?2:3;
         render();
       });
-      row.addEventListener('pointercancel',()=>{grip=null;});
+      row.addEventListener('pointercancel',()=>{grip=null;row.style.removeProperty('--strip-drift');});
     }
   }
+  function make(tag,content='',className=''){
+    const item=document.createElement(tag);
+    item.textContent=content;if(className)item.className=className;
+    return item;
+  }
+  function copyOnHold(surface,reference){
+    if(!surface||!navigator.clipboard)return;
+    let timer=0,press=null,consumed=false;
+    const cancel=()=>{clearTimeout(timer);press=null;};
+    surface.addEventListener('pointerdown',event=>{
+      if(event.button!==0||!event.isPrimary)return;
+      cancel();consumed=false;
+      press={x:event.clientX,y:event.clientY};
+      timer=setTimeout(()=>{
+        const link=reference();
+        if(!link)return;
+        consumed=true;
+        navigator.clipboard.writeText(link).then(()=>{
+          surface.classList.add('reader-evidence');
+          const receipt=make('small','Copied.','reference-copy-receipt');
+          surface.after(receipt);
+          setTimeout(()=>{receipt.remove();surface.classList.remove('reader-evidence');},1300);
+        }).catch(()=>{consumed=false;});
+      },520);
+    });
+    surface.addEventListener('pointermove',event=>{
+      if(press&&Math.hypot(event.clientX-press.x,event.clientY-press.y)>8)cancel();
+    });
+    window.addEventListener('pointerup',cancel);
+    window.addEventListener('pointercancel',cancel);
+    surface.addEventListener('click',event=>{
+      if(consumed&&event.detail){consumed=false;event.preventDefault();}
+    });
+  }
+  const recording=document.querySelector('#recording');
+  copyOnHold(document.querySelector('#spectrum-seek'),()=>{
+    if(!recording?.readyState)return null;
+    const link=new URL(location.pathname,location.origin);
+    link.hash='flyover';link.searchParams.set('t',recording.currentTime.toFixed(2));
+    return link.href;
+  });
   const bound=document.querySelector('#factoring .research-bound');
   const writtenProof=document.querySelector('#factoring .outbound');
   const theorem='IntegerFactoring.HalfAppendix.sqrtLogLog_factoring';
+  const statement='theorem sqrtLogLog_factoring : Factoring.SqrtLogLogConjecture';
   const source='https://github.com/1337isnot1337/integer-factoring/blob/96cd333018060b4ddcb6dbc951b02fd1c0ae2efb/formal-appendix/HalfTheorem.lean#L73';
+  const definition='https://github.com/IsaacRudich/SubexponentialDeterministicFactoring/blob/c91cc3f4947caca8977e81a5d14244f73b5ae2b1/Challenge.lean#L76';
   if(bound){
+    copyOnHold(writtenProof,()=>source);
     bound.addEventListener('dblclick',event=>{
-      if(event.target.closest('a'))return;
+      if(event.target.closest('a,button'))return;
       let proof=bound.querySelector('.found-paper');
       if(proof){proof.hidden=!proof.hidden;return;}
-      proof=document.createElement('div');proof.className='found-paper';
-      const exact=document.createElement('a');exact.href=source;
-      exact.textContent='theorem sqrtLogLog_factoring : Factoring.SqrtLogLogConjecture';
-      const premise=document.createElement('button');
-      premise.type='button';premise.textContent='SqrtLogLogConjecture';
+      proof=make('div','','found-paper theorem-slip');
+      const exact=make('a',statement);exact.href=source;
+      const expands=make('pre',`∃ C : ℕ, FactoringInTime (fun n =>
+  C * 2 ^ (C * n / (Nat.sqrt (Nat.log 2 n) + 1)))`);
+      const premise=make('a','FactoringInTime and the exact rate');premise.href=definition;
+      const prose=make('p','An existential constant C bounds the deterministic machine. Here n is the binary input length. The output is the smallest prime factor, with the pinned reference’s conventions at 0 and 1.');
       const caption=bound.querySelector('figcaption');
       const mark=on=>caption.classList.toggle('reader-evidence',on);
       premise.addEventListener('focus',()=>mark(true));premise.addEventListener('blur',()=>mark(false));
       premise.addEventListener('pointerenter',()=>mark(true));premise.addEventListener('pointerleave',()=>mark(false));
-      premise.addEventListener('click',()=>{mark(true);caption.scrollIntoView({block:'nearest'});});
-      proof.append(exact,' ',premise);
+      copyOnHold(exact,()=>source);
+      proof.append(exact,expands,prose,premise);
       bound.append(proof);
     });
-    writtenProof?.addEventListener('pointerdown',event=>{
-      if(event.button!==0)return;
-      const copy=setTimeout(()=>navigator.clipboard?.writeText(source).then(()=>{
-        writtenProof.classList.add('reader-evidence');setTimeout(()=>writtenProof.classList.remove('reader-evidence'),850);
-      }).catch(()=>{}),500);
-      window.addEventListener('pointerup',()=>clearTimeout(copy),{once:true});
-      window.addEventListener('pointercancel',()=>clearTimeout(copy),{once:true});
-    });
   }
+
+  let printSheet=null;
+  function printable({title,scope,url,figure}){
+    const slip=make('aside','','research-slip');
+    slip.append(make('b',title),make('p',scope));
+    if(figure){
+      const art=make('figure');
+      art.append(figure.cloneNode(true));slip.append(art);
+    }
+    const origin=make('a',url);origin.href=url;slip.append(origin);
+    const action=make('button','Print slip','print-research-slip');action.type='button';
+    action.addEventListener('click',()=>{
+      printSheet?.remove();
+      printSheet=slip.cloneNode(true);printSheet.classList.add('research-paper-print');
+      printSheet.querySelector('.print-research-slip').remove();
+      document.body.append(printSheet);
+      document.body.dataset.printResearch='';
+      window.print();
+    });
+    slip.append(action);
+    return slip;
+  }
+  window.addEventListener('afterprint',()=>{
+    printSheet?.remove();printSheet=null;
+    delete document.body.dataset.printResearch;
+  });
   const notes=document.querySelector('.notes-list');
   if(notes){
     let slip=null;
     document.addEventListener('dblclick',event=>{
       const row=event.target.closest('.notes-list li');
-      if(!row||event.target.closest('a'))return;
+      if(!row||event.target.closest('a,button'))return;
       const link=row.querySelector('a');
       slip?.remove();
-      slip=document.createElement('aside');slip.className='research-slip';
-      const title=document.createElement('b');title.textContent=link.textContent;
-      const url=document.createElement('p');url.textContent=link.href;
-      const scope=document.createElement('small');
-      scope.textContent=row.closest('.notes-section').querySelector('h2').firstChild.textContent.trim();
-      slip.append(title,url,scope);
+      const descriptor=row.closest('.notes-section').querySelector('h2').firstChild.textContent.trim();
+      slip=printable({title:link.textContent,scope:descriptor+' · claim status and verification in the source',url:link.href});
       row.append(slip);
       try{sessionStorage.setItem('desk-research-slip',link.href);}catch{}
     });
   }
   const proofPage=document.querySelector('[data-theorem-print]');
   if(proofPage){
-    proofPage.addEventListener('dblclick',()=>{
-      if(proofPage.querySelector('.research-slip'))return;
-      const slip=document.createElement('aside');slip.className='research-slip';
-      const label=document.createElement('b');label.textContent=theorem;
-      const scope=document.createElement('p');scope.textContent='Smallest prime factor · deterministic worst case · saving exponent ½ formalized.';
-      const url=document.createElement('p');url.textContent=source;
-      slip.append(label,scope,url);proofPage.append(slip);
+    proofPage.addEventListener('dblclick',event=>{
+      if(event.target.closest('a')||proofPage.nextElementSibling?.classList.contains('research-slip'))return;
+      const slip=printable({
+        title:theorem,scope:'Formalized in Lean. Deterministic worst-case bound for the smallest prime factor.',
+        url:source,figure:document.querySelector('.prose math')||document.querySelector('.hero-figure img')
+      });
+      proofPage.after(slip);
     });
   }
 })();

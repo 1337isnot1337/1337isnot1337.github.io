@@ -51,9 +51,9 @@
     <link rel="stylesheet" href="war-queues.css?v=1" />
     <link rel="stylesheet" href="schedule-example.css?v=1" />
     <link rel="stylesheet" href="incident-note.css?v=2" />
-    <script defer src="cpu-trace.js?v=2"></script>
+    <script defer src="cpu-trace.js?v=3"></script>
     <script defer src="vendor/swiper-bundle.min.js"></script>
-    <script defer src="shelf.js?v=35" onerror="
+    <script defer src="shelf.js?v=36" onerror="
       const restoreReading = () => {
         document.documentElement.classList.add('script-unavailable');
         document.querySelector('.shelf-heading p').textContent = 'The interactive shelf could not load. You can still read the project notes below.';
@@ -65,16 +65,16 @@
       if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', restoreReading, {once: true});
       else restoreReading();
     "></script>
-    <script defer src="rook-graph.js?v=2"></script>
+    <script defer src="rook-graph.js?v=3"></script>
     <script>document.documentElement.dataset.view = /^(#projects|#flyover|#cpu|#schedule|#conjectures|#factoring|#conway)$/.test(location.hash) ? "shelf" : "desk";</script>
     <link rel="stylesheet" href="studio.css?v=14" />
-    <script defer src="studio.js?v=25" onerror="delete document.documentElement.dataset.view"></script>
+    <script defer src="studio.js?v=26" onerror="delete document.documentElement.dataset.view"></script>
     <script defer src="paper-turn.js?v=3"></script>
     <script defer src="desk-keepsakes.js?v=10"></script>
     <script defer src="paper-dismiss.js?v=1"></script>
     <script defer src="desk-paper-extras.js?v=7"></script>
-    <script defer src="project-paper.js?v=1"></script>
-    <link rel="stylesheet" href="desk-extras.css?v=8" />
+    <script defer src="project-paper.js?v=2"></script>
+    <link rel="stylesheet" href="desk-extras.css?v=9" />
     <noscript
       ><style>
         .shelf-controls,

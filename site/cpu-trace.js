@@ -16,12 +16,15 @@
     const f=frames[index];
     discard?.remove();
     if(index===3){
-      discard=document.createElement('s');discard.className='trace-discard';
-      discard.textContent='Address 5 · '+frames[2].fetchInstruction;
+      discard=document.createElement('div');discard.className='trace-discard';
+      const label=document.createElement('small');label.textContent='Discarded at 195 ns';
+      const wrong=document.createElement('s');wrong.textContent='Address 5 · '+frames[2].fetchInstruction;
+      discard.append(label,wrong);
       trace.querySelector('#cpu-trace-fetch').append(discard);
       if(window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches === false)
         discard.animate([{transform:'translateX(-12px)',opacity:.2},{transform:'translateX(0)',opacity:1}],{duration:200,easing:'ease-out'});
-    }trace.dataset.time=f.time;trace.dataset.state=f.state;
+    }
+    trace.dataset.time=f.time;trace.dataset.state=f.state;
     set('#trace-time',`${f.time} ns`);
     set('#trace-fetch-address',`Address ${f.fetch}`);set('#trace-fetch-instruction',f.fetchInstruction);
     set('#trace-execute-address',f.execute===null?'Bubble · no program address':`Address ${f.execute}`);
