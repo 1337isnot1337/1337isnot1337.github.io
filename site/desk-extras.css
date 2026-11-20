@@ -280,3 +280,32 @@
 .numberline-ghost { outline: 1px dashed #8c5972; }
 [data-extended-point].jumped { outline: 1px solid #683b4e; outline-offset: 2px; }
 [data-extra-line] button { margin: .2em 0; }
+.print { --reverse-stock: color-mix(in srgb,var(--stock),#79624f 13%); }
+.print .print-sheet { transition: translate .16s ease, box-shadow .18s ease; }
+.print.paper-pressed .print-sheet {
+  translate: 0 -3px;
+  box-shadow: inset -2px -3px 0 var(--reverse-stock), 1px 2px 0 var(--reverse-stock);
+}
+.moving .print-sheet,.handling .print-sheet { box-shadow: inset -3px -3px 0 var(--reverse-stock), 2px 3px 0 var(--reverse-stock); }
+.print .print-sheet::after { background: linear-gradient(135deg,var(--reverse-stock) 28%,color-mix(in srgb,var(--reverse-stock),#725c53 24%)); }
+.print .reverse-peek { top: 6%; }
+.reverse-peek :is(b,small,img) { display: block; margin: .2em 0; }
+.reverse-peek img { width: min(100%,5em); max-height: 3.4em; object-fit: contain; }
+.ledge { position: relative; }
+.ledge .shelf-screw {
+  position: absolute; left: 63%; top: 45%; z-index: 2; width: 9px; height: 9px; border-radius: 50%;
+  transform: translateY(calc(-1 * var(--rise,0px))) rotate(var(--turned,0rad));
+  background: linear-gradient(132deg,#94704a 43%,#634729 46% 54%,#ac8760 57%);
+  box-shadow: 0 1px 1px #432c2b63; pointer-events: auto; touch-action: none;
+}
+.ledge .shelf-screw::after { content: ""; position: absolute; inset: -7px; }
+.ledge .shelf-washer {
+  position: absolute; left: 63%; top: 44%; padding: .2em .6em;
+  border: 1px solid #917052; background: #e3bc8f; color: #4d3836;
+  font: italic .73rem Georgia,serif; transform: translateX(-50%) rotate(-6deg); z-index: 1;
+}
+.ledge .paper-lap-tick {
+  position: absolute; top: 0; width: 2px; height: 10px;
+  rotate: 17deg; background: #614940; border-radius: 35%; opacity: .8;
+}
+@media (prefers-reduced-motion: reduce) { .print .print-sheet { transition: none; } }

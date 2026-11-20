@@ -30,7 +30,7 @@ let shelf = null;
 let coastFrame = 0;
 let lastProject = '';
 let shelfDistance = 0;
-let previousSelection = null;
+let previousSelection = null,lapStart=null,lapTimer=0;
 let savedClips=[];
 try{savedClips=JSON.parse(localStorage.getItem('shelf-paperclips')||'[]');}catch{}
 const clipped=new Set(Array.isArray(savedClips)?savedClips:[]);
@@ -50,11 +50,18 @@ document.addEventListener('press-paperclip',event=>{
   const project=Object.keys(boardObjects).find(key=>boardObjects[key]===event.detail);
   if(project)syncClip(project,!clipped.has(project));
 });
-function ledgeNote(text){
-  let label=shop.querySelector('.shelf-hidden-joke');
-  if(!label){label=document.createElement('span');label.className='shelf-hidden-joke';shop.append(label);}
-  label.textContent=text;
-  if(text==='✓')setTimeout(()=>{if(label.textContent==='✓')label.remove();},1850);
+const ledge=shop.querySelector('.ledge');
+function markLap(print){
+  let mark=ledge.querySelector('.paper-lap-tick');
+  if(!mark){
+    mark=document.createElement('i');mark.className='paper-lap-tick';
+    mark.setAttribute('aria-hidden','true');ledge.append(mark);
+  }
+  const board=ledge.getBoundingClientRect(),paper=print.getBoundingClientRect();
+  const fraction=(paper.x+paper.width/2-board.x)/board.width;
+  mark.style.left=Math.max(2,Math.min(98,fraction*100))+'%';
+  clearTimeout(lapTimer);
+  lapTimer=setTimeout(()=>mark.remove(),1850);
 }
 
 function stopCoast() {
@@ -71,16 +78,37 @@ function startShelf() {
   let blurTimer;
   let suppressShelfClick = false;
   let selectedSlide = null;
-  let hold=null,lastCorner=0,ledgePress=null;
+  let hold=null,lastCorner=0,screwGrip=null,screwAngle=0;
   let priorCornerPrint=null;
   const screw=document.createElement('i');
   screw.className='shelf-screw';screw.setAttribute('aria-hidden','true');
-  shop.append(screw);
+  const washer=document.createElement('i');
+  washer.className='shelf-washer';washer.hidden=true;washer.textContent='shelf installed as requested';
+  ledge.append(washer,screw);
+  screw.addEventListener('pointerdown',event=>{
+    if(event.button!==0||!event.isPrimary)return;
+    const rect=screw.getBoundingClientRect();
+    screwGrip={id:event.pointerId,x:rect.x+rect.width/2,y:rect.y+rect.height/2,startX:event.clientX,startY:event.clientY,initial:screwAngle};
+    screw.setPointerCapture(event.pointerId);
+  });
+  screw.addEventListener('pointermove',event=>{
+    if(screwGrip?.id!==event.pointerId||!event.buttons)return;
+    const {x,y,startX,startY,initial}=screwGrip;
+    const turn=Math.atan2(event.clientY-y,event.clientX-x)-Math.atan2(startY-y,startX-x);
+    const change=Math.abs(event.clientX-startX)<3&&Math.abs(event.clientY-startY)<3?0:turn;
+    screwAngle=initial+change;
+    screw.style.setProperty('--turned',screwAngle+'rad');
+    const raised=Math.max(0,Math.min(8,Math.abs(screwAngle)*3));
+    screw.style.setProperty('--rise',raised+'px');
+    if(Math.abs(screwAngle)>1.14)washer.hidden=false;
+  });
+  for(const event of ['pointerup','pointercancel'])screw.addEventListener(event,()=>{screwGrip=null;});
   carousel.addEventListener('pointerdown',event=>{
     const print=event.target.closest('.print');
     if(!print||event.button!==0)return;
     const box=print.getBoundingClientRect();
     hold={print,x:event.clientX,y:event.clientY,id:event.pointerId,peek:false,corner:false,started:performance.now()};
+    print.classList.add('paper-pressed');
     if(event.clientX<box.left+box.width*.14&&event.clientY<box.top+box.height*.16){
       hold.corner=true;
       const now=performance.now();
@@ -103,34 +131,26 @@ function startShelf() {
     const source=id&&document.getElementById('back-'+id);
     if(source){
       const slip=document.createElement('span');slip.className='reverse-peek';
-      slip.textContent=source.content.querySelector('p')?.textContent||source.content.querySelector('small')?.textContent;
-      hold.print.append(slip);
+      const heading=source.content.querySelector('small');
+      const caption=source.content.querySelector('p');
+      const mark=source.content.querySelector('b,img');
+      if(heading)slip.append(heading.cloneNode(true));
+      if(mark)slip.append(mark.cloneNode(true));
+      if(caption)slip.append(document.createTextNode(caption.textContent));
+      hold.print.querySelector('.print-sheet').after(slip);
     }
   },true);
-  function finishPeek(){
+  function finishPeek(event){
     if(!hold)return;
-    if(hold.corner&&hold.peek&&performance.now()-hold.started>430){
+    if(event.type==='pointerup'&&hold.corner&&hold.peek&&performance.now()-hold.started>430){
       const project=hold.print.dataset.project;
       syncClip(project,!clipped.has(project));
     }
-    hold.print.classList.remove('paper-held');
+    hold.print.classList.remove('paper-held','paper-pressed');
     hold.print.querySelector('.reverse-peek')?.remove();
     hold=null;
   }
   for(const event of ['pointerup','pointercancel'])window.addEventListener(event,finishPeek);
-  shop.addEventListener('pointerdown',event=>{
-    if(event.target.closest('a,button,input,summary,.print'))return;
-    const r=shop.getBoundingClientRect();
-    if(event.clientY>r.bottom-60 && event.clientX>r.left+r.width*.47 && event.clientX<r.left+r.width*.55)
-      ledgePress=[event.clientX,event.clientY];
-  });
-  shop.addEventListener('pointerup',event=>{
-    if(ledgePress&&Math.hypot(event.clientX-ledgePress[0],event.clientY-ledgePress[1])>20){
-      screw.style.setProperty('--turned','92deg');
-      ledgeNote('shelf installed as requested');
-    }
-    ledgePress=null;
-  });
   function showMotion(duration) {
     if (!duration || reducedMotion.matches) return;
     carousel.classList.add("moving");
@@ -235,16 +255,18 @@ function startShelf() {
         const activeSlide = instance.slides[instance.activeIndex];
         if (activeSlide === selectedSlide) return;
         selectedSlide = activeSlide;
+        const index=instance.realIndex%prints.length;
+        if(lapStart===null)lapStart=index;
         if(previousSelection!==null){
-          let step=(instance.realIndex-previousSelection+prints.length)%prints.length;
+          let step=(index-previousSelection+prints.length)%prints.length;
           if(step>prints.length/2)step-=prints.length;
           shelfDistance+=step;
-          if(Math.abs(shelfDistance)>=prints.length){
-            ledgeNote('✓');
-            shelfDistance%=prints.length;
+          if(index===lapStart&&Math.abs(shelfDistance)>=prints.length){
+            markLap(activeSlide.querySelector('.print'));
+            shelfDistance=0;
           }
         }
-        previousSelection=instance.realIndex;
+        previousSelection=index;
         activeSlide.removeAttribute("aria-hidden");
         if (!carousel.classList.contains('handling') && carousel.contains(document.activeElement) && document.activeElement.matches(':focus-visible')) {
           activeSlide.querySelector(".print").focus({ preventScroll: true });

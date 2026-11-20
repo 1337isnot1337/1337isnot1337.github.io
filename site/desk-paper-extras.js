@@ -435,7 +435,10 @@
       });
     }
   }
-  pickup.addEventListener('desk-pickup',event=>{activePrint=event.detail;pictureTurns=0;});
+  pickup.addEventListener('desk-pickup',event=>{
+    activePrint=event.detail;pictureTurns=0;
+    if(activePrint.endsWith('-print'))send('desk-project-selected',activePrint.slice(0,-6));
+  });
   const photoHand=pickup.querySelector('.photo-hand');
   photoHand.addEventListener('paper-turn',event=>{
     const {yaw,pitch,back}=event.detail;
