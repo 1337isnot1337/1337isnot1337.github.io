@@ -496,12 +496,51 @@
   }
   const journal=studio.querySelector('#about');
   let pageCorner=null;
+  const contact=document.querySelector('.calling-card-dialog');
+  const contactBack=contact.querySelector('.calling-card-links');
+  function copyAddress(url,row,reply){
+    if(!navigator.clipboard)return;
+    navigator.clipboard.writeText(url).then(()=>{
+      row.classList.add('copied-address');
+      if(reply)reply.textContent='Copied.';
+      setTimeout(()=>row.classList.remove('copied-address'),1050);
+    }).catch(()=>{if(reply)reply.textContent='The browser did not allow copying.';});
+  }
+  studio.addEventListener('desk-contact-card',()=>{
+    if(!contactBack.childElementCount){
+      const reply=contact.querySelector('[role=status]');
+      for(const source of letterForm.querySelectorAll('.address-links a')){
+        const name=source.querySelector('span').textContent;
+        const row=make('button','','calling-card-address');
+        row.type='button';row.setAttribute('aria-label','Copy '+name+' address');
+        row.append(make('b',name),make('small',source.querySelector('small').textContent));
+        row.addEventListener('click',()=>copyAddress(source.href,row,reply));
+        contactBack.append(row);
+      }
+    }
+    if(!contact.open){
+      contact.showModal();contact.querySelector('.post-hand').focus({preventScroll:true});
+    }
+  });
+  window.addEventListener('hashchange',()=>{if(contact.open)contact.close();});
+  contact.addEventListener('close',()=>{contact.querySelector('[role=status]').textContent='';});
   journal.addEventListener('pointerdown',event=>{
     const leaf=event.target.closest('[data-leaf]');
     if(!leaf||event.button!==0||event.target.closest('a,button,input'))return;
     const bounds=leaf.getBoundingClientRect();
     if(event.clientX<bounds.right-38||event.clientY<bounds.bottom-55)return;
-    pageCorner={leaf,id:event.pointerId,x:event.clientX};
+    const following=journal.querySelector('#leaf-next').hash;
+    const next=document.getElementById(following.slice(1));
+    const glimpse=make('div','','next-leaf-glimpse');
+    glimpse.setAttribute('aria-hidden','true');
+    const heading=next?.querySelector('h3');
+    const illustration=next?.querySelector('.leaf-art img')?.cloneNode();
+    if(heading)glimpse.append(make('b',heading.textContent));
+    if(illustration){
+      illustration.alt='';illustration.removeAttribute('id');glimpse.append(illustration);
+    }
+    pageCorner={leaf,id:event.pointerId,x:event.clientX,glimpse};
+    leaf.append(glimpse);
     leaf.setPointerCapture(event.pointerId);
   });
   journal.addEventListener('pointermove',event=>{
@@ -511,11 +550,12 @@
   });
   function putCornerDown(event){
     if(pageCorner?.id!==event.pointerId)return;
-    const {leaf,x}=pageCorner;
+    const {leaf,x,glimpse}=pageCorner;
     leaf.style.removeProperty('--page-curl');delete leaf.dataset.pageCurl;pageCorner=null;
+    glimpse.remove();
     if(event.type==='pointercancel')return;
     const delta=x-event.clientX;
-    if(delta>135)journal.querySelector('#leaf-next').click();
+    if(delta>Math.min(135,leaf.clientWidth*.40))journal.querySelector('#leaf-next').click();
     else if(delta>22){
       bookmarked=leaf.id;
       leaf.classList.add('dog-eared');leaf.dataset.crease='';
@@ -536,8 +576,8 @@
   });
   const cover=studio.querySelector('[data-object=book]');
   cover.addEventListener('click',event=>{
-    if(!bookmarked || event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;
-    cover.href='#'+bookmarked;
+    if(event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;
+    cover.href=bookmarked?'#'+bookmarked:'#about';
   },true);
   function prepareAddress(link) {
     let didCopy=false;
@@ -565,13 +605,20 @@
     const seal=insertOnce(letterForm.querySelector('.letter-heading'),'wax','span','delivered despite the handwriting');
     waveAt(seal);
   });
+  document.addEventListener('desk-cassette-side-b',()=>{
+    const leaf=studio.querySelector('#off-the-clock .leaf-writing');
+    if(leaf.querySelector('[data-private=cassette]'))return;
+    const side=insertOnce(leaf,'cassette','div','');
+    side.classList.add('handwritten-liner');
+    side.append(make('b','SIDE B'),make('p','Four tracks. The last one keeps winding.'));
+    const tracklist=leaf.querySelector('ul').cloneNode(true);
+    side.append(tracklist);
+    waveAt(side);
+  });
   let rewound=0;
   document.addEventListener('desk-tape',event=>{
     rewound+=event.detail;
-    if(Math.abs(rewound)<2.9)return;
-    const leaf=studio.querySelector('#off-the-clock .leaf-writing');
-    const side=insertOnce(leaf,'cassette','small',rewound<0?'Side B · the pencil finally fixed it':'Side B · four tracks and one very long loop');
-    waveAt(side);
+    if(Math.abs(rewound)>3)document.dispatchEvent(new Event('desk-cassette-side-b'));
   });
 
   const epoch=studio.querySelector('#about-teaching');
@@ -588,13 +635,14 @@
       const commands={
         ls:moved?'practice/  please-read-me-first':'notes  practice/  please-read-me-first',
         'cat notes':moved?'notes moved to practice/':'Everything is a file. Including this excuse.',
+        'cat practice/notes':moved?'Yep. Still a file.':'There is no notes file in practice/ yet.',
         'cat please-read-me-first':'Try ls. The notes file can live in practice/.',
         'ls practice':moved?'notes':'(empty)',
         'ls practice/':moved?'notes':'(empty)'
       };
       const command=input.value.trim();
       if(command==='mv notes practice/'){
-        output.textContent=moved?'Already moved.':'Moved notes to practice/.';
+        output.textContent=moved?'notes is already in practice/.':'Moved notes to practice/notes. Use ls practice/ to see it.';
         moved=true;
       }else if(command==='reset'){
         moved=false;output.textContent='Reset the practice directory.';

@@ -105,8 +105,7 @@ export function inspectDeskObjects(stage,engine,room,deskCamera,getModel,redraw,
     }
     if(Math.hypot(e.clientX-drag.startX,e.clientY-drag.startY)>6){dragged=true;backgroundTap=false;}
     const x=(e.clientX-drag.x)*.012,y=(e.clientY-drag.y)*.012;
-    if(active==='tape'&&drag.part.startsWith('reel-'))
-      document.dispatchEvent(new CustomEvent('desk-tape',{detail:x-y}));
+    if(active==='tape'&&life.windTape(drag.part,x,y))redraw();
     else if(active==='plant'&&life.brushLeaf(drag.part,x,y))redraw();
     else if((active==='archive'||active==='proof')&&life.pullSlip(drag.part,x,y))redraw();
     else rotate(x,y);

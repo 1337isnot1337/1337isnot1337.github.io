@@ -509,12 +509,23 @@ export function furnish(scene, narrow, repaint, software=false) {
     c.fillStyle='#e6d7bc';c.fillRect(0,0,w,h);
     for(let i=0;i<17;i++){c.fillStyle=i%3?'#aa977b':'#d1bda2';c.fillRect(random()*.09,i*h/17,w-random()*.12,.002);}
   },0,.113,.792);
-  box(detail('ribbon',book,.39,.07,.88),.085,.012,.36,finish(0xb46167));
+  const ribbon=detail('ribbon',book,.39,.07,.88);
+  box(ribbon,.085,.012,.36,finish(0xb46167));
+  for(const edge of [-.030,.030])box(ribbon,.005,.002,.342,finish(0xc48180),edge,.007,0);
   // Sealed envelopes, with individual folds, twine and postage.
   const letters=tag(group(world,narrow?.87:.98,.056,narrow?1.21:1.49),'letters',[0,.09,0],1.25,.74);
   letters.rotation.y=-.25;letters.scale.setScalar(narrow?.60:.73);
   for(let i=0;i<3;i++){const env=box(letters,1.34,.026,.80,finish([0xc5d3c3,0xe4baad,0xf4dfbe][i]),0,.017+i*.029,-.035*i,.012);env.rotation.y=(2-i)*.1;}
   drawn(letters,1.31,.76,(c,w,h)=>{c.strokeStyle='#a99479';c.lineWidth=.007;c.beginPath();c.moveTo(0,0);c.lineTo(w*.48,h*.57);c.lineTo(w,0);c.stroke();c.fillStyle='#947a50';c.fillRect(w*.84,h*.10,w*.105,h*.22);},0,.09,-.065,true);
+  const envelopeFlap=detail('envelope-flap',letters,0,.105,-.398);
+  const flapPaper=new T.Shape([new T.Vector2(-.655,0),new T.Vector2(.655,0),new T.Vector2(.02,-.428)]);
+  const flapStock=new T.ExtrudeGeometry(flapPaper,{depth:.006,bevelEnabled:false});
+  flapStock.rotateX(-Math.PI/2);
+  mesh(envelopeFlap,flapStock,finish(0xe4d0ac));
+  const contactCard=detail('contact-card',letters,.12,.126,-.112);
+  box(contactCard,.651,.012,.322,cream,0,0,0,.005);
+  letter(contactCard,'Cinna Davis',.51,.093,0,.007,.02,{flat:true,italic:true});
+  contactCard.rotation.y=-.10;contactCard.visible=false;
   const envelope=detail('wax',letters,0,0,0);
   const wax=cylinder(envelope,.125,.13,.031,finish(0x9e5353,.5),0,.11,-.026,12);
   letter(letters,'Letters',.80,.214,.21,.100,.20,{flat:true,italic:true});
@@ -540,7 +551,15 @@ export function furnish(scene, narrow, repaint, software=false) {
   const eatenTape=detail('eaten-tape',tape,0,.088,.31);
   wire(eatenTape,[[-.12,0,0],[-.05,.01,.14],[.10,.004,.18],[.13,.008,.07],[.07,0,0]],.008,finish(0x51423c));
   eatenTape.visible=false;
-  letter(tape,'side b · one very long loop',.65,.089,0,.005,-.12,{flat:true,ink:'#ddbdd4',italic:true}).rotation.x=Math.PI/2;
+  const windingPencil=detail('tape-pencil',tape,.43,.17,.08);
+  cylinder(windingPencil,.028,.028,.57,finish(0xb5788c),0,.272,0,6);
+  cylinder(windingPencil,.027,0,.082,cream,0,-.049,0,6);
+  cylinder(windingPencil,.029,.029,.052,finish(0xd58c84),0,.588,0,12);
+  windingPencil.rotation.z=-.64;windingPencil.visible=false;
+  letter(tape,'Side B · one very long loop',.72,.106,0,.005,-.12,{flat:true,ink:'#ddbdd4',italic:true}).rotation.x=Math.PI/2;
+  const litEdge=detail('tape-light-edge',tape,0,.053,.324);
+  letter(litEdge,'S T A G E   B',.51,.039,0,0,.002,{ink:'#f7cd98',italic:true});
+  litEdge.visible=false;
   letter(tape,'off the clock',.82,.119,0,.109,-.178,{flat:true,italic:true});
   for(const x of [-.43,.43])for(const z of [-.23,.23])cylinder(tape,.017,.017,.009,brass,x,.099,z,8);
   // One curved blade and a painted vein texture are shared by every leaf on the cutting.

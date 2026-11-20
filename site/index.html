@@ -68,13 +68,13 @@
     <script defer src="rook-graph.js?v=2"></script>
     <script>document.documentElement.dataset.view = /^(#projects|#flyover|#cpu|#schedule|#conjectures|#factoring|#conway)$/.test(location.hash) ? "shelf" : "desk";</script>
     <link rel="stylesheet" href="studio.css?v=14" />
-    <script defer src="studio.js?v=24" onerror="delete document.documentElement.dataset.view"></script>
+    <script defer src="studio.js?v=25" onerror="delete document.documentElement.dataset.view"></script>
     <script defer src="paper-turn.js?v=3"></script>
     <script defer src="desk-keepsakes.js?v=10"></script>
     <script defer src="paper-dismiss.js?v=1"></script>
-    <script defer src="desk-paper-extras.js?v=5"></script>
+    <script defer src="desk-paper-extras.js?v=6"></script>
     <script defer src="project-paper.js?v=1"></script>
-    <link rel="stylesheet" href="desk-extras.css?v=5" />
+    <link rel="stylesheet" href="desk-extras.css?v=6" />
     <noscript
       ><style>
         .shelf-controls,
@@ -658,6 +658,18 @@
 
 </section>
         </div>
+        <dialog class="calling-card-dialog" aria-label="Calling card">
+          <form method="dialog"><button class="return-post">Put back</button></form>
+          <figure class="post-office">
+            <div class="post-hand" data-turn-paper tabindex="0" role="group" aria-label="Calling card">
+              <div class="postcard calling-card">
+                <div class="calling-card-face"><b>Cinna Davis</b><small>Desk correspondence</small></div>
+                <div class="calling-card-links" aria-hidden="true"></div>
+              </div>
+            </div>
+            <p class="calling-card-reply" role="status"></p>
+          </figure>
+        </dialog>
         <dialog class="drawer-post" aria-label="A postcard from Cinna’s desk">
           <form method="dialog"><button class="return-post">Put back</button></form>
   <figure class="post-office">
