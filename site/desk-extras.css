@@ -83,7 +83,7 @@
 .desk-spectrum { position: relative; touch-action: pan-y; }
 .spectrum-note { position: absolute; left: var(--at); bottom: 15%; z-index: 2; pointer-events: none; padding: .16em .38em; background: #f3e9cd; color: #452f3c; font: 600 .72rem "DM Sans", sans-serif; transform: translateX(-50%) rotate(-3deg); white-space: nowrap; }
 .spectrum-loop { position: absolute; inset: 0 auto; pointer-events: none; border-inline: 1px solid #fff8c9; background: #fff8c93c; }
-.desk-playing-cards > div { touch-action: pan-y; }
+.desk-playing-cards > div { touch-action: pan-y; user-select: none; }
 .desk-playing-cards[data-loop] > div { outline: 1px dashed #8d6d7a; outline-offset: -5px; }
 .desk-playing-cards .found-paper { display: block; }
 .numberline-row { position: relative; }

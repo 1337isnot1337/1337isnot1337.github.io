@@ -451,7 +451,8 @@
     }
   });
   photoHand.addEventListener('dblclick',event=>{
-    if(event.target.closest('.photo-back') && activePrint.endsWith('-print') && !event.target.closest('[data-private]'))
+    const back=photoHand.querySelector('.photo-back[aria-hidden=false]');
+    if(back && activePrint.endsWith('-print') && !event.target.closest('[data-private]'))
       send('press-paperclip',activePrint);
   });
   pickup.addEventListener('close',()=>{
