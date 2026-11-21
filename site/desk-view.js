@@ -5,17 +5,30 @@ const frontGain=.87;
 const sideGain=.56;
 const frontLimit=.33;
 const frontTravel=frontLimit/frontGain;
-const rearAngle=Math.PI-.17;
+const rearAngle=Math.PI;
 const rearGain=rearAngle-frontLimit-(orbitTravel-frontTravel)*sideGain;
 const clamp=(value,min,max)=>Math.min(max,Math.max(min,value));
+const wrap=(value,limit)=>value>limit?value-2*limit:value< -limit?value+2*limit:value;
+const edgeSpeed=value=>{
+  const edge=clamp((Math.abs(value)-.70)/.30,0,1);
+  return Math.sign(value)*edge*(.48+.52*edge);
+};
 
 export function deskView(){
   let travel=0,depth=0,yaw=0,pitch=0;
-  let zoom=0, zoomTarget=0;
+  let zoom=0, zoomTarget=0, lookX=0, lookY=0, lookStarted=false;
 
   function drag(x,y){
-    travel=clamp(travel-x,-orbitTravel,orbitTravel);
+    travel=wrap(travel-x,orbitTravel);
     depth=clamp(depth+y*.98,-.68,1);
+  }
+
+  function look(x,y){
+    const wasLooking=Boolean(lookX||lookY);
+    lookX=edgeSpeed(x);lookY=edgeSpeed(y);
+    const looking=Boolean(lookX||lookY);
+    if(!wasLooking||!looking)lookStarted=looking;
+    return looking;
   }
 
   function wheel(delta){
@@ -23,22 +36,31 @@ export function deskView(){
   }
 
   function step(dt,reduced){
+    const lastTravel=travel,lastDepth=depth;
+    const steerTime=lookStarted?Math.min(dt,1/60):dt;
+    lookStarted=false;
+    const position=Math.abs(travel)/orbitTravel;
+    // Match the angular speed near the front and the back despite the drag curve.
+    const slope=(Math.abs(travel)<frontTravel?frontGain:sideGain)+4*rearGain/orbitTravel*position**3;
+    drag(lookX*steerTime*1.60/slope,lookY*steerTime*.94);
     const distance=Math.abs(travel);
     const side=frontLimit+Math.max(0,distance-frontTravel)*sideGain;
     const angle=Math.sign(travel)*(Math.min(distance*frontGain,side)+rearGain*(distance/orbitTravel)**4);
     const blend=reduced?1:1-Math.exp(-dt*36);
-    yaw=Math.abs(angle-yaw)<.004?angle:yaw+(angle-yaw)*blend;
+    const turn=wrap(angle-yaw,Math.PI);
+    yaw=Math.abs(turn)<.004?angle:wrap(yaw+turn*blend,Math.PI);
     pitch=Math.abs(depth-pitch)<.005?depth:pitch+(depth-pitch)*blend;
     zoom=Math.abs(zoomTarget-zoom)<.002?zoomTarget:zoom+(zoomTarget-zoom)*blend;
 
     return {
       yaw, below:pitch, zoom:Math.exp(zoom), rear:Math.abs(yaw)>2.24?Math.sign(yaw):0,
-      move:yaw!==angle||pitch!==depth||zoom!==zoomTarget
+      move:travel!==lastTravel||depth!==lastDepth||Math.abs(wrap(yaw-angle,Math.PI))>.000001||pitch!==depth||zoom!==zoomTarget
     };
   }
 
   function faceFront(){
     travel=0;depth=0;yaw=0;pitch=0;
+    look(0,0);
   }
-  return {drag,step,faceFront,wheel};
+  return {drag,look,step,faceFront,wheel};
 }

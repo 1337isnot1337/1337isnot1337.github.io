@@ -1,11 +1,11 @@
 import * as T from './vendor/three/three.module.min.js';
-import { furnish } from './desk-model.js?v=30';
+import { furnish } from './desk-model.js?v=31';
 import { inspectDeskObjects } from './desk-inspect.js?v=15';
 
-import { attachDeskPointer } from './desk-pointer.js?v=18';
+import { attachDeskPointer } from './desk-pointer.js?v=19';
 
 import { deskLife } from './desk-life.js?v=13';
-import { deskView } from './desk-view.js?v=6';
+import { deskView } from './desk-view.js?v=7';
 import { drawerTravel } from './desk-drawer.js?v=1';
 
 export function mountFurniture(stage,showGraphicsFallback) {
@@ -157,7 +157,8 @@ export function mountFurniture(stage,showGraphicsFallback) {
     if(!visible||contextLost||document.hidden||!dirty||!layout()||!lightReady)return;
     dirty=false;
 
-    const dt=Math.min(.06,Math.max(.016,(time-lastTime)/1000));lastTime=time;
+    const elapsed=Math.max(.001,(time-lastTime)/1000);lastTime=time;
+    const dt=Math.min(.06,Math.max(.016,elapsed));
     const amount=(motion.matches||software)?1:1-Math.exp(-dt*12);
     const target=(value,goal)=>Math.abs(value-goal)<.004?goal:T.MathUtils.lerp(value,goal,amount);
     const prevDrawer=drawerAmount,prevFile=fileAngle,prevBook=bookAngle;
@@ -171,8 +172,9 @@ export function mountFurniture(stage,showGraphicsFallback) {
     if((prevDrawer!==drawerAmount && (drawerAmount===0||drawerAmount===1)) ||
        (prevFile!==fileAngle && (fileAngle===0||fileAngle===1)) ||
        (prevBook!==bookAngle && (bookAngle===0||bookAngle===1)))engine.shadowMap.needsUpdate=true;
-    const posture=view.step(dt,motion.matches);
     const held=inspector.active();
+    if(held||opened||document.querySelector('dialog[open]'))view.look(0,0);
+    const posture=view.step(Math.min(.12,elapsed),motion.matches);
     const events=life.update(time,dt,drawerAmount,lampOn,held,posture,fileAngle);
     const shade=model.details.get('shade');
     shade.localToWorld(bulb.position.set(0,-.22,0));
@@ -251,8 +253,14 @@ export function mountFurniture(stage,showGraphicsFallback) {
   const leaveDesk=attachDeskPointer(stage,{
     targets:links,
     zoomBy(delta){view.wheel(delta);redraw();},
+    stopLook(){view.look(0,0);},
     track(x,y) {
       life.pointerMoved(x,y,performance.now());
+      if(view.look(x,y)){
+        centerUntil=0;
+        redraw();
+        x=0;y=0;
+      }
       if(motion.matches){x=0;y=0;}
       if(software){
         stage.style.setProperty('--pan-x',(x*0.6)+'%');

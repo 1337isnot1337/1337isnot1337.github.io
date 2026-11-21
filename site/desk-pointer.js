@@ -1,7 +1,7 @@
 import { attachHeldArrows } from './desk-arrows.js?v=1';
 
 // Keep the browser cursor at its real hotspot. Only an orbit owns the pointer.
-export function attachDeskPointer(stage,{pick,track,orbitBy,endOrbit,part,gesture,tapPart,zoomBy,targets=new Map([...stage.querySelectorAll('[data-object]')].map(el=>[el.dataset.object,el]))}) {
+export function attachDeskPointer(stage,{pick,track,stopLook=()=>{},orbitBy,endOrbit,part,gesture,tapPart,zoomBy,targets=new Map([...stage.querySelectorAll('[data-object]')].map(el=>[el.dataset.object,el]))}) {
   const canvas=stage.querySelector('canvas');
   let press=null, frame=0, x=0, y=0, suppress=false;
   const active=()=>stage.classList.contains('is-rendered') && !stage.closest('.desk-overview').inert;
@@ -18,14 +18,15 @@ export function attachDeskPointer(stage,{pick,track,orbitBy,endOrbit,part,gestur
   }
   function leave(){
     endPress(true);cancelAnimationFrame(frame);frame=0;
+    stopLook();
     delete stage.dataset.aim;
   }
-  function aim(e){
+  function aim(e,follow=true){
     if(e.pointerType!=='mouse')return;
     x=e.clientX;y=e.clientY;
     if(!frame)frame=requestAnimationFrame(()=>{
       frame=0;
-      if(active() && !press && !document.querySelector('dialog[open]')){
+      if(follow && active() && !press && !document.querySelector('dialog[open]')){
         const r=stage.getBoundingClientRect();track((x-r.left)/r.width*2-1,(y-r.top)/r.height*2-1);
       }
       stage.dataset.aim=active() && targetAt(x,y) ? 'object':'desk';
@@ -33,6 +34,7 @@ export function attachDeskPointer(stage,{pick,track,orbitBy,endOrbit,part,gestur
   }
   stage.addEventListener('pointerdown',e=>{
     if(!active()||!e.isPrimary||e.button!==0||e.target.closest('.loose-file-slip'))return;
+    cancelAnimationFrame(frame);frame=0;stopLook();
     suppress=false;
     const target=targetAt(e.clientX,e.clientY);
     press={id:e.pointerId,x:e.clientX,y:e.clientY,lastX:e.clientX,lastY:e.clientY,dragging:false,part:part()||target?.dataset.object};
@@ -63,11 +65,11 @@ export function attachDeskPointer(stage,{pick,track,orbitBy,endOrbit,part,gestur
   },{passive:false});
   const stopArrows=attachHeldArrows(document,()=>active() && !press &&
     document.documentElement.dataset.view==='desk' && !document.querySelector('dialog[open]'),
-  (x,y,time)=>orbitBy(x*1.25,y*.87,time));
+  (x,y,time)=>{stopLook();orbitBy(x*1.25,y*.87,time);});
   stage.addEventListener('pointerup',e=>{
     if(press?.id!==e.pointerId)return;
     suppress=press.dragging || Boolean(press.part && tapPart(press.part));
-    endPress();if(active())aim(e);
+    endPress();if(active())aim(e,false);
   });
   stage.addEventListener('pointercancel',leave);
   canvas.addEventListener('lostpointercapture',e=>{
@@ -91,6 +93,8 @@ export function attachDeskPointer(stage,{pick,track,orbitBy,endOrbit,part,gestur
     } else target.click();
   },true);
   window.addEventListener('blur',leave);
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)leave();});
+  document.addEventListener('keydown',e=>{if(e.key==='Tab')stopLook();});
   document.addEventListener('portfolio-view',()=>{stopArrows();leave();});
   return leave;
 }

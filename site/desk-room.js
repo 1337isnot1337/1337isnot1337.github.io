@@ -1,5 +1,5 @@
 import * as T from './vendor/three/three.module.min.js';
-import { furnishRoomObjects } from './room-objects.js?v=1';
+import { furnishRoomObjects } from './room-objects.js?v=2';
 import { buildRoomShell } from './room-shell.js?v=1';
 
 // Atlas order: name, source aspect ratio, wall x/y, physical width, rotation.

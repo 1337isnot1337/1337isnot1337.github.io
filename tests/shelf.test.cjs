@@ -44,6 +44,30 @@ test('the desk orbits continuously around the back and reverses through the same
   }
   window.close();
 });
+test('mouse steering takes the long way around and stops in the middle of the stage', () => {
+  const { window } = new JSDOM('', { runScripts: 'outside-only' });
+  window.eval(fs.readFileSync('site/desk-view.js', 'utf8').replace('export function','function'));
+  const camera = window.deskView();
+  assert.equal(camera.look(.34,-.24), false);
+  assert.equal(camera.step(1/60,true).yaw, 0);
+  camera.look(-1,0);
+  let previous = 0, rotation = 0;
+  for(let frame=0;frame<270;frame++){
+    const pose=camera.step(1/60,true);
+    const change=Math.atan2(Math.sin(pose.yaw-previous),Math.cos(pose.yaw-previous));
+    assert.ok(change>0 && change<.08, 'each frame stays continuous through the rear angle');
+    assert.equal(pose.move,true);
+    rotation+=change;previous=pose.yaw;
+  }
+  assert.ok(rotation>2*Math.PI);
+  camera.look(0,0);
+  assert.equal(camera.step(1/60,true).yaw, previous);
+  assert.equal(camera.step(1/60,true).move,false);
+  camera.look(0,-1);
+  for(let frame=0;frame<90;frame++)camera.step(1/60,true);
+  assert.equal(camera.step(1/60,true).below,-.68);
+  window.close();
+});
 test('desk controls preserve keyboard focus, browser zoom, and shelf arrow keys', () => {
   const dom = new JSDOM(`
     <button id="start">Start</button>
