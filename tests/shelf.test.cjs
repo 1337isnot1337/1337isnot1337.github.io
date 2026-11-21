@@ -26,6 +26,24 @@ test('all local resources and project anchors resolve', () => {
   }
   for (const el of d.querySelectorAll('a[href^="#"]')) assert.ok(d.getElementById(el.hash.slice(1)), el.hash);
 });
+test('the desk orbits continuously around the back and reverses through the same angles', () => {
+  const { window } = new JSDOM('', { runScripts: 'outside-only' });
+  const source = fs.readFileSync('site/desk-view.js', 'utf8').replace('export function', 'function');
+  window.eval(source);
+  const camera = window.deskView();
+  const angles = [0];
+  for (let step = 0; step < 248; step++) {
+    camera.drag(-.01, 0);
+    angles.push(camera.step(1/60, true).yaw);
+  }
+  assert.ok(angles.at(-1) > 2.9, 'the back is still accessible');
+  assert.ok(angles.slice(1).every((angle, index) => angle > angles[index] && angle - angles[index] < .06));
+  for (let step = 247; step >= 0; step--) {
+    camera.drag(.01, 0);
+    assert.ok(Math.abs(camera.step(1/60, true).yaw - angles[step]) < .00001);
+  }
+  window.close();
+});
 test('desk controls preserve keyboard focus, browser zoom, and shelf arrow keys', () => {
   const dom = new JSDOM(`
     <button id="start">Start</button>

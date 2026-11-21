@@ -66,8 +66,8 @@
     "></script>
     <script defer src="/rook-graph.js?v=3"></script>
     <script>document.documentElement.dataset.view = /^\/boring(?:\/|$)/.test(location.pathname) || /^(#projects|#flyover|#cpu|#schedule|#conjectures|#factoring|#conway)$/.test(location.hash) ? "shelf" : "desk";</script>
-    <link rel="stylesheet" href="/studio.css?v=16" />
-    <script defer src="/studio.js?v=35" onerror="if (!location.pathname.startsWith('/boring')) delete document.documentElement.dataset.view"></script>
+    <link rel="stylesheet" href="/studio.css?v=17" />
+    <script defer src="/studio.js?v=36" onerror="if (!location.pathname.startsWith('/boring')) delete document.documentElement.dataset.view"></script>
     <script defer src="/paper-turn.js?v=4"></script>
     <script defer src="/desk-keepsakes.js?v=10"></script>
     <script defer src="/paper-dismiss.js?v=2"></script>
@@ -129,18 +129,18 @@
               <a data-object="room-fairy-metal" data-room-poster href="https://music.apple.com/us/album/fairy-metal-single/1621034850" target="_blank" rel="noopener" hidden><span>Banshee, Fairy Metal</span></a>
               <a data-object="room-sirencore" data-room-poster href="https://open.spotify.com/album/4x7Lhq0tk6h8G7bazJcPsl" target="_blank" rel="noopener" hidden><span>Banshee, SIRENCORE</span></a>
               <a data-object="room-fables" data-room-poster href="https://open.spotify.com/album/6oHz1CC0PuNSGgRzAOZowX" target="_blank" rel="noopener" hidden><span>Banshee, FABLES</span></a>
-              <a data-object="room-luka" data-room-poster href="https://www.youtube.com/watch?v=VgPo3q01kbg" target="_blank" rel="noopener" hidden><span>Alien Stage, Luka</span></a>
+              <a data-object="room-luka" data-room-poster href="https://www.youtube.com/watch?v=rrngM9DmDfk" target="_blank" rel="noopener" hidden><span>Alien Stage, Luka in wiege</span></a>
               <a data-object="room-till" data-room-poster href="https://www.youtube.com/watch?v=BEEp4WBaD7w" target="_blank" rel="noopener" hidden><span>Alien Stage, Till</span></a>
               <a data-object="room-ivan" data-room-poster href="https://www.youtube.com/watch?v=2cFnfD4iZzM" target="_blank" rel="noopener" hidden><span>Alien Stage, Ivan</span></a>
-              <a data-object="room-korra" data-room-poster href="https://www.paramountpressexpress.com/nickelodeon/shows/the-legend-of-korra" target="_blank" rel="noopener" hidden><span>The Legend of Korra</span></a>
+              <a data-object="room-korra" data-room-poster href="https://paramountglobalcontent.com/title/legend-of-korra-the" target="_blank" rel="noopener" hidden><span>The Legend of Korra</span></a>
               <a data-object="room-seven-havens" data-room-poster href="https://thedirect.com/article/avatar-seven-havens-villain-first-look" target="_blank" rel="noopener" hidden><span>Avatar: Seven Havens</span></a>
               <a data-object="room-openai" data-room-poster href="https://openai.com/brand/" target="_blank" rel="noopener" hidden><span>OpenAI brand gallery</span></a>
-              <a data-object="room-anthropic" data-room-poster href="https://www.anthropic.com/company" target="_blank" rel="noopener" hidden><span>Anthropic company photograph</span></a>
+              <a data-object="room-anthropic" data-room-poster href="https://www.anthropic.com/research/global-workspace" target="_blank" rel="noopener" hidden><span>Anthropic, A global workspace in language models</span></a>
               <a data-object="room-neuralink" data-room-poster href="https://neuralink.com/" target="_blank" rel="noopener" hidden><span>Neuralink</span></a>
               <a data-object="room-musk" data-room-poster href="https://commons.wikimedia.org/wiki/File:Elon_Musk_Royal_Society.jpg" target="_blank" rel="noopener" hidden><span>Elon Musk at the Royal Society</span></a>
               <a data-object="room-spacex" data-room-poster href="https://www.nasa.gov/image-article/spacex-demo-2-liftoff/" target="_blank" rel="noopener" hidden><span>SpaceX flight photograph</span></a>
               <a data-object="room-aubrey" data-room-poster href="https://commons.wikimedia.org/wiki/File:Aubrey_de_Grey.jpg" target="_blank" rel="noopener" hidden><span>Aubrey de Grey</span></a>
-              <a data-object="room-fermilab" data-room-poster href="https://news.fnal.gov/2024/01/fermilabs-wilson-hall-open-to-the-public/" target="_blank" rel="noopener" hidden><span>Fermilab open house</span></a>
+              <a data-object="room-fermilab" data-room-poster href="https://lss.fnal.gov/archive/2023/slides/fermilab-slides-23-333-csaid.pdf" target="_blank" rel="noopener" hidden><span>Fermilab, Wilson Hall at sunset</span></a>
               <a data-object="room-tux" data-room-poster href="https://commons.wikimedia.org/wiki/File:Tux.svg" target="_blank" rel="noopener" hidden><span>Tux, the Linux penguin</span></a>
               <a class="object-epoch" data-object="epoch" href="#about-teaching"><span>Epoch computing club</span></a>
               <a class="object-book" data-object="book" href="#about"><span>My notebook</span></a>
@@ -1302,7 +1302,7 @@
 
     <dialog class="object-view" aria-label="Object in hand">
       <button type="button" class="put-object-back" aria-label="Put back" title="Put back">×</button>
-      <div class="turn-surface" tabindex="0" aria-label="Rotate object. Drag or use the arrow keys."></div>
+      <div class="turn-surface" tabindex="0" aria-label="Drag or use the arrow keys to turn. Plus and minus zoom. Home resets the view."></div>
       <button type="button" class="use-object" hidden></button>
     </dialog>
     <dialog class="pickup" aria-labelledby="pickup-title">

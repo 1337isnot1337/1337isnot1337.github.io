@@ -1,11 +1,11 @@
 import * as T from './vendor/three/three.module.min.js';
-import { furnish } from './desk-model.js?v=28';
-import { inspectDeskObjects } from './desk-inspect.js?v=12';
+import { furnish } from './desk-model.js?v=29';
+import { inspectDeskObjects } from './desk-inspect.js?v=13';
 
 import { attachDeskPointer } from './desk-pointer.js?v=17';
 
 import { deskLife } from './desk-life.js?v=12';
-import { deskView } from './desk-view.js?v=3';
+import { deskView } from './desk-view.js?v=4';
 import { drawerTravel } from './desk-drawer.js?v=1';
 
 export function mountFurniture(stage,showGraphicsFallback) {
@@ -59,7 +59,7 @@ export function mountFurniture(stage,showGraphicsFallback) {
   const view=deskView();
   let gazeX=0, gazeY=0, targetX=0, targetY=0;
   const life=deskLife(stage,()=>model,redraw,motion);
-  const inspector=inspectDeskObjects(stage,engine,scene,camera,()=>model,redraw,life);
+  const inspector=inspectDeskObjects(stage,engine,scene,camera,()=>model,redraw,life,motion);
   let ambientTimer=0;
   let lastPart='',pickedUp='',pickupTravel=0,centered='',centerUntil=0;
   function redraw() {
@@ -169,7 +169,7 @@ export function mountFurniture(stage,showGraphicsFallback) {
     beam.position.copy(bulb.position);
     bulb.intensity=lampOn?13*events.warm:0;
     beam.intensity=lampOn?11*events.warm:0;
-    if(inspector.paint()){
+    if(inspector.paint(time,dt)){
       if(events.active && !document.hidden)redraw();
       return;
     }
@@ -314,14 +314,13 @@ export function mountFurniture(stage,showGraphicsFallback) {
       if(!gesture)return false;
       gesture(dx,dy,time);detailMoved=true;redraw();return true;
     },
-    orbitBy(delta,vertical,time) {
+    orbitBy(delta,vertical) {
       centerUntil=0;
-      view.drag(-delta,-vertical,time);
+      view.drag(-delta*1.15,vertical);
       if(Math.abs(delta)+Math.abs(vertical)>.035)life.startleMoth(time);
       redraw();
     },
     endOrbit(time,cancelled) {
-      view.release(time,cancelled);
       life.releaseProps(cancelled);
       const drawerRelease=travel.release(time,cancelled);
       if(drawerRelease){
