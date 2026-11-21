@@ -15,7 +15,7 @@ export function deskView(){
 
   function drag(x,y){
     travel=clamp(travel-x,-orbitTravel,orbitTravel);
-    depth=clamp(depth+y*1.85,-.18,1);
+    depth=clamp(depth+y*.98,-.68,1);
   }
 
   function wheel(delta){
@@ -25,7 +25,7 @@ export function deskView(){
   function step(dt,reduced){
     const distance=Math.abs(travel);
     const side=frontLimit+Math.max(0,distance-frontTravel)*sideGain;
-    const angle=Math.sign(travel)*(Math.min(distance*frontGain,side)+rearGain*(distance/orbitTravel)**7);
+    const angle=Math.sign(travel)*(Math.min(distance*frontGain,side)+rearGain*(distance/orbitTravel)**4);
     const blend=reduced?1:1-Math.exp(-dt*36);
     yaw=Math.abs(angle-yaw)<.004?angle:yaw+(angle-yaw)*blend;
     pitch=Math.abs(depth-pitch)<.005?depth:pitch+(depth-pitch)*blend;

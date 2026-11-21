@@ -148,7 +148,7 @@ export function inspectDeskObjects(stage,engine,room,deskCamera,getModel,redraw,
     if(e.key==='+'||e.key==='='||e.key==='-'){
       e.preventDefault();zoomBy(e.key==='-'?-.14:.14);return;
     }
-    const turn={ArrowLeft:[-.2,0],ArrowRight:[.2,0],ArrowUp:[0,-.2],ArrowDown:[0,.2]}[e.key];
+    const turn={ArrowLeft:[-.13,0],ArrowRight:[.13,0],ArrowUp:[0,-.13],ArrowDown:[0,.13]}[e.key];
     if(turn){e.preventDefault();rotate(...turn);}
   });
   surface.addEventListener('wheel',e=>{
@@ -162,7 +162,7 @@ export function inspectDeskObjects(stage,engine,room,deskCamera,getModel,redraw,
     const onObject=hitsObject(e);
     tap=null;
     press={id:e.pointerId,x:e.clientX,y:e.clientY,part,onObject,dragging:false,
-      sensitivity:2*Math.PI/Math.max(320,Math.min(surface.clientWidth,surface.clientHeight))};
+      sensitivity:1.25*Math.PI/Math.max(320,Math.min(surface.clientWidth,surface.clientHeight))};
   });
   surface.addEventListener('pointermove',e=>{
     if(!press || press.id!==e.pointerId || !e.buttons){

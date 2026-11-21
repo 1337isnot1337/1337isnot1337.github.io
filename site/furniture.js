@@ -1,11 +1,11 @@
 import * as T from './vendor/three/three.module.min.js';
 import { furnish } from './desk-model.js?v=29';
-import { inspectDeskObjects } from './desk-inspect.js?v=13';
+import { inspectDeskObjects } from './desk-inspect.js?v=14';
 
 import { attachDeskPointer } from './desk-pointer.js?v=17';
 
 import { deskLife } from './desk-life.js?v=12';
-import { deskView } from './desk-view.js?v=4';
+import { deskView } from './desk-view.js?v=5';
 import { drawerTravel } from './desk-drawer.js?v=1';
 
 export function mountFurniture(stage,showGraphicsFallback) {
@@ -186,8 +186,10 @@ export function mountFurniture(stage,showGraphicsFallback) {
     gazeY=Math.abs(gazeY-targetY)<.009?targetY:T.MathUtils.lerp(gazeY,targetY,ease);
     camera.position.x+=gazeX*.30;camera.position.y-=gazeY*.17;
     aim.x+=gazeX*.125;aim.y-=gazeY*.065;
-    camera.position.y-=posture.below*5.88;
-    aim.y-=posture.below*2.83;
+    const under=Math.max(0,posture.below),up=Math.max(0,-posture.below);
+    const wallView=Math.sin(posture.yaw)**2;
+    camera.position.y+=up*.5-under*5.88;
+    aim.y+=up*4.8-under*2.83+wallView*.85*(1-under);
     const offsetX=camera.position.x-aim.x;
     const offsetZ=camera.position.z-aim.z;
     const sin=Math.sin(posture.yaw),cos=Math.cos(posture.yaw);
@@ -316,7 +318,7 @@ export function mountFurniture(stage,showGraphicsFallback) {
     },
     orbitBy(delta,vertical,time) {
       centerUntil=0;
-      view.drag(-delta*1.15,vertical);
+      view.drag(-delta*.76,vertical);
       if(Math.abs(delta)+Math.abs(vertical)>.035)life.startleMoth(time);
       redraw();
     },
