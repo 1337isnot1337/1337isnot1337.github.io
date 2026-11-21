@@ -7,6 +7,7 @@ supply any files to the release. Research checkouts are read-only inputs.
 from datetime import datetime, timezone
 from html import escape
 import argparse
+from base64 import b64encode
 import hashlib
 import json
 import os
@@ -209,9 +210,18 @@ def add_breadcrumb_schema(output):
 
 def apply_reader_skin(output):
     """Style generated pages without rewriting research text or source assets."""
-    css = (HERE.parent / "site/research-reader.css").read_bytes()
+    site = HERE.parent / "site"
+    css = (site / "research-reader.css").read_bytes()
     if not css.strip():
         raise ValueError("Website reader stylesheet is empty")
+    # Catalogue output is checked on its own, outside the portfolio asset tree.
+    pixelation = (site / "pixelation.css").read_bytes()
+    grid = b64encode((site / "assets/pixel-grid.svg").read_bytes())
+    pixelation, count = re.subn(rb'/assets/pixel-grid\.svg(?:\?[^#"\s]+)?#grid',
+                                b"data:image/svg+xml;base64," + grid + b"#grid", pixelation)
+    if count != 1:
+        raise ValueError("Expected one pixel grid reference in the website filter")
+    css += b"\n" + pixelation
     digest = hashlib.sha256(css).hexdigest()
     name = f"reader-{digest[:16]}.css"
     pages = list(output.rglob("*.html"))
