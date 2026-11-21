@@ -415,38 +415,56 @@ export function furnishRoomObjects({walls, world, half, narrow, group, box, bead
     if(grounded)prop.position.y+=y-new T.Box3().setFromObject(prop,true).min.y;
     tag(prop,'prop-'+id,[0,0,0],.5,.5);
     prop.userData.roomProp=label;
+    return prop;
   }
   function ledge(wall, x,y, length, rows, scale=.92) {
-    box(wall,length,.073,.43,wood,x,y-.038,.185,.014);
-    box(wall,length+.05,.038,.05,trim,x,y-.066,.413,.010);
+    box(wall,length,.073,.54,wood,x,y-.038,.24,.014);
+    box(wall,length+.05,.038,.05,trim,x,y-.066,.512,.010);
     for(const sign of [-1,1])box(wall,.095,.21,.17,trim,x+sign*(length/2-.26),y-.15,.082,.012);
-    const spacing=(length-.18)/rows.length;
-    shuffled(rows).forEach((row,i)=>piece(wall,row,x+spacing*(i-(rows.length-1)/2),y,.218,scale,(random()-.5)*.18,true));
-  }
-  function wallRow(wall, x,y,span,rows,scale) {
-    shuffled(rows).forEach((row,i)=>piece(wall,row,x+(i-(rows.length-1)/2)*span/rows.length,y+(i%2)*.12,.085,scale,(random()-.5)*.12));
+    wall.updateWorldMatrix(true,false);
+    const local=wall.matrixWorld.clone().invert();
+    const clearance=.12,shelfFront=.49;
+    const props=shuffled(rows).map(row=>{
+      const root=piece(wall,row,0,0,0,scale);
+      root.rotation.y=(random()-.5)*.14;
+      const bounds=new T.Box3().setFromObject(root,true).applyMatrix4(local);
+      const size=bounds.getSize(new T.Vector3());
+      const support=Math.min(1,(shelfFront-clearance)/size.z);
+      return {root,bounds,width:size.x*support,support};
+    });
+    const contentWidth=props.reduce((width,item)=>width+item.width,0);
+    const fit=Math.min(1,(length-.085*(props.length+1))/contentWidth);
+    const gap=(length-contentWidth*fit)/(props.length+1);
+    let cursor=x-length/2+gap;
+    for(const {root,bounds,width,support} of props){
+      const ratio=support*fit;
+      root.scale.multiplyScalar(ratio);
+      root.position.set(cursor-bounds.min.x*ratio,
+        y-bounds.min.y*ratio,(clearance+shelfFront-(bounds.min.z+bounds.max.z)*ratio)/2);
+      cursor+=width*fit+gap;
+    }
   }
   const {back,front,music,science}=walls;
   const window=collections.window;
-  ledge(back,-5.42,1.21,4.24,window.slice(0,5),1.12);
-  ledge(back,5.7,1.21,4.35,window.slice(5,10),1.18);
-  ledge(back,-5.51,3.78,4.32,window.slice(10,15),1.30);
-  ledge(back,5.57,3.43,4.22,window.slice(15),1.16);
+  ledge(back,-7.15,1.21,4.24,window.slice(0,5),1.12);
+  ledge(back,7.19,1.21,4.35,window.slice(5,10),1.18);
+  ledge(back,-6.07,3.78,4.32,window.slice(10,15),1.30);
+  ledge(back,6.11,3.43,4.22,window.slice(15),1.16);
 
   const records=collections.records;
   ledge(music,-.18,-2.25,8.35,records.slice(0,10),1.20);
   ledge(music,-1.66,4.27,6.40,records.slice(10,16),1.16);
-  ledge(music,6.1,1.32,2.94,records.slice(16),1.07);
+  ledge(music,5.18,1.32,1.78,records.slice(16),1.07);
 
   const instruments=collections.instruments;
   ledge(science,.13,-2.04,8.8,instruments.slice(0,10),1.16);
   ledge(science,.68,4.35,7.35,instruments.slice(10,16),1.16);
-  ledge(science,-6.44,1.91,3.13,instruments.slice(16),1.10);
+  ledge(science,-4.97,1.91,2.15,instruments.slice(16),1.10);
 
   const entry=collections.entry;
   ledge(front,-4.12,-1.31,6.33,entry.slice(0,7),1.28);
   ledge(front,-3.90,1.70,6.0,entry.slice(7,13),1.22);
-  ledge(front,5.67,-.61,4.47,entry.slice(13),1.09);
+  ledge(front,6.72,-.61,4.40,entry.slice(13),1.09);
 
   const desk=collections.desk;
   piece(world,desk[4],.18+(random()-.5)*.13,1.52,-1.42,narrow?.49:.80,(random()-.5)*.14,true);
@@ -461,10 +479,8 @@ export function furnishRoomObjects({walls, world, half, narrow, group, box, bead
     }
     shuffled(items).forEach((row,i)=>piece(world,row,x+((i%2)*2-1)*.25,-1.424,-1.48+Math.floor(i/2)*.56,.82,(random()-.5)*.12,true));
   }
-  const reverse=group(world,0,0,-2.287);
-  reverse.rotation.y=Math.PI;
-  wallRow(reverse,narrow?-.07:-.24,2.44,narrow?4.52:6.81,desk.slice(10,17),narrow?.80:1.0);
+  ledge(front,-4.05,3.46,6.42,desk.slice(10,17),1.10);
   for(const [i,row] of desk.slice(17).entries()){
-    piece(world,row,(i-1)*(narrow?.68:.81),-3.062,-2.66-i*.30,1.12);
+    piece(world,row,-half-1.06-i*.62,-3.062,-1.74+i*.12,1.12,0,true);
   }
 }

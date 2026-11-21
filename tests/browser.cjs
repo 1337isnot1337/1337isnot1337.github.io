@@ -699,15 +699,30 @@ const server = http.createServer((req,res) => {
     const {furnish}=await import('/desk-model.js');
     return [false,true].map(narrow=>{
       const model=furnish(new T.Scene(),narrow,()=>{},true);
+      const props=[...model.roomProps];
+      const overlaps=[];
+      for(let index=0;index<props.length;index++){
+        const [id,{bounds}]=props[index];
+        for(const [neighbor,{bounds:other}] of props.slice(index+1)){
+          if(['x','y','z'].every(axis=>Math.min(bounds.max[axis],other.max[axis])-
+            Math.max(bounds.min[axis],other.min[axis])>.008))overlaps.push([id,neighbor]);
+        }
+      }
       const scope=new T.Box3().setFromObject(model.targets.get('scope').root,true);
+      let flapClearsScope=true;
       for(let step=0;step<=70;step++){
         model.flap.rotation.x=-step*Math.PI/180;
-        if(new T.Box3().setFromObject(model.flap,true).intersectsBox(scope))return false;
+        if(new T.Box3().setFromObject(model.flap,true).intersectsBox(scope)){
+          flapClearsScope=false;break;
+        }
       }
-      return true;
+      return {flapClearsScope,overlaps};
     });
   });
-  assert.deepEqual(clearance,[true,true],'folder clears the entire oscilloscope in both layouts');
+  for(const layout of clearance){
+    assert.equal(layout.flapClearsScope,true,'folder clears the entire oscilloscope');
+    assert.deepEqual(layout.overlaps,[],'shuffled props have clearance in both layouts');
+  }
   await shelfMouse.locator('[data-object="robot-photo"]').click();
   await pickup.locator('.photo-link').click();
   await shelfMouse.locator('#about:visible').waitFor();

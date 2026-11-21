@@ -1,6 +1,8 @@
-// Four joined walls, with the camera's full orbit inside the room.
+import * as T from './vendor/three/three.module.min.js';
+
+// The hutch sits against the window wall.
 export function buildRoomShell(world, {group,box,bead,cylinder,finish,drawn,wood,trim,floorMat}) {
-  const width=9.55, backZ=-8.65, frontZ=10.65, floor=-3.07, ceiling=6.65;
+  const width=9.55, backZ=-2.68, frontZ=10.65, floor=-3.07, ceiling=6.65;
   const length=frontZ-backZ, middle=(frontZ+backZ)/2;
   const molding=finish(0xc4ab97,.85);
   const walls={
@@ -12,8 +14,19 @@ export function buildRoomShell(world, {group,box,bead,cylinder,finish,drawn,wood
   walls.front.rotation.y=Math.PI;
   walls.music.rotation.y=Math.PI/2;
   walls.science.rotation.y=-Math.PI/2;
-  function wall(parent,span,paint,wainscot){
-    box(parent,span,ceiling-floor,.14,finish(paint,.96),0,(ceiling+floor)/2,-.07).castShadow=false;
+  const opening={left:-2.97,right:2.75,bottom:3.39,top:6.19};
+  function wall(parent,span,paint,wainscot,window){
+    const plaster=finish(paint,.96);
+    const wallSection=(left,right,bottom,top)=>{
+      box(parent,right-left,top-bottom,.26,plaster,(left+right)/2,(bottom+top)/2,-.13).castShadow=false;
+    };
+    if(window){
+      const {left,right,bottom,top}=window;
+      wallSection(-span/2,left,floor,ceiling);
+      wallSection(right,span/2,floor,ceiling);
+      wallSection(left,right,floor,bottom);
+      wallSection(left,right,top,ceiling);
+    }else wallSection(-span/2,span/2,floor,ceiling);
     box(parent,span,1.42,.036,finish(wainscot,.96),0,floor+.72,.021).castShadow=false;
     box(parent,span,.080,.071,molding,0,floor+1.44,.034,.014).castShadow=false;
     box(parent,span,.13,.072,trim,0,floor+.072,.034,.010).castShadow=false;
@@ -22,7 +35,7 @@ export function buildRoomShell(world, {group,box,bead,cylinder,finish,drawn,wood
       box(parent,.025,1.32,.018,finish(wainscot,.84),x,floor+.74,.044,.003).castShadow=false;
     }
   }
-  wall(walls.back,2*width,0xb0b8b3,0x748985);
+  wall(walls.back,2*width,0xb0b8b3,0x748985,opening);
   wall(walls.front,2*width,0xb4a69d,0x897972);
   wall(walls.music,length,0xb6b8a0,0x818873);
   wall(walls.science,length,0xc2adaf,0x96858e);
@@ -30,34 +43,105 @@ export function buildRoomShell(world, {group,box,bead,cylinder,finish,drawn,wood
   box(world,2*width,.115,length,finish(0xc8beb4,.97),0,ceiling+.0575,middle).castShadow=false;
 
   const rear=walls.back;
-  box(rear,5.84,3.35,.136,trim,-.18,2.73,.076,.021);
-  drawn(rear,5.62,3.12,(c,w,h)=>{
-    const wash=c.createLinearGradient(0,0,0,h);
-    wash.addColorStop(0,'#93adba');wash.addColorStop(.58,'#e2beac');wash.addColorStop(1,'#f4c291');
-    c.fillStyle=wash;c.fillRect(0,0,w,h);
-    c.fillStyle='#ffdfb3';c.beginPath();c.arc(w*.72,h*.51,.25,0,Math.PI*2);c.fill();
-    for(let row=0;row<3;row++){
-      c.fillStyle=['#9ba9a3','#728884','#657b77'][row];c.beginPath();c.moveTo(0,h);
-      for(let i=0;i<=26;i++){
-        const x=w*i/26,y=h*(.66+row*.08)+Math.sin(i*.27+row)*.15+Math.cos(i*.77)*.066;
-        c.lineTo(x,y);
-      }
-      c.lineTo(w,h);c.fill();
-    }
-  },-.18,2.73,.151);
-  for(const x of [-2.98,-.18,2.62])box(rear,.092,3.20,.100,molding,x,2.73,.195,.010);
-  for(const y of [1.13,2.65,4.33])box(rear,5.72,.090,.102,molding,-.18,y,.195,.010);
-  box(rear,6.28,.123,.468,wood,-.18,1.08,.262,.018);
-  const curtain=finish(0x8c777e,.91);
-  const rod=cylinder(rear,.037,.037,6.69,finish(0x917454,.54,.24),-.18,4.52,.302,19);
+  const {left,right,bottom,top}=opening;
+  const center=(left+right)/2, span=right-left, height=top-bottom, mid=(top+bottom)/2;
+  for(const x of [left,center,right]){
+    box(rear,.105,height+.15,.28,trim,x,mid,-.055,.009).castShadow=false;
+    box(rear,.039,height+.075,.058,molding,x+.034,mid,.091,.006).castShadow=false;
+  }
+  for(const y of [bottom,mid,top]){
+    box(rear,span+.14,.09,.28,trim,center,y,-.055,.009).castShadow=false;
+    box(rear,span+.06,.031,.057,molding,center,y+.029,.088,.006).castShadow=false;
+  }
+  box(rear,span+.33,.127,.55,wood,center,bottom-.087,.077,.018);
+  box(rear,span+.16,.075,.096,trim,center,bottom-.19,.125,.010);
+  const glass=new T.MeshStandardMaterial({
+    color:0xaccad9,roughness:.23,transparent:true,opacity:.085,depthWrite:false
+  });
+  for(const sign of [-1,1])for(const vertical of [-1,1]){
+    const pane=box(rear,span/2-.094,height/2-.080,.008,glass,center+sign*span/4,mid+vertical*height/4,-.10);
+    pane.castShadow=false;pane.receiveShadow=false;
+  }
+  const curtain=new T.MeshStandardMaterial({color:0x8f7780,roughness:.9,side:T.DoubleSide});
+  const rings=finish(0xa48a69,.53,.21);
+  const rod=cylinder(rear,.035,.035,span+1.10,finish(0x917454,.54,.24),center,top+.24,.317,19);
   rod.rotation.z=Math.PI/2;
   for(const sign of [-1,1]){
-    for(let n=0;n<9;n++){
-      const x=-.18+sign*(2.54+n*.088);
-      const depth=.082+(n%2)*.023,height=3.04+Math.sin(n*.71)*.12;
-      box(rear,.098,height,depth,curtain,x,4.44-height/2,.299+(n%2)*.03,.021);
+    const edge=center+sign*(span/2-.20);
+    const positions=[],indices=[],uv=[];
+    const columns=40,rows=16;
+    for(let row=0;row<=rows;row++)for(let col=0;col<=columns;col++){
+      const v=row/rows,u=col/columns;
+      const x=edge+sign*(u*(.69+.13*v)-(1-u)*.061*v);
+      const y=top+.16-v*(height+.23+.026*Math.sin(u*23));
+      const z=.31+(.037+v*.027)*Math.sin(u*10*Math.PI+.33*v);
+      positions.push(x,y,z);uv.push(u,v);
+      if(row&&col){
+        const a=row*(columns+1)+col,b=a-columns-1;
+        indices.push(a,b,b-1,a,b-1,a-1);
+      }
     }
-    bead(rear,-.18+sign*3.37,4.52,.307,.075,.054,.045,molding);
+    const drape=new T.BufferGeometry();
+    drape.setAttribute('position',new T.Float32BufferAttribute(positions,3));
+    drape.setAttribute('uv',new T.Float32BufferAttribute(uv,2));
+    drape.setIndex(indices);drape.computeVertexNormals();
+    const panel=new T.Mesh(drape,curtain);panel.castShadow=true;panel.receiveShadow=true;rear.add(panel);
+    for(let n=0;n<6;n++){
+      const ring=new T.Mesh(new T.TorusGeometry(.049,.009,7,15),rings);
+      ring.position.set(edge+sign*(.043+n*.128),top+.225,.317);
+      ring.rotation.y=Math.PI/2;rear.add(ring);
+    }
+    bead(rear,center+sign*(span/2+.56),top+.24,.317,.074,.050,.047,molding);
+  }
+  // Geometry behind the aperture has genuine depth and changes with the view.
+  const outdoors=group(rear,0,0,-.30);
+  drawn(outdoors,42,19,(c,w,h)=>{
+    const sky=c.createLinearGradient(0,0,0,h);
+    sky.addColorStop(0,'#749bad');sky.addColorStop(.48,'#b7cad3');
+    sky.addColorStop(.73,'#e5c2af');sky.addColorStop(1,'#f4c592');
+    c.fillStyle=sky;c.fillRect(0,0,w,h);
+  },0,8,-25);
+  const glow=new T.MeshStandardMaterial({color:0xffd197,emissive:0xffc17b,emissiveIntensity:.57});
+  const sun=bead(outdoors,-4.9,4.1,-22,.61,.61,.60,glow);
+  sun.castShadow=false;sun.receiveShadow=false;
+  box(outdoors,33,.24,26,finish(0x647f63,.98),0,-.12,-13).castShadow=false;
+  function ridge(z,base,amplitude,color,phase){
+    const coordinates=[],uv=[],indices=[];
+    for(let i=0;i<=24;i++){
+      const x=(i-12)*1.53;
+      const y=base+amplitude*(.51+Math.sin(i*.51+phase)*.32+Math.sin(i*1.23+phase)*.12);
+      coordinates.push(x,-.10,z-2,x,y,z+(i%4-1.5)*.28);
+      uv.push(i/24,0,i/24,1);
+      if(i){const point=i*2;indices.push(point-2,point,point-1,point,point+1,point-1);}
+    }
+    const geo=new T.BufferGeometry();
+    geo.setAttribute('position',new T.Float32BufferAttribute(coordinates,3));
+    geo.setAttribute('uv',new T.Float32BufferAttribute(uv,2));
+    geo.setIndex(indices);geo.computeVertexNormals();
+    outdoors.add(new T.Mesh(geo,finish(color,.98)));
+  }
+  ridge(-19,2.09,2.45,0x829397,1.8);
+  ridge(-14,1.16,2.83,0x71877b,3.1);
+  ridge(-10,.49,1.97,0x7c896b,.7);
+  const bark=finish(0x635548,.92);
+  for(const [x,z,h] of [[-5,-4.6,3.65],[-2.5,-6.2,2.8],[3.4,-5.1,4.1],[5.8,-7.3,3.04],[-6.0,-8.9,3.8],[2.0,-8.4,2.6]]){
+    cylinder(outdoors,.086,.147,h*.69,bark,x,h*.345,z,10).castShadow=false;
+    for(let i=0;i<5;i++){
+      const r=h*(.27-i*.042);
+      const profile=[[0,0],[r,.033],[r*.86,h*.106],[r*.55,h*.22],[r*.18,h*.342],[0,h*.46]];
+      const crown=new T.Mesh(new T.LatheGeometry(profile.map(point=>new T.Vector2(...point)),11),finish(i%2?0x4f705f:0x567762,.96));
+      crown.position.set(x+i*.019,h*(.32+i*.113),z);
+      crown.rotation.set(.064*Math.sin(x+i),i*.41,-.033*Math.cos(x+i));outdoors.add(crown);
+    }
+  }
+  for(const [x,z,tint] of [[-.9,-7.1,0xd6b389],[.62,-8.34,0xe5c2a7],[1.62,-8.76,0xbb9e8f]]){
+    box(outdoors,.99,.73,.76,finish(tint,.92),x,.39,z).castShadow=false;
+    const roof=finish(0x845d51,.93);
+    for(const sign of [-1,1]){
+      const tile=box(outdoors,.62,.079,.91,roof,x+sign*.255,.858,z,.011);
+      tile.rotation.z=-sign*.48;tile.castShadow=false;
+    }
+    for(const offset of [-.24,.22])box(outdoors,.122,.168,.022,finish(0xffd29a,.84),x+offset,.48,z+.385).castShadow=false;
   }
 
   const entry=walls.front, door=finish(0x5b756b,.78);

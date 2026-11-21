@@ -1,5 +1,5 @@
 import * as T from './vendor/three/three.module.min.js';
-import { furnish } from './desk-model.js?v=31';
+import { furnish } from './desk-model.js?v=32';
 import { inspectDeskObjects } from './desk-inspect.js?v=15';
 
 import { attachDeskPointer } from './desk-pointer.js?v=20';
@@ -206,8 +206,13 @@ export function mountFurniture(stage,showGraphicsFallback) {
     const offsetX=camera.position.x-aim.x;
     const offsetZ=camera.position.z-aim.z;
     const sin=Math.sin(posture.yaw),cos=Math.cos(posture.yaw);
-    camera.position.x=aim.x+offsetX*cos+offsetZ*sin;
-    camera.position.z=aim.z+offsetZ*cos-offsetX*sin;
+    // Orbit within the room in front of the desk. Past either side, look
+    // outward toward the rest of the room from that same walkable arc.
+    const walkSin=.95*sin,walkCos=Math.sqrt(1-walkSin*walkSin);
+    camera.position.x=aim.x+offsetX*walkCos+offsetZ*walkSin;
+    camera.position.z=aim.z+offsetZ*walkCos-offsetX*walkSin;
+    aim.x=camera.position.x-offsetX*cos-offsetZ*sin;
+    aim.z=camera.position.z-offsetZ*cos+offsetX*sin;
     const sunChanged=Math.abs(sun.position.x+4.7-events.drift)>.045;
     if(sunChanged)sun.position.x=-4.7+events.drift;
     model.daylight.value=events.drift;

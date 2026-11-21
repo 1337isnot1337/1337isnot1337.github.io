@@ -5,7 +5,7 @@ import { lampProjection } from './desk-lamp.js?v=1';
 import { paintScope, followProbe } from './desk-scope.js?v=1';
 import { airframeGeometry, wingUnderside } from './model-plane.js?v=2';
 import { mergeGeometries } from './vendor/three/BufferGeometryUtils.js';
-import { decorateRoom } from './desk-room.js?v=5';
+import { decorateRoom } from './desk-room.js?v=6';
 import { RoundedBoxGeometry } from './vendor/three/RoundedBoxGeometry.js';
 
 export function furnish(scene, narrow, repaint, software=false) {
@@ -1070,7 +1070,7 @@ export function furnish(scene, narrow, repaint, software=false) {
     if(software && parent!==mug){
       if(!fastMaterials.has(mat))fastMaterials.set(mat,new T.MeshLambertMaterial({
         color:mat.color,map:mat.map,side:mat.side,vertexColors:mat.vertexColors,transparent:mat.transparent,
-        depthWrite:mat.depthWrite,alphaTest:mat.alphaTest,polygonOffset:mat.polygonOffset,
+        depthWrite:mat.depthWrite,alphaTest:mat.alphaTest,opacity:mat.opacity,polygonOffset:mat.polygonOffset,
         polygonOffsetFactor:mat.polygonOffsetFactor,polygonOffsetUnits:mat.polygonOffsetUnits,
         emissive:mat.emissive,emissiveIntensity:mat.emissiveIntensity
       }));
