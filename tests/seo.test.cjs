@@ -91,6 +91,27 @@ test('homepage and profile identify the same person and provide a descriptive na
   assert.equal(about.querySelector('meta[property="og:site_name"]')?.content, 'Cinna Davis');
 });
 
+test('favicon is accessible at stable search-crawler and root paths', () => {
+  const link = documentFor('/').querySelector('link[rel="icon"]');
+  assert.equal(link?.getAttribute('href'), '/assets/prints/favicon.png');
+  assert.equal(link?.getAttribute('type'), 'image/png');
+  assert.equal(link?.getAttribute('sizes'), '192x192');
+
+  const icon = fs.readFileSync(path.join(root, 'assets/prints/favicon.png'));
+  const rootIcon = fs.readFileSync(path.join(root, 'favicon.png'));
+  assert.deepEqual(icon, rootIcon, 'favicon assets must be the same image');
+  assert.equal(icon.subarray(0, 8).toString('hex'), '89504e470d0a1a0a');
+  assert.equal(icon.readUInt32BE(16), 192, 'favicon width');
+  assert.equal(icon.readUInt32BE(20), 192, 'favicon height');
+
+  const ico = fs.readFileSync(path.join(root, 'favicon.ico'));
+  assert.equal(ico.readUInt16LE(0), 0);
+  assert.equal(ico.readUInt16LE(2), 1);
+  assert.ok(ico.readUInt16LE(4) >= 1);
+
+  assert.equal(documentFor('/about/').querySelector('link[rel="icon"]')?.getAttribute('href'), link.getAttribute('href'));
+});
+
 test('crawler rules reference the canonical sitemap', () => {
   const robots = fs.readFileSync(path.join(root, 'robots.txt'), 'utf8');
   assert.match(robots, /^User-agent: \*\nAllow: \/\n/m);
