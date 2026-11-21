@@ -3,7 +3,7 @@ import { attachHeldArrows } from './desk-arrows.js?v=1';
 // Keep the browser cursor at its real hotspot. Only an orbit owns the pointer.
 export function attachDeskPointer(stage,{pick,track,stopLook=()=>{},orbitBy,endOrbit,part,gesture,tapPart,zoomBy,targets=new Map([...stage.querySelectorAll('[data-object]')].map(el=>[el.dataset.object,el]))}) {
   const canvas=stage.querySelector('canvas');
-  let press=null, frame=0, x=0, y=0, suppress=false;
+  let press=null, frame=0, x=0, y=0, overControl=false, suppress=false;
   const active=()=>stage.classList.contains('is-rendered') && !stage.closest('.desk-overview').inert;
   function targetAt(clientX,clientY){
     const r=canvas.getBoundingClientRect();
@@ -24,13 +24,14 @@ export function attachDeskPointer(stage,{pick,track,stopLook=()=>{},orbitBy,endO
   function aim(e,follow=true){
     if(e.pointerType!=='mouse')return;
     x=e.clientX;y=e.clientY;
+    overControl=Boolean(e.target.closest('[data-object]'));
     if(!frame)frame=requestAnimationFrame(()=>{
       frame=0;
       const enabled=active();
       const target=enabled && targetAt(x,y);
       if(follow && enabled && !press && !document.querySelector('dialog[open]')){
         const r=stage.getBoundingClientRect();
-        track((x-r.left)/r.width*2-1,(y-r.top)/r.height*2-1,Boolean(target));
+        track((x-r.left)/r.width*2-1,(y-r.top)/r.height*2-1,overControl||Boolean(target));
       }
       stage.dataset.aim=target ? 'object':'desk';
     });

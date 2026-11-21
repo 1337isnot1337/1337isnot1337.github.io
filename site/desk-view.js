@@ -7,8 +7,8 @@ const frontLimit=.33;
 const frontTravel=frontLimit/frontGain;
 const rearAngle=Math.PI;
 const rearGain=rearAngle-frontLimit-(orbitTravel-frontTravel)*sideGain;
-const horizontalSteeringStart=.84;
-const verticalSteeringStart=.68;
+const horizontalSteeringStart=.60;
+const verticalSteeringStart=.40;
 const clamp=(value,min,max)=>Math.min(max,Math.max(min,value));
 const wrap=(value,limit)=>value>limit?value-2*limit:value< -limit?value+2*limit:value;
 const edgeSpeed=(value,threshold)=>{

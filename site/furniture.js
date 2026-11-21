@@ -2,10 +2,10 @@ import * as T from './vendor/three/three.module.min.js';
 import { furnish } from './desk-model.js?v=32';
 import { inspectDeskObjects } from './desk-inspect.js?v=15';
 
-import { attachDeskPointer } from './desk-pointer.js?v=20';
+import { attachDeskPointer } from './desk-pointer.js?v=21';
 
 import { deskLife } from './desk-life.js?v=13';
-import { deskView } from './desk-view.js?v=11';
+import { deskView } from './desk-view.js?v=12';
 import { drawerTravel } from './desk-drawer.js?v=1';
 
 export function mountFurniture(stage,showGraphicsFallback) {
