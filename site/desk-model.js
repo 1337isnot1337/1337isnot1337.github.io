@@ -5,7 +5,7 @@ import { lampProjection } from './desk-lamp.js?v=1';
 import { paintScope, followProbe } from './desk-scope.js?v=1';
 import { airframeGeometry, wingUnderside } from './model-plane.js?v=2';
 import { mergeGeometries } from './vendor/three/BufferGeometryUtils.js';
-import { decorateRoom } from './desk-room.js?v=6';
+import { decorateRoom } from './desk-room.js?v=7';
 import { RoundedBoxGeometry } from './vendor/three/RoundedBoxGeometry.js';
 
 export function furnish(scene, narrow, repaint, software=false) {
@@ -200,6 +200,21 @@ export function furnish(scene, narrow, repaint, software=false) {
   // Rear hutch, upright shelves, and a pinboard live in the same coordinate system as the desk.
   box(world,width-.16,3.21,.11,darkWood,0,1.59,-2.22);
   box(world,width-.36,2.95,.025,finish(0x6c6855),0,1.57,-2.15);
+  const backing=drawn(world,width-.36,2.95,(c,w,h)=>{
+    const light=c.createLinearGradient(0,0,w,h);
+    light.addColorStop(0,'#5b5446');
+    light.addColorStop(.51,'#7b7159');
+    light.addColorStop(1,'#625b4a');
+    c.fillStyle=light;c.fillRect(0,0,w,h);
+    for(const y of [0,h*.548]){
+      const shelfShadow=c.createLinearGradient(0,y,0,y+.29);
+      shelfShadow.addColorStop(0,'#2f24194f');
+      shelfShadow.addColorStop(1,'#2f241900');
+      c.fillStyle=shelfShadow;c.fillRect(0,y,w,.29);
+    }
+  },0,1.57,-2.136);
+  backing.material.transparent=false;
+  backing.material.depthWrite=true;
   for(const direction of [-1,1]){
     const x=direction*(side-.04);
     box(world,.14,3.24,.95,wood,x,1.6,-1.79,.025);
@@ -973,7 +988,7 @@ export function furnish(scene, narrow, repaint, software=false) {
     beam.addColorStop(0,'#eab9cb99');beam.addColorStop(1,'#eab9cb00');c.fillStyle=beam;c.fillRect(0,0,w,h);
   },0,0,0);
   stageLights.visible=false;
-  decorateRoom(world,{narrow,half,group,box,bead,cylinder,wire,finish,photo,tag,drawn,wood,trim,floorMat});
+  decorateRoom(world,{narrow,half,group,box,bead,cylinder,wire,finish,photo,tag,drawn,weave,wood,trim,floorMat});
   // Bake short-range occlusion onto the work surface once. No full-screen AO pass.
   const contact=document.createElement('canvas');contact.width=512;contact.height=256;
   const ctx=contact.getContext('2d');
@@ -997,6 +1012,7 @@ export function furnish(scene, narrow, repaint, software=false) {
   const materials=new Set();
   world.traverse(node=>{if(node.isMesh)materials.add(node.material);});
   for(const mat of materials) {
+    if(mat.isMeshBasicMaterial)continue;
     const workSurface=mat===wood || mat===blotter;
     mat.customProgramCacheKey=()=>workSurface?'desk-contact':'desk-room';
     mat.onBeforeCompile=shader=>{
@@ -1044,7 +1060,7 @@ export function furnish(scene, narrow, repaint, software=false) {
   const occluders=Array.from(roomProps.values(),item=>item.bounds);
   // One draw can paint several solid colors on the same rigid part.
   function batchMaterial(mat) {
-    if(mat.map || mat.vertexColors || mat===bulbGlass || mat.transparent)return mat;
+    if(mat.isMeshBasicMaterial || mat.map || mat.vertexColors || mat===bulbGlass || mat.transparent)return mat;
     const key=[mat.roughness,mat.metalness,mat.side].join('/');
     if(!solidVariants.has(key)){
       const tint=mat.clone();tint.color.set(0xffffff);tint.vertexColors=true;
@@ -1058,7 +1074,7 @@ export function furnish(scene, narrow, repaint, software=false) {
     let parent=m.parent;while(!rigid.has(parent))parent=parent.parent;
     if(parent===world && !m.parent.userData.roomProp){
       if(!m.geometry.boundingBox)m.geometry.computeBoundingBox();
-      occluders.push(m.geometry.boundingBox.clone().applyMatrix4(m.matrixWorld));
+      if(!m.material.isMeshBasicMaterial)occluders.push(m.geometry.boundingBox.clone().applyMatrix4(m.matrixWorld));
     }
     const mat=batchMaterial(m.material);
     const key=parent.id+'/'+mat.id+'/'+m.castShadow;
@@ -1067,7 +1083,7 @@ export function furnish(scene, narrow, repaint, software=false) {
   });
   for(const {parent,mat,cast,meshes} of batches.values()){
     let surface=mat;
-    if(software && parent!==mug){
+    if(software && parent!==mug && !mat.isMeshBasicMaterial){
       if(!fastMaterials.has(mat))fastMaterials.set(mat,new T.MeshLambertMaterial({
         color:mat.color,map:mat.map,side:mat.side,vertexColors:mat.vertexColors,transparent:mat.transparent,
         depthWrite:mat.depthWrite,alphaTest:mat.alphaTest,opacity:mat.opacity,polygonOffset:mat.polygonOffset,

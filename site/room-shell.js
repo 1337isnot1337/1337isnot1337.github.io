@@ -1,10 +1,27 @@
 import * as T from './vendor/three/three.module.min.js';
+import { buildWindowView } from './room-window-view.js?v=1';
 
 // The hutch sits against the window wall.
-export function buildRoomShell(world, {group,box,bead,cylinder,finish,drawn,wood,trim,floorMat}) {
+export function buildRoomShell(world, {group,box,bead,cylinder,finish,photo,weave,wood,trim,floorMat}) {
   const width=9.55, backZ=-2.68, frontZ=10.65, floor=-3.07, ceiling=6.65;
   const length=frontZ-backZ, middle=(frontZ+backZ)/2;
   const molding=finish(0xc4ab97,.85);
+  const texture=document.createElement('canvas');
+  texture.width=texture.height=192;
+  const ctx=texture.getContext('2d'), surface=ctx.createImageData(192,192);
+  let grit=3029;
+  for(let y=0;y<192;y++)for(let x=0;x<192;x++){
+    grit=(Math.imul(grit,1664525)+1013904223)>>>0;
+    const trowel=3*Math.sin(x*.063)+2*Math.sin(x*.037+y*.112);
+    const tone=233+trowel+(grit>>>28);
+    const i=(y*192+x)*4;
+    surface.data[i]=surface.data[i+1]=surface.data[i+2]=tone;surface.data[i+3]=255;
+  }
+  ctx.putImageData(surface,0,0);
+  const plasterGrain=new T.CanvasTexture(texture);
+  plasterGrain.colorSpace=T.SRGBColorSpace;
+  plasterGrain.wrapS=plasterGrain.wrapT=T.RepeatWrapping;
+  plasterGrain.repeat.set(3,3);
   const walls={
     back:group(world,0,0,backZ),
     front:group(world,0,0,frontZ),
@@ -16,7 +33,7 @@ export function buildRoomShell(world, {group,box,bead,cylinder,finish,drawn,wood
   walls.science.rotation.y=-Math.PI/2;
   const opening={left:-2.97,right:2.75,bottom:3.39,top:6.19};
   function wall(parent,span,paint,wainscot,window){
-    const plaster=finish(paint,.96);
+    const plaster=new T.MeshStandardMaterial({color:paint,map:plasterGrain,bumpMap:plasterGrain,bumpScale:.015,roughness:.97});
     const wallSection=(left,right,bottom,top)=>{
       box(parent,right-left,top-bottom,.26,plaster,(left+right)/2,(bottom+top)/2,-.13).castShadow=false;
     };
@@ -56,13 +73,20 @@ export function buildRoomShell(world, {group,box,bead,cylinder,finish,drawn,wood
   box(rear,span+.33,.127,.55,wood,center,bottom-.087,.077,.018);
   box(rear,span+.16,.075,.096,trim,center,bottom-.19,.125,.010);
   const glass=new T.MeshStandardMaterial({
-    color:0xaccad9,roughness:.23,transparent:true,opacity:.085,depthWrite:false
+    color:0xc6d9df,roughness:.16,metalness:.12,transparent:true,opacity:.055,depthWrite:false
   });
   for(const sign of [-1,1])for(const vertical of [-1,1]){
     const pane=box(rear,span/2-.094,height/2-.080,.008,glass,center+sign*span/4,mid+vertical*height/4,-.10);
     pane.castShadow=false;pane.receiveShadow=false;
   }
-  const curtain=new T.MeshStandardMaterial({color:0x8f7780,roughness:.9,side:T.DoubleSide});
+  const latch=finish(0xb69664,.39,.55);
+  box(rear,.29,.106,.043,latch,center-.032,mid-.064,.115,.018);
+  box(rear,.16,.031,.050,latch,center-.026,mid+.021,.133,.009);
+  bead(rear,center+.04,mid+.039,.162,.029,.027,.020,latch);
+  for(const dx of [-.100,.100])bead(rear,center-.03+dx,mid-.065,.139,.012,.012,.008,finish(0x6a5340,.45,.45));
+  const curtain=new T.MeshStandardMaterial({
+    color:0x8f7780,map:weave,bumpMap:weave,bumpScale:.012,roughness:.91,side:T.DoubleSide
+  });
   const rings=finish(0xa48a69,.53,.21);
   const rod=cylinder(rear,.035,.035,span+1.10,finish(0x917454,.54,.24),center,top+.24,.317,19);
   rod.rotation.z=Math.PI/2;
@@ -93,56 +117,7 @@ export function buildRoomShell(world, {group,box,bead,cylinder,finish,drawn,wood
     }
     bead(rear,center+sign*(span/2+.56),top+.24,.317,.074,.050,.047,molding);
   }
-  // Geometry behind the aperture has genuine depth and changes with the view.
-  const outdoors=group(rear,0,0,-.30);
-  drawn(outdoors,42,19,(c,w,h)=>{
-    const sky=c.createLinearGradient(0,0,0,h);
-    sky.addColorStop(0,'#749bad');sky.addColorStop(.48,'#b7cad3');
-    sky.addColorStop(.73,'#e5c2af');sky.addColorStop(1,'#f4c592');
-    c.fillStyle=sky;c.fillRect(0,0,w,h);
-  },0,8,-25);
-  const glow=new T.MeshStandardMaterial({color:0xffd197,emissive:0xffc17b,emissiveIntensity:.57});
-  const sun=bead(outdoors,-4.9,4.1,-22,.61,.61,.60,glow);
-  sun.castShadow=false;sun.receiveShadow=false;
-  box(outdoors,33,.24,26,finish(0x647f63,.98),0,-.12,-13).castShadow=false;
-  function ridge(z,base,amplitude,color,phase){
-    const coordinates=[],uv=[],indices=[];
-    for(let i=0;i<=24;i++){
-      const x=(i-12)*1.53;
-      const y=base+amplitude*(.51+Math.sin(i*.51+phase)*.32+Math.sin(i*1.23+phase)*.12);
-      coordinates.push(x,-.10,z-2,x,y,z+(i%4-1.5)*.28);
-      uv.push(i/24,0,i/24,1);
-      if(i){const point=i*2;indices.push(point-2,point,point-1,point,point+1,point-1);}
-    }
-    const geo=new T.BufferGeometry();
-    geo.setAttribute('position',new T.Float32BufferAttribute(coordinates,3));
-    geo.setAttribute('uv',new T.Float32BufferAttribute(uv,2));
-    geo.setIndex(indices);geo.computeVertexNormals();
-    outdoors.add(new T.Mesh(geo,finish(color,.98)));
-  }
-  ridge(-19,2.09,2.45,0x829397,1.8);
-  ridge(-14,1.16,2.83,0x71877b,3.1);
-  ridge(-10,.49,1.97,0x7c896b,.7);
-  const bark=finish(0x635548,.92);
-  for(const [x,z,h] of [[-5,-4.6,3.65],[-2.5,-6.2,2.8],[3.4,-5.1,4.1],[5.8,-7.3,3.04],[-6.0,-8.9,3.8],[2.0,-8.4,2.6]]){
-    cylinder(outdoors,.086,.147,h*.69,bark,x,h*.345,z,10).castShadow=false;
-    for(let i=0;i<5;i++){
-      const r=h*(.27-i*.042);
-      const profile=[[0,0],[r,.033],[r*.86,h*.106],[r*.55,h*.22],[r*.18,h*.342],[0,h*.46]];
-      const crown=new T.Mesh(new T.LatheGeometry(profile.map(point=>new T.Vector2(...point)),11),finish(i%2?0x4f705f:0x567762,.96));
-      crown.position.set(x+i*.019,h*(.32+i*.113),z);
-      crown.rotation.set(.064*Math.sin(x+i),i*.41,-.033*Math.cos(x+i));outdoors.add(crown);
-    }
-  }
-  for(const [x,z,tint] of [[-.9,-7.1,0xd6b389],[.62,-8.34,0xe5c2a7],[1.62,-8.76,0xbb9e8f]]){
-    box(outdoors,.99,.73,.76,finish(tint,.92),x,.39,z).castShadow=false;
-    const roof=finish(0x845d51,.93);
-    for(const sign of [-1,1]){
-      const tile=box(outdoors,.62,.079,.91,roof,x+sign*.255,.858,z,.011);
-      tile.rotation.z=-sign*.48;tile.castShadow=false;
-    }
-    for(const offset of [-.24,.22])box(outdoors,.122,.168,.022,finish(0xffd29a,.84),x+offset,.48,z+.385).castShadow=false;
-  }
+  buildWindowView(group(rear,0,0,-.30),{photo,cylinder,finish});
 
   const entry=walls.front, door=finish(0x5b756b,.78);
   box(entry,3.11,6.03,.145,trim,2.46,-.034,.079,.018);
@@ -158,11 +133,12 @@ export function buildRoomShell(world, {group,box,bead,cylinder,finish,drawn,wood
   box(entry,5.62,1.88,.047,finish(0x99766b,.92),-4.18,2.18,.095,.010);
 
   // Runners sit on the floor, with the desk feet still grounded.
-  const rug=finish(0x64716b,.96);
+  const rug=new T.MeshStandardMaterial({color:0x64716b,map:weave,bumpMap:weave,bumpScale:.020,roughness:.98});
   box(world,11.75,.022,6.46,rug,0,floor+.011,.03,.010).castShadow=false;
   for(const x of [-5.64,5.64])box(world,.058,.008,6.20,molding,x,floor+.026,.03,.005).castShadow=false;
   for(const z of [-2.98,3.04])box(world,11.29,.008,.046,molding,0,floor+.028,z,.004).castShadow=false;
-  const runner=box(world,2.55,.025,4.85,finish(0x89717c,.96),-6.65,floor+.012,4.04,.011);
+  const runnerFabric=rug.clone();runnerFabric.color.set(0x89717c);
+  const runner=box(world,2.55,.025,4.85,runnerFabric,-6.65,floor+.012,4.04,.011);
   runner.rotation.y=.09;runner.castShadow=false;
   return walls;
 }

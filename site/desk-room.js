@@ -1,6 +1,6 @@
 import * as T from './vendor/three/three.module.min.js';
-import { furnishRoomObjects } from './room-objects.js?v=3';
-import { buildRoomShell } from './room-shell.js?v=2';
+import { furnishRoomObjects } from './room-objects.js?v=4';
+import { buildRoomShell } from './room-shell.js?v=3';
 
 // Atlas order: name, source aspect ratio, wall x/y, physical width, rotation.
 const artwork = [
@@ -34,8 +34,8 @@ ivyLeaf.setAttribute('uv', new T.Float32BufferAttribute([
 ], 2));
 ivyLeaf.computeVertexNormals();
 
-export function decorateRoom(world, { narrow, half, group, box, bead, cylinder, wire, finish, photo, tag, drawn, wood, trim, floorMat }) {
-  const walls=buildRoomShell(world,{group,box,bead,cylinder,finish,drawn,wood,trim,floorMat});
+export function decorateRoom(world, { narrow, half, group, box, bead, cylinder, wire, finish, photo, tag, drawn, weave, wood, trim, floorMat }) {
+  const walls=buildRoomShell(world,{group,box,bead,cylinder,finish,photo,weave,wood,trim,floorMat});
   const atlas = photo('/assets/furniture/room-atlas.webp?v=4');
   const ink = new T.MeshStandardMaterial({ map: atlas, roughness: .93, alphaTest: .28 });
   const cutout = ink.clone();
@@ -135,7 +135,7 @@ export function decorateRoom(world, { narrow, half, group, box, bead, cylinder, 
     vine(wall, -4.19, 3.71, .088, 1.82, .4 + side);
   }
 
-  furnishRoomObjects({walls,world,half,narrow,group,box,bead,cylinder,wire,finish,drawn,tag,wood,trim});
+  furnishRoomObjects({walls,world,half,narrow,group,box,bead,cylinder,wire,finish,drawn,tag,weave,wood,trim});
 
   // Smaller vines on the end of the hutch connect it to the rest of the room.
   for (const side of [-1, 1]) {

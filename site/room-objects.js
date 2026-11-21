@@ -67,10 +67,29 @@ const collections = {
 
 // Match compact and wide layouts within one visit. A fresh load gets a new order.
 const placementSeed=Math.floor(Math.random()*2**32);
-export function furnishRoomObjects({walls, world, half, narrow, group, box, bead, cylinder, wire, finish, drawn, tag, wood, trim}) {
-  const line = finish(0x4e3b3e), page = finish(0xece0c7);
+export function furnishRoomObjects({walls, world, half, narrow, group, box, bead, cylinder, wire, finish, drawn, tag, weave, wood, trim}) {
+  const line = finish(0x4e3b3e), page = finish(0xece0c7,.92);
   const gilt = finish(0xb4965e,.43,.35), glaze = finish(0x829c9e,.25,.12);
   const shadow = finish(0x51474d,.76);
+  const stock = new T.MeshStandardMaterial({color:0xd8c6a4,map:weave,roughness:.94});
+  const covers = new Map();
+  const finishes = {
+    bowl:[.27,.02], flask:[.26,.05], bird:[.31,.01], loupe:[.33,.62],
+    caliper:[.40,.57], key:[.38,.64], glider:[.36,.52], prism:[.24,.10],
+    reel:[.37,.35], camera:[.49,.22], cat:[.77,0],
+    packet:[.89,0], ticket:[.91,0], frame:[.68,.04]
+  };
+  const contactBrush=document.createElement('canvas');
+  contactBrush.width=contactBrush.height=64;
+  const brush=contactBrush.getContext('2d');
+  const softEdge=brush.createRadialGradient(32,32,5,32,32,32);
+  softEdge.addColorStop(0,'rgba(43,28,24,.53)');
+  softEdge.addColorStop(.62,'rgba(43,28,24,.25)');
+  softEdge.addColorStop(1,'rgba(43,28,24,0)');
+  brush.fillStyle=softEdge;brush.fillRect(0,0,64,64);
+  const contactTexture=new T.CanvasTexture(contactBrush);
+  contactTexture.colorSpace=T.SRGBColorSpace;
+  const shelfContact=new T.MeshBasicMaterial({map:contactTexture,transparent:true,depthWrite:false,toneMapped:false});
   const faceDisc = (root,r,d,mat,x,y,z) => {
     const mesh=cylinder(root,r,r,d,mat,x,y,z,24);
     mesh.rotation.x=Math.PI/2;
@@ -88,6 +107,7 @@ export function furnishRoomObjects({walls, world, half, narrow, group, box, bead
   const builders = {
     book(p,m,label,color){
       box(p,.37,.53,.32,page,0,.292,0,.010);
+      for(let i=0;i<9;i++)box(p,.346,.0014,.004,stock,0,.5576,-.134+i*.033);
       for(const x of [-.197,.197])box(p,.035,.60,.35,m,x,.303,0,.005);
       box(p,.42,.60,.046,m,0,.303,.173,.010);
       box(p,.19,.017,.007,gilt,0,.128,.199);
@@ -411,7 +431,13 @@ export function furnishRoomObjects({walls, world, half, narrow, group, box, bead
     const prop=group(parent,x,y,z);
     if(grounded)prop.rotation.y=angle;else prop.rotation.z=angle;
     prop.scale.setScalar(scale);
-    builders[kind](prop,finish(color,.59),label,color);
+    if(kind==='book' || kind==='fabric'){
+      if(!covers.has(color))covers.set(color,new T.MeshStandardMaterial({
+        color,map:weave,bumpMap:weave,bumpScale:.008,roughness:.88
+      }));
+    }
+    const surface=kind==='book'||kind==='fabric' ? covers.get(color) : finish(color,...(finishes[kind]||[.59,0]));
+    builders[kind](prop,surface,label,color);
     if(grounded)prop.position.y+=y-new T.Box3().setFromObject(prop,true).min.y;
     tag(prop,'prop-'+id,[0,0,0],.5,.5);
     prop.userData.roomProp=label;
@@ -441,6 +467,11 @@ export function furnishRoomObjects({walls, world, half, narrow, group, box, bead
       root.scale.multiplyScalar(ratio);
       root.position.set(cursor-bounds.min.x*ratio,
         y-bounds.min.y*ratio,(clearance+shelfFront-(bounds.min.z+bounds.max.z)*ratio)/2);
+      const depth=(bounds.max.z-bounds.min.z)*ratio;
+      const contact=new T.Mesh(new T.PlaneGeometry(width*fit*1.21,Math.min(.39,depth*1.28+.08)),shelfContact);
+      contact.rotation.x=-Math.PI/2;
+      contact.position.set(cursor+width*fit/2,y+.0016,(clearance+shelfFront)/2);
+      wall.add(contact);
       cursor+=width*fit+gap;
     }
   }

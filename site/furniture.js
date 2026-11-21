@@ -1,5 +1,5 @@
 import * as T from './vendor/three/three.module.min.js';
-import { furnish } from './desk-model.js?v=32';
+import { furnish } from './desk-model.js?v=33';
 import { inspectDeskObjects } from './desk-inspect.js?v=15';
 
 import { attachDeskPointer } from './desk-pointer.js?v=22';
@@ -23,15 +23,16 @@ export function mountFurniture(stage,showGraphicsFallback) {
   engine.shadowMap.autoUpdate=false;
   engine.toneMapping=T.ACESFilmicToneMapping;engine.toneMappingExposure=1.03;
   const scene=new T.Scene();scene.background=new T.Color(0xc7bc9e);
-  const camera=new T.PerspectiveCamera(43,1,.10,42);
-  const sky=new T.HemisphereLight(0xfff5df,0xd0bec0,1.95);scene.add(sky);
+  const camera=new T.PerspectiveCamera(43,1,.10,62);
+  const daySky=1.76;
+  const sky=new T.HemisphereLight(0xfff1df,0xbfcbd6,daySky);scene.add(sky);
   const sun=new T.DirectionalLight(0xffedd4,2.12);
   sun.position.set(-4.7,7.7,4.6);sun.target.position.set(0,.6,-.3);sun.castShadow=true;
   sun.shadow.mapSize.setScalar(1024);
   Object.assign(sun.shadow.camera,{left:-6.7,right:6.7,top:4.8,bottom:-4.8,near:.3,far:19});
   sun.shadow.bias=-.00025;sun.shadow.normalBias=.012;sun.shadow.radius=2;
   scene.add(sun,sun.target);
-  const fill=new T.DirectionalLight(0xe3ecff,.49);fill.position.set(5,3,-1);scene.add(fill);
+  const fill=new T.DirectionalLight(0xffdfb5,.67);fill.position.set(5.4,6.2,-8);scene.add(fill);
   const bulb=new T.PointLight(0xffce8a,0,8,2);
   const beam=new T.SpotLight(0xffd39a,0,8,.72,.85,1.9);
   scene.add(bulb,beam,beam.target);
@@ -192,8 +193,8 @@ export function mountFurniture(stage,showGraphicsFallback) {
       if(Number.isFinite(delay))ambientTimer=setTimeout(()=>{ambientTimer=0;redraw();},delay);
     }
     const phone=narrow;
-    camera.position.set(phone?.22:.70, (phone?4.19:4.06)+drawerAmount*.12, (phone?6.13:6.47)+drawerAmount*1.52);
-    aim.set(phone?0:.025,(phone?.40:.67)-drawerAmount*.53,.21+drawerAmount*.77);
+    camera.position.set(phone?.22:.70, (phone?4.19:4.06)+drawerAmount*.12, (phone?6.13:6.72)+drawerAmount*1.52);
+    aim.set(phone?0:.025,(phone?.40:.96)-drawerAmount*.53,.21+drawerAmount*.77);
     const ease=motion.matches?1:1-Math.exp(-dt*18);
     gazeX=Math.abs(gazeX-targetX)<.009?targetX:T.MathUtils.lerp(gazeX,targetX,ease);
     gazeY=Math.abs(gazeY-targetY)<.009?targetY:T.MathUtils.lerp(gazeY,targetY,ease);
@@ -380,7 +381,7 @@ export function mountFurniture(stage,showGraphicsFallback) {
   lamp.addEventListener('click',()=>{
     lampOn=!lampOn;life.lampChange(lampOn);lamp.setAttribute('aria-pressed',String(lampOn));
     model.bulbGlass.emissiveIntensity=lampOn?2.2:.08;
-    bulb.intensity=lampOn?22:0;sky.intensity=lampOn?.95:1.95;sun.intensity=lampOn?.80:2.12;
+    bulb.intensity=lampOn?22:0;sky.intensity=lampOn?.95:daySky;sun.intensity=lampOn?.80:2.12;
     redraw();
   });
   stage.addEventListener('drawer-change',()=>{
