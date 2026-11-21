@@ -95,19 +95,22 @@ test('favicon is accessible at stable search-crawler and root paths', () => {
   const link = documentFor('/').querySelector('link[rel="icon"]');
   assert.equal(link?.getAttribute('href'), '/assets/prints/favicon.png');
   assert.equal(link?.getAttribute('type'), 'image/png');
-  assert.equal(link?.getAttribute('sizes'), '192x192');
+  assert.equal(link?.getAttribute('sizes'), '48x48');
 
   const icon = fs.readFileSync(path.join(root, 'assets/prints/favicon.png'));
   const rootIcon = fs.readFileSync(path.join(root, 'favicon.png'));
   assert.deepEqual(icon, rootIcon, 'favicon assets must be the same image');
   assert.equal(icon.subarray(0, 8).toString('hex'), '89504e470d0a1a0a');
-  assert.equal(icon.readUInt32BE(16), 192, 'favicon width');
-  assert.equal(icon.readUInt32BE(20), 192, 'favicon height');
+  assert.equal(icon.readUInt32BE(16), 48, 'favicon width');
+  assert.equal(icon.readUInt32BE(20), 48, 'favicon height');
 
   const ico = fs.readFileSync(path.join(root, 'favicon.ico'));
   assert.equal(ico.readUInt16LE(0), 0);
   assert.equal(ico.readUInt16LE(2), 1);
-  assert.ok(ico.readUInt16LE(4) >= 1);
+  assert.equal(ico.readUInt16LE(4), 1, 'one ICO image');
+  assert.equal(ico.readUInt8(6), 48, 'ICO image width');
+  assert.equal(ico.readUInt8(7), 48, 'ICO image height');
+  assert.deepEqual(ico.subarray(22), icon, 'ICO embeds the same poster image');
 
   assert.equal(documentFor('/about/').querySelector('link[rel="icon"]')?.getAttribute('href'), link.getAttribute('href'));
 });
