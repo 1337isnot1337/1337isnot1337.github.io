@@ -9,8 +9,8 @@ const rearAngle=Math.PI;
 const rearGain=rearAngle-frontLimit-(orbitTravel-frontTravel)*sideGain;
 const clamp=(value,min,max)=>Math.min(max,Math.max(min,value));
 const wrap=(value,limit)=>value>limit?value-2*limit:value< -limit?value+2*limit:value;
-const edgeSpeed=value=>{
-  const edge=clamp((Math.abs(value)-.70)/.30,0,1);
+const edgeSpeed=(value,threshold)=>{
+  const edge=clamp((Math.abs(value)-threshold)/(1-threshold),0,1);
   return Math.sign(value)*edge*(.48+.52*edge);
 };
 
@@ -25,7 +25,7 @@ export function deskView(){
 
   function look(x,y){
     const wasLooking=Boolean(lookX||lookY);
-    lookX=edgeSpeed(x);lookY=edgeSpeed(y);
+    lookX=edgeSpeed(x,.86);lookY=edgeSpeed(y,.76);
     const looking=Boolean(lookX||lookY);
     if(!looking)lookDelay=0;
     else if(!wasLooking)lookDelay=.16;
