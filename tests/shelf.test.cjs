@@ -48,7 +48,7 @@ test('mouse steering takes the long way around and stops in the middle of the st
   const { window } = new JSDOM('', { runScripts: 'outside-only' });
   window.eval(fs.readFileSync('site/desk-view.js', 'utf8').replace('export function','function'));
   const camera = window.deskView();
-  assert.equal(camera.look(.83,-.24), false);
+  assert.equal(camera.look(.91,-.83), false);
   assert.equal(camera.step(1/60,true).yaw, 0);
   camera.look(-1,0);
   assert.equal(camera.step(1/60,true).yaw,0,'a passing pointer can still click near the edge');

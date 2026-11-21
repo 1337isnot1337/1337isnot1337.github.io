@@ -25,7 +25,7 @@ export function deskView(){
 
   function look(x,y){
     const wasLooking=Boolean(lookX||lookY);
-    lookX=edgeSpeed(x,.86);lookY=edgeSpeed(y,.76);
+    lookX=edgeSpeed(x,.92);lookY=edgeSpeed(y,.84);
     const looking=Boolean(lookX||lookY);
     if(!looking)lookDelay=0;
     else if(!wasLooking)lookDelay=.16;
