@@ -60,6 +60,17 @@ export function attachDeskPointer(stage,{pick,track,orbitBy,endOrbit,part,gestur
     const unit=e.deltaMode===1?16:e.deltaMode===2?stage.clientHeight:1;
     zoomBy(e.deltaY*unit);
   },{passive:false});
+  const arrowDrag={ArrowLeft:[-.13,0],ArrowRight:[.13,0],ArrowUp:[0,-.09],ArrowDown:[0,.09]};
+  document.addEventListener('keydown',e=>{
+    const step=arrowDrag[e.key];
+    if(!step || e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey || e.shiftKey || press
+      || document.documentElement.dataset.view!=='desk' || !active()
+      || e.target.closest?.('input, select, textarea, [contenteditable]')
+      || document.querySelector('dialog[open]'))return;
+    e.preventDefault();
+    orbitBy(...step,e.timeStamp);
+    endOrbit(e.timeStamp);
+  });
   stage.addEventListener('pointerup',e=>{
     if(press?.id!==e.pointerId)return;
     suppress=press.dragging || Boolean(press.part && tapPart(press.part));

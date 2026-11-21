@@ -5,7 +5,7 @@ import { lampProjection } from './desk-lamp.js?v=1';
 import { paintScope, followProbe } from './desk-scope.js?v=1';
 import { airframeGeometry, wingUnderside } from './model-plane.js?v=2';
 import { mergeGeometries } from './vendor/three/BufferGeometryUtils.js';
-import { decorateRoom } from './desk-room.js?v=1';
+import { decorateRoom } from './desk-room.js?v=2';
 import { RoundedBoxGeometry } from './vendor/three/RoundedBoxGeometry.js';
 
 export function furnish(scene, narrow, repaint, software=false) {
@@ -200,7 +200,17 @@ export function furnish(scene, narrow, repaint, software=false) {
   // Rear hutch, upright shelves, and a pinboard live in the same coordinate system as the desk.
   box(world,width-.16,3.21,.11,darkWood,0,1.59,-2.22);
   box(world,width-.36,2.95,.025,finish(0x6c6855),0,1.57,-2.15);
-  for(const x of [-side+.04,side-.04]) box(world,.14,3.24,.95,wood,x,1.6,-1.79,.025);
+  for(const direction of [-1,1]){
+    const x=direction*(side-.04);
+    box(world,.14,3.24,.95,wood,x,1.6,-1.79,.025);
+    box(world,.15,3.21,.045,trim,x,1.60,-1.35,.012);
+    for(const y of [.18,1.46,3.04]){
+      for(const z of [-1.53,-2.01]){
+        const plug=cylinder(world,.025,.028,.016,trim,x+direction*.070,y,z,12);
+        plug.rotation.z=Math.PI/2;
+      }
+    }
+  }
   // Keep the shelf ends clear of the rear panel plane to avoid z-fighting.
   for(const y of [1.45,3.18]){
     box(world,width-.13,.14,1.012,wood,0,y,-1.751,.025);
@@ -682,7 +692,8 @@ export function furnish(scene, narrow, repaint, software=false) {
   const springtail=detail('springtail',pot,.19,.011,.069);
   bead(springtail,0,0,0,.005,.004,.009,finish(0x533a43));
   // A jointed task lamp, thumb screws and a domed enamel shade.
-  const lamp=tag(group(world,half-(narrow?.52:.89),.018,-1.38),"lamp",[0,.90,.12],.78,1.13);lamp.scale.setScalar(narrow?.71:.94);
+  // Leave room behind the shade at the full range of its hinge.
+  const lamp=tag(group(world,half-(narrow?.52:.89),.018,-.85),"lamp",[0,.90,.12],.78,1.13);lamp.scale.setScalar(narrow?.71:.94);
   // Spun enamel and a folded rim, with a hollow shade and its own milk-glass bulb.
   function turned(parent,profile,material,x,y,z){
     return mesh(parent,new T.LatheGeometry(profile.map(([r,h])=>new T.Vector2(r,h)),36),material,x,y,z);
@@ -759,7 +770,7 @@ export function furnish(scene, narrow, repaint, software=false) {
     tick.rotation.z=a-Math.PI/2;
   }
   // A small ceramic pencil cup lives beside the lamp.
-  const mug=tag(group(world,half-(narrow?.71:.56),.06,-.57),'cup',[0,.26,0],.34,.52);
+  const mug=tag(group(world,half-(narrow?.71:.56),.06,-.30),'cup',[0,.26,0],.34,.52);
   const glaze=finish(0x76a29b,.28,.035);
   // Continue the profile around the lip, down the inside wall, and across the floor.
   const cupProfile=[[0,.010],[.080,.010],[.089,.003],[.101,.003],[.108,.012],[.113,.020],

@@ -1,12 +1,23 @@
 import * as T from './vendor/three/three.module.min.js';
 
-// The atlas is read left to right, top to bottom. All art and credits are
-// listed in assets/furniture/room-sources.md.
+// Atlas order: name, source aspect ratio, wall x/y, physical width, rotation.
 const artwork = [
-  'fairy-metal', 'sirencore', 'fables', 'luka',
-  'till', 'ivan', 'korra', 'seven-havens',
-  'openai', 'anthropic', 'neuralink', 'musk',
-  'spacex', 'aubrey', 'fermilab', 'tux',
+  ['fairy-metal', 1, -2.48, 2.65, 1.46, -.025],
+  ['sirencore', 1, -.88, 2.73, 1.54, .013],
+  ['fables', 1, .82, 2.72, 1.64, -.010],
+  ['luka', 16/9, -2.09, 1.19, 2.26, .017],
+  ['till', 16/9, .38, 1.17, 2.46, -.014],
+  ['ivan', 16/9, -2.08, -.18, 2.33, -.017],
+  ['korra', 320/213, .36, -.40, 2.43, .010],
+  ['seven-havens', 2/3, 2.89, 1.72, 2.31, -.012],
+  ['openai', 700/982, -2.62, 2.26, 1.55, .015],
+  ['anthropic', 4/3, -.74, 2.83, 1.74, -.019],
+  ['neuralink', 1200/630, -.73, 1.64, 1.76, .008],
+  ['musk', 1666/2500, 2.75, 2.16, 1.73, .036],
+  ['spacex', 1041/1564, .99, 2.27, 1.58, -.011],
+  ['aubrey', 500/695, -2.71, .17, 1.32, -.019],
+  ['fermilab', 2560/1707, -.63, .18, 2.57, .014],
+  ['tux', 300/356, 1.57, 0, 1.43, -.036],
 ];
 const leafColors = [0x58724a, 0x3b6244, 0x446e4b, 0x638757, 0x81945e];
 const ivyLeaf = new T.BufferGeometry();
@@ -22,29 +33,39 @@ ivyLeaf.computeVertexNormals();
 
 export function decorateRoom(world, { narrow, half, group, box, bead, cylinder, wire, finish, photo, tag, drawn, trim }) {
   const width = narrow ? 6.7 : 7.15;
-  const atlas = photo('/assets/furniture/room-atlas.webp?v=1');
-  const ink = new T.MeshStandardMaterial({ map: atlas, roughness: .93 });
+  const atlas = photo('/assets/furniture/room-atlas.webp?v=2');
+  const ink = new T.MeshStandardMaterial({ map: atlas, roughness: .93, alphaTest: .28 });
+  const cutout = ink.clone();
+  cutout.side = T.DoubleSide;
+  const paper = new T.MeshStandardMaterial({ color: 0xe8dfce, roughness: .97, side: T.BackSide });
   const plaster = finish(0xc5b5a3, .94);
   const stem = finish(0x506741);
   const foliage = leafColors.map(color => new T.MeshStandardMaterial({ color, roughness: .88, side: T.DoubleSide }));
 
-  function poster(wall, index, x, y, height, tilt) {
-    const w = height * .80;
-    const frame = tag(group(wall, x, y, .071), 'room-' + artwork[index], [0, 0, 0], w, height);
+  function poster(wall, index) {
+    const [id, aspect, x, y, w, tilt] = artwork[index];
+    const height = w / aspect;
+    const offset = index >= 8 ? -.48 : 0;
+    const frame = tag(group(wall, x + offset, y, .071), 'room-' + id, [0, 0, 0], w, height);
     frame.userData.roomPoster = true;
     frame.rotation.z = tilt;
     const plane = new T.PlaneGeometry(w, height);
     const uv = plane.attributes.uv;
     const column = index % 4, row = Math.floor(index / 4);
     // Avoid mip-map bleeding from the next print along the atlas edge.
-    const pad = .007;
+    const pad = .02;
     for (let i = 0; i < uv.count; i++) {
       uv.setXY(i, (column + pad + uv.getX(i) * (1 - 2 * pad)) / 4,
         (3 - row + pad + uv.getY(i) * (1 - 2 * pad)) / 4);
     }
-    const print = new T.Mesh(plane, ink);
+    const print = new T.Mesh(plane, id === 'tux' ? cutout : ink);
     print.receiveShadow = true;
     frame.add(print);
+    if (id !== 'tux') {
+      const back = new T.Mesh(plane.clone(), paper);
+      back.position.z = -.004;
+      frame.add(back);
+    }
   }
 
   function leaf(branch, position, size, angle, index) {
@@ -106,16 +127,13 @@ export function decorateRoom(world, { narrow, half, group, box, bead, cylinder, 
     const diffuser = new T.MeshStandardMaterial({ color: glow, emissive: glow, emissiveIntensity: .83, transparent: true });
     box(wall, 9.37, .033, .018, diffuser, 0, 3.682, .092, .006).castShadow = false;
 
-    const x = [-2.24, -.79, .68, 2.15];
-    const y = [2.77, 1.28];
-    const tilt = [-.018, .024, -.014, .028, .029, -.024, .012, -.023];
-    for (let i = 0; i < 8; i++) {
-      poster(wall, offset + i, x[i % 4] - side * .58, y[Math.floor(i / 4)] + (i % 2) * .055, i % 4 === 2 ? 1.40 : 1.32, tilt[i] * side);
-    }
-    box(wall, 2.02, .092, .63, trim, -2.77, .13, .325, .021);
-    flowers(wall, -2.90, .177, side < 0 ? 0x738376 : 0xb78d84);
-    vine(wall, 3.32, 3.72, .088, 2.37, 2 + side);
-    vine(wall, -3.74, 3.71, .088, 1.47, .4 + side);
+    for (let i = 0; i < 8; i++) poster(wall, offset + i);
+    const shelfX = side < 0 ? -4.02 : 3.2;
+    const shelfY = side < 0 ? -.62 : -.76;
+    box(wall, 1.12, .092, .63, trim, shelfX, shelfY, .325, .021);
+    flowers(wall, shelfX, shelfY + .047, side < 0 ? 0x738376 : 0xb78d84);
+    vine(wall, 4.32, 3.72, .088, 2.87, 2 + side);
+    vine(wall, -4.19, 3.71, .088, 1.82, .4 + side);
   }
 
   // Smaller vines on the end of the hutch connect it to the rest of the room.

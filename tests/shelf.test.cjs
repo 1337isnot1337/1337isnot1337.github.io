@@ -26,13 +26,13 @@ test('all local resources and project anchors resolve', () => {
   }
   for (const el of d.querySelectorAll('a[href^="#"]')) assert.ok(d.getElementById(el.hash.slice(1)), el.hash);
 });
-test('desk pointer activation preserves keyboard focus and browser zoom', () => {
+test('desk controls preserve keyboard focus, browser zoom, and shelf arrow keys', () => {
   const dom = new JSDOM(`
     <button id="start">Start</button>
     <div class="desk-overview"><div class="is-rendered"><canvas></canvas>
       <button data-object="lamp">Lamp</button>
     </div></div>`, { runScripts: 'outside-only' });
-  const { document, MouseEvent, WheelEvent } = dom.window;
+  const { document, MouseEvent, WheelEvent, KeyboardEvent } = dom.window;
   const source = fs.readFileSync('site/desk-pointer.js', 'utf8').replace('export function', 'function');
   dom.window.eval(source);
   const stage = document.querySelector('.is-rendered');
@@ -40,7 +40,11 @@ test('desk pointer activation preserves keyboard focus and browser zoom', () => 
   const lamp = stage.querySelector('[data-object="lamp"]');
   canvas.getBoundingClientRect = () => ({ left: 0, top: 0, width: 100, height: 100, right: 100, bottom: 100 });
   const zoomDeltas = [];
-  dom.window.attachDeskPointer(stage, { pick: () => 'lamp', zoomBy: delta => zoomDeltas.push(delta) });
+  const cameraMoves = [];
+  dom.window.attachDeskPointer(stage, {
+    pick: () => 'lamp', zoomBy: delta => zoomDeltas.push(delta),
+    orbitBy: (x, y) => cameraMoves.push([x,y]), endOrbit() {}
+  });
   let activations = 0;
   lamp.addEventListener('click', () => activations++);
   const start = document.querySelector('#start');
@@ -58,6 +62,18 @@ test('desk pointer activation preserves keyboard focus and browser zoom', () => 
   canvas.dispatchEvent(browserZoom);
   assert.equal(browserZoom.defaultPrevented, false);
   assert.deepEqual(zoomDeltas, [-48]);
+  function arrow(key) {
+    const event = new KeyboardEvent('keydown', { bubbles: true, cancelable: true, key });
+    lamp.dispatchEvent(event);
+    return event.defaultPrevented;
+  }
+  document.documentElement.dataset.view = 'desk';
+  assert.equal(arrow('ArrowRight'), true);
+  assert.equal(arrow('ArrowUp'), true);
+  assert.ok(cameraMoves[0][0] > 0 && cameraMoves[1][1] < 0);
+  document.documentElement.dataset.view = 'shelf';
+  assert.equal(arrow('ArrowRight'), false);
+  assert.equal(cameraMoves.length, 2);
   dom.window.close();
 });
 test('catalogue matches accents, case, and whitespace; empty search can recover', () => {

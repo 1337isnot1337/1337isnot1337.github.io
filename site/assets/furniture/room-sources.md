@@ -1,6 +1,6 @@
 # Desk room poster sources
 
-The room atlas contains small reproductions of publicly published art and photographs. Each print opens the corresponding source in the desk. The paper borders and captions were drawn for this site.
+The room atlas contains reproductions of publicly published art and photographs. Pick up a print to rotate it, then select the print in hand to open its source.
 
 - [Banshee, Fairy Metal](https://music.apple.com/us/album/fairy-metal-single/1621034850)
 - [Banshee, SIRENCORE](https://open.spotify.com/album/4x7Lhq0tk6h8G7bazJcPsl)
@@ -19,6 +19,6 @@ The room atlas contains small reproductions of publicly published art and photog
 - [Fermilab open house](https://news.fnal.gov/2024/01/fermilabs-wilson-hall-open-to-the-public/)
 - [Tux, the Linux penguin](https://commons.wikimedia.org/wiki/File:Tux.svg), drawn by Larry Ewing with The GIMP, with vector work by Simon Budig and Garrett LeSage
 
-The project prints on the corkboard are separate, original compositions drawn in `scripts/draw_project_prints.py`.
+The project prints on the corkboard are separate illustrations for the site.
 
 Tux copyright notice: These drawings are copyrighted by Larry Ewing and Simon Budig (penguin-variant.sk also by Anja Gerwinski), redistribution is free but has to include this README/Copyright notice.

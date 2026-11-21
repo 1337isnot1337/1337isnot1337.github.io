@@ -4,6 +4,7 @@ import * as T from './vendor/three/three.module.min.js';
 export function inspectDeskObjects(stage,engine,room,deskCamera,getModel,redraw,life){
   const dialog=document.querySelector('.object-view'), surface=dialog.querySelector('.turn-surface');
   const use=dialog.querySelector('.use-object');
+  const turnLabel=surface.getAttribute('aria-label');
   const objects={
     plant:['The windowsill cutting'], cup:['The pencil cup','Borrow a pencil'],
     pencil:['Graphite pencil','Draw with it'], 'rose-pencil':['Rose pencil','Draw with it'],
@@ -57,6 +58,7 @@ export function inspectDeskObjects(stage,engine,room,deskCamera,getModel,redraw,
     active=id;
     opener=stage.querySelector('[data-object="'+id+'"]');
     dialog.setAttribute('aria-label',label);
+    surface.setAttribute('aria-label',id.startsWith('room-') ? turnLabel+' Press Enter to open the source.' : turnLabel);
     use.hidden=!action;use.textContent=id==='cup'?life.cupAction():action||'';
     yaw=id.includes('pencil')?-.72:-.24;
     pitch=id==='tape'||['drawer-note','crumb-plan','shim','screw'].includes(id)?.90:id.includes('pencil')?.94:id==='cup'?.32:.16;
@@ -71,6 +73,16 @@ export function inspectDeskObjects(stage,engine,room,deskCamera,getModel,redraw,
       e.preventDefault();e.stopImmediatePropagation();
       open(id,label,action);
     },true);
+  }
+  for(const poster of stage.querySelectorAll('[data-room-poster]')){
+    poster.addEventListener('click',e=>{
+      if(using || !stage.classList.contains('is-rendered') || e.metaKey || e.ctrlKey || e.altKey || e.shiftKey)return;
+      e.preventDefault();e.stopImmediatePropagation();
+      open(poster.dataset.object,poster.textContent.trim());
+    },true);
+  }
+  function followPoster(){
+    using=true;try{opener.click();}finally{using=false;}
   }
   function close(){
     if(dialog.open)dialog.close();
@@ -93,6 +105,9 @@ export function inspectDeskObjects(stage,engine,room,deskCamera,getModel,redraw,
     if(graphite)document.dispatchEvent(new CustomEvent('desk-eraser',{detail:erase}));
   };
   surface.addEventListener('keydown',e=>{
+    if(active.startsWith('room-') && (e.key==='Enter' || e.key===' ')){
+      e.preventDefault();followPoster();return;
+    }
     const turn={ArrowLeft:[-.2,0],ArrowRight:[.2,0],ArrowUp:[0,-.2],ArrowDown:[0,.2]}[e.key];
     if(turn){e.preventDefault();rotate(...turn);}
   });
@@ -116,7 +131,17 @@ export function inspectDeskObjects(stage,engine,room,deskCamera,getModel,redraw,
     else rotate(x,y);
     drag.x=e.clientX;drag.y=e.clientY;
   });
-  surface.addEventListener('click',e=>{if(e.detail && backgroundTap && !hitsObject(e))close();else if(e.detail && !dragged && hitsObject(e)){life.inspect(part,active,null,'tap');if(active==='cup')use.textContent=life.cupAction();}backgroundTap=false;redraw();});
+  surface.addEventListener('click',e=>{
+    if(e.detail && backgroundTap && !hitsObject(e))close();
+    else if(e.detail && !dragged && hitsObject(e)){
+      if(active.startsWith('room-') && source)followPoster();
+      else {
+        life.inspect(part,active,null,'tap');
+        if(active==='cup')use.textContent=life.cupAction();
+      }
+    }
+    backgroundTap=false;redraw();
+  });
   surface.addEventListener('pointerup',()=>{
     if(drag&&dragged&&(active==='archive'||active==='proof'))life.pullSlip(drag.part,0,0,true);
   });

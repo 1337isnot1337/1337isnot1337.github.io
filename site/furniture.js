@@ -1,8 +1,8 @@
 import * as T from './vendor/three/three.module.min.js';
-import { furnish } from './desk-model.js?v=27';
-import { inspectDeskObjects } from './desk-inspect.js?v=11';
+import { furnish } from './desk-model.js?v=28';
+import { inspectDeskObjects } from './desk-inspect.js?v=12';
 
-import { attachDeskPointer } from './desk-pointer.js?v=16';
+import { attachDeskPointer } from './desk-pointer.js?v=17';
 
 import { deskLife } from './desk-life.js?v=12';
 import { deskView } from './desk-view.js?v=3';
@@ -316,7 +316,7 @@ export function mountFurniture(stage,showGraphicsFallback) {
     },
     orbitBy(delta,vertical,time) {
       centerUntil=0;
-      view.drag(delta,vertical,time);
+      view.drag(-delta,-vertical,time);
       if(Math.abs(delta)+Math.abs(vertical)>.035)life.startleMoth(time);
       redraw();
     },
