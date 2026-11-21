@@ -8,16 +8,16 @@ const artwork = [
   ['luka', 16/9, -2.09, 1.19, 2.26, .017],
   ['till', 16/9, .38, 1.17, 2.46, -.014],
   ['ivan', 16/9, -2.08, -.18, 2.33, -.017],
-  ['korra', 320/213, .36, -.40, 2.43, .010],
+  ['korra', 2732/2048, .36, -.57, 2.43, .010],
   ['seven-havens', 2/3, 2.89, 1.72, 2.31, -.012],
-  ['openai', 700/982, -2.62, 2.26, 1.55, .015],
-  ['anthropic', 4/3, -.74, 2.83, 1.74, -.019],
-  ['neuralink', 1200/630, -.73, 1.64, 1.76, .008],
-  ['musk', 1666/2500, 2.75, 2.16, 1.73, .036],
-  ['spacex', 1041/1564, .99, 2.27, 1.58, -.011],
-  ['aubrey', 500/695, -2.71, .17, 1.32, -.019],
-  ['fermilab', 2560/1707, -.63, .18, 2.57, .014],
-  ['tux', 300/356, 1.57, 0, 1.43, -.036],
+  ['openai', 700/982, 2.4, 2.31, 1.47, .015],
+  ['anthropic', 16/9, .21, 2.83, 2.62, -.014],
+  ['neuralink', 1200/630, -.22, .15, 1.80, .008],
+  ['musk', 1666/2500, -2.30, 1.88, 2.08, .016],
+  ['spacex', 1041/1564, 2.38, .28, 1.20, -.011],
+  ['aubrey', 500/695, -2.37, -.60, 1.15, -.019],
+  ['fermilab', 1479/688, .22, 1.38, 2.62, .013],
+  ['tux', 300/356, 1.25, -.10, 1.00, -.036],
 ];
 const leafColors = [0x58724a, 0x3b6244, 0x446e4b, 0x638757, 0x81945e];
 const ivyLeaf = new T.BufferGeometry();
@@ -33,7 +33,7 @@ ivyLeaf.computeVertexNormals();
 
 export function decorateRoom(world, { narrow, half, group, box, bead, cylinder, wire, finish, photo, tag, drawn, trim }) {
   const width = narrow ? 6.7 : 7.15;
-  const atlas = photo('/assets/furniture/room-atlas.webp?v=2');
+  const atlas = photo('/assets/furniture/room-atlas.webp?v=3');
   const ink = new T.MeshStandardMaterial({ map: atlas, roughness: .93, alphaTest: .28 });
   const cutout = ink.clone();
   cutout.side = T.DoubleSide;
@@ -78,12 +78,12 @@ export function decorateRoom(world, { narrow, half, group, box, bead, cylinder, 
     branch.add(blade);
   }
 
-  function vine(parent, x, y, z, length, phase) {
+  function vine(parent, x, y, z, length, phase, lead = []) {
     const branch = group(parent, x, y, z);
     const points = Array.from({ length: 15 }, (_, i) => [
       Math.sin(i * .62 + phase) * .20 + i * .010, -i * length / 14, Math.sin(i * .39) * .056,
     ]);
-    wire(branch, points, .014, stem).castShadow = false;
+    wire(branch, [...lead, ...points], .014, stem).castShadow = false;
     points.slice(1).forEach((point, i) => {
       leaf(branch, point, .70 + .25 * Math.sin(i * 1.4 + phase), (i % 2 ? -1 : 1) * (1.18 + .25 * Math.sin(i)), i);
     });
@@ -138,9 +138,11 @@ export function decorateRoom(world, { narrow, half, group, box, bead, cylinder, 
 
   // Smaller vines on the end of the hutch connect it to the rest of the room.
   for (const side of [-1, 1]) {
-    const pot = group(world, side * (half - .25), 3.19, -1.78);
+    const pot = group(world, side * (half - .25), 3.25, -1.78);
     cylinder(pot, .17, .132, .23, finish(0xa86f52), 0, .12, 0, 20);
     cylinder(pot, .155, .155, .003, finish(0x5e4c38), 0, .239, 0, 20);
-    vine(world, side * (half - .22), 3.41, -1.67, narrow ? .92 : 1.45, side + 1.4);
+    // The stem clears the top and rolls over the front edge before it drops.
+    vine(world, side * (half - .22), 3.41, -1.01, narrow ? .92 : 1.45, side + 1.4,
+      [[-side * .03, .081, -.75], [0, .157, -.57], [0, .119, -.22]]);
   }
 }
