@@ -127,7 +127,7 @@ export function mountFurniture(stage,showGraphicsFallback) {
       vector.copy(point).project(camera);
       const x=(vector.x+1)*.5*viewWidth,y=(1-vector.y)*.5*viewHeight;
       const outside=depth<=camera.near||x<10||x>viewWidth-10||y<12||y>viewHeight-10
-        || (root.userData.roomPoster && Math.abs(yaw)<.29);
+        || (root.userData.roomPoster === true && Math.abs(yaw)<.29);
       if(root.userData.roomPoster)el.hidden=outside;
       if(el.hasAttribute('data-outside')!==outside)el.toggleAttribute('data-outside',outside);
       if(outside)continue;
