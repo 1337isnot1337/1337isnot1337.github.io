@@ -26,20 +26,21 @@ test('all local resources and project anchors resolve', () => {
   }
   for (const el of d.querySelectorAll('a[href^="#"]')) assert.ok(d.getElementById(el.hash.slice(1)), el.hash);
 });
-test('a raycast lamp click activates the lamp without taking keyboard focus', () => {
+test('desk pointer activation preserves keyboard focus and browser zoom', () => {
   const dom = new JSDOM(`
     <button id="start">Start</button>
     <div class="desk-overview"><div class="is-rendered"><canvas></canvas>
       <button data-object="lamp">Lamp</button>
     </div></div>`, { runScripts: 'outside-only' });
-  const { document, MouseEvent } = dom.window;
+  const { document, MouseEvent, WheelEvent } = dom.window;
   const source = fs.readFileSync('site/desk-pointer.js', 'utf8').replace('export function', 'function');
   dom.window.eval(source);
   const stage = document.querySelector('.is-rendered');
   const canvas = stage.querySelector('canvas');
   const lamp = stage.querySelector('[data-object="lamp"]');
   canvas.getBoundingClientRect = () => ({ left: 0, top: 0, width: 100, height: 100, right: 100, bottom: 100 });
-  dom.window.attachDeskPointer(stage, { pick: () => 'lamp' });
+  const zoomDeltas = [];
+  dom.window.attachDeskPointer(stage, { pick: () => 'lamp', zoomBy: delta => zoomDeltas.push(delta) });
   let activations = 0;
   lamp.addEventListener('click', () => activations++);
   const start = document.querySelector('#start');
@@ -49,6 +50,14 @@ test('a raycast lamp click activates the lamp without taking keyboard focus', ()
   assert.equal(document.activeElement, start);
   lamp.focus();
   assert.equal(document.activeElement, lamp);
+  const wheel = new WheelEvent('wheel', { bubbles: true, cancelable: true, deltaY: -3, deltaMode: 1 });
+  canvas.dispatchEvent(wheel);
+  assert.equal(wheel.defaultPrevented, true);
+  assert.deepEqual(zoomDeltas, [-48]);
+  const browserZoom = new WheelEvent('wheel', { bubbles: true, cancelable: true, deltaY: 200, ctrlKey: true });
+  canvas.dispatchEvent(browserZoom);
+  assert.equal(browserZoom.defaultPrevented, false);
+  assert.deepEqual(zoomDeltas, [-48]);
   dom.window.close();
 });
 test('catalogue matches accents, case, and whitespace; empty search can recover', () => {

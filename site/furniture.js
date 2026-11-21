@@ -1,11 +1,11 @@
 import * as T from './vendor/three/three.module.min.js';
-import { furnish } from './desk-model.js?v=26';
+import { furnish } from './desk-model.js?v=27';
 import { inspectDeskObjects } from './desk-inspect.js?v=11';
 
-import { attachDeskPointer } from './desk-pointer.js?v=15';
+import { attachDeskPointer } from './desk-pointer.js?v=16';
 
 import { deskLife } from './desk-life.js?v=12';
-import { deskView } from './desk-view.js?v=2';
+import { deskView } from './desk-view.js?v=3';
 import { drawerTravel } from './desk-drawer.js?v=1';
 
 export function mountFurniture(stage,showGraphicsFallback) {
@@ -118,15 +118,17 @@ export function mountFurniture(stage,showGraphicsFallback) {
   }
   const targetStyles=new Map();
   const targetProperties=['--screen-x','--screen-y','--hit-width','--hit-height'];
-  function projectTargets() {
-    const lens=viewHeight/(2*Math.tan(T.MathUtils.degToRad(camera.fov/2)));
+  function projectTargets(yaw) {
+    const lens=viewHeight*camera.zoom/(2*Math.tan(T.MathUtils.degToRad(camera.fov/2)));
     for(const [id,{root,point:local,w,h}] of model.targets) {
       const el=links.get(id);
       point.copy(local).applyMatrix4(root.matrixWorld);
       const depth=-vector.copy(point).applyMatrix4(camera.matrixWorldInverse).z;
       vector.copy(point).project(camera);
       const x=(vector.x+1)*.5*viewWidth,y=(1-vector.y)*.5*viewHeight;
-      const outside=depth<=camera.near||x<10||x>viewWidth-10||y<12||y>viewHeight-10;
+      const outside=depth<=camera.near||x<10||x>viewWidth-10||y<12||y>viewHeight-10
+        || (root.userData.roomPoster && Math.abs(yaw)<.29);
+      if(root.userData.roomPoster)el.hidden=outside;
       if(el.hasAttribute('data-outside')!==outside)el.toggleAttribute('data-outside',outside);
       if(outside)continue;
       const px=lens/depth;
@@ -201,7 +203,8 @@ export function mountFurniture(stage,showGraphicsFallback) {
       aim.lerp(focus,strength);
     }
     if(!software&&(detailMoved||sunChanged))engine.shadowMap.needsUpdate=true;
-    camera.lookAt(aim);engine.render(scene,camera);projectTargets();
+    if(camera.zoom!==posture.zoom){camera.zoom=posture.zoom;camera.updateProjectionMatrix();}
+    camera.lookAt(aim);engine.render(scene,camera);projectTargets(posture.yaw);
     if(!stage.classList.contains('is-rendered') || prevDrawer!==drawerAmount || prevFile!==fileAngle || prevBook!==bookAngle || model!==boundedModel || events.active || detailMoved){
       detailMoved=false;
       for(const group of hitGroups.values()){
@@ -233,6 +236,7 @@ export function mountFurniture(stage,showGraphicsFallback) {
   const shown=mesh=>{for(let n=mesh;n;n=n.parent)if(!n.visible)return false;return true;};
   const candidates=[],hits=[];
   const leaveDesk=attachDeskPointer(stage,{
+    zoomBy(delta){view.wheel(delta);redraw();},
     track(x,y) {
       life.pointerMoved(x,y,performance.now());
       if(motion.matches){x=0;y=0;}

@@ -11,6 +11,7 @@ const clamp=(value,min,max)=>Math.min(max,Math.max(min,value));
 
 export function deskView(){
   let travel=0,depth=0,rear=0,yaw=0,pitch=0,overshoot=0;
+  let zoom=0, zoomTarget=0;
   let speed=0,lastMove=-Infinity;
 
   function drag(x,y,time){
@@ -29,6 +30,10 @@ export function deskView(){
     speed=0;lastMove=-Infinity;
   }
 
+  function wheel(delta){
+    zoomTarget=clamp(zoomTarget-delta*.00115,Math.log(.72),Math.log(1.72));
+  }
+
   function step(dt,reduced){
     const distance=Math.abs(travel);
     const side=frontLimit+Math.max(0,distance-frontTravel)*sideGain;
@@ -38,10 +43,11 @@ export function deskView(){
     yaw=Math.abs(target-yaw)<.004?target:yaw+(target-yaw)*blend;
     pitch=Math.abs(depth-pitch)<.005||reduced?depth:pitch+(depth-pitch)*blend;
     overshoot=reduced||Math.abs(overshoot)<.002?0:overshoot*Math.exp(-dt*12);
+    zoom=Math.abs(zoomTarget-zoom)<.002?zoomTarget:zoom+(zoomTarget-zoom)*blend;
 
     return {
-      yaw, below:pitch, rear:Math.abs(yaw)>2.24?Math.sign(yaw):0,
-      move:Math.abs(angle-yaw)>.004||Math.abs(depth-pitch)>.005||Boolean(overshoot),
+      yaw, below:pitch, zoom:Math.exp(zoom), rear:Math.abs(yaw)>2.24?Math.sign(yaw):0,
+      move:Math.abs(angle-yaw)>.004||Math.abs(depth-pitch)>.005||zoom!==zoomTarget||Boolean(overshoot),
       behindWall:Math.abs(yaw)>1.89
     };
   }
@@ -50,5 +56,5 @@ export function deskView(){
     travel=0;depth=0;rear=0;yaw=0;pitch=0;overshoot=0;
     speed=0;lastMove=-Infinity;
   }
-  return {drag,release,step,faceFront};
+  return {drag,release,step,faceFront,wheel};
 }

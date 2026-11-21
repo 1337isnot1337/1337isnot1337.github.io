@@ -1,5 +1,5 @@
 // Keep the browser cursor at its real hotspot. Only an orbit owns the pointer.
-export function attachDeskPointer(stage,{pick,track,orbitBy,endOrbit,part,gesture,tapPart}) {
+export function attachDeskPointer(stage,{pick,track,orbitBy,endOrbit,part,gesture,tapPart,zoomBy}) {
   const canvas=stage.querySelector('canvas');
   const targets=new Map([...stage.querySelectorAll('[data-object]')].map(el=>[el.dataset.object,el]));
   let press=null, frame=0, x=0, y=0, suppress=false;
@@ -53,6 +53,12 @@ export function attachDeskPointer(stage,{pick,track,orbitBy,endOrbit,part,gestur
   });
   stage.addEventListener('touchmove',e=>{
     if(press?.dragging && e.touches.length===1 && e.cancelable)e.preventDefault();
+  },{passive:false});
+  stage.addEventListener('wheel',e=>{
+    if(!active() || e.ctrlKey || e.metaKey || !e.deltaY || document.querySelector('dialog[open]'))return;
+    e.preventDefault();
+    const unit=e.deltaMode===1?16:e.deltaMode===2?stage.clientHeight:1;
+    zoomBy(e.deltaY*unit);
   },{passive:false});
   stage.addEventListener('pointerup',e=>{
     if(press?.id!==e.pointerId)return;

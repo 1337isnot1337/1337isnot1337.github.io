@@ -5,6 +5,7 @@ import { lampProjection } from './desk-lamp.js?v=1';
 import { paintScope, followProbe } from './desk-scope.js?v=1';
 import { airframeGeometry, wingUnderside } from './model-plane.js?v=2';
 import { mergeGeometries } from './vendor/three/BufferGeometryUtils.js';
+import { decorateRoom } from './desk-room.js?v=1';
 import { RoundedBoxGeometry } from './vendor/three/RoundedBoxGeometry.js';
 
 export function furnish(scene, narrow, repaint, software=false) {
@@ -200,8 +201,9 @@ export function furnish(scene, narrow, repaint, software=false) {
   box(world,width-.16,3.21,.11,darkWood,0,1.59,-2.22);
   box(world,width-.36,2.95,.025,finish(0x6c6855),0,1.57,-2.15);
   for(const x of [-side+.04,side-.04]) box(world,.14,3.24,.95,wood,x,1.6,-1.79,.025);
+  // Keep the shelf ends clear of the rear panel plane to avoid z-fighting.
   for(const y of [1.45,3.18]){
-    box(world,width-.13,.14,1.03,wood,0,y,-1.76,.025);
+    box(world,width-.13,.14,1.012,wood,0,y,-1.751,.025);
     box(world,width-.08,.052,.12,trim,0,y-.063,-1.25,.015);
   }
   box(world,.11,1.61,.90,wood,narrow?.35:.65,2.31,-1.76,.016);
@@ -962,6 +964,7 @@ export function furnish(scene, narrow, repaint, software=false) {
   // The room extends beyond the camera; the shelf and desk never float on a blank page.
   box(wall,32,11,.18,wallMat,0,1,-2.59);
   box(world,32,.16,24,floorMat,0,-3.15,3);
+  decorateRoom(world,{narrow,half,group,box,bead,cylinder,wire,finish,photo,tag,drawn,trim});
   // Bake short-range occlusion onto the work surface once. No full-screen AO pass.
   const contact=document.createElement('canvas');contact.width=512;contact.height=256;
   const ctx=contact.getContext('2d');

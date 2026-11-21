@@ -44,6 +44,7 @@ html[data-view] .is-loading > .desk-load-status {
   min-height:0; max-width:none; padding:0; transform:translate(-50%,-50%); border:0; box-shadow:none; background:none;
 }
 .is-rendered .desk-objects [data-outside] { visibility:hidden; }
+.desk-objects [data-room-poster][hidden] { display:none; }
 .is-rendered .desk-objects span {
   position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap;
 }
