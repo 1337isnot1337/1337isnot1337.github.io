@@ -116,6 +116,7 @@ const server = http.createServer((req,res) => {
    }
    await page.locator('.mode-switch').click();
    await page.locator('.swiper-initialized').waitFor();
+   assert.equal(new URL(page.url()).pathname, '/boring/');
    if(name==='mobile'){
      const source = await page.locator('.swiper-slide-active .print img').evaluate(async img=>{
        await img.decode();return img.currentSrc;
@@ -133,6 +134,7 @@ const server = http.createServer((req,res) => {
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth <= innerWidth), `${name}: horizontal page overflow`);
    assert.deepEqual(mapRequests,[],`${name}: closed map must not request image`);
    await page.locator('.mode-switch').click();
+   assert.equal(new URL(page.url()).pathname, '/');
    await page.locator('.object-scope').click();
    await page.locator('#desk-map summary').click();
    await page.waitForFunction(()=>{const img=document.querySelector('#desk-map-image img');return img?.complete && img.naturalWidth>0;});
@@ -140,7 +142,7 @@ const server = http.createServer((req,res) => {
    assert.equal(await page.locator('#desk-audio').getAttribute('src'),null);
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
    await page.locator('#desk-map').screenshot({path:`test-results/${name}-location-search.png`});
-   assert.equal(await page.locator('#desk-map a').first().getAttribute('href'),'assets/livermore-automatic-mp3.webp');
+   assert.equal(await page.locator('#desk-map a').first().getAttribute('href'),'/assets/livermore-automatic-mp3.webp');
    await page.locator('#desk-map summary').click();
    await page.locator('.desk-rail [href="#catalogue"]').click();
    assert.ok(await page.locator('.firmware-project').isVisible());
@@ -467,9 +469,21 @@ const server = http.createServer((req,res) => {
    await scheduleExample.locator(".schedule-example-output").screenshot({path:`test-results/${name}-schedule-output.png`});
    const missing = await page.goto(base + '/a-missing-page-for-testing');
    assert.equal(missing.status(),404);
-   await page.getByRole('heading',{name:'Nothing at this address.'}).waitFor();
+   await page.getByRole('heading',{name:'The desk ate this page.'}).waitFor();
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth <= innerWidth), `${name}: 404 overflow`);
    await page.screenshot({path:`test-results/${name}-404.png`,fullPage:true});
+   const drawer = page.locator('.lost-drawer');
+   assert.equal(await drawer.getByText('One paperclip. Two crumbs. Still no page.').isVisible(), false);
+   await drawer.locator('summary').press('Enter');
+   await drawer.getByText('One paperclip. Two crumbs. Still no page.').waitFor();
+   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth <= innerWidth), `${name}: open 404 drawer overflow`);
+   if (name === 'desktop' || name === 'mobile') {
+    await page.screenshot({path:`test-results/${name}-404-drawer.png`,fullPage:true});
+   }
+   await page.getByRole('link',{name:'Browse the shelf'}).click();
+   assert.equal(new URL(page.url()).pathname, '/boring/');
+   await page.locator('.swiper-initialized').waitFor();
+   assert.equal(await page.locator('.desktop-picture').isVisible(), false);
    await page.goto(base + '/imsa-map/?example=1');
    await page.getByRole('heading',{name:'S1 room list'}).waitFor();
    await page.evaluate(() => document.fonts.ready);
@@ -629,6 +643,7 @@ const server = http.createServer((req,res) => {
     };
   });
   await shelfMouse.goto(base+'/#projects');
+  assert.equal(new URL(shelfMouse.url()).pathname, '/boring/');
   const centerPrint=shelfMouse.locator('.swiper-slide-active .print');
   await centerPrint.scrollIntoViewIfNeeded();
   const paper=await centerPrint.boundingBox();
@@ -954,6 +969,10 @@ const server = http.createServer((req,res) => {
   await plain.goto(base+'/#desk-numbers');
   assert.ok(await plain.locator('#desk-numbers').isVisible());
   assert.equal(await plain.locator('#desk-numbers .desk-permalink').getAttribute('href'),'#desk-numbers');
+  await plain.goto(base+'/boring/');
+  assert.ok(await plain.locator('#projects').isVisible());
+  assert.equal(await plain.locator('.desktop-picture').isVisible(), false);
+  assert.equal(await plain.locator('.mode-switch').getAttribute('href'), '/');
   await plain.close();
   console.log('no JavaScript: catalogue and project reading passed');
 

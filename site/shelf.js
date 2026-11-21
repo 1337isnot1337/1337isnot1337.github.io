@@ -340,7 +340,7 @@ function showShelf() {
     if (!requestedShelf) {
       requestedShelf = true;
       const script = document.createElement('script');
-      script.src = 'vendor/swiper-bundle.min.js';
+      script.src = '/vendor/swiper-bundle.min.js';
       script.addEventListener('load', showShelf, {once: true});
       document.head.append(script);
     }
@@ -465,7 +465,7 @@ function returnToShelf() {
     history.replaceState(
       null,
       "",
-      location.pathname + location.search + "#projects",
+      "/boring/" + location.search,
     );
     window.dispatchEvent(new Event("hashchange"));
   }

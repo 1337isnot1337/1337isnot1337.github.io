@@ -1,10 +1,11 @@
 # Cinna Davis’s desk
 
-[Visit the desk](https://itsdavis.com/) · [Browse the project shelf](https://itsdavis.com/#projects)
+[Visit the desk](https://itsdavis.com/) · [Browse the project shelf](https://itsdavis.com/boring/)
 
 The homepage, interactive project examples, and self-hosted assets are in `site/`. To preview them locally, run:
 
 ```sh
+npm run build:boring
 python3 -m http.server --directory site
 ```
 

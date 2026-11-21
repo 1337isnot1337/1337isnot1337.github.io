@@ -2,7 +2,9 @@
   "name": "cinna-project-shelf",
   "private": true,
   "scripts": {
+    "build:boring": "node scripts/build_boring.cjs",
     "test": "node --test tests/*.test.cjs",
+    "pretest:browser": "npm run build:boring",
     "test:browser": "node tests/browser.cjs"
   },
   "devDependencies": {

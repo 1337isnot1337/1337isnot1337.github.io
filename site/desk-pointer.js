@@ -74,7 +74,8 @@ export function attachDeskPointer(stage,{pick,track,orbitBy,endOrbit,part,gestur
     if(target===e.target.closest('[data-object]') && target)return;
     e.preventDefault();e.stopImmediatePropagation();
     if(!target)return;
-    target.focus({preventScroll:true});
+    // A raycast lamp click only toggles the light. Tab still focuses its button.
+    if (target.dataset.object !== 'lamp') target.focus({preventScroll:true});
     if(e.ctrlKey||e.metaKey||e.shiftKey||e.altKey){
       target.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true,ctrlKey:e.ctrlKey,metaKey:e.metaKey,shiftKey:e.shiftKey,altKey:e.altKey}));
     } else target.click();

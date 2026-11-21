@@ -9,3 +9,6 @@ __pycache__/
 
 # Built from a separate, verified research checkout
 /site/solved-conjectures/
+
+# Built from the shared portfolio page
+/site/boring/

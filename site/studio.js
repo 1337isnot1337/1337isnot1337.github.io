@@ -14,11 +14,12 @@
   let returnY = null;
   const switcher=document.querySelector(".mode-switch");
   const page=document.documentElement;
+  const modeAddress = view => (view === "shelf" ? "/boring/" : "/") + location.search;
   let sceneNearby=false, sceneStarted=false;
   function setView(view) {
     const changed=page.dataset.view!==view;
     page.dataset.view=view;
-    switcher.hash=view==="desk" ? "#projects" : "#studio";
+    switcher.href = modeAddress(view === "desk" ? "shelf" : "desk");
     switcher.title=view==="desk" ? "Boring mode" : "Back to the desk";
     switcher.setAttribute("aria-label",switcher.title);
     const back=rail.querySelector(".back-to-desk");
@@ -33,6 +34,9 @@
     }
   }
   setView(page.dataset.view||"desk");
+  if (location.pathname === "/" && location.hash === "#projects") {
+    history.replaceState(history.state, "", modeAddress("shelf"));
+  }
   function showGraphicsFallback(message) {
     stage.classList.remove("is-loading","is-rendered");
     const warning=stage.querySelector(".graphics-warning");
@@ -45,7 +49,7 @@
   function showFurniture() {
     if (sceneStarted || !deskIsReadyToMount()) return;
     sceneStarted=true;
-    import("./furniture.js?v=31").then(module => {
+    import("./furniture.js?v=32").then(module => {
       if (!deskIsReadyToMount()) { sceneStarted=false; return; }
       try { module.mountFurniture(stage,showGraphicsFallback); }
       catch { showGraphicsFallback(); }
@@ -164,7 +168,9 @@
   }
   function readAddress(move) {
     const target = document.getElementById(location.hash.slice(1));
-    if(!location.hash || location.hash==="#studio")setView("desk");
+    if (!location.hash || location.hash === "#studio") {
+      setView(/^\/boring(?:\/|$)/.test(location.pathname) ? "shelf" : "desk");
+    }
     else if(location.hash==="#projects")setView("shelf");
     else if(history.state?.view)setView(history.state.view);
     if (target && studio.contains(target)) reveal(target, move);
@@ -174,13 +180,18 @@
   document.addEventListener("click", event => {
     const link = event.target.closest("a");
     if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey
-        || event.altKey || event.shiftKey || !link?.hash || link.origin!==location.origin
-        || link.pathname!==location.pathname || link.search!==location.search) return;
+        || event.altKey || event.shiftKey || !link || link.origin!==location.origin
+        || link.search!==location.search) return;
+    if (link !== switcher && (!link.hash || link.pathname !== location.pathname)) return;
     const target = document.getElementById(link.hash.slice(1));
-    if(link.hash==="#projects" || link.hash==="#studio"){
+    if(link===switcher || link.hash==="#projects" || link.hash==="#studio"){
       event.preventDefault();
-      if(location.hash!==link.hash)history.pushState(null,"",link.hash);
-      setView(link.hash==="#studio" ? "desk" : "shelf");
+      const view = link === switcher
+        ? (page.dataset.view === "desk" ? "shelf" : "desk")
+        : (link.hash === "#studio" ? "desk" : "shelf");
+      const address = modeAddress(view);
+      if (location.pathname + location.search + location.hash !== address) history.pushState(null, "", address);
+      setView(view);
       const focus=link.classList.contains("back-to-desk") && page.dataset.view==="desk" && opener ? opener : switcher;
       reveal(studio);returnY=null;opener=null;
       window.scrollTo({top:0,behavior:"instant"});

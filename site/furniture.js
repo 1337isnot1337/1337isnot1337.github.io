@@ -2,7 +2,7 @@ import * as T from './vendor/three/three.module.min.js';
 import { furnish } from './desk-model.js?v=26';
 import { inspectDeskObjects } from './desk-inspect.js?v=11';
 
-import { attachDeskPointer } from './desk-pointer.js?v=14';
+import { attachDeskPointer } from './desk-pointer.js?v=15';
 
 import { deskLife } from './desk-life.js?v=12';
 import { deskView } from './desk-view.js?v=2';

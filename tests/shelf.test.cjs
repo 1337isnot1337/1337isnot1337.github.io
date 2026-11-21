@@ -26,6 +26,31 @@ test('all local resources and project anchors resolve', () => {
   }
   for (const el of d.querySelectorAll('a[href^="#"]')) assert.ok(d.getElementById(el.hash.slice(1)), el.hash);
 });
+test('a raycast lamp click activates the lamp without taking keyboard focus', () => {
+  const dom = new JSDOM(`
+    <button id="start">Start</button>
+    <div class="desk-overview"><div class="is-rendered"><canvas></canvas>
+      <button data-object="lamp">Lamp</button>
+    </div></div>`, { runScripts: 'outside-only' });
+  const { document, MouseEvent } = dom.window;
+  const source = fs.readFileSync('site/desk-pointer.js', 'utf8').replace('export function', 'function');
+  dom.window.eval(source);
+  const stage = document.querySelector('.is-rendered');
+  const canvas = stage.querySelector('canvas');
+  const lamp = stage.querySelector('[data-object="lamp"]');
+  canvas.getBoundingClientRect = () => ({ left: 0, top: 0, width: 100, height: 100, right: 100, bottom: 100 });
+  dom.window.attachDeskPointer(stage, { pick: () => 'lamp' });
+  let activations = 0;
+  lamp.addEventListener('click', () => activations++);
+  const start = document.querySelector('#start');
+  start.focus();
+  canvas.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, detail: 1, clientX: 50, clientY: 50 }));
+  assert.equal(activations, 1);
+  assert.equal(document.activeElement, start);
+  lamp.focus();
+  assert.equal(document.activeElement, lamp);
+  dom.window.close();
+});
 test('catalogue matches accents, case, and whitespace; empty search can recover', () => {
   const p = page();
   assert.equal(p.d.querySelector('#result-count').textContent, '6 of 31 projects');

@@ -4,29 +4,197 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta name="robots" content="noindex" />
-    <meta name="theme-color" content="#fffbf6" />
+    <meta name="theme-color" content="#283b32" />
     <title>Page not found · Cinna Davis</title>
     <link rel="icon" href="/assets/prints/favicon.png" />
-    <link rel="stylesheet" href="/shelf.css?v=25" />
     <style>
-      main { width: min(680px, 88%); margin: clamp(60px, 15vh, 160px) auto; }
-      h1 { margin: 28px 0 18px; }
-      p { max-width: 48ch; color: var(--muted); }
-      nav { display: flex; gap: 24px; flex-wrap: wrap; margin-top: 28px; }
-      nav a { color: var(--berry); font-weight: 600; }
+      @font-face {
+        font-family: "Bricolage Grotesque";
+        src: url(/assets/fonts/bricolage.woff2) format("woff2");
+        font-weight: 200 800;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: "DM Sans";
+        src: url(/assets/fonts/body.woff2?v=2) format("woff2");
+        font-weight: 100 1000;
+        font-display: swap;
+      }
+      *, *::before, *::after { box-sizing: border-box; }
+      .missing-page {
+        margin: 0;
+        background: #283b32;
+        color: #34282f;
+        font-family: "DM Sans", Arial, sans-serif;
+        line-height: 1.5;
+      }
+      .missing-desk {
+        display: grid;
+        grid-template-columns: minmax(0, 1.1fr) minmax(0, .9fr);
+        align-items: center;
+        gap: clamp(22px, 5vw, 78px);
+        width: min(90%, 1080px);
+        min-height: 100svh;
+        margin: auto;
+        padding-block: clamp(32px, 7vh, 88px);
+      }
+      .missing-slip {
+        position: relative;
+        padding: clamp(22px, 5vw, 58px);
+        background: #f3dccd;
+        box-shadow: 0 16px 32px #14211b87;
+        transform: rotate(-1.4deg);
+      }
+      .missing-slip h1 {
+        max-width: 8em;
+        margin: 0;
+        color: #34282f;
+        font-family: "Bricolage Grotesque", sans-serif;
+        font-size: clamp(36px, 6.4vw, 82px);
+        font-weight: 720;
+        line-height: .99;
+        letter-spacing: -.036em;
+        text-wrap: balance;
+      }
+      .misfile-stamp {
+        display: inline-block;
+        margin: 22px 0 0;
+        padding: 4px 9px;
+        border: 2px solid currentColor;
+        color: #783648;
+        font-weight: 760;
+        font-size: .875rem;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+        transform: rotate(-4deg);
+      }
+      .missing-slip nav {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 10px 19px;
+        margin-top: clamp(25px, 4vw, 43px);
+        font-weight: 700;
+      }
+      .missing-slip a {
+        display: inline-flex;
+        align-items: center;
+        min-height: 44px;
+        padding: 6px 2px;
+        color: #5a3249;
+        text-underline-offset: 4px;
+      }
+      .missing-slip .desk-return {
+        padding-inline: 16px;
+        background: #493247;
+        color: #fff4e9;
+        text-decoration: none;
+      }
+      .desk-return:hover { background: #6b3d60; }
+      .missing-slip a:focus-visible,
+      .lost-drawer summary:focus-visible { outline: 3px solid #aa5684; outline-offset: 4px; }
+      .lost-drawer {
+        position: relative;
+        isolation: isolate;
+        min-height: 324px;
+        width: 100%;
+      }
+      .lost-drawer::before {
+        content: "";
+        position: absolute;
+        inset: 37px 0 99px;
+        border: 12px solid #72452c;
+        background: #362820;
+        box-shadow: inset 0 12px 24px #1e1915, 0 15px 26px #15221bb3;
+      }
+      .lost-drawer summary {
+        position: absolute;
+        z-index: 1;
+        inset: 46px 5px auto;
+        display: grid;
+        justify-items: center;
+        align-content: center;
+        gap: 12px;
+        min-height: 158px;
+        padding: 12px;
+        border: 3px solid #7b4d31;
+        background: linear-gradient(#c87e4570, #47261836), #955e36 url(/assets/furniture/grain.webp) center / 620px;
+        box-shadow: 0 12px 19px #1e19157a, inset 0 2px 1px #f3bb7b7a;
+        cursor: pointer;
+        list-style: none;
+        transition: transform .46s cubic-bezier(.2,.7,.2,1);
+      }
+      .lost-drawer summary::-webkit-details-marker { display: none; }
+      .lost-drawer summary:hover { box-shadow: 0 15px 26px #1e191595, inset 0 2px 1px #f9c791bb; }
+      .drawer-label {
+        padding: 7px 16px;
+        border: 2px solid #68482d;
+        background: #f3dba5;
+        color: #442e25;
+        font-weight: 700;
+        text-align: center;
+      }
+      .drawer-close, [open] .drawer-open { display: none; }
+      [open] .drawer-close { display: inline; }
+      .lost-drawer summary svg { width: 100px; height: 31px; }
+      .lost-drawer[open] summary { transform: translateY(112px); }
+      .drawer-contents {
+        position: absolute;
+        inset: 61px 18px auto;
+        display: grid;
+        justify-items: center;
+        gap: 6px;
+        padding: 8px 10px 13px;
+        color: #fff1dc;
+        text-align: center;
+      }
+      .drawer-contents svg { width: 142px; height: 36px; }
+      .drawer-contents p { margin: 0; font-size: .95rem; }
+      @media (max-width: 710px) {
+        .missing-desk {
+          grid-template-columns: minmax(0, 1fr);
+          align-content: center;
+          gap: 12px;
+          max-width: 505px;
+        }
+        .missing-slip h1 { max-width: 11ch; }
+        .lost-drawer { min-height: 270px; }
+        .lost-drawer::before { inset: 30px 0 64px; }
+        .lost-drawer summary { inset-block-start: 39px; min-height: 130px; }
+        .lost-drawer[open] summary { transform: translateY(92px); }
+        .drawer-contents { inset-block-start: 44px; }
+      }
+      @media (prefers-reduced-motion: reduce) { .lost-drawer summary { transition: none; } }
     </style>
   </head>
-  <body>
-    <main>
-      <a class="byline" href="/">Cinna Davis</a>
-      <h1>Nothing at this address.</h1>
-      <p>The page may have moved, or the link may be incomplete. The shelf and
-        project catalogue are still here.</p>
-      <nav aria-label="Find your way back">
-        <a href="/">Back to the shelf</a>
-        <a href="/#catalogue">Browse the catalogue</a>
-        <a href="/solved-conjectures/">Search the proofs</a>
-      </nav>
+  <body class="missing-page">
+    <main class="missing-desk">
+      <section class="missing-slip" aria-labelledby="missing-title">
+        <h1 id="missing-title">The desk ate this page.</h1>
+        <p class="misfile-stamp">404 · Page not found</p>
+        <nav aria-label="Find your way back">
+          <a class="desk-return" href="/">Back to the desk</a>
+          <a href="/boring/">Browse the shelf</a>
+        </nav>
+      </section>
+      <details class="lost-drawer">
+        <summary>
+          <span class="drawer-label"><span class="drawer-open">Check the drawer</span><span class="drawer-close">Close the drawer</span></span>
+          <svg viewBox="0 0 100 31" aria-hidden="true" fill="none">
+            <path d="M9 7C10 30 89 30 91 7" stroke="#51301c" stroke-width="8" stroke-linecap="round" />
+            <path d="M9 5C11 27 89 27 91 5" stroke="#c98d46" stroke-width="6" stroke-linecap="round" />
+            <path d="M15 11C26 24 74 24 85 11" stroke="#efbe74" stroke-width="2" stroke-linecap="round" />
+            <circle cx="9" cy="6" r="5" fill="#e0a058" /><circle cx="91" cy="6" r="5" fill="#e0a058" />
+          </svg>
+        </summary>
+        <div class="drawer-contents">
+          <svg viewBox="0 0 142 36" fill="none" aria-hidden="true">
+            <path d="m13 24 30-12a5 5 0 0 1 4 9L22 32a8 8 0 1 1-6-15L48 4a11 11 0 0 1 8 20L29 35" stroke="#c7d6cd" stroke-width="2" stroke-linecap="round" />
+            <path d="m104 15 7 3-2 8-9 3-4-7 5-6Zm22-4 7-2 5 5-2 6-8-1Z" fill="#dcac73" />
+          </svg>
+          <p>One paperclip. Two crumbs. Still no page.</p>
+        </div>
+      </details>
     </main>
   </body>
 </html>

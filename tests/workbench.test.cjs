@@ -69,7 +69,7 @@ test('in-place recording is user initiated, follows real time and stops when lea
  p.click('#desk-play-recording');
  await new Promise(resolve=>setImmediate(resolve));
  assert.equal(starts,1);
- assert.equal(audio.getAttribute('src'),'assets/livermore.mp3');
+ assert.equal(audio.getAttribute('src'),'/assets/livermore.mp3');
  assert.equal(audio.hidden,false);
  assert.equal(p.d.activeElement,audio);
  assert.equal(p.d.querySelector('.desk-listen').hidden,true);
@@ -165,7 +165,7 @@ test('historical map loads only when opened and preserves uncertainty and attrib
  details.dispatchEvent(new p.dom.window.Event('toggle'));assert.equal(holder.children.length,1);
  img.dispatchEvent(new p.dom.window.Event('error'));
  assert.equal(p.d.querySelector('#desk-map-error').hidden,false);
- assert.ok(details.querySelector('a[href="assets/livermore-automatic-mp3.webp"]'));
+ assert.ok(details.querySelector('a[href="/assets/livermore-automatic-mp3.webp"]'));
  assert.equal(p.d.querySelector('#desk-audio').getAttribute('src'),null);
  p.dom.window.close();
 });

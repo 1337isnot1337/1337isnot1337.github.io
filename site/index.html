@@ -29,30 +29,30 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Cinna Davis | Software, Mathematics & Research" />
     <meta name="twitter:description" content="Software, mathematics and research by Cinna Davis. Explore DOPPLERGEIST, integer factoring, processor design and mathematical proofs." />
-    <link rel="icon" href="assets/prints/favicon.png" />
+    <link rel="icon" href="/assets/prints/favicon.png" />
     <link
       rel="preload"
-      href="assets/fonts/bricolage.woff2"
+      href="/assets/fonts/bricolage.woff2"
       as="font"
       type="font/woff2"
       crossorigin
     />
-    <link rel="stylesheet" href="vendor/swiper-bundle.min.css" />
-    <link rel="stylesheet" href="shelf.css?v=25" />
-    <link rel="stylesheet" href="welcome.css?v=desk-1" />
-    <link rel="stylesheet" href="workbench.css?v=6" />
-    <link rel="stylesheet" href="notebook.css?v=4" />
-    <link rel="stylesheet" href="numberline.css?v=1" />
-    <script defer src="numberline.js?v=3"></script>
-    <script defer src="workbench.js?v=9"></script>
-    <link rel="stylesheet" href="cpu-trace.css?v=1" />
-    <link rel="stylesheet" href="firmware-note.css?v=2" />
-    <link rel="stylesheet" href="rook-graph.css?v=1" />
-    <link rel="stylesheet" href="war-queues.css?v=1" />
-    <link rel="stylesheet" href="schedule-example.css?v=1" />
-    <link rel="stylesheet" href="incident-note.css?v=2" />
-    <script defer src="cpu-trace.js?v=3"></script>
-    <script defer src="shelf.js?v=37" onerror="
+    <link rel="stylesheet" href="/vendor/swiper-bundle.min.css" />
+    <link rel="stylesheet" href="/shelf.css?v=25" />
+    <link rel="stylesheet" href="/welcome.css?v=desk-1" />
+    <link rel="stylesheet" href="/workbench.css?v=6" />
+    <link rel="stylesheet" href="/notebook.css?v=4" />
+    <link rel="stylesheet" href="/numberline.css?v=1" />
+    <script defer src="/numberline.js?v=3"></script>
+    <script defer src="/workbench.js?v=9"></script>
+    <link rel="stylesheet" href="/cpu-trace.css?v=1" />
+    <link rel="stylesheet" href="/firmware-note.css?v=2" />
+    <link rel="stylesheet" href="/rook-graph.css?v=1" />
+    <link rel="stylesheet" href="/war-queues.css?v=1" />
+    <link rel="stylesheet" href="/schedule-example.css?v=1" />
+    <link rel="stylesheet" href="/incident-note.css?v=2" />
+    <script defer src="/cpu-trace.js?v=3"></script>
+    <script defer src="/shelf.js?v=38" onerror="
       const restoreReading = () => {
         document.documentElement.classList.add('script-unavailable');
         document.querySelector('.shelf-heading p').textContent = 'The interactive shelf could not load. You can still read the project notes below.';
@@ -64,16 +64,16 @@
       if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', restoreReading, {once: true});
       else restoreReading();
     "></script>
-    <script defer src="rook-graph.js?v=3"></script>
-    <script>document.documentElement.dataset.view = /^(#projects|#flyover|#cpu|#schedule|#conjectures|#factoring|#conway)$/.test(location.hash) ? "shelf" : "desk";</script>
-    <link rel="stylesheet" href="studio.css?v=15" />
-    <script defer src="studio.js?v=31" onerror="delete document.documentElement.dataset.view"></script>
-    <script defer src="paper-turn.js?v=4"></script>
-    <script defer src="desk-keepsakes.js?v=10"></script>
-    <script defer src="paper-dismiss.js?v=2"></script>
-    <script defer src="desk-paper-extras.js?v=12"></script>
-    <script defer src="project-paper.js?v=2"></script>
-    <link rel="stylesheet" href="desk-extras.css?v=11" />
+    <script defer src="/rook-graph.js?v=3"></script>
+    <script>document.documentElement.dataset.view = /^\/boring(?:\/|$)/.test(location.pathname) || /^(#projects|#flyover|#cpu|#schedule|#conjectures|#factoring|#conway)$/.test(location.hash) ? "shelf" : "desk";</script>
+    <link rel="stylesheet" href="/studio.css?v=15" />
+    <script defer src="/studio.js?v=32" onerror="if (!location.pathname.startsWith('/boring')) delete document.documentElement.dataset.view"></script>
+    <script defer src="/paper-turn.js?v=4"></script>
+    <script defer src="/desk-keepsakes.js?v=10"></script>
+    <script defer src="/paper-dismiss.js?v=2"></script>
+    <script defer src="/desk-paper-extras.js?v=12"></script>
+    <script defer src="/project-paper.js?v=2"></script>
+    <link rel="stylesheet" href="/desk-extras.css?v=11" />
     <noscript
       ><style>
         .shelf-controls,
@@ -90,14 +90,14 @@
   <body>
     <svg class="brand-symbols" width="0" height="0" aria-hidden="true"><defs><symbol id="brand-github" viewBox="0 0 24 24"><path d="M12 .8a11.3 11.3 0 0 0-3.57 22.02c.56.1.77-.24.77-.54v-2.1c-3.14.68-3.8-1.33-3.8-1.33-.51-1.3-1.25-1.64-1.25-1.64-1.02-.7.08-.69.08-.69 1.13.08 1.73 1.16 1.73 1.16 1.01 1.73 2.65 1.23 3.3.94.1-.73.4-1.23.71-1.51-2.51-.29-5.15-1.26-5.15-5.59 0-1.23.44-2.23 1.16-3.02-.12-.29-.5-1.44.11-3 0 0 .95-.3 3.11 1.15a10.83 10.83 0 0 1 5.65 0c2.16-1.45 3.1-1.15 3.1-1.15.62 1.56.24 2.71.12 3 .72.79 1.16 1.79 1.16 3.02 0 4.34-2.64 5.3-5.16 5.58.41.35.76 1.04.76 2.1v3.08c0 .3.21.65.78.54A11.3 11.3 0 0 0 12 .8z"/></symbol><symbol id="brand-linkedin" viewBox="0 0 24 24"><path d="M3 2h18a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1zm2.4 7.1v9.8h3.1V9.1H5.4zm1.55-4.7a1.8 1.8 0 1 0 0 3.6 1.8 1.8 0 0 0 0-3.6zM10.5 9.1v9.8h3.1v-5.3c0-1.5.3-2.4 1.7-2.4 1.3 0 1.5 1 1.5 2.4v5.3h3.1v-6c0-2.9-1-4.1-3.4-4.1-1.4 0-2.4.6-3 1.5V9.1z" fill-rule="evenodd"/></symbol><symbol id="brand-x" viewBox="0 0 24 24"><path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.64 7.584H.47l8.6-9.835L0 1.154h7.594l5.243 6.932zm-1.29 19.49h2.039L6.487 3.24H4.3z"/></symbol></defs></svg>
     <a href="#projects" class="skip">Skip to projects</a>
-    <a class="mode-switch" href="#projects" aria-label="Boring mode" title="Boring mode">
+    <a class="mode-switch" href="/boring/" aria-label="Boring mode" title="Boring mode">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><g class="mode-desk"><path d="M3 19h18M5 16.5V6h3.4v10.5zM10 16.5v-12h3.4v12zM15.4 6.7l3.1-.9 2.7 10.1-3.1.8z"/></g><g class="mode-shelf"><path d="M2.5 12.5h19M4 13v6m16-6v6M6 12V5.5h11.5v6M8 8.5h4m1.5 7h4"/></g></svg>
       <span class="mode-desk">Boring mode</span><span class="mode-shelf">Back to desk</span>
     </a>
     <nav class="profile-links desk-profiles" aria-label="Social profiles"><a href="https://github.com/1337isnot1337" aria-label="GitHub" title="GitHub"><svg width="22" height="22" aria-hidden="true"><use href="#brand-github"/></svg></a><a href="https://www.linkedin.com/in/cinna-davis/" aria-label="LinkedIn" title="LinkedIn"><svg width="22" height="22" aria-hidden="true"><use href="#brand-linkedin"/></svg></a><a href="https://x.com/1337isnot1337" aria-label="X" title="X"><svg width="22" height="22" aria-hidden="true"><use href="#brand-x"/></svg></a></nav>
     <header class="mast">
       <div class="page-width mast-inner">
-        <a class="byline" href="./">Cinna Davis</a>
+        <a class="byline" href="/">Cinna Davis</a>
         <nav aria-label="Main">
           <a href="#catalogue">Catalogue</a><a href="#about">About me</a
           ><a href="#elsewhere">Elsewhere</a>
@@ -162,8 +162,8 @@
     <button type="button" data-desk="numbers" aria-pressed="false">Place numbers</button>
   </div>
   <article class="desk-sheet desk-sound" data-desk-panel="sound" id="desk-sound">
-    <header class="desk-intro"><a class="desk-project" href="#flyover" data-project="flyover"><img src="assets/furniture/prints/flyover.webp" alt="" width="32" height="40" loading="lazy" /><span>DOPPLERGEIST<small>Open recording notes ↗</small></span></a><h3>Where was<br> the microphone?</h3></header>
-    <figure class="desk-artifact desk-recording"><div class="desk-figure-heading"><span>Livermore recording</span><span>100–400 Hz</span></div><div class="desk-spectrum"><img src="assets/livermore.webp" srcset="assets/livermore-800.webp 800w, assets/livermore.webp 1600w" sizes="(max-width: 680px) 90vw, 640px" width="1600" height="550" loading="lazy" alt="Bright harmonics bend downward in the flyover recording as the aircraft pitch falls."/><span class="desk-playhead" aria-hidden="true" hidden></span></div><div class="desk-time"><span>0:00</span><span>Time →</span><span>1:25</span></div><div class="desk-listen" hidden><button type="button" id="desk-play-recording">Play the flyover</button></div><p id="desk-audio-status" role="status" hidden></p><audio id="desk-audio" controls preload="none" data-desk-src="assets/livermore.mp3" aria-label="Livermore aircraft flyover" tabindex="0" hidden></audio><figcaption><strong>Follow the bright curves as you listen.</strong> The pitch drops as the plane passes. A match is a candidate, not automatically a location.</figcaption><small>Recording: <a href="https://doi.org/10.5281/zenodo.23424278">Praveen Pathak</a> · <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a></small></figure>
+    <header class="desk-intro"><a class="desk-project" href="#flyover" data-project="flyover"><img src="/assets/furniture/prints/flyover.webp" alt="" width="32" height="40" loading="lazy" /><span>DOPPLERGEIST<small>Open recording notes ↗</small></span></a><h3>Where was<br> the microphone?</h3></header>
+    <figure class="desk-artifact desk-recording"><div class="desk-figure-heading"><span>Livermore recording</span><span>100–400 Hz</span></div><div class="desk-spectrum"><img src="/assets/livermore.webp" srcset="/assets/livermore-800.webp 800w, /assets/livermore.webp 1600w" sizes="(max-width: 680px) 90vw, 640px" width="1600" height="550" loading="lazy" alt="Bright harmonics bend downward in the flyover recording as the aircraft pitch falls."/><span class="desk-playhead" aria-hidden="true" hidden></span></div><div class="desk-time"><span>0:00</span><span>Time →</span><span>1:25</span></div><div class="desk-listen" hidden><button type="button" id="desk-play-recording">Play the flyover</button></div><p id="desk-audio-status" role="status" hidden></p><audio id="desk-audio" controls preload="none" data-desk-src="/assets/livermore.mp3" aria-label="Livermore aircraft flyover" tabindex="0" hidden></audio><figcaption><strong>Follow the bright curves as you listen.</strong> The pitch drops as the plane passes. A match is a candidate, not automatically a location.</figcaption><small>Recording: <a href="https://doi.org/10.5281/zenodo.23424278">Praveen Pathak</a> · <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a></small></figure>
     <div class="desk-copy"><p>A passing aircraft leaves a curve in a recording. I’m building DOPPLERGEIST to match that changing pitch against historical flight tracks.</p><a class="desk-permalink" href="#desk-sound" aria-label="Direct link to the flyover experiment">Link to this experiment</a></div>
     <details class="desk-map" id="desk-map">
       <summary><span>See the location search</span><small>Historical run · inconclusive</small></summary>
@@ -172,27 +172,27 @@
         <p>This search compared the recording with nearby flight tracks in a constrained region and time window. It did not establish a location: 187 track evaluations exceeded the supported trajectory model, leaving the search incomplete.</p>
         <figure>
           <div id="desk-map-image"></div>
-          <template id="desk-map-template"><img src="assets/livermore-automatic-mp3.webp" srcset="assets/livermore-automatic-mp3-960.webp 960w, assets/livermore-automatic-mp3.webp 2610w" sizes="(max-width: 680px) 90vw, 1000px" width="2610" height="1278" alt="Measured spectrogram and fitted aircraft curve beside an aerial map of candidate microphone positions. A star marks the highest fit score, a diamond an alternative, and a circle the inferred reference. The map includes its fit-score legend and USGS / USDA NAIP imagery credit." /></template>
+          <template id="desk-map-template"><img src="/assets/livermore-automatic-mp3.webp" srcset="/assets/livermore-automatic-mp3-960.webp 960w, /assets/livermore-automatic-mp3.webp 2610w" sizes="(max-width: 680px) 90vw, 1000px" width="2610" height="1278" alt="Measured spectrogram and fitted aircraft curve beside an aerial map of candidate microphone positions. A star marks the highest fit score, a diamond an alternative, and a circle the inferred reference. The map includes its fit-score legend and USGS / USDA NAIP imagery credit." /></template>
           <p id="desk-map-error" role="status" hidden>The figure could not load. Use the full-size figure or the source notes below.</p>
           <figcaption>Colors show fit scores, not probabilities. The star is the highest score; the circle is an inferred reference, not surveyed truth. This cropped map does not show every searched point.</figcaption>
         </figure>
-        <div class="desk-map-links"><a href="assets/livermore-automatic-mp3.webp">Open the full-size figure ↗</a><a href="/DOPPLERGEIST/examples.html#livermore">Recording example page</a><a href="https://github.com/1337isnot1337/DOPPLERGEIST/blob/250df50211ff78a868e94234aed3a671a6bfa2ca/docs/LIVERMORE_DEMO.md#all-aircraft-archive-mp3-ranking">Read this historical run</a></div>
+        <div class="desk-map-links"><a href="/assets/livermore-automatic-mp3.webp">Open the full-size figure ↗</a><a href="/DOPPLERGEIST/examples.html#livermore">Recording example page</a><a href="https://github.com/1337isnot1337/DOPPLERGEIST/blob/250df50211ff78a868e94234aed3a671a6bfa2ca/docs/LIVERMORE_DEMO.md#all-aircraft-archive-mp3-ranking">Read this historical run</a></div>
         <small class="desk-map-credit">Figure © 2026 Cinna Davis · <a href="https://github.com/1337isnot1337/DOPPLERGEIST/blob/250df50211ff78a868e94234aed3a671a6bfa2ca/LICENSE">PolyForm Noncommercial</a>. Imagery: USGS / USDA NAIP. Recording: <a href="https://doi.org/10.5281/zenodo.23424278">Praveen Pathak</a> · <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.</small>
       </div>
     </details>
   </article>
   <article class="desk-sheet desk-cards" data-desk-panel="cards" id="desk-war">
-    <header class="desk-intro"><a class="desk-project" href="#conjectures" data-project="conjectures"><img src="assets/furniture/prints/conjectures.webp" alt="" width="32" height="40" loading="lazy" /><span>A collection of proofs<small>Open project notes ↗</small></span></a><h3>One more round.<br> Forever.</h3></header>
+    <header class="desk-intro"><a class="desk-project" href="#conjectures" data-project="conjectures"><img src="/assets/furniture/prints/conjectures.webp" alt="" width="32" height="40" loading="lazy" /><span>A collection of proofs<small>Open project notes ↗</small></span></a><h3>One more round.<br> Forever.</h3></header>
     <div class="desk-artifact desk-deal"><div class="desk-figure-heading"><span>The next cards</span><span id="desk-turn">Turn 0 / 90</span></div><div class="desk-playing-cards" aria-label="Next card for each player"><div><small>Player A</small><b id="desk-card-a">15</b><span id="desk-count-a">8 cards</span></div><div><small>Player B</small><b id="desk-card-b">10</b><span id="desk-count-b">8 cards</span></div><div><small>Player C</small><b id="desk-card-c">4</b><span id="desk-count-c">7 cards</span></div></div><div class="desk-controls" hidden><button type="button" id="desk-deal-one">Deal a turn</button><button type="button" id="desk-deal-cycle">Go to turn 90</button><button type="button" id="desk-deal-reset">Reset</button></div><p id="desk-deal-status" role="status">Highest card wins. Won cards go underneath, highest first.</p><p class="desk-small">The numbers are ranks in the actual 23-card deal, not a standard 52-card deck.</p></div>
     <div class="desk-copy"><p>This three-player War deal returns to exactly the same card order after 90 turns. Nobody runs out. Then the whole game repeats.</p><p class="desk-small">It’s one example from my collection of proofs and counterexamples with GPT-6.2 Astra. The notes are unrefereed; Lean status is recorded per result.</p><a href="#conjectures" data-project="conjectures" class="desk-action">Explore the full cycle <span aria-hidden="true">↗</span></a><a class="desk-permalink" href="#desk-war" aria-label="Direct link to the card game experiment">Link to this experiment</a></div>
   </article>
   <article class="desk-sheet desk-bits" data-desk-panel="bits" id="desk-bits">
-    <header class="desk-intro"><a class="desk-project" href="#cpu" data-project="cpu"><img src="assets/furniture/prints/cpu-switch.webp" alt="" width="32" height="40" loading="lazy" /><span>Hack CPU<small>Open project notes ↗</small></span></a><h3>A number,<br> one switch at a time.</h3></header>
+    <header class="desk-intro"><a class="desk-project" href="#cpu" data-project="cpu"><img src="/assets/furniture/prints/cpu-switch.webp" alt="" width="32" height="40" loading="lazy" /><span>Hack CPU<small>Open project notes ↗</small></span></a><h3>A number,<br> one switch at a time.</h3></header>
     <div class="desk-artifact desk-register"><div class="desk-figure-heading"><span>Hack A-instruction</span><span>15-bit address</span></div><div class="desk-address"><span>@</span><output id="desk-address-value" aria-live="off">42</output></div><p class="desk-bit-hint">Each 1 contributes its place value.</p><div class="desk-bit-row" aria-label="Address bits"><span class="desk-fixed-bit" title="Instruction bit is fixed at zero">0<small>fixed</small></span><span class="desk-bit-fallback">000 0000 0010 1010</span></div><p id="desk-bit-sum" role="status">32 + 8 + 2 = 42</p><button class="desk-register-reset" type="button" hidden>Reset to 42</button></div>
     <div class="desk-copy"><p>I extended the Hack CPU with a two-stage pipeline, branch prediction and fused instructions.</p><p class="desk-small">Start with something smaller: the 16 bits in an A-instruction. The first bit stays zero. The other 15 hold an address.</p><a href="#cpu" data-project="cpu" class="desk-action">Try the branch predictor <span aria-hidden="true">↗</span></a><a class="desk-permalink" href="#desk-bits" aria-label="Direct link to the address-bit experiment">Link to this experiment</a></div>
   </article>
 <article class="desk-sheet desk-numbers" data-desk-panel="numbers" id="desk-numbers">
-    <header class="desk-intro"><a class="desk-project" href="#conjectures" data-project="conjectures"><img src="assets/furniture/prints/conjectures.webp" alt="" width="32" height="40" loading="lazy" /><span>A collection of proofs<small>Open project notes ↗</small></span></a>
+    <header class="desk-intro"><a class="desk-project" href="#conjectures" data-project="conjectures"><img src="/assets/furniture/prints/conjectures.webp" alt="" width="32" height="40" loading="lazy" /><span>A collection of proofs<small>Open project notes ↗</small></span></a>
     <h3>How tightly can<br> you pack a line?</h3></header>
     <div class="desk-artifact numberline-paper">
     <div class="desk-figure-heading"><span>Forbidden gaps: 2, 5, 9</span><span>Period 7</span></div>
@@ -246,7 +246,7 @@
         </div>
         <div class="file-cabinet">
         <div class="file-dividers">
-          <img src="assets/studio/card-box.webp" alt="" width="360" height="250" loading="lazy" />
+          <img src="/assets/studio/card-box.webp" alt="" width="360" height="250" loading="lazy" />
         <div
           class="catalogue-filters"
           hidden
@@ -601,7 +601,7 @@
   </nav>
   <div class="notebook-spread">
     <article data-leaf="about" class="notebook-page notebook-robotics" aria-labelledby="robotics-story-title">
-      <div class="leaf-art"><img src="assets/studio/reefscape.webp" width="1440" height="1440" loading="lazy" alt="Team 2022’s 2025 REEFSCAPE robot carrying a white coral pipe above its blue bumpers." /></div>
+      <div class="leaf-art"><img src="/assets/studio/reefscape.webp" width="1440" height="1440" loading="lazy" alt="Team 2022’s 2025 REEFSCAPE robot carrying a white coral pipe above its blue bumpers." /></div>
       <div class="leaf-writing">
       <h3 id="robotics-story-title">Code that has to<br> move something.</h3>
       <p>I lead programming for Titan Robotics, FIRST Team 2022. Our team of ten writes the robot’s Java code. I teach rookies, review code, and dig through match logs when the robot does something we didn’t ask it to.</p>
@@ -609,7 +609,7 @@
       </div>
     </article>
     <article id="about-physics" data-leaf="about-physics" class="notebook-page notebook-physics" aria-labelledby="physics-story-title">
-      <div class="leaf-art"><img src="assets/studio/tracks.webp" width="500" height="500" loading="lazy" alt="Particle tracks radiating across a dark field." /></div>
+      <div class="leaf-art"><img src="/assets/studio/tracks.webp" width="500" height="500" loading="lazy" alt="Particle tracks radiating across a dark field." /></div>
       <div class="leaf-writing">
       <h3 id="physics-story-title">Looking for<br> a rare signal.</h3>
       <p>With Dr. Peter Dong’s group in IMSA–CMS through Fermilab, I write software for a search for a doubly charged Higgs boson.</p>
@@ -624,7 +624,7 @@
       </div>
     </article>
     <div id="about-teaching" data-leaf="about-teaching" class="notebook-page notebook-teaching">
-      <div class="leaf-art"><img src="assets/studio/terminal.webp" width="500" height="500" loading="lazy" alt="A school computer with a pencil and an open notebook." /></div>
+      <div class="leaf-art"><img src="/assets/studio/terminal.webp" width="500" height="500" loading="lazy" alt="A school computer with a pencil and an open notebook." /></div>
       <div class="leaf-writing">
       <h3>Passing it on.</h3>
       <p>I’m co-president of Epoch, our computer science club, where I’ve taught Linux workshops. I was also a teaching assistant for Elements of Computing Systems I and II.</p>
@@ -632,7 +632,7 @@
       </div>
     </div>
     <aside id="off-the-clock" data-leaf="off-the-clock" class="notebook-page favorites notebook-favorites" aria-labelledby="favorites-title">
-      <div class="leaf-art"><img src="assets/studio/tape.webp" width="500" height="500" loading="lazy" alt="A plum cassette with a loose ribbon of tape." /></div>
+      <div class="leaf-art"><img src="/assets/studio/tape.webp" width="500" height="500" loading="lazy" alt="A plum cassette with a loose ribbon of tape." /></div>
       <div class="leaf-writing">
       <h3 id="favorites-title">Off the clock</h3>
       <p>I’m into ALIEN STAGE and the Avatar universe. These are on my shelf, too.</p>
@@ -673,11 +673,11 @@
           <form method="dialog"><button class="return-post">Put back</button></form>
   <figure class="post-office">
     <div class="post-hand" data-turn-paper tabindex="0" role="group" aria-label="Postcard. Drag to turn, or use the arrow keys."><div class="postcard">
-      <img class="postcard-front" draggable="false" src="assets/studio/night-mail.webp" width="1200" height="800" loading="lazy" alt="A calico mail carrier with a pink envelope at a moonlit window." />
+      <img class="postcard-front" draggable="false" src="/assets/studio/night-mail.webp" width="1200" height="800" loading="lazy" alt="A calico mail carrier with a pink envelope at a moonlit window." />
       <div class="postcard-back" aria-hidden="true">
         <div class="post-message"><h3>From Cinna’s desk</h3><p>Your stops on this visit</p><ol id="post-route"></ol></div>
         <div class="post-address">
-          <img class="cat-stamp" src="assets/furniture/prints/night-mail.webp" alt="" loading="lazy" width="92" height="65" />
+          <img class="cat-stamp" src="/assets/furniture/prints/night-mail.webp" alt="" loading="lazy" width="92" height="65" />
           <div class="post-delivery">
             <p class="post-recipient"></p>
             <small class="post-device"></small>
@@ -714,37 +714,37 @@
             <ul>
               <li>
                 <a data-project="conjectures" href="#conjectures">
-                  <img src="assets/furniture/prints/conjectures.webp" alt="" width="38" height="48" loading="lazy" />
+                  <img src="/assets/furniture/prints/conjectures.webp" alt="" width="38" height="48" loading="lazy" />
                   <span><strong>Solved conjectures</strong><small>Deal a game that repeats forever</small></span>
                 </a>
               </li>
               <li>
                 <a data-project="flyover" href="#flyover">
-                  <img src="assets/furniture/prints/flyover.webp" alt="" width="38" height="48" loading="lazy" />
+                  <img src="/assets/furniture/prints/flyover.webp" alt="" width="38" height="48" loading="lazy" />
                   <span><strong>DOPPLERGEIST</strong><small>Hear the pitch of a passing plane</small></span>
                 </a>
               </li>
               <li>
                 <a data-project="factoring" href="#factoring">
-                  <img src="assets/furniture/prints/factoring-bead.webp" alt="" width="38" height="48" loading="lazy" />
+                  <img src="/assets/furniture/prints/factoring-bead.webp" alt="" width="38" height="48" loading="lazy" />
                   <span><strong>Integer factoring</strong><small>Split a number into its primes</small></span>
                 </a>
               </li>
               <li>
                 <a data-project="cpu" href="#cpu">
-                  <img src="assets/furniture/prints/cpu-switch.webp" alt="" width="38" height="48" loading="lazy" />
+                  <img src="/assets/furniture/prints/cpu-switch.webp" alt="" width="38" height="48" loading="lazy" />
                   <span><strong>The Hack CPU</strong><small>Teach a tiny counter to predict</small></span>
                 </a>
               </li>
               <li>
                 <a data-project="schedule" href="#schedule">
-                  <img src="assets/furniture/prints/schedule.webp" alt="" width="38" height="48" loading="lazy" />
+                  <img src="/assets/furniture/prints/schedule.webp" alt="" width="38" height="48" loading="lazy" />
                   <span><strong>Schedule map</strong><small>Turn a timetable into room lists</small></span>
                 </a>
               </li>
               <li>
                 <a data-project="conway" href="#conway">
-                  <img src="assets/furniture/prints/conway.webp" alt="" width="38" height="48" loading="lazy" />
+                  <img src="/assets/furniture/prints/conway.webp" alt="" width="38" height="48" loading="lazy" />
                   <span><strong>Conway’s 99-graph</strong><small>Explore the neighbors of a rook</small></span>
                 </a>
               </li>
@@ -769,8 +769,8 @@
                     width="640"
                     height="800"
                     draggable="false"
-                    src="assets/prints/schedule.webp"
-                    srcset="assets/prints/shelf/schedule.webp 420w, assets/prints/schedule.webp 840w"
+                    src="/assets/prints/schedule.webp"
+                    srcset="/assets/prints/shelf/schedule.webp 420w, /assets/prints/schedule.webp 840w"
                     sizes="(max-width: 680px) clamp(200px, 62vw, 290px), clamp(238px, 20.6vw, 316px)"
                     alt=""
                   /><span class="print-foot"
@@ -789,8 +789,8 @@
                     width="640"
                     height="800"
                     draggable="false"
-                    src="assets/prints/conway.webp"
-                    srcset="assets/prints/shelf/conway.webp 420w, assets/prints/conway.webp 840w"
+                    src="/assets/prints/conway.webp"
+                    srcset="/assets/prints/shelf/conway.webp 420w, /assets/prints/conway.webp 840w"
                     sizes="(max-width: 680px) clamp(200px, 62vw, 290px), clamp(238px, 20.6vw, 316px)"
                     alt=""
                   /><span class="print-foot"
@@ -808,8 +808,8 @@
                   ><span class="print-sheet"><img loading="lazy"
                     width="840"
                     height="1050"
-                    src="assets/prints/conjectures.webp"
-                    srcset="assets/prints/shelf/conjectures.webp 420w, assets/prints/conjectures.webp 840w"
+                    src="/assets/prints/conjectures.webp"
+                    srcset="/assets/prints/shelf/conjectures.webp 420w, /assets/prints/conjectures.webp 840w"
                     sizes="(max-width: 680px) clamp(200px, 62vw, 290px), clamp(238px, 20.6vw, 316px)"
                     alt=""
                     draggable="false"
@@ -829,8 +829,8 @@
                     width="640"
                     height="800"
                     draggable="false"
-                    src="assets/prints/flyover.webp"
-                    srcset="assets/prints/shelf/flyover.webp 420w, assets/prints/flyover.webp 840w"
+                    src="/assets/prints/flyover.webp"
+                    srcset="/assets/prints/shelf/flyover.webp 420w, /assets/prints/flyover.webp 840w"
                     sizes="(max-width: 680px) clamp(200px, 62vw, 290px), clamp(238px, 20.6vw, 316px)"
                     alt=""
                   /><span class="print-foot"
@@ -849,8 +849,8 @@
                     width="640"
                     height="800"
                     draggable="false"
-                    src="assets/prints/factoring-bead.webp"
-                    srcset="assets/prints/shelf/factoring-bead.webp 420w, assets/prints/factoring-bead.webp 840w"
+                    src="/assets/prints/factoring-bead.webp"
+                    srcset="/assets/prints/shelf/factoring-bead.webp 420w, /assets/prints/factoring-bead.webp 840w"
                     sizes="(max-width: 680px) clamp(200px, 62vw, 290px), clamp(238px, 20.6vw, 316px)"
                     alt=""
                   /><span class="print-foot"
@@ -869,8 +869,8 @@
                     width="640"
                     height="800"
                     draggable="false"
-                    src="assets/prints/cpu-switch.webp"
-                    srcset="assets/prints/shelf/cpu-switch.webp 420w, assets/prints/cpu-switch.webp 840w"
+                    src="/assets/prints/cpu-switch.webp"
+                    srcset="/assets/prints/shelf/cpu-switch.webp 420w, /assets/prints/cpu-switch.webp 840w"
                     sizes="(max-width: 680px) clamp(200px, 62vw, 290px), clamp(238px, 20.6vw, 316px)"
                     alt=""
                   /><span class="print-foot"
@@ -1031,8 +1031,8 @@
               <img
                 width="1600"
                 height="550"
-                src="assets/livermore.webp"
-                srcset="assets/livermore-800.webp 800w, assets/livermore.webp 1600w"
+                src="/assets/livermore.webp"
+                srcset="/assets/livermore-800.webp 800w, /assets/livermore.webp 1600w"
                 sizes="(max-width: 680px) 90vw, 720px"
                 loading="lazy"
                 alt="The recorded aircraft’s harmonics slope down as its pitch falls."
@@ -1062,11 +1062,11 @@
               id="recording"
               controls
               preload="none"
-              data-src="assets/livermore.mp3"
+              data-src="/assets/livermore.mp3"
               hidden
               aria-label="Aircraft flyover"
             ></audio>
-            <noscript><audio controls preload="none" src="assets/livermore.mp3" aria-label="Aircraft flyover"></audio></noscript>
+            <noscript><audio controls preload="none" src="/assets/livermore.mp3" aria-label="Aircraft flyover"></audio></noscript>
             <figcaption>
               Flyover recorded by
               <a href="https://doi.org/10.5281/zenodo.23424278"
@@ -1193,7 +1193,7 @@
   <div id="trace-explanation" role="status" aria-live="polite" aria-atomic="true"><p id="trace-prediction">Predicted next address: 5. Correct next address: 7.</p><p id="trace-summary">At the next rising edge (195 ns), fetch redirects to 7 and an inserted NOP replaces the wrong-path instruction. D stays zero.</p></div>
   <div class="trace-controls" hidden><button type="button" id="trace-prev">Previous snapshot</button><button type="button" id="trace-next">Next snapshot</button><button type="button" id="trace-reset">Reset</button></div>
   <p class="cpu-trace-scope">Five snapshots from the existing testbench, 170–210 ns. These are simulation timestamps, not hardware speed measurements. An inserted NOP is a pipeline bubble, not program address 0.</p>
-  <div class="cpu-trace-sources"><a href="https://github.com/1337isnot1337/nand2tetris-verilog-improved/blob/063f0c4a24cefde327ffba93678ff5586608791d/05/cpu_optimized.sv#L167-L207">Pipeline source ↗</a><a href="https://github.com/1337isnot1337/nand2tetris-verilog-improved/blob/063f0c4a24cefde327ffba93678ff5586608791d/05/mod_cpu_tests.sv#L42-L65">Test program ↗</a><a href="assets/cpu-trace/README.md">Reproduce the trace ↗</a><a href="assets/cpu-trace/trace.csv">Recorded CSV ↗</a></div>
+  <div class="cpu-trace-sources"><a href="https://github.com/1337isnot1337/nand2tetris-verilog-improved/blob/063f0c4a24cefde327ffba93678ff5586608791d/05/cpu_optimized.sv#L167-L207">Pipeline source ↗</a><a href="https://github.com/1337isnot1337/nand2tetris-verilog-improved/blob/063f0c4a24cefde327ffba93678ff5586608791d/05/mod_cpu_tests.sv#L42-L65">Test program ↗</a><a href="/assets/cpu-trace/README.md">Reproduce the trace ↗</a><a href="/assets/cpu-trace/trace.csv">Recorded CSV ↗</a></div>
 </section>
           <a
             class="outbound"
@@ -1323,19 +1323,19 @@
     </template>
     <template id="back-robot-photo">
       <small>Titan Robotics · 2025</small>
-      <img class="contact-strip" src="assets/studio/reefscape-build.webp" width="750" height="270" alt="Three build-table photos showing the belly pan, wiring and motor controllers." />
+      <img class="contact-strip" src="/assets/studio/reefscape-build.webp" width="750" height="270" alt="Three build-table photos showing the belly pan, wiring and motor controllers." />
       <p>Before the bumpers went on.</p>
       <small>Build table · February 4</small>
     </template>
     <template id="back-flyover-print">
       <small>DOPPLERGEIST · Livermore</small>
-      <figure><img src="assets/studio/flyover-wave.svg" width="314" height="105" alt="Waveform of the 85-second excerpt. The largest peak comes just after one minute." /><figcaption><span>0:00</span><span>1:25</span></figcaption></figure>
+      <figure><img src="/assets/studio/flyover-wave.svg" width="314" height="105" alt="Waveform of the 85-second excerpt. The largest peak comes just after one minute." /><figcaption><span>0:00</span><span>1:25</span></figcaption></figure>
       <p>One plane passing a microphone.</p>
       <small>Recording by Praveen Pathak · CC BY 4.0</small>
     </template>
     <template id="back-conway-print">
       <small>Conway’s 99-graph</small>
-      <img class="neighbor-sketch" src="assets/studio/conway-neighbors.svg" width="190" height="174" alt="Fourteen neighbors paired around one vertex, forming seven triangles." />
+      <img class="neighbor-sketch" src="/assets/studio/conway-neighbors.svg" width="190" height="174" alt="Fourteen neighbors paired around one vertex, forming seven triangles." />
       <p>Pick any vertex. Its fourteen neighbors have to pair off.</p>
       <small>Seven triangles through a point</small>
     </template>
