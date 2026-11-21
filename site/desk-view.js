@@ -16,7 +16,7 @@ const edgeSpeed=value=>{
 
 export function deskView(){
   let travel=0,depth=0,yaw=0,pitch=0;
-  let zoom=0, zoomTarget=0, lookX=0, lookY=0, lookStarted=false;
+  let zoom=0, zoomTarget=0, lookX=0, lookY=0, lookDelay=0;
 
   function drag(x,y){
     travel=wrap(travel-x,orbitTravel);
@@ -27,7 +27,8 @@ export function deskView(){
     const wasLooking=Boolean(lookX||lookY);
     lookX=edgeSpeed(x);lookY=edgeSpeed(y);
     const looking=Boolean(lookX||lookY);
-    if(!wasLooking||!looking)lookStarted=looking;
+    if(!looking)lookDelay=0;
+    else if(!wasLooking)lookDelay=.16;
     return looking;
   }
 
@@ -37,8 +38,11 @@ export function deskView(){
 
   function step(dt,reduced){
     const lastTravel=travel,lastDepth=depth;
-    const steerTime=lookStarted?Math.min(dt,1/60):dt;
-    lookStarted=false;
+    // Give a passing pointer time to click an object near the edge.
+    const waiting=lookDelay>0;
+    const time=waiting?Math.min(dt,.04):dt;
+    const steerTime=Math.max(0,time-lookDelay);
+    lookDelay=Math.max(0,lookDelay-time);
     const position=Math.abs(travel)/orbitTravel;
     // Match the angular speed near the front and the back despite the drag curve.
     const slope=(Math.abs(travel)<frontTravel?frontGain:sideGain)+4*rearGain/orbitTravel*position**3;
@@ -54,7 +58,7 @@ export function deskView(){
 
     return {
       yaw, below:pitch, zoom:Math.exp(zoom), rear:Math.abs(yaw)>2.24?Math.sign(yaw):0,
-      move:travel!==lastTravel||depth!==lastDepth||Math.abs(wrap(yaw-angle,Math.PI))>.000001||pitch!==depth||zoom!==zoomTarget
+      move:waiting||travel!==lastTravel||depth!==lastDepth||Math.abs(wrap(yaw-angle,Math.PI))>.000001||pitch!==depth||zoom!==zoomTarget
     };
   }
 

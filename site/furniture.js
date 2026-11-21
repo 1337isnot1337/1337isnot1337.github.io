@@ -5,7 +5,7 @@ import { inspectDeskObjects } from './desk-inspect.js?v=15';
 import { attachDeskPointer } from './desk-pointer.js?v=20';
 
 import { deskLife } from './desk-life.js?v=13';
-import { deskView } from './desk-view.js?v=7';
+import { deskView } from './desk-view.js?v=8';
 import { drawerTravel } from './desk-drawer.js?v=1';
 
 export function mountFurniture(stage,showGraphicsFallback) {

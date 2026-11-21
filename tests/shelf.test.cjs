@@ -51,11 +51,12 @@ test('mouse steering takes the long way around and stops in the middle of the st
   assert.equal(camera.look(.34,-.24), false);
   assert.equal(camera.step(1/60,true).yaw, 0);
   camera.look(-1,0);
+  assert.equal(camera.step(1/60,true).yaw,0,'a passing pointer can still click near the edge');
   let previous = 0, rotation = 0;
   for(let frame=0;frame<270;frame++){
     const pose=camera.step(1/60,true);
     const change=Math.atan2(Math.sin(pose.yaw-previous),Math.cos(pose.yaw-previous));
-    assert.ok(change>0 && change<.08, 'each frame stays continuous through the rear angle');
+    assert.ok(change>=0 && change<.08, 'each frame stays continuous through the rear angle');
     assert.equal(pose.move,true);
     rotation+=change;previous=pose.yaw;
   }
