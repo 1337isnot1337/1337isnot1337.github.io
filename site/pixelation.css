@@ -1,0 +1,16 @@
+/* Sample one pixel in each 2px square and blend it with the original frame. */
+@media screen and (forced-colors: none) and (prefers-contrast: no-preference) {
+  @supports (backdrop-filter: url("#grid")) {
+    /* Modal dialogs paint above the document, so put the filter over the dialog instead. */
+    html:not(:has(dialog:modal))::after,
+    dialog:modal::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: 2147483647;
+      pointer-events: none;
+      opacity: .42;
+      backdrop-filter: url("/assets/pixel-grid.svg?v=1#grid");
+    }
+  }
+}

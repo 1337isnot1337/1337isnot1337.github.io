@@ -128,6 +128,7 @@ def render(entries: list[dict]) -> str:
   <meta name="twitter:image" content="{SITE}/assets/conjectures-preview.jpg">
   <meta name="twitter:image:alt" content="Solved conjectures, with illustrated playing cards beside the title.">
   <link rel="icon" href="/assets/prints/favicon.png">
+  <link rel="stylesheet" href="/pixelation.css?v=1">
   <link rel="stylesheet" href="/shelf.css?v=25">
   <link rel="stylesheet" href="/projects/project-pages.css?v=1">
   <link rel="stylesheet" href="/research-notes/notes.css?v=3">

@@ -1,5 +1,7 @@
 /* Personal-site reading skin. Research content, math fonts and status semantics
    remain owned by the generated catalogue. Load after its stylesheet. */
+@import url("/pixelation.css?v=1");
+
 :root {
   --paper: #fffbf6;
   --surface: #fffdf9;
