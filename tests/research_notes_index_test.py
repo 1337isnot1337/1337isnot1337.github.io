@@ -47,7 +47,7 @@ class ResearchNotesIndexTests(unittest.TestCase):
         self.assertEqual({x["kind"] for x in listed}, {"candidate", "verification"})
         rendered = notes.render(listed)
         self.assertEqual(rendered.count('<h1>'), 1)
-        self.assertIn('href="https://1337isnot1337.github.io/solved-conjectures/docs/five-speed-candidates/"', rendered)
+        self.assertIn('href="https://itsdavis.com/solved-conjectures/docs/five-speed-candidates/"', rendered)
         self.assertNotIn("Excluded page", rendered)
         self.assertIn('2026-11-19', rendered)
         self.assertEqual(rendered.count('<script type="application/ld+json">'), 1)

@@ -1,6 +1,6 @@
 # Cinna Davis’s desk
 
-[Visit the desk](https://1337isnot1337.github.io/) · [Browse the project shelf](https://1337isnot1337.github.io/#projects)
+[Visit the desk](https://itsdavis.com/) · [Browse the project shelf](https://itsdavis.com/#projects)
 
 The homepage, interactive project examples, and self-hosted assets are in `site/`. To preview them locally, run:
 
@@ -10,7 +10,7 @@ python3 -m http.server --directory site
 
 Pushing to `main` publishes that directory through GitHub Actions.
 
-The same workflow first tries to build the [searchable conjecture catalogue](https://1337isnot1337.github.io/solved-conjectures/) from the current `main` branch of [solved-conjectures](https://github.com/1337isnot1337/solved-conjectures). Its generator, design, search, and page checks live in that repository. The build writes `site/solved-conjectures/` before uploading the complete website; generated pages are not copied into this repository. An hourly scheduled run refreshes the catalogue. You can also run **Publish project shelf** manually in Actions. The catalogue records its source commit and checks local links, page metadata, and sitemap coverage before publication.
+The same workflow first tries to build the [searchable conjecture catalogue](https://itsdavis.com/solved-conjectures/) from the current `main` branch of [solved-conjectures](https://github.com/1337isnot1337/solved-conjectures). Its generator, design, search, and page checks live in that repository. The build writes `site/solved-conjectures/` before uploading the complete website; generated pages are not copied into this repository. An hourly scheduled run refreshes the catalogue. You can also run **Publish project shelf** manually in Actions. The catalogue records its source commit and checks local links, page metadata, and sitemap coverage before publication.
 
 The website-owned `scripts/build_catalogue.py` adapter accepts explicit plain-text Lean status markers as well as the upstream Markdown format. Qualified declarations use an exact reviewed allowlist, not inferred verification. The source's mathematical scope, independent status-report comparison, and page checks remain unchanged. Unknown declarations stop publication; do not remove qualifications or change the research source to make a website build pass. Run `PYTHONDONTWRITEBYTECODE=1 python3 tests/catalogue_compat_test.py /path/to/solved-conjectures` to check this boundary.
 
@@ -25,7 +25,7 @@ cargo build --locked --release --target wasm32-unknown-unknown
 wasm-bindgen --target web --no-typescript --out-name schedule --out-dir site/imsa-map target/wasm32-unknown-unknown/release/imsa-map.wasm
 ```
 
-The shelf adapts the [Swiper Coverflow demo](https://github.com/nolimits4web/swiper/blob/master/demos/240-effect-coverflow.html). Swiper 14.4.0 runs from `site/vendor/` under the included MIT license. The six poster illustrations were generated for this site. Catalogue entries link to public repositories, research records, or specific contributions. The War demonstration uses the starting queues and descending collection rule from the [three-player War proof](https://github.com/1337isnot1337/solved-conjectures/blob/main/results/spivey-multiplayer-war/PROOF.md). The demos and links behind them describe the actual projects. The flyover and spectrogram are from the [DOPPLERGEIST Livermore example](https://1337isnot1337.github.io/DOPPLERGEIST/). The recording is by Praveen Pathak ([dataset](https://doi.org/10.5281/zenodo.23424278), [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)). Font licenses are in `site/assets/fonts/`.
+The shelf adapts the [Swiper Coverflow demo](https://github.com/nolimits4web/swiper/blob/master/demos/240-effect-coverflow.html). Swiper 14.4.0 runs from `site/vendor/` under the included MIT license. The six poster illustrations were generated for this site. Catalogue entries link to public repositories, research records, or specific contributions. The War demonstration uses the starting queues and descending collection rule from the [three-player War proof](https://github.com/1337isnot1337/solved-conjectures/blob/main/results/spivey-multiplayer-war/PROOF.md). The demos and links behind them describe the actual projects. The flyover and spectrogram are from the [DOPPLERGEIST Livermore example](https://itsdavis.com/DOPPLERGEIST/). The recording is by Praveen Pathak ([dataset](https://doi.org/10.5281/zenodo.23424278), [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)). Font licenses are in `site/assets/fonts/`.
 
 
 ## Checks

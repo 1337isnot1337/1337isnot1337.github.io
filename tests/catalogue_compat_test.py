@@ -56,12 +56,12 @@ class StatusCompatibility(unittest.TestCase):
         module = load_builder(SOURCE)
         install_adapter(module)
         builder = object.__new__(module.Builder)
-        builder.base_url = "https://1337isnot1337.github.io/solved-conjectures/"
+        builder.base_url = "https://itsdavis.com/solved-conjectures/"
         builder.base_path = "/solved-conjectures/"
         page = builder.head("Example", "Example proof", "results/example/proof/")
         self.assertIn(builder.canonical("results/example/proof/"), page)
         self.assertIn('name="twitter:card" content="summary_large_image"', page)
-        self.assertIn('name="twitter:image" content="https://1337isnot1337.github.io/assets/conjectures-preview.jpg"', page)
+        self.assertIn('name="twitter:image" content="https://itsdavis.com/assets/conjectures-preview.jpg"', page)
         missing = builder.head("Missing", "Missing page", "404.html", noindex=True)
         self.assertIn('content="noindex,follow"', missing)
         self.assertNotIn('property="og:image"', missing)

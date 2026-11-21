@@ -61,7 +61,7 @@ jobs:
             --source _sources/solved-conjectures \
             --fallback-source _sources/catalogue-snapshot \
             --output "$GITHUB_WORKSPACE/site/solved-conjectures" \
-            --base-url https://1337isnot1337.github.io/solved-conjectures/
+            --base-url https://itsdavis.com/solved-conjectures/
       - name: Generate research notes directory from the validated catalogue
         run: |
           PYTHONDONTWRITEBYTECODE=1 python3 scripts/build_research_notes_index.py \

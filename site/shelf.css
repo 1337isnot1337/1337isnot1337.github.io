@@ -1378,7 +1378,7 @@ html {
     text-decoration: underline;
   }
   .open-project .detail::after {
-    content: "Cinna Davis · 1337isnot1337.github.io";
+    content: "Cinna Davis · itsdavis.com";
     display: block;
     margin-top: 24px;
     border-top: 1px solid var(--hair);

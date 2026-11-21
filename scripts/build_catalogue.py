@@ -20,7 +20,7 @@ QUALIFIED_ABELIAN_STATUS = (
     "sharpness example. The general minimum-degree-three conjecture remains "
     "outside this result."
 )
-PREVIEW = "https://1337isnot1337.github.io/assets/conjectures-preview.jpg"
+PREVIEW = "https://itsdavis.com/assets/conjectures-preview.jpg"
 PREVIEW_ALT = "Solved conjectures, with illustrated playing cards beside the title."
 PLAIN_STATUSES = {
     ("Lean status: " + token + ending).casefold(): canonical

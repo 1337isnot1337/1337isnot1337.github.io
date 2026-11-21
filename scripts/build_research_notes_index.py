@@ -15,7 +15,7 @@ from pathlib import Path
 import re
 from urllib.parse import urlsplit
 
-SITE = "https://1337isnot1337.github.io"
+SITE = "https://itsdavis.com"
 INDEX_URL = SITE + "/research-notes/"
 CATALOGUE_PREFIX = SITE + "/solved-conjectures/docs/"
 TITLE = "Mathematical research notes and verification records | Cinna Davis"

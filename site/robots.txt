@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://1337isnot1337.github.io/sitemap.xml
+Sitemap: https://itsdavis.com/sitemap.xml

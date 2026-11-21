@@ -221,7 +221,7 @@ class CatalogueRelease(unittest.TestCase):
 
     def test_breadcrumb_schema_follows_existing_result_hierarchy(self):
         self.output.mkdir()
-        base = "https://1337isnot1337.github.io/solved-conjectures/"
+        base = "https://itsdavis.com/solved-conjectures/"
         pages = [
             ("index.html", "All results", base),
             ("results/example/index.html", "Example result", base + "results/example/"),

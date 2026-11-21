@@ -5,7 +5,7 @@ const { JSDOM } = require('jsdom');
 const html = fs.readFileSync('site/index.html', 'utf8');
 const script = fs.readFileSync('site/shelf.js', 'utf8');
 function page(setup = () => {}) {
-  const dom = new JSDOM(html, { runScripts: 'outside-only', url: 'https://1337isnot1337.github.io/', pretendToBeVisual: true });
+  const dom = new JSDOM(html, { runScripts: 'outside-only', url: 'https://itsdavis.com/', pretendToBeVisual: true });
   dom.window.matchMedia = () => ({ matches: true, addEventListener() {} });
   dom.window.HTMLElement.prototype.scrollIntoView = () => {};
   setup(dom.window);
@@ -255,7 +255,7 @@ test('predictor announces the outcome and next state together without nested liv
 
 test('shared pages request the same version of the shelf stylesheet', () => {
   const stylesheet = path => {
-    const dom=new JSDOM(fs.readFileSync('site/'+path,'utf8'),{url:'https://1337isnot1337.github.io/'+path});
+    const dom=new JSDOM(fs.readFileSync('site/'+path,'utf8'),{url:'https://itsdavis.com/'+path});
     const href=[...dom.window.document.querySelectorAll('link[rel="stylesheet"]')].find(link=>link.href.includes('/shelf.css')).href;
     dom.window.close();
     return href;
@@ -267,7 +267,7 @@ test('shared pages request the same version of the shelf stylesheet', () => {
 
 test('schedule examples share the tool canonical and explain local processing', () => {
   const d=new JSDOM(fs.readFileSync('site/imsa-map/index.html','utf8')).window.document;
-  assert.equal(d.querySelector('link[rel="canonical"]').href,'https://1337isnot1337.github.io/imsa-map/');
+  assert.equal(d.querySelector('link[rel="canonical"]').href,'https://itsdavis.com/imsa-map/');
   assert.match(d.querySelector('meta[name="description"]').content,/five-day room lists.*nothing uploaded or saved/);
 });
 

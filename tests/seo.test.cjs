@@ -5,7 +5,7 @@ const path = require('node:path');
 const { JSDOM } = require('jsdom');
 
 const root = path.join(__dirname, '..', 'site');
-const origin = 'https://1337isnot1337.github.io';
+const origin = 'https://itsdavis.com';
 const ownPages = [
   '/', '/about/', '/projects/', '/projects/integer-factoring/',
   '/projects/hack-cpu/', '/projects/conway-99/', '/imsa-map/', '/research-notes/'
