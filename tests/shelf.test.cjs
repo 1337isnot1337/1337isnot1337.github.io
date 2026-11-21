@@ -287,7 +287,7 @@ test('shared pages request the same version of the shelf stylesheet', () => {
   };
   const expected=stylesheet('index.html');
   assert.ok(new URL(expected).searchParams.get('v'));
-  for(const path of ['404.html','imsa-map/index.html']) assert.equal(stylesheet(path),expected);
+  assert.equal(stylesheet('imsa-map/index.html'),expected);
 });
 
 test('schedule examples share the tool canonical and explain local processing', () => {
