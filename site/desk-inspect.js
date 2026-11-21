@@ -1,4 +1,5 @@
 import * as T from './vendor/three/three.module.min.js';
+import { attachHeldArrows } from './desk-arrows.js?v=1';
 
 // One renderer serves the room and the object in hand. Capture the room once per pickup.
 export function inspectDeskObjects(stage,engine,room,deskCamera,getModel,redraw,life,motion){
@@ -121,8 +122,11 @@ export function inspectDeskObjects(stage,engine,room,deskCamera,getModel,redraw,
       detailedPrint=face;redraw();
     },undefined,()=>{});
   }
+  const stopArrows=attachHeldArrows(surface,()=>dialog.open && surface===document.activeElement && !press,
+    (x,y)=>rotate(x*1.5,y*1.5));
   function putBack(){
     if(!active)return;
+    stopArrows();
     life.stow(active,yaw);life.inspect('',active,null,'close');active='';source=null;press=null;tap=null;
     surface.classList.remove('is-turning');releasePrint();stand.clear();snapshot?.dispose();snapshot=null;
     backdrop.uniforms.frame.value=null;stage.classList.remove('inspecting');redraw();
@@ -148,8 +152,6 @@ export function inspectDeskObjects(stage,engine,room,deskCamera,getModel,redraw,
     if(e.key==='+'||e.key==='='||e.key==='-'){
       e.preventDefault();zoomBy(e.key==='-'?-.14:.14);return;
     }
-    const turn={ArrowLeft:[-.13,0],ArrowRight:[.13,0],ArrowUp:[0,-.13],ArrowDown:[0,.13]}[e.key];
-    if(turn){e.preventDefault();rotate(...turn);}
   });
   surface.addEventListener('wheel',e=>{
     if(!e.deltaY||e.ctrlKey||e.metaKey)return;
@@ -217,7 +219,7 @@ export function inspectDeskObjects(stage,engine,room,deskCamera,getModel,redraw,
     if(!active || !dialog.open)return false;
     const model=getModel();
     const detail=active==='plane'?'airframe':active+'-volume';
-    const item=model.details.get(detail)||model.targets.get(active)?.root||model.details.get(active);
+    const item=model.details.get(detail)||(model.targets.get(active)?.preview||model.targets.get(active)?.root)||model.details.get(active);
     const ratio=stage.clientWidth/stage.clientHeight;
     if(source!==item || ratio!==aspect){
       const firstPickup=!source;

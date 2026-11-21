@@ -5,7 +5,7 @@ import { lampProjection } from './desk-lamp.js?v=1';
 import { paintScope, followProbe } from './desk-scope.js?v=1';
 import { airframeGeometry, wingUnderside } from './model-plane.js?v=2';
 import { mergeGeometries } from './vendor/three/BufferGeometryUtils.js';
-import { decorateRoom } from './desk-room.js?v=3';
+import { decorateRoom } from './desk-room.js?v=4';
 import { RoundedBoxGeometry } from './vendor/three/RoundedBoxGeometry.js';
 
 export function furnish(scene, narrow, repaint, software=false) {
@@ -227,6 +227,13 @@ export function furnish(scene, narrow, repaint, software=false) {
     box(g,thickness,height,.075,binding,0,height/2,.241,.018);
     for(const q of [-1,1])box(g,.018,height,.61,binding,q*(thickness-.018)/2,height/2,-.030);
     for(const f of [.12,.16,.88])box(g,thickness*.80,.011,.006,brass,0,height*f,.282);
+    drawn(g,thickness*.62,.075,(c,w,h)=>{
+      const motif=(title?.length??0)%4;
+      c.strokeStyle='#c3a478';c.fillStyle='#d5bb85';c.lineWidth=.004;
+      c.beginPath();c.moveTo(w*.21,h*.65);
+      c.lineTo(w*.48,h*(.18+.15*motif));c.lineTo(w*.79,h*.65);c.stroke();
+      c.beginPath();c.arc(w*.5,h*.63,.010+.002*motif,0,Math.PI*2);c.fill();
+    },0,height*.935,.285);
     if(title){const t=letter(g,title,height*.62,Math.min(.15,thickness*.68),0,height*.53,.284,{ink:'#fff0cd',bold:true});t.rotation.z=Math.PI/2;}
     return g;
   }
@@ -281,8 +288,8 @@ export function furnish(scene, narrow, repaint, software=false) {
     return shelf;
   }
   const proofX=narrow?-.60:-1.12, researchX=narrow?.80:1.58;
-  const proof=collection('proof',proofX,narrow?1.32:1.68,narrow?1.38:1.43,0x694357,'assets/furniture/conjectures-binding.webp?v=2');
-  const archive=collection('archive',researchX,narrow?.93:1.25,narrow?1.10:1.25,0x536760,'assets/furniture/research-binding.webp?v=2');
+  const proof=collection('proof',proofX,narrow?1.32:1.68,narrow?1.38:1.43,0x694357,'assets/furniture/conjectures-binding.webp?v=3');
+  const archive=collection('archive',researchX,narrow?.93:1.25,narrow?1.10:1.25,0x536760,'assets/furniture/research-binding.webp?v=3');
   const titles=['War','Graph theory','Proofs','Sequences'];
   const companions=narrow?2:4;
   for(let i=0;i<companions;i++){
@@ -966,16 +973,7 @@ export function furnish(scene, narrow, repaint, software=false) {
     beam.addColorStop(0,'#eab9cb99');beam.addColorStop(1,'#eab9cb00');c.fillStyle=beam;c.fillRect(0,0,w,h);
   },0,0,0);
   stageLights.visible=false;
-  const wall=detail('wall',world);
-  const wallMat=finish(0xb9b1a4);
-  for(let i=-7;i<8;i++){
-    box(wall,.027,6,.025,finish(0xa6a193),i*.88,1.67,-2.473);
-  }
-  box(wall,29,.11,.16,cream,0,3.82,-2.47,.018);
-  // The room extends beyond the camera; the shelf and desk never float on a blank page.
-  box(wall,32,11,.18,wallMat,0,1,-2.59);
-  box(world,32,.16,24,floorMat,0,-3.15,3);
-  decorateRoom(world,{narrow,half,group,box,bead,cylinder,wire,finish,photo,tag,drawn,trim});
+  decorateRoom(world,{narrow,half,group,box,bead,cylinder,wire,finish,photo,tag,drawn,wood,trim,floorMat});
   // Bake short-range occlusion onto the work surface once. No full-screen AO pass.
   const contact=document.createElement('canvas');contact.width=512;contact.height=256;
   const ctx=contact.getContext('2d');
@@ -1027,9 +1025,23 @@ export function furnish(scene, narrow, repaint, software=false) {
     };
   }
   // Combine rigid geometry between joints; hinges, drawer travel and picking remain independent.
-  const rigid=new Set([world,flap,cover,...details.values(),...Array.from(targets.values(),item=>item.root)]);
+  const roomProps=new Map(), previewGeometry=new Set();
+  const rigid=new Set([world,flap,cover,...details.values()]);
+  world.updateMatrixWorld(true);
+  for(const [id,item] of targets){
+    const {root}=item;
+    if(!root.userData.roomProp){rigid.add(root);continue;}
+    item.bounds=new T.Box3().setFromObject(root,true);
+    item.point.copy(root.worldToLocal(item.bounds.getCenter(new T.Vector3())));
+    const size=item.bounds.getSize(new T.Vector3());
+    item.w=Math.max(size.x,size.z)/root.scale.x;
+    item.h=size.y/root.scale.y;
+    item.preview=root.clone(true);
+    item.preview.traverse(mesh=>{if(mesh.isMesh)previewGeometry.add(mesh.geometry);});
+    roomProps.set(id,item);
+  }
   const batches=new Map(),source=new Set(),solidVariants=new Map(),fastMaterials=new Map();
-  const occluders=[];
+  const occluders=Array.from(roomProps.values(),item=>item.bounds);
   // One draw can paint several solid colors on the same rigid part.
   function batchMaterial(mat) {
     if(mat.map || mat.vertexColors || mat===bulbGlass || mat.transparent)return mat;
@@ -1041,11 +1053,10 @@ export function furnish(scene, narrow, repaint, software=false) {
     }
     return solidVariants.get(key);
   }
-  world.updateMatrixWorld(true);
   world.traverse(m=>{
     if(!m.isMesh)return;
     let parent=m.parent;while(!rigid.has(parent))parent=parent.parent;
-    if(parent===world){
+    if(parent===world && !m.parent.userData.roomProp){
       if(!m.geometry.boundingBox)m.geometry.computeBoundingBox();
       occluders.push(m.geometry.boundingBox.clone().applyMatrix4(m.matrixWorld));
     }
@@ -1090,7 +1101,7 @@ export function furnish(scene, narrow, repaint, software=false) {
     const done=mesh(parent,combined,surface);done.castShadow=cast;
     combined.computeBoundingBox();combined.computeBoundingSphere();
   }
-  source.forEach(g=>g.dispose());
+  source.forEach(g=>{if(!previewGeometry.has(g))g.dispose();});
   const flexCable=followProbe(cableWire.children[0],cableTip,probeRest);
-  return {world,targets,details,occluders,drawer,flap,cover,lamp,bulbGlass:fastMaterials.get(bulbGlass)||bulbGlass,contactMap,daylight,projectLampShadow,flexCable,titleLooseFile,pencilBounds:{book:book.position.x+(narrow?.24:.43),mat:matRight-.10},sketchTexture:sketchFace.material.map};
+  return {world,targets,roomProps,details,occluders,drawer,flap,cover,lamp,bulbGlass:fastMaterials.get(bulbGlass)||bulbGlass,contactMap,daylight,projectLampShadow,flexCable,titleLooseFile,pencilBounds:{book:book.position.x+(narrow?.24:.43),mat:matRight-.10},sketchTexture:sketchFace.material.map};
 }

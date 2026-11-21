@@ -1,7 +1,8 @@
+import { attachHeldArrows } from './desk-arrows.js?v=1';
+
 // Keep the browser cursor at its real hotspot. Only an orbit owns the pointer.
-export function attachDeskPointer(stage,{pick,track,orbitBy,endOrbit,part,gesture,tapPart,zoomBy}) {
+export function attachDeskPointer(stage,{pick,track,orbitBy,endOrbit,part,gesture,tapPart,zoomBy,targets=new Map([...stage.querySelectorAll('[data-object]')].map(el=>[el.dataset.object,el]))}) {
   const canvas=stage.querySelector('canvas');
-  const targets=new Map([...stage.querySelectorAll('[data-object]')].map(el=>[el.dataset.object,el]));
   let press=null, frame=0, x=0, y=0, suppress=false;
   const active=()=>stage.classList.contains('is-rendered') && !stage.closest('.desk-overview').inert;
   function targetAt(clientX,clientY){
@@ -60,17 +61,9 @@ export function attachDeskPointer(stage,{pick,track,orbitBy,endOrbit,part,gestur
     const unit=e.deltaMode===1?16:e.deltaMode===2?stage.clientHeight:1;
     zoomBy(e.deltaY*unit);
   },{passive:false});
-  const arrowDrag={ArrowLeft:[-.13,0],ArrowRight:[.13,0],ArrowUp:[0,-.09],ArrowDown:[0,.09]};
-  document.addEventListener('keydown',e=>{
-    const step=arrowDrag[e.key];
-    if(!step || e.defaultPrevented || e.ctrlKey || e.metaKey || e.altKey || e.shiftKey || press
-      || document.documentElement.dataset.view!=='desk' || !active()
-      || e.target.closest?.('input, select, textarea, [contenteditable]')
-      || document.querySelector('dialog[open]'))return;
-    e.preventDefault();
-    orbitBy(...step,e.timeStamp);
-    endOrbit(e.timeStamp);
-  });
+  const stopArrows=attachHeldArrows(document,()=>active() && !press &&
+    document.documentElement.dataset.view==='desk' && !document.querySelector('dialog[open]'),
+  (x,y,time)=>orbitBy(x*1.25,y*.87,time));
   stage.addEventListener('pointerup',e=>{
     if(press?.id!==e.pointerId)return;
     suppress=press.dragging || Boolean(press.part && tapPart(press.part));
@@ -98,6 +91,6 @@ export function attachDeskPointer(stage,{pick,track,orbitBy,endOrbit,part,gestur
     } else target.click();
   },true);
   window.addEventListener('blur',leave);
-  document.addEventListener('portfolio-view',leave);
+  document.addEventListener('portfolio-view',()=>{stopArrows();leave();});
   return leave;
 }

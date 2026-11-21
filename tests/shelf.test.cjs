@@ -51,7 +51,13 @@ test('desk controls preserve keyboard focus, browser zoom, and shelf arrow keys'
       <button data-object="lamp">Lamp</button>
     </div></div>`, { runScripts: 'outside-only' });
   const { document, MouseEvent, WheelEvent, KeyboardEvent } = dom.window;
-  const source = fs.readFileSync('site/desk-pointer.js', 'utf8').replace('export function', 'function');
+  let nextFrame;
+  dom.window.requestAnimationFrame = frame => { nextFrame=frame; return 1; };
+  dom.window.cancelAnimationFrame = () => { nextFrame=null; };
+  const arrows = fs.readFileSync('site/desk-arrows.js', 'utf8').replace('export function', 'function');
+  dom.window.eval(arrows);
+  const source = fs.readFileSync('site/desk-pointer.js', 'utf8')
+    .replace(/^import[^\n]*\n/,'').replace('export function', 'function');
   dom.window.eval(source);
   const stage = document.querySelector('.is-rendered');
   const canvas = stage.querySelector('canvas');
@@ -89,9 +95,14 @@ test('desk controls preserve keyboard focus, browser zoom, and shelf arrow keys'
   assert.equal(arrow('ArrowRight'), true);
   assert.equal(arrow('ArrowUp'), true);
   assert.ok(cameraMoves[0][0] > 0 && cameraMoves[1][1] < 0);
+  nextFrame(dom.window.performance.now()+18);
+  nextFrame(dom.window.performance.now()+36);
+  assert.equal(cameraMoves.length,4,'held arrows move between key repeat events');
+  for(const key of ['ArrowRight','ArrowUp'])dom.window.dispatchEvent(new KeyboardEvent('keyup',{key}));
+  assert.equal(nextFrame,null,'keyup stops the animation');
   document.documentElement.dataset.view = 'shelf';
   assert.equal(arrow('ArrowRight'), false);
-  assert.equal(cameraMoves.length, 2);
+  assert.equal(cameraMoves.length,4);
   dom.window.close();
 });
 test('catalogue matches accents, case, and whitespace; empty search can recover', () => {

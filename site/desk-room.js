@@ -1,14 +1,16 @@
 import * as T from './vendor/three/three.module.min.js';
+import { furnishRoomObjects } from './room-objects.js?v=1';
+import { buildRoomShell } from './room-shell.js?v=1';
 
 // Atlas order: name, source aspect ratio, wall x/y, physical width, rotation.
 const artwork = [
   ['fairy-metal', 1, -2.48, 2.65, 1.46, -.025],
   ['sirencore', 1, -.88, 2.73, 1.54, .013],
   ['fables', 1, .82, 2.72, 1.64, -.010],
-  ['luka', 16/9, -2.09, 1.19, 2.26, .017],
-  ['till', 16/9, .38, 1.17, 2.46, -.014],
-  ['ivan', 16/9, -2.08, -.18, 2.33, -.017],
-  ['korra', 2732/2048, .36, -.57, 2.43, .010],
+  ['luka', 1, -2.48, 1.07, 1.51, .017],
+  ['till', 1, -.88, 1.07, 1.53, -.014],
+  ['ivan', 1, .82, 1.06, 1.62, -.017],
+  ['korra', 2732/2048, -2.03, -.66, 2.44, .010],
   ['seven-havens', 2/3, 2.89, 1.72, 2.31, -.012],
   ['openai', 700/982, 2.4, 2.31, 1.47, .015],
   ['anthropic', 16/9, .21, 2.83, 2.62, -.014],
@@ -18,6 +20,7 @@ const artwork = [
   ['aubrey', 500/695, -2.37, -.60, 1.15, -.019],
   ['fermilab', 1479/688, .22, 1.38, 2.62, .013],
   ['tux', 300/356, 1.25, -.10, 1.00, -.036],
+  ['atla', 2732/2048, .46, -.67, 2.33, .016],
 ];
 const leafColors = [0x58724a, 0x3b6244, 0x446e4b, 0x638757, 0x81945e];
 const ivyLeaf = new T.BufferGeometry();
@@ -31,21 +34,20 @@ ivyLeaf.setAttribute('uv', new T.Float32BufferAttribute([
 ], 2));
 ivyLeaf.computeVertexNormals();
 
-export function decorateRoom(world, { narrow, half, group, box, bead, cylinder, wire, finish, photo, tag, drawn, trim }) {
-  const width = narrow ? 6.7 : 7.15;
-  const atlas = photo('/assets/furniture/room-atlas.webp?v=3');
+export function decorateRoom(world, { narrow, half, group, box, bead, cylinder, wire, finish, photo, tag, drawn, wood, trim, floorMat }) {
+  const walls=buildRoomShell(world,{group,box,bead,cylinder,finish,drawn,wood,trim,floorMat});
+  const atlas = photo('/assets/furniture/room-atlas.webp?v=4');
   const ink = new T.MeshStandardMaterial({ map: atlas, roughness: .93, alphaTest: .28 });
   const cutout = ink.clone();
   cutout.side = T.DoubleSide;
   const paper = new T.MeshStandardMaterial({ color: 0xe8dfce, roughness: .97, side: T.BackSide });
-  const plaster = finish(0xc5b5a3, .94);
   const stem = finish(0x506741);
   const foliage = leafColors.map(color => new T.MeshStandardMaterial({ color, roughness: .88, side: T.DoubleSide }));
 
   function poster(wall, index) {
     const [id, aspect, x, y, w, tilt] = artwork[index];
     const height = w / aspect;
-    const offset = index >= 8 ? -.48 : 0;
+    const offset = index >= 8 && index < 16 ? -.48 : 0;
     const frame = tag(group(wall, x + offset, y, .071), 'room-' + id, [0, 0, 0], w, height);
     frame.userData.roomPoster = true;
     frame.rotation.z = tilt;
@@ -56,7 +58,7 @@ export function decorateRoom(world, { narrow, half, group, box, bead, cylinder, 
     const pad = .02;
     for (let i = 0; i < uv.count; i++) {
       uv.setXY(i, (column + pad + uv.getX(i) * (1 - 2 * pad)) / 4,
-        (3 - row + pad + uv.getY(i) * (1 - 2 * pad)) / 4);
+        (4 - row + pad + uv.getY(i) * (1 - 2 * pad)) / 5);
     }
     const print = new T.Mesh(plane, id === 'tux' ? cutout : ink);
     print.receiveShadow = true;
@@ -109,12 +111,8 @@ export function decorateRoom(world, { narrow, half, group, box, bead, cylinder, 
     }
   }
 
-  for (const [side, offset] of [[-1, 0], [1, 8]]) {
-    const wall = group(world, side * width, 0, 2.28);
-    wall.rotation.y = -side * Math.PI / 2;
-    box(wall, 9.57, 8, .135, plaster, 0, .90, -.067);
-    box(wall, 9.55, .13, .096, trim, 0, -2.93, .033, .012);
-    box(wall, 9.55, .10, .09, finish(0xa38a71), 0, 3.72, .04, .010);
+  for (const [side, offset, wall] of [[-1,0,walls.music],[1,8,walls.science]]) {
+    box(wall,9.55,.10,.09,finish(0xa38a71),0,3.72,.04,.010);
     const glow = side < 0 ? '#f3bb8f' : '#d9b1d7';
     drawn(wall, 9.36, .71, (context, w, h) => {
       const fall = context.createLinearGradient(0, 0, 0, h);
@@ -128,6 +126,7 @@ export function decorateRoom(world, { narrow, half, group, box, bead, cylinder, 
     box(wall, 9.37, .033, .018, diffuser, 0, 3.682, .092, .006).castShadow = false;
 
     for (let i = 0; i < 8; i++) poster(wall, offset + i);
+    if(side<0)poster(wall,16);
     const shelfX = side < 0 ? -4.02 : 3.2;
     const shelfY = side < 0 ? -.62 : -.76;
     box(wall, 1.12, .092, .63, trim, shelfX, shelfY, .325, .021);
@@ -135,6 +134,8 @@ export function decorateRoom(world, { narrow, half, group, box, bead, cylinder, 
     vine(wall, 4.32, 3.72, .088, 2.87, 2 + side);
     vine(wall, -4.19, 3.71, .088, 1.82, .4 + side);
   }
+
+  furnishRoomObjects({walls,world,half,narrow,group,box,bead,cylinder,wire,finish,drawn,tag,wood,trim});
 
   // Smaller vines on the end of the hutch connect it to the rest of the room.
   for (const side of [-1, 1]) {

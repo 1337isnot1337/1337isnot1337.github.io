@@ -1,11 +1,11 @@
 import * as T from './vendor/three/three.module.min.js';
-import { furnish } from './desk-model.js?v=29';
-import { inspectDeskObjects } from './desk-inspect.js?v=14';
+import { furnish } from './desk-model.js?v=30';
+import { inspectDeskObjects } from './desk-inspect.js?v=15';
 
-import { attachDeskPointer } from './desk-pointer.js?v=17';
+import { attachDeskPointer } from './desk-pointer.js?v=18';
 
-import { deskLife } from './desk-life.js?v=12';
-import { deskView } from './desk-view.js?v=5';
+import { deskLife } from './desk-life.js?v=13';
+import { deskView } from './desk-view.js?v=6';
 import { drawerTravel } from './desk-drawer.js?v=1';
 
 export function mountFurniture(stage,showGraphicsFallback) {
@@ -74,10 +74,21 @@ export function mountFurniture(stage,showGraphicsFallback) {
     if(model){
       scene.remove(model.world);model.contactMap.dispose();
       const textures=new Set(),materials=new Set(),geometries=new Set();
-      model.world.traverse(m=>{if(m.isMesh){geometries.add(m.geometry);materials.add(m.material);for(const value of Object.values(m.material))if(value?.isTexture)textures.add(value);}});
+      const collect=m=>{if(m.isMesh){geometries.add(m.geometry);materials.add(m.material);for(const value of Object.values(m.material))if(value?.isTexture)textures.add(value);}};
+      model.world.traverse(collect);
+      for(const item of model.roomProps.values())item.preview.traverse(collect);
       textures.forEach(t=>t.dispose());materials.forEach(m=>m.dispose());geometries.forEach(g=>g.dispose());
     }
     model=furnish(scene,narrow,redraw,software);hitGroups.clear();extraMeshes.length=0;
+    const navigation=stage.querySelector('.desk-objects');
+    for(const [id,{root}] of model.roomProps){
+      if(links.has(id))continue;
+      const button=document.createElement('button');
+      button.type='button';button.dataset.object=id;button.dataset.roomProp='';
+      button.hidden=true;button.setAttribute('aria-label',root.userData.roomProp);
+      button.addEventListener('click',()=>inspector.open(id,root.userData.roomProp));
+      navigation.append(button);links.set(id,button);
+    }
     stage.closest('#studio').dispatchEvent(new Event('desk-sketch-request'));
     try{
       const destination=sessionStorage.getItem('desk-return');
@@ -128,7 +139,7 @@ export function mountFurniture(stage,showGraphicsFallback) {
       const x=(vector.x+1)*.5*viewWidth,y=(1-vector.y)*.5*viewHeight;
       const outside=depth<=camera.near||x<10||x>viewWidth-10||y<12||y>viewHeight-10
         || (root.userData.roomPoster === true && Math.abs(yaw)<.29);
-      if(root.userData.roomPoster)el.hidden=outside;
+      if(root.userData.roomPoster||root.userData.roomProp)el.hidden=outside;
       if(el.hasAttribute('data-outside')!==outside)el.toggleAttribute('data-outside',outside);
       if(outside)continue;
       const px=lens/depth;
@@ -238,6 +249,7 @@ export function mountFurniture(stage,showGraphicsFallback) {
   const shown=mesh=>{for(let n=mesh;n;n=n.parent)if(!n.visible)return false;return true;};
   const candidates=[],hits=[];
   const leaveDesk=attachDeskPointer(stage,{
+    targets:links,
     zoomBy(delta){view.wheel(delta);redraw();},
     track(x,y) {
       life.pointerMoved(x,y,performance.now());
@@ -258,10 +270,17 @@ export function mountFurniture(stage,showGraphicsFallback) {
       }
       for(const mesh of extraMeshes)if(shown(mesh))candidates.push(mesh);
       const [first]=ray.intersectObjects(candidates,false,hits);
-      if(!first)return '';
-      for(const box of model.occluders){
-        if(ray.ray.intersectBox(box,intersection) && ray.ray.origin.distanceTo(intersection)<first.distance-.012)return '';
+      let nearest=first?.distance??Infinity, prop='';
+      for(const [id,item] of model.roomProps){
+        if(links.get(id).hidden||!ray.ray.intersectBox(item.bounds,intersection))continue;
+        const distance=ray.ray.origin.distanceTo(intersection);
+        if(distance<nearest){nearest=distance;prop=id;}
       }
+      if(!Number.isFinite(nearest))return '';
+      for(const box of model.occluders){
+        if(ray.ray.intersectBox(box,intersection) && ray.ray.origin.distanceTo(intersection)<nearest-.012)return '';
+      }
+      if(prop)return prop;
       let owner=first.object;
       while(owner){
         lastPart ||= owner.userData.detail||'';
@@ -371,7 +390,10 @@ export function mountFurniture(stage,showGraphicsFallback) {
   function suspendDesk() {
     contextLost=true;leaveDesk();warning.textContent=unavailable;
     showGraphicsFallback();
-    links.forEach(el=>el.removeAttribute('data-outside'));
+    links.forEach(el=>{
+      el.removeAttribute('data-outside');
+      if(el.matches('[data-room-prop],[data-room-poster]'))el.hidden=true;
+    });
     inspector.close();lamp.hidden=true;links.get('plant').hidden=true;
   }
   canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();suspendDesk();});

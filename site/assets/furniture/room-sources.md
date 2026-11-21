@@ -5,9 +5,10 @@ The room atlas contains reproductions of publicly published art and photographs.
 - [Banshee, Fairy Metal](https://music.apple.com/us/album/fairy-metal-single/1621034850)
 - [Banshee, SIRENCORE](https://music.apple.com/us/album/sirencore/1731271714)
 - [Banshee, FABLES](https://music.apple.com/us/album/fables/1783404103)
-- [Alien Stage, Luka in wiege](https://www.youtube.com/watch?v=rrngM9DmDfk), VIVINOS and Studio LICO
-- [Alien Stage, Till](https://www.youtube.com/watch?v=BEEp4WBaD7w)
-- [Alien Stage, Ivan](https://www.youtube.com/watch?v=2cFnfD4iZzM)
+- [Alien Stage, Luka profile](https://www.youtube.com/post/UgkxWTHffv8lJDN-ngTHzlvc1byEz_7S6NaU), creator-published by VIVINOS and Studio LICO
+- [Alien Stage, Till profile](https://pbs.twimg.com/media/GZZ-nsRXcAAlk1L.jpg), VIVINOS and Studio LICO artwork, mirrored profile card
+- [Alien Stage, Ivan profile](https://i.pinimg.com/originals/04/15/ea/0415ea4d2afc9fd821d654a8227e7ef7.jpg), VIVINOS and Studio LICO artwork, mirrored profile card
+- [Avatar: The Last Airbender](https://paramountglobalcontent.com/title/avatar-the-last-airbender), Nickelodeon artwork from Paramount Global Content
 - [The Legend of Korra](https://paramountglobalcontent.com/title/legend-of-korra-the), Nickelodeon artwork from Paramount Global Content
 - [Avatar: Seven Havens](https://thedirect.com/article/avatar-seven-havens-villain-first-look), Nickelodeon and Paramount+ key art
 - [OpenAI brand gallery](https://openai.com/brand/)

@@ -33,8 +33,7 @@ export function deskView(){
 
     return {
       yaw, below:pitch, zoom:Math.exp(zoom), rear:Math.abs(yaw)>2.24?Math.sign(yaw):0,
-      move:yaw!==angle||pitch!==depth||zoom!==zoomTarget,
-      behindWall:Math.abs(yaw)>1.89
+      move:yaw!==angle||pitch!==depth||zoom!==zoomTarget
     };
   }
 

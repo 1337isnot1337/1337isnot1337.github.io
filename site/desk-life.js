@@ -419,7 +419,7 @@ export function deskLife(stage, getModel, redraw, reduced) {
       node.position.copy(original.position);node.quaternion.copy(original.quaternion);
     });
   }
-  function update(time,dt,drawerAmount,lampOn,inHand,{yaw,below,rear,behindWall},flap) {
+  function update(time,dt,drawerAmount,lampOn,inHand,{yaw,below,rear},flap) {
     const model=getModel(),motion=!reduced.matches;
     const drift=motion?Math.sin((time-started)/90000)*.32:0;
     if(wrote&&currentSketch&&model.sketchTexture.image!==currentSketch && !part('scratch').userData.drawn){
@@ -435,7 +435,6 @@ export function deskLife(stage, getModel, redraw, reduced) {
     part('drawer-stamp').visible=!stampBorrowed;
     object('keepsake').visible=!postcardHeld;
 
-    part('wall').visible=!behindWall;
     part('under-eye').visible=below>.44;
     part('pupil').position.x=clamp(Math.sin(yaw)*.072,-.047,.047);
     const limit=Math.sqrt(Math.max(0,.05**2-part('pupil').position.x**2));
