@@ -2,7 +2,7 @@ import * as T from './vendor/three/three.module.min.js';
 import { furnish } from './desk-model.js?v=31';
 import { inspectDeskObjects } from './desk-inspect.js?v=15';
 
-import { attachDeskPointer } from './desk-pointer.js?v=19';
+import { attachDeskPointer } from './desk-pointer.js?v=20';
 
 import { deskLife } from './desk-life.js?v=13';
 import { deskView } from './desk-view.js?v=7';
@@ -254,12 +254,11 @@ export function mountFurniture(stage,showGraphicsFallback) {
     targets:links,
     zoomBy(delta){view.wheel(delta);redraw();},
     stopLook(){view.look(0,0);},
-    track(x,y) {
+    track(x,y,overObject) {
       life.pointerMoved(x,y,performance.now());
-      if(view.look(x,y)){
+      if(view.look(overObject?0:x,overObject?0:y)){
         centerUntil=0;
         redraw();
-        x=0;y=0;
       }
       if(motion.matches){x=0;y=0;}
       if(software){

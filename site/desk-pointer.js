@@ -26,10 +26,13 @@ export function attachDeskPointer(stage,{pick,track,stopLook=()=>{},orbitBy,endO
     x=e.clientX;y=e.clientY;
     if(!frame)frame=requestAnimationFrame(()=>{
       frame=0;
-      if(follow && active() && !press && !document.querySelector('dialog[open]')){
-        const r=stage.getBoundingClientRect();track((x-r.left)/r.width*2-1,(y-r.top)/r.height*2-1);
+      const enabled=active();
+      const target=enabled && targetAt(x,y);
+      if(follow && enabled && !press && !document.querySelector('dialog[open]')){
+        const r=stage.getBoundingClientRect();
+        track((x-r.left)/r.width*2-1,(y-r.top)/r.height*2-1,Boolean(target));
       }
-      stage.dataset.aim=active() && targetAt(x,y) ? 'object':'desk';
+      stage.dataset.aim=target ? 'object':'desk';
     });
   }
   stage.addEventListener('pointerdown',e=>{
