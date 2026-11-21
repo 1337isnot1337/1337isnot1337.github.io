@@ -7,11 +7,13 @@ const frontLimit=.33;
 const frontTravel=frontLimit/frontGain;
 const rearAngle=Math.PI;
 const rearGain=rearAngle-frontLimit-(orbitTravel-frontTravel)*sideGain;
+const horizontalSteeringStart=.84;
+const verticalSteeringStart=.68;
 const clamp=(value,min,max)=>Math.min(max,Math.max(min,value));
 const wrap=(value,limit)=>value>limit?value-2*limit:value< -limit?value+2*limit:value;
 const edgeSpeed=(value,threshold)=>{
   const edge=clamp((Math.abs(value)-threshold)/(1-threshold),0,1);
-  return Math.sign(value)*edge*(.48+.52*edge);
+  return Math.sign(value)*edge*(.25+.75*edge);
 };
 
 export function deskView(){
@@ -25,7 +27,8 @@ export function deskView(){
 
   function look(x,y){
     const wasLooking=Boolean(lookX||lookY);
-    lookX=edgeSpeed(x,.92);lookY=edgeSpeed(y,.84);
+    lookX=edgeSpeed(x,horizontalSteeringStart);
+    lookY=edgeSpeed(y,verticalSteeringStart);
     const looking=Boolean(lookX||lookY);
     if(!looking)lookDelay=0;
     else if(!wasLooking)lookDelay=.16;

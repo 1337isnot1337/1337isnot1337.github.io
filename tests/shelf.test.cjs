@@ -48,7 +48,7 @@ test('mouse steering takes the long way around and stops in the middle of the st
   const { window } = new JSDOM('', { runScripts: 'outside-only' });
   window.eval(fs.readFileSync('site/desk-view.js', 'utf8').replace('export function','function'));
   const camera = window.deskView();
-  assert.equal(camera.look(.91,-.83), false);
+  assert.equal(camera.look(.839,-.679), false);
   assert.equal(camera.step(1/60,true).yaw, 0);
   camera.look(-1,0);
   assert.equal(camera.step(1/60,true).yaw,0,'a passing pointer can still click near the edge');
@@ -67,6 +67,28 @@ test('mouse steering takes the long way around and stops in the middle of the st
   camera.look(0,-1);
   for(let frame=0;frame<90;frame++)camera.step(1/60,true);
   assert.equal(camera.step(1/60,true).below,-.68);
+  window.close();
+});
+test('steering begins in the wider edge zones and speeds up toward each edge', () => {
+  const { window } = new JSDOM('', { runScripts: 'outside-only' });
+  window.eval(fs.readFileSync('site/desk-view.js', 'utf8').replace('export function','function'));
+  function movement(x,y){
+    const camera=window.deskView();
+    assert.equal(camera.look(x,y),true);
+    let pose;
+    for(let frame=0;frame<24;frame++)pose=camera.step(1/60,true);
+    return pose;
+  }
+  const nearSide=movement(.85,0).yaw;
+  const middleSide=movement(.92,0).yaw;
+  const edgeSide=movement(1,0).yaw;
+  assert.ok(nearSide<0 && nearSide>middleSide && middleSide>edgeSide);
+  assert.ok(Math.abs(middleSide)<Math.abs(edgeSide)/2);
+  const nearTop=movement(0,-.70).below;
+  const middleTop=movement(0,-.84).below;
+  const edgeTop=movement(0,-1).below;
+  assert.ok(nearTop<0 && nearTop>middleTop && middleTop>edgeTop);
+  assert.ok(Math.abs(middleTop)<Math.abs(edgeTop)/2);
   window.close();
 });
 test('desk controls preserve keyboard focus, browser zoom, and shelf arrow keys', () => {
