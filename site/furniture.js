@@ -314,7 +314,7 @@ export function mountFurniture(stage,showGraphicsFallback) {
       if(!gesture)return false;
       gesture(dx,dy,time);detailMoved=true;redraw();return true;
     },
-    orbitBy(delta,vertical) {
+    orbitBy(delta,vertical,time) {
       centerUntil=0;
       view.drag(-delta*1.15,vertical);
       if(Math.abs(delta)+Math.abs(vertical)>.035)life.startleMoth(time);
