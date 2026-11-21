@@ -98,7 +98,11 @@ export function attachDeskPointer(stage,{pick,track,stopLook=()=>{},orbitBy,endO
   },true);
   window.addEventListener('blur',leave);
   document.addEventListener('visibilitychange',()=>{if(document.hidden)leave();});
-  document.addEventListener('keydown',e=>{if(e.key==='Tab')stopLook();});
+  document.addEventListener('pointerdown',()=>{stage.dataset.pointerInput='';},true);
+  document.addEventListener('keydown',e=>{
+    if(!e.altKey && !e.ctrlKey && !e.metaKey)delete stage.dataset.pointerInput;
+    if(e.key==='Tab')stopLook();
+  });
   document.addEventListener('portfolio-view',()=>{stopArrows();leave();});
   return leave;
 }

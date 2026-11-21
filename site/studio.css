@@ -49,7 +49,18 @@ html[data-view] .is-loading > .desk-load-status {
 .is-rendered .desk-objects span {
   position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap;
 }
-.is-rendered .desk-objects :focus-visible { outline:2px dashed #fff3cb; outline-offset:4px; border-radius:5px; box-shadow:0 0 0 4px #44302dad; }
+.is-rendered .desk-objects [data-object]:focus { outline:none; }
+.is-rendered:not([data-pointer-input]) .desk-objects [data-object]:focus-visible:not([aria-label]) > span,
+.is-rendered:not([data-pointer-input]) .desk-objects [data-object][aria-label]:focus-visible::after {
+  position:absolute;
+  left:calc(50% + clamp(7rem, var(--screen-x), 100vw - 7rem) - var(--screen-x));
+  bottom:calc(50% + var(--screen-y) - max(2.5rem, var(--screen-y) - var(--hit-height,44px)/2 - 6px));
+  transform:translateX(-50%);
+  width:max-content; max-width:13rem; height:auto; clip-path:none;
+  padding:4px 8px; border-radius:4px; background:#30261e; color:#fff7e8;
+  font:600 .8125rem/1.25 var(--headline); text-align:center; overflow-wrap:anywhere; pointer-events:none;
+}
+.is-rendered:not([data-pointer-input]) .desk-objects [data-object][aria-label]:focus-visible::after { content:attr(aria-label); }
 .graphics-warning {
   position:absolute; z-index:2; color:#fff7e8; background:#30261eec; left:50%; top:12%;
   transform:translateX(-50%); width:max-content; max-width:90%; margin:0;
