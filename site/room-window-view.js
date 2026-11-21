@@ -4,6 +4,18 @@ export function buildWindowView(outdoors, {photo,cylinder,finish}) {
   // Every ray through the window meets this rear arc, even from the side of the desk.
   const landscape=new T.MeshBasicMaterial({color:0xb8c4c5,side:T.BackSide,toneMapped:false});
   const valley=photo('/assets/furniture/window-valley.webp',()=>{
+    // Give the distant scenery a fine pixel grid while keeping the room's geometry crisp.
+    const pixels=document.createElement('canvas');
+    pixels.width=576;
+    pixels.height=Math.round(pixels.width*valley.image.height/valley.image.width);
+    const ctx=pixels.getContext('2d');
+    ctx.imageSmoothingQuality='high';
+    ctx.drawImage(valley.image,0,0,pixels.width,pixels.height);
+    valley.image=pixels;
+    valley.magFilter=T.NearestFilter;
+    valley.minFilter=T.NearestMipmapLinearFilter;
+    valley.anisotropy=1;
+    valley.needsUpdate=true;
     landscape.map=valley;
     landscape.color.set(0xffffff);
     landscape.needsUpdate=true;

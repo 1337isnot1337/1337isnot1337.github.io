@@ -1,5 +1,5 @@
 import * as T from './vendor/three/three.module.min.js';
-import { furnish } from './desk-model.js?v=33';
+import { furnish } from './desk-model.js?v=34';
 import { inspectDeskObjects } from './desk-inspect.js?v=15';
 
 import { attachDeskPointer } from './desk-pointer.js?v=22';

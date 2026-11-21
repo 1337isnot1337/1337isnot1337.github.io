@@ -5,7 +5,7 @@ import { lampProjection } from './desk-lamp.js?v=1';
 import { paintScope, followProbe } from './desk-scope.js?v=1';
 import { airframeGeometry, wingUnderside } from './model-plane.js?v=2';
 import { mergeGeometries } from './vendor/three/BufferGeometryUtils.js';
-import { decorateRoom } from './desk-room.js?v=7';
+import { decorateRoom } from './desk-room.js?v=8';
 import { RoundedBoxGeometry } from './vendor/three/RoundedBoxGeometry.js';
 
 export function furnish(scene, narrow, repaint, software=false) {
