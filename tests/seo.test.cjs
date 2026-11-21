@@ -71,6 +71,32 @@ test('structured data matches actual document types and claims', () => {
   assert.equal(app.offers.price, '0');
 });
 
+test('homepage and profile identify the same person and provide a descriptive name', () => {
+  const home = documentFor('/');
+  const about = documentFor('/about/');
+  assert.match(home.querySelector('h1')?.textContent || '', /Cinna Davis/);
+  assert.match(home.querySelector('meta[name="description"]')?.content || '', /Cinna Davis/);
+  assert.match(home.querySelector('#about')?.textContent || '', /Cinna Davis/);
+  assert.match(about.querySelector('h1')?.textContent || '', /Cinna Davis/);
+  for (const doc of [home, about]) {
+    const person = schemaFor(doc).find(node => node['@type'] === 'Person');
+    assert.equal(person?.['@id'], origin + '/#person');
+    assert.equal(person.name, 'Cinna Davis');
+    assert.equal(person.mainEntityOfPage?.['@id'], origin + '/about/#page');
+    assert.equal(person.affiliation?.name, 'Illinois Mathematics and Science Academy');
+    for (const url of ['https://github.com/1337isnot1337', 'https://www.linkedin.com/in/cinna-davis/', 'https://x.com/1337isnot1337'])
+      assert.ok(person.sameAs.includes(url), 'missing social identity: ' + url);
+  }
+  assert.equal(home.querySelector('meta[property="og:site_name"]')?.content, 'Cinna Davis');
+  assert.equal(about.querySelector('meta[property="og:site_name"]')?.content, 'Cinna Davis');
+});
+
+test('crawler rules reference the canonical sitemap', () => {
+  const robots = fs.readFileSync(path.join(root, 'robots.txt'), 'utf8');
+  assert.match(robots, /^User-agent: \*\nAllow: \/\n/m);
+  assert.ok(robots.includes('Sitemap: ' + origin + '/sitemap.xml'));
+});
+
 test('site sitemap lists precisely the independently maintained canonical pages', () => {
   const text = fs.readFileSync(path.join(root, 'site-pages.xml'), 'utf8');
   const doc = new JSDOM(text, { contentType: 'application/xml' }).window.document;
