@@ -1,5 +1,5 @@
 import * as T from './vendor/three/three.module.min.js';
-import { shelfGems } from './shelf-gems.js?v=1';
+import { shelfGems } from './shelf-gems.js?v=2';
 
 const actions={shutter:'release the shutter',slide:'move the caliper jaw',play:'start or stop the tape',
   'compass-face':'tap the compass'};

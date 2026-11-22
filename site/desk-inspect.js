@@ -1,6 +1,6 @@
 import * as T from './vendor/three/three.module.min.js';
 import { attachHeldArrows } from './desk-arrows.js?v=1';
-import { shelfInspection } from './shelf-inspection.js?v=2';
+import { shelfInspection } from './shelf-inspection.js?v=3';
 
 // One renderer serves the room and the object in hand. Capture the room once per pickup.
 export function inspectDeskObjects(stage,engine,room,deskCamera,getModel,redraw,life,motion){
@@ -240,7 +240,9 @@ export function inspectDeskObjects(stage,engine,room,deskCamera,getModel,redraw,
       aspect=ratio;source=item;releasePrint();stand.clear();
       const copy=item.clone(true);
       copy.position.set(0,0,0);copy.quaternion.identity();copy.scale.setScalar(1);
-      const box=new T.Box3().setFromObject(copy,true),center=box.getCenter(new T.Vector3());
+      const box=new T.Box3().setFromObject(copy,true);
+      box.max.y+=copy.userData.inspectionHeadroom||0;
+      const center=box.getCenter(new T.Vector3());
       radius=box.getBoundingSphere(new T.Sphere()).radius;copy.position.sub(center);stand.add(copy);
       working=shelfInspection(copy);
       if(working)surface.setAttribute('aria-label',turnLabel+' Press Enter to '+working.label+'.');

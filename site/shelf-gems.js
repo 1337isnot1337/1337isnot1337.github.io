@@ -123,7 +123,6 @@ const mechanisms={
   crate:['crate-lid','open the lid',{axis:'x',distance:-1.78,drag:true}],
   tube:['tube-cap','draw out the rolled print',{axis:'x',property:'position',distance:-.18,drag:true}],
   brush:['brush-bristles','flex the bristles',{axis:'x',distance:.55,pulse:true,drag:true}],
-  glider:['glider-elevator','deflect the elevator',{distance:.56,drag:true}],
   cat:['cat-tail','pet the tiny cat',{axis:'y',distance:.44,pulse:true,
     onToggle:()=>{tone(466,{duration:.13,volume:.032,shape:'triangle'});tone(370,{at:.09,duration:.23,volume:.03});}}],
   bird:['bird-beak','hear a chirp',{distance:-.36,pulse:true,
@@ -253,6 +252,8 @@ export function shelfGems(copy,parts) {
   const hands=clockHands(copy);
   if(hands)return clock(hands);
   const kind=copy.userData.shelfKind;
+  if(kind==='starship')return movingControl(parts,'starship-upper','separate Starship from Super Heavy',
+    {axis:'y',property:'position',distance:copy.userData.inspectionHeadroom,drag:true});
   if(kind==='keys')return piano(parts);
   if(kind==='record')return rotation(parts,'record-disc','spin the record',[['record-disc','z',-3.49]],()=>{
     for(const [i,note] of [392,440,523.25,493.88,392].entries())tone(note,{at:i*.22,duration:.32,volume:.058});

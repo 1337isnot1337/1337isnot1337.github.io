@@ -1,5 +1,5 @@
 import * as T from './vendor/three/three.module.min.js';
-import { paintRoomPrint } from './room-print.js?v=1';
+import { paintRoomPrint } from './room-print.js?v=2';
 
 // Independent props grouped by where they live. Dimensions are relative to the desk.
 const collections = {
@@ -52,15 +52,15 @@ const collections = {
     ['coat-pin','Enamel leaf pin','botanical',0x8a8e61], ['entry-bird','Little clay crow','bird',0x5a6373],
   ],
   desk: [
-    ['brass-airplane','Brass glider ornament','glider',0xba9258], ['inch-gauge','Folding rule','caliper',0xbba77a],
+    ['cellar-torch','Pocket lantern','lantern',0x597864], ['inch-gauge','Folding rule','caliper',0xbba77a],
     ['ink-colors','Ink swatches','swatch',0x79586f], ['deskside-flask','Ink bottle','flask',0x526476],
     ['clay-cat','Tiny clay cat','cat',0xc99571], ['green-matchbox','Matchbox','packet',0x72816a],
     ['desk-film','35 mm film roll','spool',0x738190], ['thread-card','Thread sample','packet',0x9a705b],
-    ['deskside-tray','Loose change tray','bowl',0x9c6c77], ['cellar-torch','Pocket lantern','lantern',0x597864],
+    ['deskside-tray','Loose change tray','bowl',0x9c6c77], ['starship-model','Starship stack model','starship',0xaab2b6],
     ['index-left','Margin graph','chart',0x765e84], ['scribbled-run','Notebook margin','ticket',0x728077],
     ['bench-fern','Fern bookmark','botanical',0x6b864e], ['after-hours','After-hours slip','envelope',0xb68179],
     ['proof-rosette','Folded paper star','star',0xb1816a], ['astronomy-frame','Orion sketch','frame',0x796582],
-    ['paper-flight','Flight log clipping','frame',0x779491], ['workshop-tag','Shelf inspection ticket','ticket',0xb8a078],
+    ['starlink-sketch','Starlink orbit sketch','frame',0x49616d], ['workshop-tag','Shelf inspection ticket','ticket',0xb8a078],
     ['pin-wheel','Miniature pinwheel','star',0x879ba3], ['tool-box','Parts case','crate',0x795e6c],
   ],
 };
@@ -75,7 +75,7 @@ export function furnishRoomObjects({walls, world, half, narrow, group, box, bead
   const covers = new Map();
   const finishes = {
     bowl:[.27,.02], flask:[.26,.05], bird:[.31,.01], loupe:[.33,.62],
-    caliper:[.40,.57], key:[.38,.64], glider:[.36,.52], prism:[.24,.10],
+    caliper:[.40,.57], key:[.38,.64], starship:[.35,.63], prism:[.24,.10],
     reel:[.37,.35], camera:[.49,.22], cat:[.77,0],
     packet:[.89,0], ticket:[.91,0], frame:[.68,.04]
   };
@@ -630,13 +630,35 @@ export function furnishRoomObjects({walls, world, half, narrow, group, box, bead
       }
       cylinder(p,.023,.039,.080,shadow,0,.044,0,12);
     },
-    glider(p,m){
-      bead(p,0,.146,0,.247,.041,.044,gilt);
-      box(p,.138,.024,.346,m,-.018,.143,0,.02);
-      const elevator=moving(p,'glider-elevator',-.153,.150,0,true);
-      box(elevator,.070,.021,.150,m,-.021,0,0,.012);
-      box(p,.064,.081,.021,m,-.18,.188,0,.005);
-      cylinder(p,.023,.044,.126,shadow,0,.070,0,12);
+    starship(p,m){
+      p.userData.inspectionHeadroom=.16;
+      const steel=finish(0x7f898e,.42,.48), tiles=finish(0x414750,.77,.11);
+      box(p,.247,.04,.207,trim,0,.024,0,.014);
+      cylinder(p,.037,.047,.024,shadow,0,.055,0,20);
+      cylinder(p,.038,.038,.258,m,0,.192,0,24);
+      for(const y of [.078,.115,.157,.199,.239,.292])cylinder(p,.0386,.0386,.002,steel,0,y,0,24);
+      cylinder(p,.037,.038,.028,steel,0,.333,0,24);
+      cylinder(p,.022,.037,.014,tiles,0,.348,0,20);
+      for(let i=0;i<4;i++){
+        const fin=group(p,0,.307,0);
+        fin.rotation.y=i*Math.PI/2+Math.PI/4;
+        box(fin,.034,.006,.025,steel,0,0,.047,.002);
+        for(const x of [-.010,0,.010])box(fin,.002,.007,.023,tiles,x,.001,.047);
+      }
+      const ship=moving(p,'starship-upper',0,.353,0,true);
+      const profile=[[.038,0],[.038,.120],[.037,.139],[.033,.159],[.023,.182],[.011,.199],[.001,.209]];
+      const section=pairs=>pairs.map(([r,y])=>new T.Vector2(r,y));
+      const hull=new T.Mesh(new T.LatheGeometry(section(profile),32),m);
+      const heatShield=new T.Mesh(new T.LatheGeometry(section(profile.map(([r,y])=>[r+.0008,y])),16,-Math.PI/2,Math.PI),tiles);
+      heatShield.rotation.y=-Math.PI*.31;
+      hull.castShadow=true;hull.receiveShadow=true;ship.add(hull,heatShield);
+      for(const side of [-1,1]){
+        const aft=box(ship,.033,.069,.009,tiles,side*.048,.040,.008,.003);
+        aft.rotation.z=side*.28;
+        const forward=box(ship,.018,.031,.007,steel,side*.035,.143,.006,.002);
+        forward.rotation.z=side*.54;
+      }
+      for(const x of [-.010,.010])cylinder(ship,.007,.008,.016,tiles,x,-.004,0,12);
     },
     cat(p,m){
       const muzzle=finish(0xe1bb91,.62), nose=finish(0x9d645f,.49);
@@ -765,7 +787,7 @@ export function furnishRoomObjects({walls, world, half, narrow, group, box, bead
   piece(world,desk[4],.18+(random()-.5)*.13,1.52,-1.42,narrow?.49:.80,(random()-.5)*.14,true);
   piece(world,desk[3],narrow?1.71:2.66,.020,-1.61,.86,.045);
   piece(world,desk[8],narrow?1.94:2.91,.041,.82,.79,.037);
-  piece(world,desk[9],narrow?2.12:3.13,.023,-1.69,.87,-.038);
+  piece(world,desk[9],narrow?2.12:3.13,.023,-1.69,.87,-.27,true);
   for(const [side, items] of [[-1,desk.slice(0,3)],[1,desk.slice(5,8)]]){
     const x=side*(half+.85);
     box(world,1.19,.105,1.72,wood,x,-1.48,-.92,.026);

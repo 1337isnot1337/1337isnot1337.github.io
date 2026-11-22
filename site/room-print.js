@@ -108,7 +108,21 @@ function diagram(c,w,h,name,ink) {
     stars.forEach((star,i)=>{c.beginPath();c.arc(...point(star),i%3===0?5:3.4,0,Math.PI*2);c.fillStyle='#f4e2b1';c.fill();});
     return;
   }
-  if(/atlas|Rail|timetable|Flight|Beamline/.test(name)){
+  if(name==='Starlink orbit sketch'){
+    c.fillStyle='#263949';c.fillRect(36,h*.15,w-72,h*.52);
+    const radius=height*.50;
+    c.fillStyle='#628f9c';c.beginPath();c.arc(x,y,radius,0,Math.PI*2);c.fill();
+    for(const turn of [-.91,-.22,.66]){
+      c.beginPath();c.ellipse(x,y,radius*1.75,radius*.55,turn,0,Math.PI*2);
+      c.strokeStyle='#dfc18b';c.lineWidth=2;c.stroke();
+    }
+    c.save();c.translate(x+radius*1.09,y-radius*.86);c.rotate(-.46);
+    c.fillStyle='#f7e4a9';c.fillRect(-5,-5,10,10);
+    for(const span of [-29,8])for(let i=0;i<3;i++)c.fillRect(span+i*7,-3,6,6);
+    c.restore();
+    return;
+  }
+  if(/atlas|Rail|timetable|Beamline/.test(name)){
     const routes=[
       [[.13,.6],[.25,.6],[.31,.27],[.49,.27],[.64,.49],[.85,.49]],
       [[.16,-.45],[.32,-.45],[.49,.27],[.69,-.46],[.84,-.46]],

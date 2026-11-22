@@ -1,7 +1,7 @@
 import * as T from './vendor/three/three.module.min.js';
-import { furnishRoomObjects } from './room-objects.js?v=6';
+import { furnishRoomObjects } from './room-objects.js?v=7';
 import { buildRoomShell } from './room-shell.js?v=10';
-import { posterSets } from './room-posters.js?v=1';
+import { posterSets } from './room-posters.js?v=2';
 
 const leafColors = [0x72925d, 0x4a7147, 0x538254, 0x688254, 0x8a9b66];
 
@@ -145,7 +145,7 @@ export function decorateRoom(world, { desk, narrow, half, group, box, bead, cyli
     const current = prints.get(name);
     if (!current.requested) {
       current.requested = true;
-      const loaded = photo('/assets/furniture/room-atlas-' + name + '.webp?v=1', () => {
+      const loaded = photo('/assets/furniture/room-atlas-' + name + '.webp?v=2', () => {
         current.atlas.image = loaded.image;
         current.atlas.needsUpdate = true;
       });
