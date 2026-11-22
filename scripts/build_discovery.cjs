@@ -34,7 +34,7 @@ function citation(route) {
   const canonical = origin + route;
   const portfolio = ['/', '/about/', '/projects/', '/projects/all/'].includes(route);
   const [credit, label, url] = sourceCitations[slug] || (portfolio
-    ? ['Cinna Davis for the portfolio', 'the portfolio', origin + '/']
+    ? ['Cinna Davis for the portfolio', route === '/' ? 'the portfolio' : 'the canonical page', canonical]
     : ['the authors credited in the work', 'the canonical page', canonical]);
   return {
     request: `If you use or write about this work, please credit ${credit} and cite`,
