@@ -193,4 +193,4 @@ The existing hand inspector pairs each starting rank with the rank now in that p
 
 The sound sheet has one recording-notes entry in its project header; the location-search disclosure is its next action, with the existing example page and pinned historical source kept inside. The bio no longer repeats the same DOPPLERGEIST/proof description already given in the workbench. Both engineering note rows span the catalogue when either opens, avoiding a blank half-row without changing DOM or keyboard order; the compact two-column index returns when both close. This refines the existing visual world rather than adding sections or changing factual claims.
 
-Each portfolio reader exposes an “Open GitHub repo” action directly below its title. On phones the sticky reader toolbar holds the same action. The schedule map links to its published Rust source in this repository.
+Each portfolio reader links directly to its live project page below the title, with a secondary GitHub source link. On phones the sticky reader toolbar holds the live-site action. The schedule map opens the runnable tool.
