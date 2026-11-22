@@ -71,9 +71,9 @@
     <script defer src="/rook-graph.js?v=3"></script>
     <script>document.documentElement.dataset.view = /^\/boring(?:\/|$)/.test(location.pathname) || /^(#projects|#flyover|#cpu|#schedule|#conjectures|#factoring|#conway)$/.test(location.hash) ? "shelf" : "desk";</script>
     <link rel="stylesheet" href="/studio.css?v=20" />
-    <script defer src="/studio.js?v=55" onerror="if (!location.pathname.startsWith('/boring')) delete document.documentElement.dataset.view"></script>
+    <script defer src="/studio.js?v=56" onerror="if (!location.pathname.startsWith('/boring')) delete document.documentElement.dataset.view"></script>
     <script defer src="/paper-turn.js?v=5"></script>
-    <script defer src="/desk-keepsakes.js?v=10"></script>
+    <script defer src="/desk-keepsakes.js?v=11"></script>
     <script defer src="/paper-dismiss.js?v=2"></script>
     <script defer src="/desk-paper-extras.js?v=12"></script>
     <script defer src="/project-paper.js?v=2"></script>
@@ -618,17 +618,9 @@
     <p>I’m Cinna Davis, a senior at the Illinois Mathematics and Science Academy. Some of my work lives in proofs and code. Some of it has to run a robot. <a href="/about/">Read more about me</a>.</p>
   </header>
   <nav class="notebook-tabs" aria-label="Notebook pages" hidden>
-    <a href="#about">Robot code</a><a href="#about-physics">Physics</a><a href="#about-teaching">Teaching</a><a href="#off-the-clock">Off the clock</a>
+    <a href="#about-physics">Physics</a><a href="#about-robotics">Robot code</a><a href="#about-teaching">Teaching</a><a href="#off-the-clock">Off the clock</a>
   </nav>
   <div class="notebook-spread">
-    <article data-leaf="about" class="notebook-page notebook-robotics" aria-labelledby="robotics-story-title">
-      <div class="leaf-art"><img src="/assets/studio/reefscape.webp" width="1440" height="1440" loading="lazy" alt="Team 2022’s 2025 REEFSCAPE robot carrying a white coral pipe above its blue bumpers." /></div>
-      <div class="leaf-writing">
-      <h3 id="robotics-story-title">Code that has to<br> move something.</h3>
-      <p>I lead programming for Titan Robotics, FIRST Team 2022. Our team of ten writes the robot’s Java code. I teach rookies, review code, and dig through match logs when the robot does something we didn’t ask it to.</p>
-      <p class="notebook-season"><a href="https://titanrobotics2022.com/robot/current-season/">Meet Timmy, our 2026 robot ↗</a></p>
-      </div>
-    </article>
     <article id="about-physics" data-leaf="about-physics" class="notebook-page notebook-physics" aria-labelledby="physics-story-title">
       <div class="leaf-art"><img src="/assets/studio/tracks.webp" width="500" height="500" loading="lazy" alt="Particle tracks radiating across a dark field." /></div>
       <div class="leaf-writing">
@@ -642,6 +634,14 @@
         <p class="abstract-venue">IMSAloquium · <time datetime="2026-04-15">April 15, 2026</time></p>
         <a href="https://digitalcommons.imsa.edu/sir_presentations/2026/session2/5/">Read the abstract</a>
       </figure>
+      </div>
+    </article>
+    <article id="about-robotics" data-leaf="about-robotics" class="notebook-page notebook-robotics" aria-labelledby="robotics-story-title">
+      <div class="leaf-art"><img src="/assets/studio/reefscape.webp" width="1440" height="1440" loading="lazy" alt="Team 2022’s 2025 REEFSCAPE robot carrying a white coral pipe above its blue bumpers." /></div>
+      <div class="leaf-writing">
+      <h3 id="robotics-story-title">Code that has to<br> move something.</h3>
+      <p>I lead programming for Titan Robotics, FIRST Team 2022. Our team of ten writes the robot’s Java code. I teach rookies, review code, and dig through match logs when the robot does something we didn’t ask it to.</p>
+      <p class="notebook-season"><a href="https://titanrobotics2022.com/robot/current-season/">Meet Timmy, our 2026 robot ↗</a></p>
       </div>
     </article>
     <div id="about-teaching" data-leaf="about-teaching" class="notebook-page notebook-teaching">
@@ -669,7 +669,7 @@
   <nav class="leaf-pager" aria-label="Turn notebook pages" hidden>
     <a href="#off-the-clock" id="leaf-prev" aria-label="Previous notebook page">←</a>
     <span id="leaf-count"></span>
-    <a href="#about-physics" id="leaf-next" aria-label="Next notebook page">→</a>
+    <a href="#about-robotics" id="leaf-next" aria-label="Next notebook page">→</a>
   </nav>
 </section>
 

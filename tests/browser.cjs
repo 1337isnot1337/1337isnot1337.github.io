@@ -355,13 +355,15 @@ const server = http.createServer((req,res) => {
    await page.locator('#clear-projects').click();
    assert.equal(await page.locator('#find-project').inputValue(),'');
    await page.locator('.desk-rail [href="#about"]').click();
-   assert.ok(await page.locator('.notebook-robotics .notebook-season a').isVisible());
+   assert.ok(await page.locator('#about-physics').isVisible());
+   assert.equal(await page.locator('.notebook-tabs [aria-current="page"]').getAttribute('href'),'#about-physics');
+   assert.equal(await page.locator('#leaf-count').textContent(),'1 / 4');
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),`${name}: notebook fits page`);
    assert.equal(await page.locator('#about .favorites a').count(),4);
    await page.locator('#about').screenshot({path:`test-results/${name}-notebook.png`});
    await page.locator('#leaf-next').click();
-   assert.ok(await page.locator('#about-physics').isVisible());
-   assert.ok(page.url().endsWith('#about-physics'));
+   assert.ok(await page.locator('#about-robotics .notebook-season a').isVisible());
+   assert.ok(page.url().endsWith('#about-robotics'));
    await page.locator('.back-to-desk').click();
    if(await page.locator('html').getAttribute('data-view')==='shelf')await page.locator('.mode-switch').click();
    await page.locator('.object-letters').click();
@@ -735,7 +737,7 @@ const server = http.createServer((req,res) => {
   }
   await shelfMouse.locator('[data-object="robot-photo"]').click();
   await pickup.locator('.photo-link').click();
-  await shelfMouse.locator('#about:visible').waitFor();
+  await shelfMouse.locator('#about-robotics:visible').waitFor();
   assert.equal(await shelfMouse.locator('.desk-overview').evaluate(el=>el.inert),true);
   await shelfMouse.locator('.back-to-desk').click();
   assert.equal(await shelfMouse.evaluate(()=>document.activeElement.dataset.object),'robot-photo');

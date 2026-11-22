@@ -73,7 +73,7 @@
   }
 
   const stops = new Map([
-    ["desk", "The workbench"], ["catalogue", "The project files"], ["about", "Robot code"],
+    ["desk", "The workbench"], ["catalogue", "The project files"], ["about-robotics", "Robot code"],
     ["about-physics", "Particle physics"], ["about-teaching", "Teaching"],
     ["off-the-clock", "Off the clock"], ["elsewhere", "Letters"],
     ["desk-numbers", "The number line"],

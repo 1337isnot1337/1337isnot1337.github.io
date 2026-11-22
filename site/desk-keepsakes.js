@@ -18,7 +18,7 @@
     'cpu-print':['The Hack CPU','assets/prints/cpu-switch.webp','A streetcar at a railway switch.','#cpu','Explore the processor'],
     'schedule-print':['Schedule map','assets/prints/schedule.webp','A folded campus map with a route marked in red.','#schedule','Open the schedule project'],
     'conjectures-print':['Solved conjectures','assets/prints/conjectures.webp','Rabbit playing cards laid out on a plum-colored table.','#conjectures','Explore the conjectures'],
-    'robot-photo':['REEFSCAPE, 2025','assets/studio/reefscape.webp','Titan Robotics’ blue-bumpered 2022 robot carrying a white coral pipe on the REEFSCAPE field.','#about','Open the robotics notebook']
+    'robot-photo':['REEFSCAPE, 2025','assets/studio/reefscape.webp','Titan Robotics’ blue-bumpered 2022 robot carrying a white coral pipe on the REEFSCAPE field.','#about-robotics','Open the robotics notebook']
   };
   const doodles=['wave','airmail','pit-crew','constellation','snail-mail'];
   let bag=[],last=null,opener=null,lead='graphite',stroke=null,eraser=false;
@@ -103,7 +103,7 @@
         link.removeAttribute('data-project');
         if(href){
           link.href=href;link.textContent=label;
-          if(href!=='#about')link.dataset.project=href.slice(1);
+          if(id!=='robot-photo')link.dataset.project=href.slice(1);
         } else link.removeAttribute('href');
       }else{
         title.textContent='Scratch paper';setLead(id==='rose-pencil'?'rose':id==='pencil'?'graphite':lead);
