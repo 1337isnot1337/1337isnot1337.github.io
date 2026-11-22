@@ -16,3 +16,5 @@ __pycache__/
 # Built from the public HTML pages
 /site/llms.txt
 /site/plain/
+/site/projects/all/
+/site/project-directory.xml

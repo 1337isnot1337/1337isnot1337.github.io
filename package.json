@@ -3,6 +3,8 @@
   "private": true,
   "scripts": {
     "build:boring": "node scripts/build_boring.cjs",
+    "build:projects": "node scripts/build_project_directory.cjs",
+    "pretest": "npm run build:projects",
     "test": "node --test tests/*.test.cjs",
     "pretest:browser": "npm run build:boring",
     "test:browser": "node tests/browser.cjs"

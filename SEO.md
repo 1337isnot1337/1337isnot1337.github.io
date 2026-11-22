@@ -41,11 +41,13 @@ keep `tests/seo.test.cjs` passing.
 
 ## AI search discovery
 
-GitHub Pages builds `/llms.txt` and seven public Markdown companions under `/plain/`.
-`scripts/build_discovery.cjs` converts the canonical HTML with Pandoc after the
-research-notes index is generated. The HTML advertises each Markdown companion,
-and the companion links back to its source. DOPPLERGEIST and Solved Conjectures
-retain their own documentation. The index links directly to those sources.
+GitHub Pages builds `/projects/all/` and its sitemap from `scripts/public_projects.json`.
+The directory connects each public repository to its project and credits upstream
+work on contribution pages. Each existing project site keeps its own canonical URL.
+`scripts/build_discovery.cjs` builds `/llms.txt` and the Markdown companions under
+`/plain/` from the canonical HTML after the validated research catalogue is
+generated. Each HTML page advertises its Markdown companion, and each companion
+links back to its source. DOPPLERGEIST publishes its own `/DOPPLERGEIST/llms.txt`.
 
 [Ramp's experiment](https://engineering.ramp.com/post/marketing-to-ai-agents)
 counted about 370 matches for a test offer in 32 days. Markdown received broader

@@ -131,6 +131,31 @@ test('site sitemap lists precisely the independently maintained canonical pages'
     assert.ok(sitemap.includes(origin + suffix), suffix);
 });
 
+test('the project index links published project pages and their public sources', () => {
+  const groups = require('../scripts/public_projects.json');
+  const entries = Object.values(groups).flat();
+  const base = '/projects/all/';
+  const routes = [base, ...entries.filter(item => item.slug).map(item => `${base}${item.slug}/`)];
+  const index = documentFor(base);
+  assert.ok(documentFor('/projects/').querySelector(`a[href="${base}"]`));
+  const sitemapIndex = fs.readFileSync(path.join(root, 'sitemap.xml'), 'utf8');
+  assert.ok(sitemapIndex.includes(`${origin}/project-directory.xml`));
+  const sitemap = fs.readFileSync(path.join(root, 'project-directory.xml'), 'utf8');
+  const locations = new JSDOM(sitemap, { contentType: 'application/xml' }).window.document.querySelectorAll('loc');
+  assert.deepEqual([...locations].map(location => location.textContent), routes.map(route => origin + route));
+  for (const route of routes) {
+    const doc = documentFor(route);
+    assert.equal(doc.querySelector('link[rel="canonical"]').href, origin + route);
+    assert.equal(doc.querySelectorAll('h1').length, 1);
+    assert.ok(route === base || index.querySelector(`a[href="${route}"]`));
+  }
+  for (const item of entries) {
+    for (const repo of item.repositories) {
+      assert.ok(index.querySelector(`a[href="https://github.com/1337isnot1337/${repo}"]`), repo);
+    }
+  }
+});
+
 test('standalone page links and local assets resolve', () => {
   for (const url of ownPages.filter(url => url !== '/')) {
     const doc = documentFor(url);

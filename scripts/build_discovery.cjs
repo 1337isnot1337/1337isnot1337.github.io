@@ -2,17 +2,22 @@ const { execFileSync } = require('node:child_process');
 const fs = require('node:fs');
 const path = require('node:path');
 const { JSDOM } = require('jsdom');
+const groups = require('./public_projects.json');
 
 const site = path.join(__dirname, '..', 'site');
 const origin = 'https://itsdavis.com';
 const pages = [
   ['/about/', 'About Cinna Davis'],
   ['/projects/', 'Software, mathematics, and research projects'],
+  ['/projects/all/', 'Full project and repository index'],
   ['/projects/integer-factoring/', 'Deterministic integer factoring'],
   ['/projects/hack-cpu/', 'Hack CPU and branch prediction'],
   ['/projects/conway-99/', 'Conway’s 99-graph'],
   ['/research-notes/', 'Research notes and verification records'],
-  ['/imsa-map/', 'IMSA schedule map']
+  ['/imsa-map/', 'IMSA schedule map'],
+  ['/solved-conjectures/', 'Solved Conjectures'],
+  ...Object.values(groups).flat().filter(item => item.slug)
+    .map(item => [`/projects/all/${item.slug}/`, item.name])
 ];
 
 const index = ['# Cinna Davis', '', '> Software, mathematics, and research by Cinna Davis.', '',
@@ -74,7 +79,7 @@ for (const [route, label] of pages) {
 }
 
 index.push('', '## Project documentation',
-  `- [DOPPLERGEIST](${origin}/DOPPLERGEIST/): Aircraft Doppler audio geolocation. [Repository and README](https://github.com/1337isnot1337/DOPPLERGEIST).`,
+  `- [DOPPLERGEIST](${origin}/DOPPLERGEIST/llms.txt): Markdown overview, field notes, method, package, and citation. [Canonical site](${origin}/DOPPLERGEIST/).`,
   `- [Solved Conjectures](${origin}/solved-conjectures/): Proofs, counterexamples, and Lean verification status. [Repository and README](https://github.com/1337isnot1337/solved-conjectures).`,
   '', '## Source repositories',
   '- [Cinna Davis on GitHub](https://github.com/1337isnot1337)', '');
