@@ -43,7 +43,7 @@ function save(page, title, description, content, kind, parts) {
 </head>
 <body>
   <a class="skip" href="#content">Skip to content</a>
-  <header class="mast"><div class="page-width mast-inner"><a class="byline" href="/">Cinna Davis</a><nav aria-label="Main navigation"><a href="/projects/">Projects</a><a href="${route}">Full project index</a><a href="/about/">About</a></nav></div></header>
+  <header class="mast"><div class="page-width mast-inner"><a class="byline" href="/">Cinna Davis</a><nav aria-label="Main navigation"><a href="/projects/">Projects</a><a href="${route}">Project index</a><a href="/about/">About</a></nav></div></header>
   <main id="content" class="project-page">
     <header class="collection-intro"><h1>${escape(title)}</h1><p class="lead">${escape(description)}</p></header>
     ${content}
@@ -86,7 +86,7 @@ for (const [heading, items] of Object.entries(groups)) {
   sections.push(`<section><h2>${escape(heading)}</h2><ul>${entries.join('\n')}</ul></section>`);
 }
 
-save(route, 'Full project index', 'Public software, hardware, research and collaborations by Cinna Davis, with links to project pages and source repositories.', `<div class="prose">${sections.join('\n')}</div>`, 'CollectionPage', {
+save(route, 'Project index', 'Public software, hardware, research and collaborations by Cinna Davis, with links to project pages and source repositories.', `<div class="prose">${sections.join('\n')}</div>`, 'CollectionPage', {
   mainEntity: { '@type': 'ItemList', itemListElement: listedProjects }
 });
 

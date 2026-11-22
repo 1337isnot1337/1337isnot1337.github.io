@@ -9,7 +9,7 @@ const origin = 'https://itsdavis.com';
 const pages = [
   ['/about/', 'About Cinna Davis'],
   ['/projects/', 'Software, mathematics, and research projects'],
-  ['/projects/all/', 'Full project and repository index'],
+  ['/projects/all/', 'Project and repository index'],
   ['/projects/integer-factoring/', 'Deterministic integer factoring'],
   ['/projects/hack-cpu/', 'Hack CPU and branch prediction'],
   ['/projects/conway-99/', 'Conway’s 99-graph'],
