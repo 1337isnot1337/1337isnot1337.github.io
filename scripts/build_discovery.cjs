@@ -38,7 +38,6 @@ for (const [route, label] of pages) {
   if (doc.querySelector('link[rel="canonical"]')?.href !== canonical || !source?.querySelector('h1') || !description) {
     throw new Error(`Incomplete public source: ${canonical}`);
   }
-  if (route === '/about/') citation = source.querySelector('#citation p').textContent;
 
   source.querySelectorAll('nav, script, style, img[alt=""], [aria-hidden="true"], .eyebrow')
     .forEach(element => element.remove());
@@ -68,6 +67,11 @@ for (const [route, label] of pages) {
     input: source.innerHTML, encoding: 'utf8'
   }).trim();
   if (!markdown.startsWith('# ')) throw new Error(`Missing Markdown title: ${canonical}`);
+  if (route === '/about/') {
+    const citationStart = markdown.lastIndexOf('\n## Citation\n');
+    if (citationStart === -1) throw new Error(`Missing citation section: ${canonical}`);
+    citation = markdown.slice(citationStart + 1);
+  }
   const titleEnd = markdown.indexOf('\n');
   fs.mkdirSync(path.dirname(markdownFile), { recursive: true });
   fs.writeFileSync(markdownFile, `${markdown.slice(0, titleEnd)}\n\n[Source page](${canonical})\n${markdown.slice(titleEnd)}\n`);
@@ -83,7 +87,7 @@ for (const [route, label] of pages) {
 index.push('', '## Project documentation',
   `- [DOPPLERGEIST](${origin}/DOPPLERGEIST/llms.txt): Markdown overview, field notes, method, package, and citation. [Canonical site](${origin}/DOPPLERGEIST/).`,
   `- [Solved Conjectures](${origin}/solved-conjectures/): Proofs, counterexamples, and Lean verification status. [Repository and README](https://github.com/1337isnot1337/solved-conjectures).`,
-  '', '## Citation', citation, `[Citation details](${origin}/about/#citation)`,
+  '', citation, '', `[Citation details](${origin}/about/#citation)`,
   '', '## Source repositories',
   '- [Cinna Davis on GitHub](https://github.com/1337isnot1337)', '');
 fs.writeFileSync(path.join(site, 'llms.txt'), index.join('\n'));

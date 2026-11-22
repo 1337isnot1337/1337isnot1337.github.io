@@ -4,8 +4,8 @@ import { buildRoomShell } from './room-shell.js?v=9';
 
 // Atlas order: artwork, wall, aspect ratio, mounting x/y, width, angle.
 const artwork = [
-  ['fairy-metal', 'music', 1, -0.72, 3.23, 1.18, -0.07],
-  ['sirencore', 'music', 1, -1.33, 1.59, 1.38, 0.027],
+  ['banshee-may-he-rot', 'music', 1, -0.72, 3.23, 1.18, -0.07],
+  ['banshee-germany', 'music', 0.717456, -1.33, 1.59, 1.02, 0.027],
   ['fables', 'front', 1, 5.54, 1.52, 1.25, 0.054],
   ['luka', 'music', 1, 1.0, 2.78, 0.99, 0.1],
   ['till', 'music', 1, 3.46, -0.56, 1.08, -0.065],
@@ -21,8 +21,8 @@ const artwork = [
   ['fermilab', 'science', 2.149709, -0.56, 1.266, 1.93, -0.06],
   ['tux', 'science', 0.842697, 2.06, -0.55, 0.94, 0.115],
   ['atla', 'front', 1.333984, 1.44, 4.58, 2.48, -0.038],
-  ['birth-of-venus', 'music', 1, -2.51, -0.74, 1.24, 0.084],
-  ['secrets', 'music', 1, -4.65, 5.64, 1.19, -0.089],
+  ['banshee-philadelphia', 'music', 0.75, -2.51, -0.74, 0.93, 0.084],
+  ['banshee-wordmark', 'music', 1.37195, -4.65, 5.64, 1.29, -0.089],
   ['cure', 'music', 1, -0.04, -0.16, 1.62, -0.027],
   ['europa', 'front', 0.670635, 7.22, 2.45, 1.7, 0.04],
   ['grand-tour', 'back', 0.670635, -6.18, 5.49, 1.22, -0.069],
@@ -31,6 +31,12 @@ const artwork = [
   ['golden-record', 'music', 1, 4.94, 3.78, 1.11, 0.073],
   ['bubble-tracks', 'science', 1.5, 0.58, 0.15, 1.32, -0.112],
   ['voyager-record', 'front', 0.98777, 6.18, 5.38, 1.4, -0.066],
+  ['foxwedding-wreck', 'front', 1, -7.96, 1.55, 1.3, 0.044],
+  ['jazmin-traumatic', 'back', 1, -4.49, 2.74, 1.38, 0.051],
+  ['mothica-paris', 'front', 0.8, -0.22, 2.16, 1.23, 0.075],
+  ['babychaos-prayers', 'front', 0.714286, -4.72, 5.4, 1.22, 0.044],
+  ['ic3peak-tokyo', 'science', 0.8, -4.48, 4.73, 1.28, -0.07],
+  ['melanie-trilogy', 'back', 1, 4.73, 1.78, 1.56, -0.034],
 ];
 const atlasRows=Math.ceil(artwork.length/4);
 const leafColors = [0x72925d, 0x4a7147, 0x538254, 0x688254, 0x8a9b66];
@@ -68,7 +74,7 @@ const ivyLeaf=ivyGeometry();
 
 export function decorateRoom(world, { desk, narrow, half, group, box, bead, cylinder, wire, finish, photo, tag, drawn, weave, wood, trim, floorMat, night }) {
   const {walls,coves}=buildRoomShell(world,{group,box,bead,cylinder,wire,finish,photo,drawn,weave,wood,trim,floorMat,night});
-  const atlas = photo('/assets/furniture/room-atlas.webp?v=5');
+  const atlas = photo('/assets/furniture/room-atlas.webp?v=6');
   const ink = new T.MeshStandardMaterial({ map: atlas, roughness: .93, alphaTest: .28 });
   const cutout = ink.clone();
   cutout.side = T.DoubleSide;

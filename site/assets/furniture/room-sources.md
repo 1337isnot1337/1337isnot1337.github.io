@@ -2,8 +2,8 @@
 
 The room atlas contains reproductions of publicly published art and photographs. Individual prints in `posters/` are loaded on pickup for a closer look. Select the print in hand to open its source.
 
-- [Banshee, Fairy Metal](https://music.apple.com/us/album/fairy-metal-single/1621034850)
-- [Banshee, SIRENCORE](https://music.apple.com/us/album/sirencore/1731271714)
+- [Banshee, May He Rot](https://music.apple.com/us/album/may-he-rot-ep/1531546637), release cover
+- [Banshee, The Secrets to Altering Reality Tour in Germany](https://www.metalglory.com/news-banshee-kommt-2026-erstmals-nach-deutschland/), Wizard Live tour artwork
 - [Banshee, FABLES](https://music.apple.com/us/album/fables/1783404103)
 - [Alien Stage, Luka profile](https://www.youtube.com/post/UgkxWTHffv8lJDN-ngTHzlvc1byEz_7S6NaU), creator-published by VIVINOS and Studio LICO
 - [Alien Stage, Till profile](https://pbs.twimg.com/media/GZZ-nsRXcAAlk1L.jpg), VIVINOS and Studio LICO artwork, mirrored profile card
@@ -19,8 +19,8 @@ The room atlas contains reproductions of publicly published art and photographs.
 - [Aubrey de Grey](https://commons.wikimedia.org/wiki/File:Aubrey_de_Grey.jpg)
 - [Fermilab, Wilson Hall at sunset](https://lss.fnal.gov/archive/2023/slides/fermilab-slides-23-333-csaid.pdf), cropped from the cover photo in the Fermilab slide archive
 - [Tux, the Linux penguin](https://commons.wikimedia.org/wiki/File:Tux.svg), drawn by Larry Ewing with The GIMP, with vector work by Simon Budig and Garrett LeSage
-- [Banshee, Birth of Venus](https://music.apple.com/us/album/birth-of-venus/1694156199), release artwork
-- [Banshee, The Secrets to Altering Reality](https://music.apple.com/us/album/the-secrets-to-altering-reality/1862301194), release artwork
+- [Banshee at Nikki Lopez](https://ma.to/event/banshee-nikki-lopez-6-nov-2026), VERSION III concert flyer from the Nikki Lopez listing
+- [Banshee wordmark](https://banshee-shop.myshopify.com/), artwork from the artist’s official store
 - [Alien Stage, Cure](https://music.apple.com/us/song/1739046382), official soundtrack cover
 - [Europa](https://www.jpl.nasa.gov/images/europa-jpl-travel-poster/), NASA/JPL-Caltech, illustration by Liz Barrios De La Torre
 - [The Grand Tour](https://www.jpl.nasa.gov/images/the-grand-tour-jpl-travel-poster/), NASA/JPL-Caltech and Invisible Creature
@@ -29,6 +29,12 @@ The room atlas contains reproductions of publicly published art and photographs.
 - [Voyager Golden Record cover](https://science.nasa.gov/image-detail/voyager-record-cover-446eb9/), NASA/JPL-Caltech
 - [Fermilab bubble chamber and particle tracks](https://news.fnal.gov/2017/09/month-fermilab-history-september/), Fermilab History and Archives
 - [Mounting the Voyager Golden Record](https://science.nasa.gov/image-detail/the-golden-record-30269492703-o/), NASA/JPL-Caltech
+- [Foxwedding, WRECK](https://music.apple.com/us/album/wreck-single/1653750280), release artwork via the [Cover Art Archive](https://musicbrainz.org/release/0d3f9b39-7bb1-4d9a-be8a-9bd2686ae030/cover-art)
+- [Jazmin Bean, The Traumatic Livelihood World Tour](https://www.kerrang.com/jazmin-bean-announces-the-traumatic-livelihood-world-tour), official tour poster as published by Kerrang!
+- [Mothica at Backstage By The Mill](https://verygroup.fr/veryshow/artists/mothica/), Veryshow concert artwork via [Concerts Paris](https://concerts.paris/en/events/tour-mothica)
+- [Babychaos, Prayers](https://store.jeremysaffer.com/products/babychaos-prayers-signed-limited-edition-8x12-metallic-print), signed print photographed by Jeremy Saffer
+- [IC3PEAK, Coming Home in Tokyo](https://avyss-magazine.com/2025/08/23/63306/), Tokyo tour flyer as published by AVYSS
+- [Melanie Martinez, The Trilogy Tour](https://www.313presents.com/news/detail/melanie-martinez-brings-north-american-arena-tour-to-little-caesars-arena-friday-june-14-2024), Little Caesars Arena concert artwork from 313 Presents
 
 The project prints on the corkboard are separate illustrations for the site.
 

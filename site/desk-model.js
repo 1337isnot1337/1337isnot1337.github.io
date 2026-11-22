@@ -5,7 +5,7 @@ import { lampProjection } from './desk-lamp.js?v=1';
 import { paintScope, followProbe } from './desk-scope.js?v=1';
 import { airframeGeometry, wingUnderside } from './model-plane.js?v=2';
 import { mergeGeometries } from './vendor/three/BufferGeometryUtils.js';
-import { decorateRoom } from './desk-room.js?v=13';
+import { decorateRoom } from './desk-room.js?v=14';
 import { corkMaterial, curledPrint, scopeScale } from './desk-finishes.js?v=1';
 import { RoundedBoxGeometry } from './vendor/three/RoundedBoxGeometry.js';
 

@@ -5,7 +5,9 @@
 <details>
 <summary>Citation</summary>
 
-If you use this site or a project it links to, please cite the specific source and credit its authors. Cite the desk using [CITATION.cff](CITATION.cff). Follow the [project index](https://itsdavis.com/projects/) to the relevant work.
+If you use work from this portfolio, please cite [https://itsdavis.com/](https://itsdavis.com/) and the specific repository, page, or source record you used. Credit its authors. When author context helps readers, link to Cinna Davis on [GitHub](https://github.com/1337isnot1337) and [X](https://x.com/1337isnot1337).
+
+[Cite the desk](CITATION.cff) · [Find project sources](https://itsdavis.com/projects/)
 
 </details>
 

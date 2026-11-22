@@ -71,7 +71,7 @@
     <script defer src="/rook-graph.js?v=3"></script>
     <script>document.documentElement.dataset.view = /^\/boring(?:\/|$)/.test(location.pathname) || /^(#projects|#flyover|#cpu|#schedule|#conjectures|#factoring|#conway)$/.test(location.hash) ? "shelf" : "desk";</script>
     <link rel="stylesheet" href="/studio.css?v=21" />
-    <script defer src="/studio.js?v=58" onerror="if (!location.pathname.startsWith('/boring')) delete document.documentElement.dataset.view"></script>
+    <script defer src="/studio.js?v=59" onerror="if (!location.pathname.startsWith('/boring')) delete document.documentElement.dataset.view"></script>
     <script defer src="/paper-turn.js?v=5"></script>
     <script defer src="/desk-keepsakes.js?v=11"></script>
     <script defer src="/paper-dismiss.js?v=2"></script>
@@ -130,8 +130,8 @@
               <button type="button" data-object="conway-print" data-board-print="conway" data-keepsake aria-haspopup="dialog" hidden><span>Conway graph print</span></button>
               <button type="button" data-object="conjectures-print" data-board-print="conjectures" data-keepsake aria-haspopup="dialog" hidden><span>Solved conjectures print</span></button>
               <button type="button" data-object="robot-photo" data-keepsake aria-haspopup="dialog" hidden><span>Titan Robotics photograph</span></button>
-              <a data-object="room-fairy-metal" data-room-poster href="https://music.apple.com/us/album/fairy-metal-single/1621034850" target="_blank" rel="noopener" hidden><span>Banshee, Fairy Metal</span></a>
-              <a data-object="room-sirencore" data-room-poster href="https://open.spotify.com/album/4x7Lhq0tk6h8G7bazJcPsl" target="_blank" rel="noopener" hidden><span>Banshee, SIRENCORE</span></a>
+              <a data-object="room-banshee-may-he-rot" data-room-poster href="https://music.apple.com/us/album/may-he-rot-ep/1531546637" target="_blank" rel="noopener" hidden><span>Banshee, May He Rot</span></a>
+              <a data-object="room-banshee-germany" data-room-poster href="https://www.metalglory.com/news-banshee-kommt-2026-erstmals-nach-deutschland/" target="_blank" rel="noopener" hidden><span>Banshee, The Secrets to Altering Reality Tour in Germany</span></a>
               <a data-object="room-fables" data-room-poster href="https://open.spotify.com/album/6oHz1CC0PuNSGgRzAOZowX" target="_blank" rel="noopener" hidden><span>Banshee, FABLES</span></a>
               <a data-object="room-luka" data-room-poster href="https://www.youtube.com/post/UgkxWTHffv8lJDN-ngTHzlvc1byEz_7S6NaU" target="_blank" rel="noopener" hidden><span>Alien Stage, Luka profile</span></a>
               <a data-object="room-till" data-room-poster href="https://alienstage.online/characters/till" target="_blank" rel="noopener" hidden><span>Alien Stage, Till profile</span></a>
@@ -147,8 +147,8 @@
               <a data-object="room-aubrey" data-room-poster href="https://commons.wikimedia.org/wiki/File:Aubrey_de_Grey.jpg" target="_blank" rel="noopener" hidden><span>Aubrey de Grey</span></a>
               <a data-object="room-fermilab" data-room-poster href="https://lss.fnal.gov/archive/2023/slides/fermilab-slides-23-333-csaid.pdf" target="_blank" rel="noopener" hidden><span>Fermilab, Wilson Hall at sunset</span></a>
               <a data-object="room-tux" data-room-poster href="https://commons.wikimedia.org/wiki/File:Tux.svg" target="_blank" rel="noopener" hidden><span>Tux, the Linux penguin</span></a>
-              <a data-object="room-birth-of-venus" data-room-poster href="https://music.apple.com/us/album/birth-of-venus/1694156199" target="_blank" rel="noopener" hidden><span>Banshee, Birth of Venus</span></a>
-              <a data-object="room-secrets" data-room-poster href="https://music.apple.com/us/album/the-secrets-to-altering-reality/1862301194" target="_blank" rel="noopener" hidden><span>Banshee, The Secrets to Altering Reality</span></a>
+              <a data-object="room-banshee-philadelphia" data-room-poster href="https://ma.to/event/banshee-nikki-lopez-6-nov-2026" target="_blank" rel="noopener" hidden><span>Banshee at Nikki Lopez</span></a>
+              <a data-object="room-banshee-wordmark" data-room-poster href="https://banshee-shop.myshopify.com/" target="_blank" rel="noopener" hidden><span>Banshee wordmark</span></a>
               <a data-object="room-cure" data-room-poster href="https://music.apple.com/us/song/1739046382" target="_blank" rel="noopener" hidden><span>Alien Stage, Cure</span></a>
               <a data-object="room-europa" data-room-poster href="https://www.jpl.nasa.gov/images/europa-jpl-travel-poster/" target="_blank" rel="noopener" hidden><span>Europa, NASA JPL travel poster</span></a>
               <a data-object="room-grand-tour" data-room-poster href="https://www.jpl.nasa.gov/images/the-grand-tour-jpl-travel-poster/" target="_blank" rel="noopener" hidden><span>The Grand Tour, NASA JPL travel poster</span></a>
@@ -157,6 +157,12 @@
               <a data-object="room-golden-record" data-room-poster href="https://science.nasa.gov/image-detail/voyager-record-cover-446eb9/" target="_blank" rel="noopener" hidden><span>Voyager Golden Record cover</span></a>
               <a data-object="room-bubble-tracks" data-room-poster href="https://news.fnal.gov/2017/09/month-fermilab-history-september/" target="_blank" rel="noopener" hidden><span>Fermilab bubble chamber and particle tracks</span></a>
               <a data-object="room-voyager-record" data-room-poster href="https://science.nasa.gov/image-detail/the-golden-record-30269492703-o/" target="_blank" rel="noopener" hidden><span>Mounting the Voyager Golden Record</span></a>
+              <a data-object="room-foxwedding-wreck" data-room-poster href="https://music.apple.com/us/album/wreck-single/1653750280" target="_blank" rel="noopener" hidden><span>Foxwedding, WRECK</span></a>
+              <a data-object="room-jazmin-traumatic" data-room-poster href="https://www.kerrang.com/jazmin-bean-announces-the-traumatic-livelihood-world-tour" target="_blank" rel="noopener" hidden><span>Jazmin Bean, The Traumatic Livelihood World Tour</span></a>
+              <a data-object="room-mothica-paris" data-room-poster href="https://verygroup.fr/veryshow/artists/mothica/" target="_blank" rel="noopener" hidden><span>Mothica at Backstage By The Mill</span></a>
+              <a data-object="room-babychaos-prayers" data-room-poster href="https://store.jeremysaffer.com/products/babychaos-prayers-signed-limited-edition-8x12-metallic-print" target="_blank" rel="noopener" hidden><span>Babychaos, Prayers</span></a>
+              <a data-object="room-ic3peak-tokyo" data-room-poster href="https://avyss-magazine.com/2025/08/23/63306/" target="_blank" rel="noopener" hidden><span>IC3PEAK, Coming Home in Tokyo</span></a>
+              <a data-object="room-melanie-trilogy" data-room-poster href="https://www.313presents.com/news/detail/melanie-martinez-brings-north-american-arena-tour-to-little-caesars-arena-friday-june-14-2024" target="_blank" rel="noopener" hidden><span>Melanie Martinez, The Trilogy Tour</span></a>
               <a class="object-epoch" data-object="epoch" href="#about-teaching"><span>Epoch computing club</span></a>
               <a class="object-book" data-object="book" href="#about"><span>My notebook</span></a>
               <a class="object-tape" data-object="tape" href="#off-the-clock"><span>Off the clock</span></a>
