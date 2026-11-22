@@ -42,7 +42,7 @@ keep `tests/seo.test.cjs` passing.
 ## AI search discovery
 
 GitHub Pages builds `/projects/all/` and its sitemap from `scripts/public_projects.json`.
-The directory connects each public repository to its project and credits upstream
+The directory connects the listed repositories to their projects and credits upstream
 work on contribution pages. Each existing project site keeps its own canonical URL.
 `scripts/build_discovery.cjs` builds `/llms.txt` and the Markdown companions under
 `/plain/` from the canonical HTML after the validated research catalogue is

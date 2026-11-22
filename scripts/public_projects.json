@@ -41,14 +41,5 @@
     {"name":"QB Reader contributions","slug":"qbreader-contributions","repositories":["website","qbreader-temp","qbreader-temp1"],"summary":"A contribution to the QB Reader quizbowl practice website that preserves the buzzpoint in generated tossup cards.","detail":"The substantive change is documented in the upstream pull request. The profile also contains the source fork and two empty scratch repositories.","links":[["QB Reader website","https://www.qbreader.org/"],["Upstream contribution","https://github.com/qbreader/website/pull/356"]]},
     {"name":"Epoch computing club website","slug":"epoch-website","repositories":[],"summary":"Updates to club events and site content for the Epoch computing club at IMSA.","detail":"The upstream pull request records the website change.","links":[["Upstream contribution","https://github.com/epochml/epochml.github.io/pull/2"]]},
     {"name":"Cinna Davis’s portfolio","page":"/","repositories":["1337isnot1337.github.io","1337isnot1337"],"summary":"An interactive desk and project shelf for work in software, mathematics, acoustics, hardware and physics.","detail":"The project includes a conventional browsing mode and connects the interactive exhibits to their public source material.","links":[["Profile","/about/"]]}
-  ],
-  "Small experiments and upstream forks": [
-    {"name":"Discord terminal bot","repositories":["discord-bot"],"summary":"An older Rust Discord bot that uses Serenity and Ratatui for a terminal interface."},
-    {"name":"Pathfinding experiment","repositories":["pathfinding-test"],"summary":"A small repository for experimenting with pathfinding."},
-    {"name":"Shell experiment","repositories":["shell"],"summary":"A small shell programming project."},
-    {"name":"Strikor","repositories":["strikor"],"summary":"A work-in-progress game project."},
-    {"name":"HTB Watcher","repositories":["htb-watcher"],"summary":"A small monitoring utility for Hack The Box activity."},
-    {"name":"HyFetch fork","repositories":["hyfetch"],"summary":"A fork of the upstream HyFetch system information utility.","links":[["Upstream HyFetch","https://github.com/rust-malaysia/hyfetch"]]},
-    {"name":"Encryptcord fork","repositories":["encryptcord"],"summary":"A fork of the upstream Encryptcord project.","links":[["Upstream Encryptcord","https://github.com/Inbestigator/encryptcord"]]}
   ]
 }
