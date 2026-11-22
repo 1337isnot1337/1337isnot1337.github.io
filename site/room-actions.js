@@ -16,6 +16,18 @@ export function bindRoomActions(links,redraw) {
   }
 
   const lamp=links.get('reading-lamp'), rover=links.get('cart-rover');
+  const curtains=links.get('window-drapes');
+  let drapesClosed=false, drapes=0, cloth, rings, ties;
+  curtains.addEventListener('click',()=>{
+    drapesClosed=!drapesClosed;
+    curtains.setAttribute('aria-pressed',String(drapesClosed));
+    redraw();
+  });
+  function setDrapes(amount){
+    for(const panel of cloth)panel.morphTargetInfluences[0]=amount;
+    for(const [ring,rest] of rings)ring.position.x=rest+(ring.userData.drapeEnd-rest)*amount;
+    for(const tie of ties)tie.visible=amount<.085;
+  }
   let lampOverride=null, lampLevel=0, lampStarted=-Infinity;
   let roverStarted=-Infinity, plantStarted=-Infinity, roverTimer;
   let chain, shade, stems, wheels, diode;
@@ -51,6 +63,10 @@ export function bindRoomActions(links,redraw) {
       stems=model.details.get('rubber-plant-stems');
       wheels=[0,1,2,3].map(i=>model.details.get('rover-wheel-'+i));
       diode=model.details.get('rover-diode').children[0].material;
+      cloth=model.targets.get('window-drapes').root.children.filter(part=>part.userData.liveCloth);
+      rings=[...model.details].filter(([name])=>name.startsWith('drape-ring-')).map(([,ring])=>[ring,ring.position.x]);
+      ties=[-1,1].map(side=>model.details.get('drape-tie-'+side));
+      setDrapes(drapes);
     },
     paint({time,dt,night,nightGoal,reduced,ease}){
       let moving=false, geometryMoved=false;
@@ -93,7 +109,15 @@ export function bindRoomActions(links,redraw) {
       moving ||= rustle<1;
       stems.rotation.z=sway;
       stems.rotation.x=-sway*.52;
-      return {moving,geometryMoved,readingLevel:lampLevel};
+      const curtainGoal=Number(drapesClosed);
+      if(drapes!==curtainGoal){
+        const step=reduced?1:dt*1.42;
+        drapes+=Math.sign(curtainGoal-drapes)*Math.min(step,Math.abs(curtainGoal-drapes));
+        setDrapes(drapes);
+        geometryMoved=true;
+        moving ||= drapes!==curtainGoal;
+      }
+      return {moving,geometryMoved,readingLevel:lampLevel,drapes};
     }
   };
 }

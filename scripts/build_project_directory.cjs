@@ -12,7 +12,7 @@ const anchor = (label, url) => `<a href="${escape(url)}">${escape(label)}</a>`;
 function save(page, title, description, content, kind, parts) {
   const url = origin + page;
   const siteTitle = `${title} | Cinna Davis`;
-  const socialImage = `${origin}/assets/project-shelf.jpg`;
+  const socialImage = `${origin}/assets/share/projects-v1.jpg`;
   const data = {
     '@context': 'https://schema.org', '@type': kind, '@id': `${url}#page`,
     url, name: title, description, isPartOf: { '@id': `${origin}/#website` }, ...parts
@@ -34,10 +34,15 @@ function save(page, title, description, content, kind, parts) {
   <meta property="og:title" content="${escape(siteTitle)}">
   <meta property="og:description" content="${escape(description)}">
   <meta property="og:image" content="${socialImage}">
-  <meta property="og:image:alt" content="Illustrated project prints on Cinna Davis’s wooden shelf.">
+  <meta property="og:image:alt" content="Project shelf, with a selection of illustrated project prints.">
+  <meta property="og:image:type" content="image/jpeg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
   <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="${socialImage}">
+  <meta name="twitter:image:alt" content="Project shelf, with a selection of illustrated project prints.">
   <link rel="icon" href="/favicon.ico">
-  <link rel="stylesheet" href="/shelf.css?v=26">
+  <link rel="stylesheet" href="/shelf.css?v=27">
   <link rel="stylesheet" href="/projects/project-pages.css?v=2">
   <script type="application/ld+json">${JSON.stringify(data).replace(/</g, '\\u003c')}</script>
 </head>

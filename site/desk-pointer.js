@@ -3,7 +3,7 @@ import { attachHeldArrows } from './desk-arrows.js?v=1';
 // Keep the browser cursor at its real hotspot. Only an orbit owns the pointer.
 export function attachDeskPointer(stage,{pick,track,hover=()=>{},stopLook=()=>{},orbitBy,endOrbit,part,gesture,tapPart,zoomBy,targets=new Map([...stage.querySelectorAll('[data-object]')].map(el=>[el.dataset.object,el]))}) {
   const canvas=stage.querySelector('canvas');
-  let press=null, frame=0, x=0, y=0, overControl=false, tracking=false, suppress=false;
+  let press=null, frame=0, x=0, y=0, overControl=false, suppress=false;
   let clickTarget, pointerInside=false, nextCameraPick=0;
   const active=()=>stage.classList.contains('is-rendered') && !stage.closest('.desk-overview').inert;
   function targetAt(clientX,clientY){
@@ -24,17 +24,16 @@ export function attachDeskPointer(stage,{pick,track,hover=()=>{},stopLook=()=>{}
     stopLook();hover('');
     delete stage.dataset.aim;
   }
-  function aim(e,follow=true){
+  function aim(e){
     if(e.pointerType!=='mouse')return;
     pointerInside=true;
     x=e.clientX;y=e.clientY;
     overControl=Boolean(e.target.closest('[data-object]'));
-    tracking=follow;
     if(!frame)frame=requestAnimationFrame(()=>{
       frame=0;
       const enabled=active();
       const target=enabled && targetAt(x,y);
-      if(tracking && enabled && !press && !document.querySelector('dialog[open]')){
+      if(enabled && !press && !document.querySelector('dialog[open]')){
         const r=stage.getBoundingClientRect();
         hover(target?.dataset.object||'');
         track((x-r.left)/r.width*2-1,(y-r.top)/r.height*2-1,overControl||Boolean(target));
@@ -93,7 +92,7 @@ export function attachDeskPointer(stage,{pick,track,hover=()=>{},stopLook=()=>{}
     if(press?.id!==e.pointerId)return;
     clickTarget=press.target;
     suppress=Boolean(press.mode || (press.part && tapPart(press.part)));
-    endPress();if(active())aim(e,false);
+    endPress();if(active())aim(e);
   });
   stage.addEventListener('pointercancel',e=>{if(press?.id===e.pointerId)leave();});
   stage.addEventListener('lostpointercapture',e=>{
@@ -101,6 +100,7 @@ export function attachDeskPointer(stage,{pick,track,hover=()=>{},stopLook=()=>{}
     suppress=true;
     endPress(true);
   });
+  stage.addEventListener('pointerenter',aim);
   stage.addEventListener('pointerleave',()=>{if(!press)leave();});
   stage.addEventListener('dragstart',e=>{if(active())e.preventDefault();});
   stage.addEventListener('click',e=>{

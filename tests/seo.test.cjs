@@ -43,8 +43,14 @@ test('all independently authored pages are crawlable and have accurate metadata'
     assert.equal(doc.querySelector('meta[property="og:url"]')?.content, origin + url, url);
     assert.ok(image?.startsWith(origin + '/assets/'), url);
     assert.ok(fs.existsSync(path.join(root, new URL(image).pathname.slice(1))), url);
-    assert.ok(doc.querySelector('meta[property="og:image:alt"]')?.content, url);
-    assert.match(doc.querySelector('meta[name="twitter:card"]')?.content || '', /^summary(_large_image)?$/, url);
+    assert.equal(doc.querySelectorAll('meta[property="og:image"]').length, 1, url);
+    assert.equal(doc.querySelector('meta[name="twitter:image"]')?.content, image, url);
+    assert.equal(doc.querySelector('meta[property="og:image:width"]')?.content, '1200', url);
+    assert.equal(doc.querySelector('meta[property="og:image:height"]')?.content, '630', url);
+    const alt = doc.querySelector('meta[property="og:image:alt"]')?.content;
+    assert.ok(alt, url);
+    assert.equal(doc.querySelector('meta[name="twitter:image:alt"]')?.content, alt, url);
+    assert.equal(doc.querySelector('meta[name="twitter:card"]')?.content, 'summary_large_image', url);
     const graph = schemaFor(doc);
     assert.ok(graph.some(node => node.url === origin + url), url);
     for (const node of graph) if (node['@type'] === 'BreadcrumbList') {

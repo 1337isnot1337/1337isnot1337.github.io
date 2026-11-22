@@ -5,7 +5,7 @@ import { lampProjection } from './desk-lamp.js?v=1';
 import { paintScope, followProbe } from './desk-scope.js?v=1';
 import { airframeGeometry, wingUnderside } from './model-plane.js?v=2';
 import { mergeGeometries } from './vendor/three/BufferGeometryUtils.js';
-import { decorateRoom } from './desk-room.js?v=21';
+import { decorateRoom } from './desk-room.js?v=22';
 import { clockHands, setClock } from './shelf-clock.js?v=1';
 import { corkMaterial, curledPrint, scopeScale } from './desk-finishes.js?v=1';
 import { RoundedBoxGeometry } from './vendor/three/RoundedBoxGeometry.js';
@@ -1156,7 +1156,7 @@ export function furnish(scene, narrow, repaint, software=false, posterMode='prof
     return solidVariants.get(key);
   }
   room.traverse(m=>{
-    if(!m.isMesh)return;
+    if(!m.isMesh||m.userData.liveCloth)return;
     let parent=m.parent;while(!rigid.has(parent))parent=parent.parent;
     if(staticRoots.has(parent) && !m.parent.userData.roomProp){
       if(!m.geometry.boundingBox)m.geometry.computeBoundingBox();

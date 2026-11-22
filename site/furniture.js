@@ -1,14 +1,14 @@
 import * as T from './vendor/three/three.module.min.js';
-import { furnish } from './desk-model.js?v=47';
+import { furnish } from './desk-model.js?v=48';
 import { inspectDeskObjects } from './desk-inspect.js?v=20';
 
-import { attachDeskPointer } from './desk-pointer.js?v=23';
+import { attachDeskPointer } from './desk-pointer.js?v=24';
 
 import { deskLife } from './desk-life.js?v=17';
-import { deskView } from './desk-view.js?v=13';
+import { deskView } from './desk-view.js?v=14';
 import { drawerTravel } from './desk-drawer.js?v=1';
 import { setClock } from './shelf-clock.js?v=1';
-import { bindRoomActions } from './room-actions.js?v=1';
+import { bindRoomActions } from './room-actions.js?v=2';
 
 export function mountFurniture(stage,showGraphicsFallback) {
   const canvas = stage.querySelector('canvas');
@@ -232,6 +232,7 @@ export function mountFurniture(stage,showGraphicsFallback) {
     const target=(value,goal)=>Math.abs(value-goal)<.004?goal:T.MathUtils.lerp(value,goal,amount);
     const roomMotion=roomActions.paint({time,dt,night,nightGoal,reduced:motion.matches,ease:target});
     readingLight.intensity=roomMotion.readingLevel*25;
+    sun.intensity*=1-roomMotion.drapes*.42;
     detailMoved ||= roomMotion.geometryMoved;
     const prevDrawer=drawerAmount,prevFile=fileAngle,prevBook=bookAngle;
     const held=inspector.active();
@@ -298,9 +299,15 @@ export function mountFurniture(stage,showGraphicsFallback) {
     const under=Math.max(0,posture.below),up=Math.max(0,-posture.below);
     const wallView=Math.sin(posture.yaw)**2;
     camera.position.y+=up*.5-under*5.88;
-    aim.y+=up*4.8-under*2.83+wallView*.85*(1-under);
+    aim.y+=-under*2.83+wallView*.85*(1-under);
     const offsetX=camera.position.x-aim.x;
     const offsetZ=camera.position.z-aim.z;
+    if(up){
+      const distance=Math.hypot(offsetX,offsetZ);
+      const initialPitch=Math.atan2(aim.y-camera.position.y,distance);
+      const elevation=T.MathUtils.lerp(initialPitch,Math.PI*.28,posture.above);
+      aim.y=camera.position.y+Math.tan(elevation)*distance;
+    }
     const sin=Math.sin(posture.yaw),cos=Math.cos(posture.yaw);
     // Orbit within the room in front of the desk. Past either side, look
     // outward toward the rest of the room from that same walkable arc.

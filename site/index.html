@@ -20,16 +20,14 @@
       property="og:description"
       content="Software, mathematics and research by Cinna Davis, an IMSA student. Projects include DOPPLERGEIST, deterministic factoring and robotics."
     />
-    <meta
-      property="og:image"
-      content="https://itsdavis.com/assets/project-shelf.jpg?v=2"
-    />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content="Illustrated prints of an aircraft, playing cards, an abacus, a graph and a railway on Cinna’s wooden project shelf." />
-    <meta name="twitter:image:alt" content="Illustrated prints of an aircraft, playing cards, an abacus, a graph and a railway on Cinna’s wooden project shelf." />
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:image" content="https://itsdavis.com/assets/project-shelf.jpg?v=2" />
+    <meta property="og:image" content="https://itsdavis.com/assets/share/portfolio-v1.jpg">
+    <meta property="og:image:type" content="image/jpeg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="Cinna Davis, software, mathematics and research, beside illustrated prints from the project shelf.">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="https://itsdavis.com/assets/share/portfolio-v1.jpg">
+    <meta name="twitter:image:alt" content="Cinna Davis, software, mathematics and research, beside illustrated prints from the project shelf.">
     <meta name="twitter:title" content="Cinna Davis | Software, Mathematics & Research" />
     <meta name="twitter:description" content="Software, mathematics and research by Cinna Davis, an IMSA student. Projects include DOPPLERGEIST, deterministic factoring and robotics." />
     <link rel="icon" type="image/png" sizes="48x48" href="/assets/prints/favicon.png" />
@@ -42,7 +40,7 @@
     />
     <link rel="stylesheet" href="/pixelation.css?v=5">
     <link rel="stylesheet" href="/vendor/swiper-bundle.min.css" />
-    <link rel="stylesheet" href="/shelf.css?v=26" />
+    <link rel="stylesheet" href="/shelf.css?v=27" />
     <link rel="stylesheet" href="/welcome.css?v=desk-1" />
     <link rel="stylesheet" href="/workbench.css?v=6" />
     <link rel="stylesheet" href="/notebook.css?v=4" />
@@ -56,7 +54,7 @@
     <link rel="stylesheet" href="/schedule-example.css?v=1" />
     <link rel="stylesheet" href="/incident-note.css?v=2" />
     <script defer src="/cpu-trace.js?v=3"></script>
-    <script defer src="/shelf.js?v=38" onerror="
+    <script defer src="/shelf.js?v=39" onerror="
       const restoreReading = () => {
         document.documentElement.classList.add('script-unavailable');
         document.querySelector('.shelf-heading p').textContent = 'The interactive shelf could not load. You can still read the project notes below.';
@@ -71,7 +69,7 @@
     <script defer src="/rook-graph.js?v=3"></script>
     <script>document.documentElement.dataset.view = /^\/boring(?:\/|$)/.test(location.pathname) || /^(#projects|#flyover|#cpu|#schedule|#conjectures|#factoring|#conway)$/.test(location.hash) ? "shelf" : "desk";</script>
     <link rel="stylesheet" href="/studio.css?v=23" />
-    <script defer src="/studio.js?v=66" onerror="if (!location.pathname.startsWith('/boring')) delete document.documentElement.dataset.view"></script>
+    <script defer src="/studio.js?v=67" onerror="if (!location.pathname.startsWith('/boring')) delete document.documentElement.dataset.view"></script>
     <script defer src="/paper-turn.js?v=5"></script>
     <script defer src="/desk-keepsakes.js?v=11"></script>
     <script defer src="/paper-dismiss.js?v=2"></script>
@@ -90,7 +88,7 @@
       </style></noscript
     >
     <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebSite","@id":"https://itsdavis.com/#website","url":"https://itsdavis.com/","name":"Cinna Davis","alternateName":"Cinna Davis's project shelf","publisher":{"@id":"https://itsdavis.com/#person"}},{"@type":"Person","@id":"https://itsdavis.com/#person","name":"Cinna Davis","url":"https://itsdavis.com/about/","sameAs":["https://github.com/1337isnot1337","https://x.com/1337isnot1337","https://www.linkedin.com/in/cinna-davis/"],"knowsAbout":["software development","mathematics","computer systems","computational research"],"description":"Cinna Davis is a software developer and student researcher at the Illinois Mathematics and Science Academy, working in mathematics, computational physics and robotics.","affiliation":{"@type":"EducationalOrganization","name":"Illinois Mathematics and Science Academy","url":"https://www.imsa.edu/"},"mainEntityOfPage":{"@id":"https://itsdavis.com/about/#page"}},{"@type":"WebPage","@id":"https://itsdavis.com/#page","url":"https://itsdavis.com/","name":"Cinna Davis | Software, Mathematics & Research","description":"Software, mathematics and research by Cinna Davis, an IMSA student. Projects include DOPPLERGEIST, deterministic factoring and robotics.","isPartOf":{"@id":"https://itsdavis.com/#website"},"about":{"@id":"https://itsdavis.com/#person"}}]}</script>
-  </head>
+</head>
   <body>
     <svg class="brand-symbols" width="0" height="0" aria-hidden="true"><defs><symbol id="brand-github" viewBox="0 0 24 24"><path d="M12 .8a11.3 11.3 0 0 0-3.57 22.02c.56.1.77-.24.77-.54v-2.1c-3.14.68-3.8-1.33-3.8-1.33-.51-1.3-1.25-1.64-1.25-1.64-1.02-.7.08-.69.08-.69 1.13.08 1.73 1.16 1.73 1.16 1.01 1.73 2.65 1.23 3.3.94.1-.73.4-1.23.71-1.51-2.51-.29-5.15-1.26-5.15-5.59 0-1.23.44-2.23 1.16-3.02-.12-.29-.5-1.44.11-3 0 0 .95-.3 3.11 1.15a10.83 10.83 0 0 1 5.65 0c2.16-1.45 3.1-1.15 3.1-1.15.62 1.56.24 2.71.12 3 .72.79 1.16 1.79 1.16 3.02 0 4.34-2.64 5.3-5.16 5.58.41.35.76 1.04.76 2.1v3.08c0 .3.21.65.78.54A11.3 11.3 0 0 0 12 .8z"/></symbol><symbol id="brand-linkedin" viewBox="0 0 24 24"><path d="M3 2h18a1 1 0 0 1 1 1v18a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1zm2.4 7.1v9.8h3.1V9.1H5.4zm1.55-4.7a1.8 1.8 0 1 0 0 3.6 1.8 1.8 0 0 0 0-3.6zM10.5 9.1v9.8h3.1v-5.3c0-1.5.3-2.4 1.7-2.4 1.3 0 1.5 1 1.5 2.4v5.3h3.1v-6c0-2.9-1-4.1-3.4-4.1-1.4 0-2.4.6-3 1.5V9.1z" fill-rule="evenodd"/></symbol><symbol id="brand-x" viewBox="0 0 24 24"><path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.64 7.584H.47l8.6-9.835L0 1.154h7.594l5.243 6.932zm-1.29 19.49h2.039L6.487 3.24H4.3z"/></symbol></defs></svg>
     <a href="#projects" class="skip">Skip to projects</a>
@@ -208,7 +206,6 @@
               <a data-object="room-avatar-press-05" data-room-poster href="https://www.paramountpressexpress.com/nickelodeon/shows/avatar-the-last-airbender/photos/?view=642f525a64" target="_blank" rel="noopener" hidden><span>Avatar: The Last Airbender · Team Avatar</span></a>
               <a data-object="room-alnst-addicted" data-room-poster href="https://www.youtube.com/watch?v=t9EUv_4Q7Sw" target="_blank" rel="noopener" hidden><span>Alien Stage · Luka in Addicted</span></a>
               <a data-object="room-alnst-mizisua" data-room-poster href="https://www.youtube.com/watch?v=BiD7u0Svsvk" target="_blank" rel="noopener" hidden><span>Alien Stage · Mizi and Sua</span></a>
-              <a data-object="room-melanie-logo" data-room-poster href="https://store.melaniemartinezmusic.com/collections/k-12" target="_blank" rel="noopener" hidden><span>Melanie Martinez · Artist wordmark</span></a>
               <a data-object="room-alnst-round6" data-room-poster href="https://www.youtube.com/watch?v=SV9SwKd6J3w" target="_blank" rel="noopener" hidden><span>Alien Stage · Ivan in Cure</span></a>
               <a data-object="room-alnst-vida" data-room-poster href="https://www.youtube.com/watch?v=FW29TqXOzlc" target="_blank" rel="noopener" hidden><span>Alien Stage · Till in Mi Vida Loca</span></a>
               <a data-object="room-korra-press-09" data-room-poster href="https://www.paramountpressexpress.com/nickelodeon/shows/the-legend-of-korra/photos/?view=5cd51ee6e0" target="_blank" rel="noopener" hidden><span>The Legend of Korra · Team Avatar</span></a>
@@ -237,6 +234,7 @@
               <button type="button" id="drawer-posters" data-object="poster-switch" aria-label="Frivolous wall posters" aria-pressed="false" hidden></button>
               <button type="button" data-object="study-door" data-room-fixture aria-label="Study door open" aria-pressed="false" hidden></button>
               <button type="button" data-object="window-sash" data-room-fixture aria-label="Window open" aria-pressed="false" hidden></button>
+              <button type="button" data-object="window-drapes" data-room-fixture aria-label="Drapes closed" aria-pressed="false" hidden></button>
               <button type="button" data-object="cart-toolbox" data-room-fixture aria-label="Toolbox open" aria-pressed="false" hidden></button>
               <button type="button" data-object="cart-rover" data-room-fixture aria-label="Rover bench test" aria-pressed="false" hidden></button>
               <button type="button" data-object="library-box" data-room-fixture aria-label="Archive box open" aria-pressed="false" hidden></button>
@@ -1011,7 +1009,7 @@
           <div class="detail-heading">
             <p>Combinatorics</p>
             <h2 id="conjectures-title">Solved conjectures</h2>
-            <a class="project-repo" href="https://github.com/1337isnot1337/solved-conjectures">Open GitHub repo <span aria-hidden="true">↗</span></a>
+            <div class="project-links"><a class="project-site" href="/solved-conjectures/">Open project site <span aria-hidden="true">↗</span></a><a class="project-source" href="https://github.com/1337isnot1337/solved-conjectures">GitHub source</a></div>
           </div>
           <p>
             I curate this collection of proofs and counterexamples with GPT-6.2
@@ -1124,7 +1122,7 @@
           <div class="detail-heading">
             <p>Aircraft audio</p>
             <h2 id="flyover-title">DOPPLERGEIST</h2>
-            <a class="project-repo" href="https://github.com/1337isnot1337/DOPPLERGEIST">Open GitHub repo <span aria-hidden="true">↗</span></a>
+            <div class="project-links"><a class="project-site" href="/DOPPLERGEIST/">Open project site <span aria-hidden="true">↗</span></a><a class="project-source" href="https://github.com/1337isnot1337/DOPPLERGEIST">GitHub source</a></div>
           </div>
           <p>
             Can a recording tell you where the microphone was? DOPPLERGEIST
@@ -1202,7 +1200,7 @@
           <div class="detail-heading">
             <p>Algorithms</p>
             <h2 id="factoring-title">Integer factoring</h2>
-            <a class="project-repo" href="https://github.com/1337isnot1337/integer-factoring">Open GitHub repo <span aria-hidden="true">↗</span></a>
+            <div class="project-links"><a class="project-site" href="/projects/integer-factoring/">Open project site <span aria-hidden="true">↗</span></a><a class="project-source" href="https://github.com/1337isnot1337/integer-factoring">GitHub source</a></div>
           </div>
           <p>
             I work on deterministic integer factoring. The repository gives this
@@ -1259,7 +1257,7 @@
           <div class="detail-heading">
             <p>Hardware</p>
             <h2 id="cpu-title">The Hack CPU</h2>
-            <a class="project-repo" href="https://github.com/1337isnot1337/nand2tetris-verilog-improved">Open GitHub repo <span aria-hidden="true">↗</span></a>
+            <div class="project-links"><a class="project-site" href="/projects/hack-cpu/">Open project site <span aria-hidden="true">↗</span></a><a class="project-source" href="https://github.com/1337isnot1337/nand2tetris-verilog-improved">GitHub source</a></div>
           </div>
           <p>
             For my computing systems capstone, I extended the Hack CPU with a
@@ -1312,7 +1310,7 @@
           <div class="detail-heading">
             <p>Campus software</p>
             <h2 id="schedule-title">Schedule map</h2>
-            <a class="project-repo" href="https://github.com/1337isnot1337/1337isnot1337.github.io/tree/main/src">Open GitHub repo <span aria-hidden="true">↗</span></a>
+            <div class="project-links"><a class="project-site" href="/imsa-map/">Open schedule tool <span aria-hidden="true">↗</span></a><a class="project-source" href="https://github.com/1337isnot1337/1337isnot1337.github.io/tree/main/src">GitHub source</a></div>
           </div>
           <p>
             A school schedule is easier to read when you can see which room you
@@ -1346,7 +1344,7 @@
           <div class="detail-heading">
             <p>Graph theory</p>
             <h2 id="conway-title">Conway’s 99-graph</h2>
-            <a class="project-repo" href="https://github.com/1337isnot1337/conway-99">Open GitHub repo <span aria-hidden="true">↗</span></a>
+            <div class="project-links"><a class="project-site" href="/projects/conway-99/">Open project site <span aria-hidden="true">↗</span></a><a class="project-source" href="https://github.com/1337isnot1337/conway-99">GitHub source</a></div>
           </div>
           <p>
             Conway asked for a graph with 99 vertices and 14 neighbors per vertex.
@@ -1382,7 +1380,7 @@
               counting rule, not a 99-vertex solution: each square has four
               neighbors, not fourteen.</small>
           </div>
-          <a class="outbound" href="https://github.com/1337isnot1337/conway-99"
+          <a class="outbound" href="/projects/conway-99/"
             >Explore the research</a
           >
         <p class="project-page-link"><a href="/projects/conway-99/">Project notes and sources ↗</a></p>
@@ -1448,7 +1446,7 @@
     <dialog class="open-project" aria-label="Project details">
       <div class="modal-top">
         <button type="button" id="close-dialog">Back to shelf</button>
-        <a id="reader-repo" class="project-repo">Open GitHub repo <span aria-hidden="true">↗</span></a>
+        <a id="reader-site" class="project-site"><span></span> <span aria-hidden="true">↗</span></a>
         <nav class="turn-prints" aria-label="Browse open prints">
           <button
             type="button"

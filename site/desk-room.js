@@ -1,7 +1,7 @@
 import * as T from './vendor/three/three.module.min.js';
 import { furnishRoomObjects } from './room-objects.js?v=10';
-import { buildRoomShell } from './room-shell.js?v=13';
-import { posterSets } from './room-posters.js?v=2';
+import { buildRoomShell } from './room-shell.js?v=14';
+import { posterSets } from './room-posters.js?v=3';
 
 const leafColors = [0x72925d, 0x4a7147, 0x538254, 0x688254, 0x8a9b66];
 

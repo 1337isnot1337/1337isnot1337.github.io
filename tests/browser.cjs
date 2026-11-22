@@ -607,7 +607,7 @@ const server = http.createServer((req,res) => {
   const plane=cold.locator('.object-plane');
   await plane.focus();await cold.keyboard.press('Enter');
   await cold.locator('.open-project[open] #flyover').waitFor();
-  assert.equal(await cold.locator('#reader-repo').getAttribute('href'),'https://github.com/1337isnot1337/DOPPLERGEIST');
+  assert.equal(await cold.locator('#reader-site').getAttribute('href'),base+'/DOPPLERGEIST/');
   await cold.keyboard.press('Escape');
   await cold.waitForFunction(()=>document.activeElement.dataset.object==='plane');
   for(const next of ['proof','archive','scope']){
@@ -775,23 +775,24 @@ const server = http.createServer((req,res) => {
   await shelfMouse.close();
 
   // Playwright exposes real touch-drag injection through Chromium's CDP only.
-  // Every project reader exposes its own repository before any scrolling.
+  // Every project reader exposes its live site before any scrolling.
   const destinations = {
-   conjectures:'solved-conjectures',flyover:'DOPPLERGEIST',cpu:'nand2tetris-verilog-improved',
-   factoring:'integer-factoring',conway:'conway-99',schedule:'1337isnot1337.github.io/tree/main/src'
+   conjectures:'/solved-conjectures/',flyover:'/DOPPLERGEIST/',cpu:'/projects/hack-cpu/',
+   factoring:'/projects/integer-factoring/',conway:'/projects/conway-99/',schedule:'/imsa-map/'
   };
   for(const width of [320, 1280]) {
    const reader=await browser.newPage({viewport:{width,height:650},reducedMotion:'reduce'});
    await reader.goto(base+'/#conjectures');
    for(let step=0;step<6;step++) {
-    const button=reader.locator('.open-project[open] .project-repo:visible');
+    const button=reader.locator('.open-project[open] .project-site:visible');
     const id=await reader.locator('#detail-slot article').getAttribute('id');
-    assert.equal(await button.getAttribute('href'),'https://github.com/1337isnot1337/'+destinations[id]);
+    assert.equal(await button.evaluate(el=>el.pathname),destinations[id]);
+    assert.match(await reader.locator('#detail-slot .project-source').getAttribute('href'),/^https:\/\/github\.com\/1337isnot1337\//);
     assert.ok(await button.evaluate(el=>{
      const r=el.getBoundingClientRect();
      return el.closest('dialog').scrollTop===0 && r.top>=0 && r.bottom<=innerHeight && r.height>=44
        && el.contains(document.elementFromPoint(r.left+r.width/2,r.top+r.height/2));
-    }), id+' repository is immediately available at '+width+'px');
+    }), id+' site is immediately available at '+width+'px');
     await reader.locator('#next-detail').click();
    }
    await reader.close();

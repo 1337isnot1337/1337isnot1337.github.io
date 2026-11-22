@@ -401,8 +401,10 @@ function displayFromHash() {
   }
   document.querySelector("#print-position").textContent =
     index + 1 + " / " + prints.length;
-  const repo = article.querySelector(".project-repo");
-  document.querySelector("#reader-repo").href = repo.href;
+  const website=article.querySelector(".project-site");
+  const mobileLink=document.querySelector("#reader-site");
+  mobileLink.href=website.href;
+  mobileLink.firstElementChild.textContent=website.firstChild.textContent.trim();
   const paperColor=getComputedStyle(print).getPropertyValue('--stock').trim();
   dialog.style.setProperty('--reader-stock',paperColor||'#f7e9d3');
   document.querySelector("#close-dialog").textContent = opener?.closest("#studio") ? "Back to desk" : "Back to shelf";

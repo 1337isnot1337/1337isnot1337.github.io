@@ -134,21 +134,25 @@ export function buildRoomShell(world, {group,box,bead,cylinder,wire,finish,photo
   const braid=finish(0xbc936e,.79);
   const rod=cylinder(rear,.035,.035,span+1.10,finish(0x917454,.54,.24),center,top+.24,.317,19);
   rod.rotation.z=Math.PI/2;
+  const drapes=tag(group(rear,center,mid,.317),'window-drapes',[0,.19,0],span,height);
   for(const sign of [-1,1]){
-    const edge=center+sign*(span/2-.20);
-    const positions=[],indices=[],uv=[];
+    const edge=sign*(span/2-.20);
+    const positions=[],closed=[],indices=[],uv=[];
     const columns=40,rows=16;
     function fold(u,v){
       const gather=Math.exp(-((v-.60)**2)/.020);
       return [
         edge+sign*(u*(.69+.15*v-.225*gather)+.135*gather-(1-u)*.066*v),
-        top+.16-v*(height+.23+.033*Math.sin(u*21)),
-        .31+(.038+v*.024+.025*gather)*Math.sin(u*10*Math.PI+.52*v)
+        height/2+.16-v*(height+.23+.033*Math.sin(u*21)),
+        -.007+(.038+v*.024+.025*gather)*Math.sin(u*10*Math.PI+.52*v)
       ];
     }
     for(let row=0;row<=rows;row++)for(let col=0;col<=columns;col++){
       const v=row/rows,u=col/columns;
-      positions.push(...fold(u,v));uv.push(u,v);
+      const start=fold(u,v);
+      positions.push(...start);
+      closed.push(sign*(u*(span/2+.31)-.026),start[1],(.034+v*.022)*Math.sin(u*10*Math.PI+.52*v)+sign*.018);
+      uv.push(u,v);
       if(row&&col){
         const a=row*(columns+1)+col,b=a-columns-1;
         indices.push(a,b,b-1,a,b-1,a-1);
@@ -158,22 +162,34 @@ export function buildRoomShell(world, {group,box,bead,cylinder,wire,finish,photo
     drape.setAttribute('position',new T.Float32BufferAttribute(positions,3));
     drape.setAttribute('uv',new T.Float32BufferAttribute(uv,2));
     drape.setIndex(indices);drape.computeVertexNormals();
-    const panel=new T.Mesh(drape,curtain);panel.castShadow=true;panel.receiveShadow=true;rear.add(panel);
+    const closedPose=new T.BufferGeometry();
+    closedPose.setIndex(indices);
+    closedPose.setAttribute('position',new T.Float32BufferAttribute(closed,3));
+    closedPose.computeVertexNormals();
+    drape.morphAttributes.position=[closedPose.attributes.position];
+    drape.morphAttributes.normal=[closedPose.attributes.normal];
+    drape.computeBoundingBox();
+    drape.computeBoundingSphere();
+    const panel=new T.Mesh(drape,curtain);panel.castShadow=true;panel.receiveShadow=true;
+    panel.userData.liveCloth=true;
+    drapes.add(panel);
+    const tieback=detail('drape-tie-'+sign,drapes,edge,0,0);
     const tie=Array.from({length:7},(_,i)=>{
       const [x,y]=fold(i/6,.597+Math.sin(i*.5)*.014);
-      return [x,y,.370+Math.sin(i*Math.PI/6)*.044];
+      return [x-edge,y,.053+Math.sin(i*Math.PI/6)*.044];
     });
     for(const offset of [0,.019]){
-      wire(rear,tie.map(([x,y,z])=>[x,y+offset,z]),.013,braid).castShadow=false;
+      wire(tieback,tie.map(([x,y,z])=>[x,y+offset,z]),.013,braid).castShadow=false;
     }
     const [x,y,z]=tie[1];
-    bead(rear,x,y+.010,z+.009,.035,.027,.024,braid);
-    wire(rear,[[x,y,z],[x+.03*sign,y-.11,z+.016],[x+.015*sign,y-.17,z+.013]],.011,braid).castShadow=false;
-    bead(rear,x+.015*sign,y-.18,z+.015,.017,.034,.014,braid);
+    bead(tieback,x,y+.010,z+.009,.035,.027,.024,braid);
+    wire(tieback,[[x,y,z],[x+.03*sign,y-.11,z+.016],[x+.015*sign,y-.17,z+.013]],.011,braid).castShadow=false;
+    bead(tieback,x+.015*sign,y-.18,z+.015,.017,.034,.014,braid);
     for(let n=0;n<6;n++){
+      const hanger=detail('drape-ring-'+sign+'-'+n,drapes,edge+sign*(.043+n*.128),height/2+.225,0);
+      hanger.userData.drapeEnd=sign*(.05+n*(span/2+.12)/5);
       const ring=new T.Mesh(new T.TorusGeometry(.049,.009,7,15),rings);
-      ring.position.set(edge+sign*(.043+n*.128),top+.225,.317);
-      ring.rotation.y=Math.PI/2;rear.add(ring);
+      ring.rotation.y=Math.PI/2;hanger.add(ring);
     }
     bead(rear,center+sign*(span/2+.56),top+.24,.317,.074,.050,.047,molding);
   }

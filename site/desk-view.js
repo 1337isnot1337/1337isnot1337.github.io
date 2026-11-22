@@ -9,6 +9,7 @@ const rearAngle=Math.PI;
 const rearGain=rearAngle-frontLimit-(orbitTravel-frontTravel)*sideGain;
 const horizontalSteeringStart=.60;
 const verticalSteeringStart=.40;
+const upwardTravel=.68;
 const clamp=(value,min,max)=>Math.min(max,Math.max(min,value));
 const wrap=(value,limit)=>value>limit?value-2*limit:value< -limit?value+2*limit:value;
 const edgeSpeed=(value,threshold)=>{
@@ -22,7 +23,7 @@ export function deskView(){
 
   function drag(x,y){
     travel=wrap(travel-x,orbitTravel);
-    depth=clamp(depth+y*.98,-.68,1);
+    depth=clamp(depth+y*.98,-upwardTravel,1);
   }
 
   function look(x,y,overObject=false){
@@ -60,7 +61,7 @@ export function deskView(){
     zoom=Math.abs(zoomTarget-zoom)<.002?zoomTarget:zoom+(zoomTarget-zoom)*blend;
 
     return {
-      yaw, below:pitch, zoom:Math.exp(zoom), rear:Math.abs(yaw)>2.24?Math.sign(yaw):0,
+      yaw, below:pitch, above:Math.max(0,-pitch)/upwardTravel, zoom:Math.exp(zoom), rear:Math.abs(yaw)>2.24?Math.sign(yaw):0,
       move:waiting||travel!==lastTravel||depth!==lastDepth||Math.abs(wrap(yaw-angle,Math.PI))>.000001||pitch!==depth||zoom!==zoomTarget
     };
   }

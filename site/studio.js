@@ -53,7 +53,7 @@
   function showFurniture() {
     if (sceneStarted || !deskIsReadyToMount()) return;
     sceneStarted=true;
-    import("./furniture.js?v=65").then(module => {
+    import("./furniture.js?v=66").then(module => {
       if (!deskIsReadyToMount()) { sceneStarted=false; return; }
       try { module.mountFurniture(stage,showGraphicsFallback); }
       catch { showGraphicsFallback(); }

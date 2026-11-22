@@ -81,6 +81,7 @@ def install_adapter(module):
                             'name="twitter:card" content="summary_large_image"')
         return head + f'''
 <meta property="og:image" content="{PREVIEW}">
+<meta property="og:image:type" content="image/jpeg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="{PREVIEW_ALT}">
