@@ -1,6 +1,6 @@
 import * as T from './vendor/three/three.module.min.js';
 import { furnishRoomObjects } from './room-objects.js?v=4';
-import { buildRoomShell } from './room-shell.js?v=4';
+import { buildRoomShell } from './room-shell.js?v=5';
 
 // Atlas order: name, source aspect ratio, wall x/y, physical width, rotation.
 const artwork = [
@@ -22,27 +22,68 @@ const artwork = [
   ['tux', 300/356, 1.25, -.10, 1.00, -.036],
   ['atla', 2732/2048, .46, -.67, 2.33, .016],
 ];
-const leafColors = [0x58724a, 0x3b6244, 0x446e4b, 0x638757, 0x81945e];
-const ivyLeaf = new T.BufferGeometry();
-ivyLeaf.setAttribute('position', new T.Float32BufferAttribute([
-  0,0,.022, -.146,.114,0, -.149,.238,0, -.077,.30,.007, 0,.42,.022,
-  .077,.30,.007, .149,.238,0, .146,.114,0, 0,.211,.060,
-], 3));
-ivyLeaf.setIndex([0,1,8, 1,2,8, 2,3,8, 3,4,8, 4,5,8, 5,6,8, 6,7,8, 7,0,8]);
-ivyLeaf.setAttribute('uv', new T.Float32BufferAttribute([
-  .5,0, 0,.27, 0,.57, .25,.72, .5,1, .75,.72, 1,.57, 1,.27, .5,.5,
-], 2));
-ivyLeaf.computeVertexNormals();
+const leafColors = [0x72925d, 0x4a7147, 0x538254, 0x688254, 0x8a9b66];
+
+function ivyGeometry() {
+  const outline = new T.CatmullRomCurve3([
+    [0,.022],[-.105,-.012],[-.143,.056],[-.162,.133],[-.201,.221],[-.099,.215],
+    [-.073,.289],[.009,.424],[.074,.274],[.103,.217],[.198,.228],[.157,.130],
+    [.132,.043],[.094,-.005],
+  ].map(([x,y])=>new T.Vector3(x,y,0)),true);
+  const points=outline.getPoints(30).slice(0,-1);
+  const positions=[0,.153,.053],uv=[.5,.39],indices=[];
+  for(const radius of [.38,.73,1]){
+    for(const point of points){
+      const x=point.x*radius, y=.153+(point.y-.153)*radius;
+      const z=.055*(1-radius**2)+.017*Math.sin(y*16+x*12)-.043*y;
+      positions.push(x,y,z);uv.push(.5+x/.43,(y+.02)/.45);
+    }
+  }
+  for(let i=0;i<points.length;i++){
+    const j=(i+1)%points.length;
+    indices.push(0,j+1,i+1);
+    for(const ring of [0,1]){
+      const a=1+ring*points.length+i,b=1+ring*points.length+j;
+      indices.push(a,b,b+points.length,a,b+points.length,a+points.length);
+    }
+  }
+  const geometry=new T.BufferGeometry();
+  geometry.setAttribute('position',new T.Float32BufferAttribute(positions,3));
+  geometry.setAttribute('uv',new T.Float32BufferAttribute(uv,2));
+  geometry.setIndex(indices);geometry.computeVertexNormals();
+  return geometry;
+}
+const ivyLeaf=ivyGeometry();
 
 export function decorateRoom(world, { narrow, half, group, box, bead, cylinder, wire, finish, photo, tag, drawn, weave, wood, trim, floorMat }) {
-  const walls=buildRoomShell(world,{group,box,bead,cylinder,finish,photo,weave,wood,trim,floorMat});
+  const walls=buildRoomShell(world,{group,box,bead,cylinder,wire,finish,photo,drawn,weave,wood,trim,floorMat});
   const atlas = photo('/assets/furniture/room-atlas.webp?v=4');
   const ink = new T.MeshStandardMaterial({ map: atlas, roughness: .93, alphaTest: .28 });
   const cutout = ink.clone();
   cutout.side = T.DoubleSide;
   const paper = new T.MeshStandardMaterial({ color: 0xe8dfce, roughness: .97, side: T.BackSide });
-  const stem = finish(0x506741);
-  const foliage = leafColors.map(color => new T.MeshStandardMaterial({ color, roughness: .88, side: T.DoubleSide }));
+  const stem = finish(0x5e6e43);
+  const leafCanvas=document.createElement('canvas');
+  leafCanvas.width=leafCanvas.height=160;
+  const inkLeaf=leafCanvas.getContext('2d');
+  const leafShade=inkLeaf.createLinearGradient(0,0,160,135);
+  leafShade.addColorStop(0,'#9c9e87');
+  leafShade.addColorStop(.48,'#e6e9d2');
+  leafShade.addColorStop(1,'#bfc6a6');
+  inkLeaf.fillStyle=leafShade;inkLeaf.fillRect(0,0,160,160);
+  inkLeaf.strokeStyle='#f9f8dc90';inkLeaf.lineWidth=1.4;
+  inkLeaf.beginPath();inkLeaf.moveTo(80,153);inkLeaf.quadraticCurveTo(72,75,84,7);inkLeaf.stroke();
+  for(const sign of [-1,1])for(let i=0;i<5;i++){
+    const y=139-i*20, span=64-i*9;
+    inkLeaf.beginPath();inkLeaf.moveTo(79,y);
+    inkLeaf.quadraticCurveTo(79+sign*span*.74,y-12,79+sign*span,y-33);inkLeaf.stroke();
+    inkLeaf.beginPath();inkLeaf.moveTo(79+sign*span*.50,y-14);
+    inkLeaf.quadraticCurveTo(79+sign*span*.64,y-31,79+sign*span*.56,y-40);inkLeaf.stroke();
+  }
+  const leafGrain=new T.CanvasTexture(leafCanvas);leafGrain.colorSpace=T.SRGBColorSpace;
+  const foliage = leafColors.map(color => new T.MeshStandardMaterial({
+    color,map:leafGrain,roughness:.57,side:T.DoubleSide,
+  }));
 
   function poster(wall, index) {
     const [id, aspect, x, y, w, tilt] = artwork[index];

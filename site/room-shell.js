@@ -2,10 +2,10 @@ import * as T from './vendor/three/three.module.min.js';
 import { buildWindowView } from './room-window-view.js?v=2';
 
 // The hutch sits against the window wall.
-export function buildRoomShell(world, {group,box,bead,cylinder,finish,photo,weave,wood,trim,floorMat}) {
+export function buildRoomShell(world, {group,box,bead,cylinder,wire,finish,photo,drawn,weave,wood,trim,floorMat}) {
   const width=9.55, backZ=-2.68, frontZ=10.65, floor=-3.07, ceiling=6.65;
   const length=frontZ-backZ, middle=(frontZ+backZ)/2;
-  const molding=finish(0xc4ab97,.85);
+  const molding=finish(0xd1bca8,.83);
   const texture=document.createElement('canvas');
   texture.width=texture.height=192;
   const ctx=texture.getContext('2d'), surface=ctx.createImageData(192,192);
@@ -33,7 +33,7 @@ export function buildRoomShell(world, {group,box,bead,cylinder,finish,photo,weav
   walls.science.rotation.y=-Math.PI/2;
   const opening={left:-2.97,right:2.75,bottom:3.39,top:6.19};
   function wall(parent,span,paint,wainscot,window){
-    const plaster=new T.MeshStandardMaterial({color:paint,map:plasterGrain,bumpMap:plasterGrain,bumpScale:.015,roughness:.97});
+    const plaster=new T.MeshStandardMaterial({color:paint,map:plasterGrain,bumpMap:plasterGrain,bumpScale:.008,roughness:.97});
     const wallSection=(left,right,bottom,top)=>{
       box(parent,right-left,top-bottom,.26,plaster,(left+right)/2,(bottom+top)/2,-.13).castShadow=false;
     };
@@ -52,10 +52,10 @@ export function buildRoomShell(world, {group,box,bead,cylinder,finish,photo,weav
       box(parent,.025,1.32,.018,finish(wainscot,.84),x,floor+.74,.044,.003).castShadow=false;
     }
   }
-  wall(walls.back,2*width,0xb0b8b3,0x748985,opening);
-  wall(walls.front,2*width,0xb4a69d,0x897972);
-  wall(walls.music,length,0xb6b8a0,0x818873);
-  wall(walls.science,length,0xc2adaf,0x96858e);
+  wall(walls.back,2*width,0xb3bcb0,0x637d78,opening);
+  wall(walls.front,2*width,0xc2aca0,0x92796b);
+  wall(walls.music,length,0xb9b99e,0x788571);
+  wall(walls.science,length,0xc0aab1,0x897589);
   box(world,2*width,.16,length,floorMat,0,floor-.08,middle).castShadow=false;
   box(world,2*width,.115,length,finish(0xc8beb4,.97),0,ceiling+.0575,middle).castShadow=false;
 
@@ -85,21 +85,27 @@ export function buildRoomShell(world, {group,box,bead,cylinder,finish,photo,weav
   bead(rear,center+.04,mid+.039,.162,.029,.027,.020,latch);
   for(const dx of [-.100,.100])bead(rear,center-.03+dx,mid-.065,.139,.012,.012,.008,finish(0x6a5340,.45,.45));
   const curtain=new T.MeshStandardMaterial({
-    color:0x8f7780,map:weave,bumpMap:weave,bumpScale:.012,roughness:.91,side:T.DoubleSide
+    color:0xa17c7e,map:weave,bumpMap:weave,bumpScale:.009,roughness:.91,side:T.DoubleSide
   });
   const rings=finish(0xa48a69,.53,.21);
+  const braid=finish(0xbc936e,.79);
   const rod=cylinder(rear,.035,.035,span+1.10,finish(0x917454,.54,.24),center,top+.24,.317,19);
   rod.rotation.z=Math.PI/2;
   for(const sign of [-1,1]){
     const edge=center+sign*(span/2-.20);
     const positions=[],indices=[],uv=[];
     const columns=40,rows=16;
+    function fold(u,v){
+      const gather=Math.exp(-((v-.60)**2)/.020);
+      return [
+        edge+sign*(u*(.69+.15*v-.225*gather)+.135*gather-(1-u)*.066*v),
+        top+.16-v*(height+.23+.033*Math.sin(u*21)),
+        .31+(.038+v*.024+.025*gather)*Math.sin(u*10*Math.PI+.52*v)
+      ];
+    }
     for(let row=0;row<=rows;row++)for(let col=0;col<=columns;col++){
       const v=row/rows,u=col/columns;
-      const x=edge+sign*(u*(.69+.13*v)-(1-u)*.061*v);
-      const y=top+.16-v*(height+.23+.026*Math.sin(u*23));
-      const z=.31+(.037+v*.027)*Math.sin(u*10*Math.PI+.33*v);
-      positions.push(x,y,z);uv.push(u,v);
+      positions.push(...fold(u,v));uv.push(u,v);
       if(row&&col){
         const a=row*(columns+1)+col,b=a-columns-1;
         indices.push(a,b,b-1,a,b-1,a-1);
@@ -110,6 +116,17 @@ export function buildRoomShell(world, {group,box,bead,cylinder,finish,photo,weav
     drape.setAttribute('uv',new T.Float32BufferAttribute(uv,2));
     drape.setIndex(indices);drape.computeVertexNormals();
     const panel=new T.Mesh(drape,curtain);panel.castShadow=true;panel.receiveShadow=true;rear.add(panel);
+    const tie=Array.from({length:7},(_,i)=>{
+      const [x,y]=fold(i/6,.597+Math.sin(i*.5)*.014);
+      return [x,y,.370+Math.sin(i*Math.PI/6)*.044];
+    });
+    for(const offset of [0,.019]){
+      wire(rear,tie.map(([x,y,z])=>[x,y+offset,z]),.013,braid).castShadow=false;
+    }
+    const [x,y,z]=tie[1];
+    bead(rear,x,y+.010,z+.009,.035,.027,.024,braid);
+    wire(rear,[[x,y,z],[x+.03*sign,y-.11,z+.016],[x+.015*sign,y-.17,z+.013]],.011,braid).castShadow=false;
+    bead(rear,x+.015*sign,y-.18,z+.015,.017,.034,.014,braid);
     for(let n=0;n<6;n++){
       const ring=new T.Mesh(new T.TorusGeometry(.049,.009,7,15),rings);
       ring.position.set(edge+sign*(.043+n*.128),top+.225,.317);
@@ -130,7 +147,7 @@ export function buildRoomShell(world, {group,box,bead,cylinder,finish,photo,weav
   bead(entry,3.54,-.243,.349,.084,.072,.062,finish(0xbd9b66,.44,.36));
   box(entry,3.09,.069,.225,trim,2.46,-2.972,.172,.013);
   box(entry,5.85,2.12,.112,trim,-4.18,2.18,.055,.029);
-  box(entry,5.62,1.88,.047,finish(0x99766b,.92),-4.18,2.18,.095,.010);
+  drawn(entry,5.61,1.87,paintValleyCloth,-4.18,2.18,.117,false,180);
 
   // Runners sit on the floor, with the desk feet still grounded.
   const rug=new T.MeshStandardMaterial({color:0x64716b,map:weave,bumpMap:weave,bumpScale:.020,roughness:.98});
@@ -141,4 +158,56 @@ export function buildRoomShell(world, {group,box,bead,cylinder,finish,photo,weav
   const runner=box(world,2.55,.025,4.85,runnerFabric,-6.65,floor+.012,4.04,.011);
   runner.rotation.y=.09;runner.castShadow=false;
   return walls;
+}
+
+// A contour print on the cloth backing of the rear display.
+function paintValleyCloth(c,w,h){
+  const ground=c.createLinearGradient(0,0,w,h);
+  ground.addColorStop(0,'#304a49');ground.addColorStop(.52,'#49645c');ground.addColorStop(1,'#2d4242');
+  c.fillStyle=ground;c.fillRect(0,0,w,h);
+  c.save();
+  c.beginPath();c.rect(.09,.09,w-.18,h-.18);c.clip();
+  c.strokeStyle='#c1c29d27';c.lineWidth=.006;
+  for(let x=.10;x<w;x+=.215){c.beginPath();c.moveTo(x,0);c.lineTo(x,h);c.stroke();}
+  for(let y=.12;y<h;y+=.215){c.beginPath();c.moveTo(0,y);c.lineTo(w,y);c.stroke();}
+  const river=x=>h*.53+.52*Math.cos(x*.69+.25)+.073*Math.sin(x*3.3);
+  const peaks=[[.76,.17,1.34,.65,.89],[1.78,1.52,.89,.56,1.12],
+    [3.90,1.73,1.39,.76,1.05],[5.03,.39,.86,.55,.94]];
+  const columns=100,rows=36,dx=w/columns,dy=h/rows;
+  const samples=Array.from({length:rows+1},(_,row)=>Array.from({length:columns+1},(_,col)=>{
+    const x=col*dx,y=row*dy;
+    const valley=.33*Math.exp(-(((y-river(x))/.18)**2));
+    return peaks.reduce((z,[cx,cy,rx,ry,rise])=>
+      z+rise*Math.exp(-(((x-cx)/rx)**2+((y-cy)/ry)**2)),.12+.071*Math.sin(x*2.6+y*5))-valley;
+  }));
+  // Draw isolines by interpolating at the edges of each terrain cell.
+  const corners=[[0,0],[1,0],[1,1],[0,1]];
+  c.lineCap='round';
+  for(let i=1;i<=16;i++){
+    const level=i*.068,major=i%4===0;
+    c.beginPath();
+    for(let y=0;y<rows;y++)for(let x=0;x<columns;x++){
+      const heights=corners.map(([ix,iy])=>samples[y+iy][x+ix]);
+      const cuts=[];
+      for(let edge=0;edge<4;edge++){
+        const next=(edge+1)%4;
+        if((heights[edge]<level)===(heights[next]<level))continue;
+        const t=(level-heights[edge])/(heights[next]-heights[edge]);
+        cuts.push(corners[edge].map((offset,axis)=>offset+(corners[next][axis]-offset)*t));
+      }
+      if(cuts.length===0)continue;
+      if(cuts.length===4 && (heights[0]<level)!==(heights.reduce((a,b)=>a+b)/4<level))cuts.push(cuts.shift());
+      for(let j=0;j<cuts.length;j+=2){
+        c.moveTo((x+cuts[j][0])*dx,(y+cuts[j][1])*dy);
+        c.lineTo((x+cuts[j+1][0])*dx,(y+cuts[j+1][1])*dy);
+      }
+    }
+    c.strokeStyle=major?'#ded3a69c':'#d0c7986e';c.lineWidth=major?.012:.007;c.stroke();
+  }
+  c.beginPath();c.moveTo(0,river(0));
+  for(let x=dx;x<=w;x+=dx)c.lineTo(x,river(x));
+  c.strokeStyle='#b7e0d7cd';c.lineWidth=.020;c.stroke();
+  c.restore();
+  c.strokeStyle='#cfb885';c.lineWidth=.012;c.strokeRect(.075,.075,w-.15,h-.15);
+  c.strokeStyle='#cbba917a';c.lineWidth=.006;c.strokeRect(.123,.123,w-.246,h-.246);
 }

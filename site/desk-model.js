@@ -5,7 +5,8 @@ import { lampProjection } from './desk-lamp.js?v=1';
 import { paintScope, followProbe } from './desk-scope.js?v=1';
 import { airframeGeometry, wingUnderside } from './model-plane.js?v=2';
 import { mergeGeometries } from './vendor/three/BufferGeometryUtils.js';
-import { decorateRoom } from './desk-room.js?v=8';
+import { decorateRoom } from './desk-room.js?v=9';
+import { corkMaterial, curledPrint, scopeScale } from './desk-finishes.js?v=1';
 import { RoundedBoxGeometry } from './vendor/three/RoundedBoxGeometry.js';
 
 export function furnish(scene, narrow, repaint, software=false) {
@@ -101,9 +102,9 @@ export function furnish(scene, narrow, repaint, software=false) {
   const relief=software?null:loader.load('assets/furniture/grain-relief.webp',repaint);
   if(relief){relief.wrapS=relief.wrapT=T.RepeatWrapping;relief.anisotropy=4;}
   const wood=new T.MeshStandardMaterial({
-    map:woodMap,roughnessMap:relief,bumpMap:relief,bumpScale:.016,roughness:.91,color:0xe0c6ab
+    map:woodMap,roughnessMap:relief,bumpMap:relief,bumpScale:.011,roughness:.84,color:0xd9beaa
   });
-  const trim=wood.clone();trim.color.set(0xc19b77);
+  const trim=wood.clone();trim.color.set(0xb39174);
   const darkWood=wood.clone();darkWood.color.set(0x987358);
   const floorMap=woodMap.clone();floorMap.repeat.set(5,6);
   const floorMat=new T.MeshStandardMaterial({map:floorMap,color:0x967f72,roughness:.68});
@@ -202,10 +203,17 @@ export function furnish(scene, narrow, repaint, software=false) {
   box(world,width-.36,2.95,.025,finish(0x6c6855),0,1.57,-2.15);
   const backing=drawn(world,width-.36,2.95,(c,w,h)=>{
     const light=c.createLinearGradient(0,0,w,h);
-    light.addColorStop(0,'#5b5446');
-    light.addColorStop(.51,'#7b7159');
-    light.addColorStop(1,'#625b4a');
+    light.addColorStop(0,'#4b4e42');
+    light.addColorStop(.51,'#656a55');
+    light.addColorStop(1,'#545846');
     c.fillStyle=light;c.fillRect(0,0,w,h);
+    c.lineWidth=.008;
+    for(let y=.008;y<h;y+=.022){
+      c.strokeStyle=y%.066<.024?'#e3debf13':'#211e1916';
+      c.beginPath();c.moveTo(0,y);c.lineTo(w,y);c.stroke();
+    }
+    c.strokeStyle='#d5cdb518';
+    for(let x=.008;x<w;x+=.031){c.beginPath();c.moveTo(x,0);c.lineTo(x,h);c.stroke();}
     for(const y of [0,h*.548]){
       const shelfShadow=c.createLinearGradient(0,y,0,y+.29);
       shelfShadow.addColorStop(0,'#2f24194f');
@@ -324,17 +332,27 @@ export function furnish(scene, narrow, repaint, software=false) {
   const boardWidth=narrow?1.93:4.02,boardHeight=narrow?1.27:1.10;
   const pinboard=tag(group(world,narrow?.24:.08,.75,-1.58),'pinboard',[0,0,.08],boardWidth,boardHeight);
   box(pinboard,boardWidth,boardHeight,.075,trim,0,0,0,.021);
-  box(pinboard,boardWidth-.06,boardHeight-.06,.035,finish(0xb88959),0,0,.047);
+  box(pinboard,boardWidth-.095,boardHeight-.095,.030,corkMaterial(),0,0,.038);
+  for(const y of [-1,1]){
+    box(pinboard,boardWidth-.035,.045,.040,wood,0,y*(boardHeight-.052)/2,.045,.006);
+  }
+  for(const x of [-1,1]){
+    box(pinboard,.045,boardHeight-.096,.040,wood,x*(boardWidth-.052)/2,0,.045,.006);
+  }
   const printW=narrow?.351:.52,printH=narrow?.535:.79;
+  const printStock=new T.MeshStandardMaterial({color:0xf9efd9,roughness:.94,side:T.DoubleSide});
   const buttons=document.querySelectorAll('[data-board-print]');
   buttons.forEach((button,i)=>{
     const x=narrow?(i%3-1)*.595:(i-2.5)*.646;
     const y=narrow?(i<3?.297:-.297):[.027,-.019,.042,-.023,.015,-.01][i];
     const g=tag(group(pinboard,x,y,.084),button.dataset.object,[0,0,.016],printW,printH);
     g.rotation.z=[.040,-.065,.032,-.022,.053,-.042][i];
-    box(g,printW,printH,.012,paper);
+    mesh(g,curledPrint(printW,printH,printW,printH),printStock);
     const artW=printW*.93;
-    illustration(g,'assets/furniture/prints/'+button.dataset.boardPrint+'.webp',artW,artW*1.25,0,.019,.009);
+    const printInk=new T.MeshStandardMaterial({
+      map:photo('assets/furniture/prints/'+button.dataset.boardPrint+'.webp'),roughness:.82,
+    });
+    mesh(g,curledPrint(artW,artW*1.25,printW,printH,.019,.002),printInk,0,.019).castShadow=false;
     const clip=detail('pin-clip-'+button.dataset.object,g,-printW*.32,printH*.39,.025);
     const metal=mesh(clip,new T.TorusGeometry(.023,.004,7,13),brassDark);
     metal.scale.y=1.6;metal.rotation.z=.26;clip.visible=false;
@@ -342,7 +360,7 @@ export function furnish(scene, narrow, repaint, software=false) {
     const head=detail('pin-head-'+button.dataset.object,g,0,printH/2-.028,.025);
     bead(head,0,0,0,pin,pin,pin,brass);
     cylinder(head,pin*.28,pin*.18,pin*1.8,brass,0,0,-pin*.51,8).rotation.x=Math.PI/2;
-    const hole=detail('pin-hole-'+button.dataset.object,pinboard,x,y+printH/2-.028,.040);
+    const hole=detail('pin-hole-'+button.dataset.object,pinboard,x,y+printH/2-.028,.054);
     bead(hole,0,0,0,pin*.32,pin*.32,.001,finish(0x57402f));
     hole.visible=false;
   });
@@ -391,12 +409,23 @@ export function furnish(scene, narrow, repaint, software=false) {
   for(const x of [-.62,.62])box(scope,.19,.095,.54,finish(0x393934),x,.075,.01,.025);
   box(scope,1.57,.86,.075,finish(0xb9baa6,.68),0,.54,.45,.034);
   box(scope,.92,.58,.04,finish(0x4a534b),-.234,.57,.503,.028);
+  box(scope,.836,.500,.022,finish(0x263a34,.58),-.234,.57,.516,.014);
+  drawn(scope,.50,.662,scopeScale,.48,.571,.492,false,780);
   drawn(scope,.80,.47,(c,w,h)=>{
     const glass=c.createRadialGradient(w*.42,h*.47,0,w*.48,h*.47,w*.62);
     glass.addColorStop(0,'#20453b');glass.addColorStop(.72,'#102e2d');glass.addColorStop(1,'#061c20');
     c.fillStyle=glass;c.fillRect(0,0,w,h);c.strokeStyle='#345248';c.lineWidth=.003;
     for(let i=1;i<10;i++){c.beginPath();c.moveTo(w*i/10,0);c.lineTo(w*i/10,h);c.stroke();}
     for(let i=1;i<6;i++){c.beginPath();c.moveTo(0,h*i/6);c.lineTo(w,h*i/6);c.stroke();}
+    c.strokeStyle='#73907a80';
+    for(let i=1;i<40;i++){
+      const x=w*i/40, tick=i%4===0?.015:.006;
+      c.beginPath();c.moveTo(x,h*.5-tick);c.lineTo(x,h*.5+tick);c.stroke();
+    }
+    for(let i=1;i<25;i++){
+      const y=h*i/25;
+      c.beginPath();c.moveTo(w/2-.006,y);c.lineTo(w/2+.006,y);c.stroke();
+    }
     c.shadowColor='#b8f796';c.shadowBlur=5;c.strokeStyle='#d4f3a9';c.lineWidth=.007;c.beginPath();
     for(let i=0;i<=190;i++){const x=i/190*w,y=h*(.50+.26*Math.sin(i/190*Math.PI*4.5));if(i)c.lineTo(x,y);else c.moveTo(x,y);}c.stroke();c.shadowBlur=0;
   },-.232,.57,.53);
@@ -411,14 +440,14 @@ export function furnish(scene, narrow, repaint, software=false) {
   },0,0,0);
   for(const [x,y,r] of [[.49,.66,.109],[.41,.40,.067],[.62,.40,.067]]){
     const knob=x===.49?detail('tuner',scope,x,y,.53):group(scope,x,y,.53);
-    if(x===.49){
-      for(const a of [-.75,-.25,.25,.75]){
-        bead(scope,x-Math.sin(a)*.136,y+Math.cos(a)*.136,.504,.006,.006,.003,brassDark);
-      }
-    }
-    const k=cylinder(knob,r,r,.10,finish(0x474d46),0,0,0);k.rotation.x=Math.PI/2;
+    const collar=cylinder(knob,r*1.17,r*1.17,.012,finish(0x787c68,.49),0,0,-.027,22);
+    collar.rotation.x=Math.PI/2;
+    const k=cylinder(knob,r,r*.98,.094,finish(0x444c42,.69),0,0,.003,18);k.rotation.x=Math.PI/2;
+    const face=cylinder(knob,r*.82,r*.87,.012,finish(0x54584b,.59),0,0,.049,30);face.rotation.x=Math.PI/2;
     box(knob,.013,r*.59,.008,cream,0,r*.29,.057);
   }
+  bead(scope,.625,.779,.500,.018,.018,.010,finish(0x73352e,.40));
+  bead(scope,.627,.781,.507,.010,.010,.006,finish(0xcf8b6b,.33));
   const screenGlow=detail('scope-glow',scope,-.232,.57,.534);
   const matchedStrip=detail('scope-strip',scope,-.232,.545,.545);
   box(matchedStrip,.747,.29,.012,finish(0xdecaa6),0,0,0,.004);
@@ -486,6 +515,11 @@ export function furnish(scene, narrow, repaint, software=false) {
   }
   // Inset aileron hinge lines follow the changing camber and dihedral out to each tip.
   const seam=finish(0x92574a,.67);
+  for(let i=0;i<9;i++){
+    const angle=i*Math.PI/8;
+    bead(plane,.178*Math.cos(angle),.173*Math.sin(angle)-.006,.654,
+      .005,.005,.006,propMetal);
+  }
   for(const side of [-1,1]){
     wire(plane,[[.65*side,.007,-.113],[.86*side,.024,-.119],[1.13*side,.047,-.137],[1.32*side,.068,-.148]],.0038,seam);
     bead(plane,.105*side,-.051,.898,.036,.026,.031,finish(0x473d39,.62));
@@ -761,7 +795,17 @@ export function furnish(scene, narrow, repaint, software=false) {
   drawn(cover,1.09,1.45,(c,w,h)=>{
     c.strokeStyle='#caa986';c.lineWidth=.008;c.strokeRect(.035,.035,w-.07,h-.07);
     c.lineWidth=.003;c.strokeRect(.062,.062,w-.124,h-.124);
-    c.beginPath();c.moveTo(w*.43,h*.76);c.quadraticCurveTo(w*.54,h*.68,w*.65,h*.75);c.quadraticCurveTo(w*.54,h*.84,w*.43,h*.76);c.stroke();
+    for(const x of [.12,w-.12])for(const y of [.12,h-.12]){
+      c.beginPath();c.moveTo(x,y-.017);c.lineTo(x+.014,y);c.lineTo(x,y+.017);c.lineTo(x-.014,y);c.closePath();c.stroke();
+    }
+    c.lineWidth=.005;
+    c.beginPath();c.moveTo(w*.39,h*.80);c.quadraticCurveTo(w*.53,h*.80,w*.65,h*.67);c.stroke();
+    for(const [t,sign] of [[.28,-1],[.42,1],[.55,-1],[.69,1],[.82,-1]]){
+      const x=w*(.39+.26*t),y=h*(.80-.13*t*t);
+      c.beginPath();c.moveTo(x,y);
+      c.quadraticCurveTo(x+.009,y+.060*sign,x+.073,y+.074*sign);
+      c.quadraticCurveTo(x+.065,y+.021*sign,x,y);c.stroke();
+    }
   },.611,.025,0,true);
   const binder=detail('binder',file,-.47,.13,-.62);
   box(binder,.30,.075,.14,finish(0x463f3c,.46,.25),0,-.035,.02,.018);
