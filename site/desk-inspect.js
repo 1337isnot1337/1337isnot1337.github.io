@@ -1,5 +1,6 @@
 import * as T from './vendor/three/three.module.min.js';
 import { attachHeldArrows } from './desk-arrows.js?v=1';
+import { shelfInspection } from './shelf-inspection.js?v=1';
 
 // One renderer serves the room and the object in hand. Capture the room once per pickup.
 export function inspectDeskObjects(stage,engine,room,deskCamera,getModel,redraw,life,motion){
@@ -21,9 +22,7 @@ export function inspectDeskObjects(stage,engine,room,deskCamera,getModel,redraw,
     depthWrite:false,depthTest:false,uniforms:{frame:{value:null},focus:{value:1}},
     vertexShader:'varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,1.,1.);}',
     fragmentShader:`varying vec2 vUv;uniform sampler2D frame;uniform float focus;
-      void main(){vec2 d=vec2(.004,.006)*focus;float lod=2.*focus;
-        vec3 color=.4*textureLod(frame,vUv,lod).rgb;
-        color+=.15*(textureLod(frame,vUv+d,lod).rgb+textureLod(frame,vUv-d,lod).rgb+textureLod(frame,vUv+vec2(d.x,-d.y),lod).rgb+textureLod(frame,vUv+vec2(-d.x,d.y),lod).rgb);
+      void main(){vec3 color=textureLod(frame,vUv,2.28*focus).rgb;
         float edge=smoothstep(.13,.73,distance(vUv,vec2(.5,.52)));
         gl_FragColor=vec4(mix(color,mix(color*.39,vec3(.045,.027,.039),.32+edge*.38),focus),1.);
         #include <tonemapping_fragment>
@@ -32,15 +31,15 @@ export function inspectDeskObjects(stage,engine,room,deskCamera,getModel,redraw,
   });
   const screen=new T.Mesh(new T.PlaneGeometry(2,2),backdrop);
   screen.frustumCulled=false;screen.renderOrder=-1000;display.add(screen);
-  let active='',source=null,snapshot=null,opener=null,using=false,press=null,tap=null;
-  let yaw=0,pitch=0,radius=1,aspect=0,part='';
+  let active='',source=null,snapshot=null,opener=null,using=false,press=null,tap=null,working=null;
+  let yaw=0,pitch=0,radius=1,aspect=0,part='',control='';
   let zoom=0,zoomTarget=0,fitDistance=1,liftStarted=-Infinity,liftScale=1;
   const liftOffset=new T.Vector2();
   const loader=new T.TextureLoader();
   let detailedPrint=null;
   const ray=new T.Raycaster(),screenPoint=new T.Vector2();
   function hitsObject(e){
-    part='';
+    part='';control='';
     if(!source)return true;
     const r=surface.getBoundingClientRect();
     screenPoint.set((e.clientX-r.left)/r.width*2-1,1-(e.clientY-r.top)/r.height*2);
@@ -49,7 +48,10 @@ export function inspectDeskObjects(stage,engine,room,deskCamera,getModel,redraw,
       for(let n=result.object;n;n=n.parent)if(!n.visible)return false;
       return true;
     });
-    for(let n=hit?.object;n&&!part;n=n.parent)part=n.userData.detail||'';
+    for(let n=hit?.object;n&&!(part&&control);n=n.parent){
+      part ||= n.userData.detail||'';
+      control ||= n.userData.shelfControl||'';
+    }
     return Boolean(hit);
   }
   function rotate(dx,dy){
@@ -61,7 +63,7 @@ export function inspectDeskObjects(stage,engine,room,deskCamera,getModel,redraw,
   function restPose(){
     yaw=active.includes('pencil')?-.72:-.24;
     pitch=active==='tape'||['drawer-note','crumb-plan','shim','screw'].includes(active)?.90:
-      active.includes('pencil')?.94:active==='cup'?.32:.16;
+      active.includes('pencil')?.94:active==='cup'?.32:active==='prop-pocket-compass'?-.72:.16;
   }
   function zoomBy(delta){
     zoomTarget=T.MathUtils.clamp(zoomTarget+delta,Math.log(.74),Math.log(1.62));
@@ -126,7 +128,7 @@ export function inspectDeskObjects(stage,engine,room,deskCamera,getModel,redraw,
     (x,y)=>rotate(x*1.5,y*1.5));
   function putBack(){
     if(!active)return;
-    stopArrows();
+    stopArrows();working=null;control='';delete surface.dataset.shelfControl;
     life.stow(active,yaw);life.inspect('',active,null,'close');active='';source=null;part='';
     cancelPress();releasePrint();stand.clear();snapshot?.dispose();snapshot=null;
     backdrop.uniforms.frame.value=null;stage.classList.remove('inspecting');redraw();
@@ -146,6 +148,9 @@ export function inspectDeskObjects(stage,engine,room,deskCamera,getModel,redraw,
     if(active.startsWith('room-') && (e.key==='Enter' || e.key===' ')){
       e.preventDefault();followPoster();return;
     }
+    if(working&&(e.key==='Enter'||e.key===' ')){
+      e.preventDefault();working.activate(working.primary,motion.matches);redraw();return;
+    }
     if(e.key==='Home'){
       e.preventDefault();restPose();zoomTarget=0;life.inspect(part,active,{yaw,pitch},'pose');redraw();return;
     }
@@ -163,14 +168,16 @@ export function inspectDeskObjects(stage,engine,room,deskCamera,getModel,redraw,
     if(!e.isPrimary||e.button!==0)return;
     const onObject=hitsObject(e);
     tap=null;
-    press={id:e.pointerId,x:e.clientX,y:e.clientY,part,onObject,dragging:false,
+    press={id:e.pointerId,x:e.clientX,y:e.clientY,part,control,onObject,dragging:false,
       sensitivity:1.25*Math.PI/Math.max(320,Math.min(surface.clientWidth,surface.clientHeight))};
     surface.setPointerCapture(e.pointerId);
   });
   surface.addEventListener('pointermove',e=>{
     if(press?.id===e.pointerId && !(e.buttons&1))cancelPress(e);
     if(!press || press.id!==e.pointerId){
-      if(active==='plant'&&hitsObject(e)&&part==='springtail'){
+      if(working){
+        hitsObject(e);surface.toggleAttribute('data-shelf-control',Boolean(control));
+      }else if(active==='plant'&&hitsObject(e)&&part==='springtail'){
         life.inspect(part,active,null,'hover');redraw();
       }
       return;
@@ -182,7 +189,8 @@ export function inspectDeskObjects(stage,engine,room,deskCamera,getModel,redraw,
       surface.classList.add('is-turning');
     }
     const x=dx*press.sensitivity,y=dy*press.sensitivity;
-    if(active==='tape' && press.onObject && life.windTape(press.part,x,y))redraw();
+    if(working?.drag(press.control,x,y,stand.quaternion))redraw();
+    else if(active==='tape' && press.onObject && life.windTape(press.part,x,y))redraw();
     else if((active==='archive'||active==='proof')&&life.pullSlip(press.part,x,y))redraw();
     else {
       if(active==='plant')life.brushLeaf(press.part,x,y);
@@ -197,7 +205,7 @@ export function inspectDeskObjects(stage,engine,room,deskCamera,getModel,redraw,
     if(!onObject && !started.onObject)close();
     else if(onObject && started.onObject){
       if(active.startsWith('room-'))followPoster();
-      else life.inspect(part,active,null,'tap');
+      else if(!working?.activate(control,motion.matches))life.inspect(part,active,null,'tap');
       if(active==='cup')use.textContent=life.cupAction();
       redraw();
     }
@@ -216,6 +224,7 @@ export function inspectDeskObjects(stage,engine,room,deskCamera,getModel,redraw,
     if(ended && surface.hasPointerCapture(ended.id))surface.releasePointerCapture(ended.id);
   }
   surface.addEventListener('pointercancel',cancelPress);
+  surface.addEventListener('pointerleave',()=>delete surface.dataset.shelfControl);
   surface.addEventListener('lostpointercapture',cancelPress);
   window.addEventListener('blur',()=>cancelPress());
   window.addEventListener('hashchange',close);
@@ -232,6 +241,8 @@ export function inspectDeskObjects(stage,engine,room,deskCamera,getModel,redraw,
       copy.position.set(0,0,0);copy.quaternion.identity();copy.scale.setScalar(1);
       const box=new T.Box3().setFromObject(copy,true),center=box.getCenter(new T.Vector3());
       radius=box.getBoundingSphere(new T.Sphere()).radius;copy.position.sub(center);stand.add(copy);
+      working=shelfInspection(copy);
+      if(working)surface.setAttribute('aria-label',turnLabel+' Press Enter to '+working.label+'.');
       if(active.startsWith('room-'))loadPrint(copy,model.targets.get(active));
       snapshot?.dispose();
       snapshot=new T.WebGLRenderTarget(Math.round(480*Math.min(ratio,1)),Math.round(480*Math.min(1/ratio,1)));
@@ -270,8 +281,9 @@ export function inspectDeskObjects(stage,engine,room,deskCamera,getModel,redraw,
       volume.quaternion.identity();
     }
     stand.rotation.set(pitch,yaw,0,'YXZ');
+    const partMoving=working?.paint(time,dt,stand.quaternion,motion.matches);
     engine.render(display,camera);
-    if(progress<1||zoom!==zoomTarget)redraw();
+    if(progress<1||zoom!==zoomTarget||partMoving)redraw();
     return true;
   }
   return {paint,close,open,active:()=>active};

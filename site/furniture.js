@@ -1,17 +1,21 @@
 import * as T from './vendor/three/three.module.min.js';
-import { furnish } from './desk-model.js?v=37';
-import { inspectDeskObjects } from './desk-inspect.js?v=16';
+import { furnish } from './desk-model.js?v=38';
+import { inspectDeskObjects } from './desk-inspect.js?v=17';
 
 import { attachDeskPointer } from './desk-pointer.js?v=23';
 
-import { deskLife } from './desk-life.js?v=15';
+import { deskLife } from './desk-life.js?v=16';
 import { deskView } from './desk-view.js?v=13';
 import { drawerTravel } from './desk-drawer.js?v=1';
 
 export function mountFurniture(stage,showGraphicsFallback) {
   const canvas = stage.querySelector('canvas');
   if (!document.createElement('canvas').getContext('2d'))throw new Error('Canvas drawing unavailable');
-  const engine = new T.WebGLRenderer({canvas,antialias:true,alpha:false,powerPreference:'default'});
+  const options={alpha:false,powerPreference:'default'};
+  const context=canvas.getContext('webgl2',{...options,antialias:true,failIfMajorPerformanceCaveat:true})
+    || canvas.getContext('webgl2',{...options,antialias:false});
+  if(!context)throw new Error('WebGL 2 unavailable');
+  const engine = new T.WebGLRenderer({canvas,context,...options});
   const warning=stage.querySelector('.graphics-warning');
   const unavailable=warning.textContent;
   const gl=engine.getContext();
@@ -21,9 +25,12 @@ export function mountFurniture(stage,showGraphicsFallback) {
   const needsCanvasGrid=software||CSS.supports('-moz-appearance','none');
   canvas.toggleAttribute('data-pixel-sampling',needsCanvasGrid);
   const pixelGrid=matchMedia('(forced-colors: none) and (prefers-contrast: no-preference)');
-  function setResolution(){
-    const limit=needsCanvasGrid && pixelGrid.matches ? .72 : software ? .85 : 1.4;
-    engine.setPixelRatio(Math.min(devicePixelRatio,limit));
+  let movingPixels=false;
+  function setResolution(moving=movingPixels){
+    movingPixels=moving;
+    const still=needsCanvasGrid&&pixelGrid.matches?.79:software?.85:1.4;
+    const ratio=Math.min(devicePixelRatio,moving&&software&&pixelGrid.matches?.49:still);
+    if(engine.getPixelRatio()!==ratio)engine.setPixelRatio(ratio);
   }
   setResolution();
   engine.shadowMap.enabled=!software;
@@ -135,7 +142,7 @@ export function mountFurniture(stage,showGraphicsFallback) {
     if(w<2 || h<2 || window.innerHeight<2)return false;
     needsLayout=false;
     if(w===viewWidth && h===viewHeight)return true;
-    viewWidth=w;viewHeight=h;
+    viewWidth=w;viewHeight=h;targetStyles.clear();
     const compact=w<=660 || w/h<=1.2;
     if(!model || narrow!==compact){narrow=compact;rebuild();}
     engine.setSize(w,h,false);camera.aspect=w/h;
@@ -143,28 +150,34 @@ export function mountFurniture(stage,showGraphicsFallback) {
       Math.max(43,2*Math.atan(Math.tan(T.MathUtils.degToRad(21.5))*1.60/camera.aspect)*180/Math.PI);
     camera.updateProjectionMatrix();return true;
   }
-  const targetStyles=new Map();
+  const targetStyles=new Map(),projectedCamera=new T.Matrix4(),projectedLens=new T.Matrix4();
   const targetProperties=['--screen-x','--screen-y','--hit-width','--hit-height'];
   function projectTargets(yaw) {
     const lens=viewHeight*camera.zoom/(2*Math.tan(T.MathUtils.degToRad(camera.fov/2)));
+    const moved=!projectedCamera.equals(camera.matrixWorld) || !projectedLens.equals(camera.projectionMatrix);
+    projectedCamera.copy(camera.matrixWorld);projectedLens.copy(camera.projectionMatrix);
     for(const [id,{root,point:local,w,h}] of model.targets) {
       const el=links.get(id);
+      const saved=targetStyles.get(id);
+      if(!moved && saved?.root===root && saved.matrix.equals(root.matrixWorld))continue;
       point.copy(local).applyMatrix4(root.matrixWorld);
       const depth=-vector.copy(point).applyMatrix4(camera.matrixWorldInverse).z;
       vector.copy(point).project(camera);
       const x=(vector.x+1)*.5*viewWidth,y=(1-vector.y)*.5*viewHeight;
       const outside=depth<=camera.near||x<10||x>viewWidth-10||y<12||y>viewHeight-10
         || (root.userData.roomPoster === true && Math.abs(yaw)<.29);
-      if(root.userData.roomPoster||root.userData.roomProp)el.hidden=outside;
+      if((root.userData.roomPoster||root.userData.roomProp)&&el.hidden!==outside)el.hidden=outside;
       if(el.hasAttribute('data-outside')!==outside)el.toggleAttribute('data-outside',outside);
+      const state=saved||{matrix:new T.Matrix4(),rect:[]};
+      state.root=root;state.matrix.copy(root.matrixWorld);
+      if(!saved)targetStyles.set(id,state);
       if(outside)continue;
       const px=lens/depth;
       const next=[x,y,Math.max(40,w*root.scale.x*px*.83),Math.max(37,h*root.scale.y*px*.68)].map(value=>Math.round(value*10));
-      const old=targetStyles.get(id);
       for(const [i,property] of targetProperties.entries()){
-        if(old?.[i]!==next[i])el.style.setProperty(property,(next[i]/10)+'px');
+        if(state.rect[i]!==next[i])el.style.setProperty(property,(next[i]/10)+'px');
       }
-      targetStyles.set(id,next);
+      state.rect=next;
     }
   }
   let boundedModel=null,hovered='';
@@ -188,6 +201,7 @@ export function mountFurniture(stage,showGraphicsFallback) {
     }
     const night=T.MathUtils.smoothstep(nightTravel,0,1);
     model.night.value=night;
+    model.details.get('lamp-switch').rotation.z=.15-night*.67;
     sky.color.lerpColors(dayColor,nightColor,night);
     sky.intensity=T.MathUtils.lerp(daySky,.56,night);
     sun.intensity=T.MathUtils.lerp(2.16,.12,night);
@@ -237,6 +251,7 @@ export function mountFurniture(stage,showGraphicsFallback) {
     bulb.intensity=14*warmth+peek('lamp')*.40;
     beam.intensity=16*warmth;
     model.bulbGlass.emissiveIntensity=.08+2.12*warmth+peek('lamp')*.31;
+    if(held && movingPixels)setResolution(false);
     if(inspector.paint(time,dt)){
       if((events.active || nightTravel!==nightGoal) && !document.hidden)redraw();
       return;
@@ -279,13 +294,13 @@ export function mountFurniture(stage,showGraphicsFallback) {
     }
     if(!software&&(detailMoved||sunChanged))engine.shadowMap.needsUpdate=true;
     if(camera.zoom!==posture.zoom){camera.zoom=posture.zoom;camera.updateProjectionMatrix();}
+    // Keep fine detail at rest. Only a software-rendered orbit uses a
+    // smaller drawing buffer, with the same CSS size and hit coordinates.
+    if(software)setResolution(Boolean(posture.move||drawerMotion.moving));
     camera.lookAt(aim);engine.render(scene,camera);projectTargets(posture.yaw);
     if(!stage.classList.contains('is-rendered') || prevDrawer!==drawerAmount || prevFile!==fileAngle || prevBook!==bookAngle || model!==boundedModel || events.active || detailMoved || previewMoved){
       detailMoved=false;
-      for(const group of hitGroups.values()){
-        group.box.makeEmpty();
-        for(const mesh of group.meshes)group.box.union(bounds.copy(mesh.geometry.boundingBox).applyMatrix4(mesh.matrixWorld));
-      }
+      boundsDirty=true;
       boundedModel=model;
     }
     if(!stage.classList.contains('is-rendered')){
@@ -307,7 +322,15 @@ export function mountFurniture(stage,showGraphicsFallback) {
   document.addEventListener('desk-return-target',event=>{
     if(document.documentElement.dataset.view==='desk')faceObject(event.detail);
   });
-  let detailMoved=false;
+  let detailMoved=false,boundsDirty=true;
+  function refreshBounds(){
+    if(!boundsDirty)return;
+    for(const group of hitGroups.values()){
+      group.box.makeEmpty();
+      for(const mesh of group.meshes)group.box.union(bounds.copy(mesh.geometry.boundingBox).applyMatrix4(mesh.matrixWorld));
+    }
+    boundsDirty=false;
+  }
   const extraMeshes=[];
   const shown=mesh=>{for(let n=mesh;n;n=n.parent)if(!n.visible)return false;return true;};
   const candidates=[],hits=[];
@@ -337,6 +360,7 @@ export function mountFurniture(stage,showGraphicsFallback) {
       }else if(x!==targetX||y!==targetY){targetX=x;targetY=y;redraw();}
     },
     pick(x,y) {
+      refreshBounds();
       mouse.set(x*2-1,1-y*2);
       ray.setFromCamera(mouse,camera);
       candidates.length=0;hits.length=0;lastPart='';
@@ -470,6 +494,7 @@ export function mountFurniture(stage,showGraphicsFallback) {
   });
   function suspendDesk() {
     contextLost=true;leaveDesk();warning.textContent=unavailable;
+    targetStyles.clear();
     showGraphicsFallback();
     links.forEach(el=>{
       el.removeAttribute('data-outside');

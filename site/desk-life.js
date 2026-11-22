@@ -22,6 +22,7 @@ export function deskLife(stage, getModel, redraw, reduced) {
   let pointerSample=null;
   let planeAngle=.62,planeSpeed=0,propTravel=0,noseDown=false,lift=0,aimOffset=0,planeGrab=false;
   let tuner=-1,previousTuner=-1,turningTuner=false,tunerAngle=-.75,afterglow=0,patchStarted=0,patched=false;
+  let gain=0,sweep=0,settledGain=0,settledSweep=0,scopeModel=null;
   const probeRest=[.12,.032,1.13],probeJack=[.689,.252,.568];
   const probe=new Vector3(...probeRest);
   let cableGrip=false,stickerLift=0;
@@ -162,6 +163,8 @@ export function deskLife(stage, getModel, redraw, reduced) {
       const next=clamp(Math.round((tunerAngle+.75)/.5),0,3);
       rewindGlow(next);
     },
+    gain(dx,dy){gain=clamp(gain+(dx-dy)*5,-1,1);},
+    sweep(dx,dy){sweep=clamp(sweep+(dx-dy)*5,-1,1);},
     cable(dx,dy){
       if(patched&&Math.hypot(dx,dy)<.011)return;
       cableGrip=true;
@@ -310,6 +313,8 @@ export function deskLife(stage, getModel, redraw, reduced) {
         if(stripTime===null)return false;
         document.dispatchEvent(new CustomEvent('desk-experiment',{detail:'sound'}));
         el('scope').click();break;
+      case 'gain': gain=gain>.62?-.58:gain+.35;redraw();return true;
+      case 'sweep': sweep=sweep>.62?-.58:sweep+.35;redraw();return true;
       case 'tuner':
         if(tuner<0)return false;
         document.dispatchEvent(new CustomEvent('desk-experiment',{detail:experiment[tuner]}));
@@ -547,6 +552,12 @@ export function deskLife(stage, getModel, redraw, reduced) {
     part('service-flap').rotation.x=stickerLift*2.42;
     part('service-diagram').visible=stickerLift>.30;
     if(tuner>=0)part('tuner').rotation.z=tunerAngle;
+    part('gain').rotation.z=gain*-1.38;part('sweep').rotation.z=sweep*-1.38;
+    const nextGain=Math.round(gain*20),nextSweep=Math.round(sweep*20);
+    if(scopeModel!==model||settledGain!==nextGain||settledSweep!==nextSweep){
+      model.tuneScope(.26+nextGain*.0062,4.5+nextSweep*.118);
+      scopeModel=model;settledGain=nextGain;settledSweep=nextSweep;
+    }
     part('scope-strip').visible=Number.isFinite(stripTime);
     if(Number.isFinite(stripTime))part('scope-cursor').position.x=-.357+.714*clamp(stripTime/85,0,1);
     const resolution=patched ? clamp((time-patchStarted)/400,0,1):1;

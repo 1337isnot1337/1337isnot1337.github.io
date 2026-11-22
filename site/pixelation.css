@@ -5,6 +5,6 @@
   }
 
   .desktop-picture.is-rendered .furniture-canvas:not([data-pixel-sampling]) {
-    filter: url("/assets/pixel-grid.svg?v=3#grid");
+    filter: url("/assets/pixel-grid.svg?v=4#grid");
   }
 }

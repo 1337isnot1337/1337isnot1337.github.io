@@ -18,7 +18,7 @@ const collections = {
   records: [
     ['amber-reel','Amber tape reel','reel',0xba7a52], ['red-sleeve','Red record sleeve','record',0x8a524d],
     ['tour-stub','Tour ticket','ticket',0xb98183], ['headset','Studio headphones','headphones',0x424c58],
-    ['tape-deck','Tape recorder','radio',0x627d80], ['cream-sleeve','Ivory record sleeve','record',0xc1a36d],
+    ['tape-deck','Tape recorder','recorder',0x627d80], ['cream-sleeve','Ivory record sleeve','record',0xc1a36d],
     ['slate-cassette','Slate cassette','cassette',0x576878], ['copper-cassette','Copper cassette','cassette',0xa96955],
     ['late-show','Set list','chart',0x765a7c], ['film-camera','Film camera','camera',0x4d6664],
     ['thread-ribbon','Ribbon spool','spool',0x9b6782], ['tempo-dial','Tempo dial','dial',0x87616b],
@@ -42,7 +42,7 @@ const collections = {
   entry: [
     ['hall-clock','Hall clock','dial',0x887564], ['checked-scarf','Folded checked scarf','fabric',0x9a6675],
     ['house-keys','Spare key','key',0xb99a5b], ['market-bag','Canvas tote','tote',0x96817f],
-    ['cedar-crate','Cedar crate','crate',0x967159], ['pocket-compass','Pocket compass','dial',0x5a7c80],
+    ['cedar-crate','Cedar crate','crate',0x967159], ['pocket-compass','Pocket compass','compass',0x5a7c80],
     ['red-poster-tube','Poster tube','tube',0xa56754], ['train-timetable','Train timetable','ticket',0x785952],
     ['map-book','Rail atlas','book',0x776383], ['airmail-spare','Airmail envelope','envelope',0xb8838c],
     ['hall-sprig','Dried yarrow','sprig',0xaa7d72], ['shoe-brush','Boot brush','brush',0x806350],
@@ -103,6 +103,17 @@ export function furnishRoomObjects({walls, world, half, narrow, group, box, bead
   }
   function print(root, label, w, h, color, type, x, y, z) {
     drawn(root,w,h,(c,a,b)=>paintRoomPrint(c,a,b,label,color,type),x,y,z,false,label==='Track plate'?1800:940);
+  }
+  function moving(root,name,x,y,z,control=false){
+    const part=group(root,x,y,z);
+    part.userData.shelfPart=name;
+    if(control)part.userData.shelfControl=name;
+    return part;
+  }
+  function collar(root,profile,material,x,y,z){
+    const rim=new T.Mesh(new T.LatheGeometry(profile.map(([r,d])=>new T.Vector2(r,d)),32),material);
+    rim.rotation.x=Math.PI/2;rim.position.set(x,y,z);
+    rim.castShadow=true;rim.receiveShadow=true;root.add(rim);return rim;
   }
   const builders = {
     book(p,m,label,color){
@@ -222,16 +233,97 @@ export function furnishRoomObjects({walls, world, half, narrow, group, box, bead
       faceDisc(p,.020,.016,m,0,.213,.063);
     },
     camera(p,m){
-      box(p,.48,.298,.185,m,0,.158,0,.025);
-      box(p,.43,.078,.178,gilt,0,.278,0,.010);
-      box(p,.1,.059,.012,shadow,-.148,.245,.101);
-      box(p,.065,.036,.006,glaze,-.148,.245,.108,.006);
-      faceDisc(p,.113,.098,shadow,.048,.153,.113);
-      faceDisc(p,.086,.021,gilt,.048,.153,.170);
-      faceDisc(p,.073,.017,shadow,.048,.153,.183);
-      bead(p,.048,.153,.190,.062,.062,.017,finish(0x41646c,.18,.42));
-      bead(p,.024,.177,.203,.017,.006,.002,finish(0x92adb1,.26)).rotation.z=.51;
-      cylinder(p,.049,.049,.043,m,.144,.331,0,16);
+      const alloy=finish(0xae9f87,.36,.43), black=finish(0x343b39,.69,.12);
+      const leather=new T.MeshStandardMaterial({color:0x4c4541,map:weave,bumpMap:weave,bumpScale:.005,roughness:.86});
+      box(p,.49,.286,.178,m,0,.153,0,.022);
+      box(p,.491,.051,.179,alloy,0,.273,0,.012);
+      box(p,.465,.023,.176,alloy,0,.026,0,.007);
+      box(p,.443,.17,.015,leather,0,.146,.088,.010);
+      box(p,.431,.173,.009,leather,0,.146,-.092,.012);
+      box(p,.088,.046,.014,black,-.132,.263,.094,.007);
+      box(p,.061,.026,.006,glaze,-.132,.263,.103,.003);
+      box(p,.060,.034,.010,black,-.132,.263,-.091,.004);
+      cylinder(p,.036,.036,.019,black,-.151,.306,0,18);
+      wire(p,[[-.17,.314,0],[-.174,.316,-.045],[-.119,.316,-.043]],.007,alloy);
+      const release=moving(p,'shutter',.147,.308,0,true);
+      cylinder(release,.035,.038,.018,black,0,0,0,18);
+      cylinder(release,.021,.026,.015,gilt,0,.014,0,18);
+      const lens=moving(p,'lens',.048,.148,.108,true);
+      collar(lens,[[.095,0],[.111,.006],[.111,.048],[.092,.059],[.092,.077],[.067,.077],[.066,.041],[.091,0]],black,0,0,0);
+      collar(lens,[[.109,.016],[.114,.020],[.114,.038],[.107,.043],[.103,.038],[.103,.016]],alloy,0,0,0);
+      for(let grip=0;grip<24;grip++){
+        const angle=grip*Math.PI/12;
+        const ridge=box(lens,.005,.004,.018,black,-Math.sin(angle)*.114,Math.cos(angle)*.114,.029);
+        ridge.rotation.z=angle;
+      }
+      faceDisc(lens,.067,.003,finish(0x274753,.28,.36),0,0,.053);
+      bead(lens,-.024,.021,.057,.019,.005,.0018,finish(0x487a84,.35)).rotation.z=.49;
+      for(let n=0;n<7;n++){
+        const blade=moving(lens,'aperture-'+n,0,0,.057+n*.00012);
+        blade.rotation.z=n*2*Math.PI/7;
+        const shape=new T.Shape();
+        shape.moveTo(.066,-.018);shape.lineTo(.049,.035);shape.lineTo(.020,.035);
+        shape.lineTo(.026,.005);shape.closePath();
+        relief(blade,shape,.0008,0,black,0,0,0);
+      }
+      for(const x of [-.224,.224])faceDisc(p,.011,.005,gilt,x,.274,.093);
+    },
+    recorder(p,m){
+      const alloy=finish(0xc3ad83,.49,.26), tape=finish(0x6f4a39,.77);
+      box(p,.64,.46,.211,m,0,.235,0,.023);
+      box(p,.577,.354,.011,alloy,0,.251,.11,.014);
+      box(p,.551,.082,.024,shadow,0,.085,.114,.007);
+      for(const x of [-.235,.235])for(const y of [.105,.41])faceDisc(p,.009,.006,gilt,x,y,.120);
+      for(const [i,x] of [-.144,.144].entries()){
+        const spool=moving(p,'recorder-reel-'+i,x,.298,.124);
+        faceDisc(spool,.108,.008,shadow,0,0,0);
+        faceDisc(spool,.081-i*.019,.026,tape,0,0,.017);
+        faceDisc(spool,.035,.010,alloy,0,0,.031);
+        for(let blade=0;blade<3;blade++){
+          const a=blade*Math.PI*2/3;
+          box(spool,.021,.065,.006,alloy,-Math.sin(a)*.067,Math.cos(a)*.067,.031,.003).rotation.z=a;
+        }
+        collar(spool,[[.100,.027],[.109,.027],[.109,.036],[.099,.036]],alloy,0,0,0);
+        faceDisc(spool,.012,.008,shadow,0,0,.038);
+      }
+      wire(p,[[-.161,.22,.147],[-.117,.169,.147],[-.063,.163,.147],[.079,.163,.147],[.151,.23,.147]],.0045,tape);
+      box(p,.078,.043,.021,shadow,0,.172,.133,.006);
+      const play=moving(p,'play',.124,.087,.133,true);
+      box(play,.075,.040,.024,gilt,0,0,0,.007);
+      const arrow=new T.Shape();
+      arrow.moveTo(-.009,-.009);arrow.lineTo(.010,0);arrow.lineTo(-.009,.009);arrow.closePath();
+      relief(play,arrow,.001,0,shadow,0,0,.013);
+      faceDisc(p,.021,.022,shadow,.218,.086,.137);
+      const meter=moving(p,'recorder-pilot',-.18,.084,.128);
+      faceDisc(meter,.011,.006,finish(0xc87b53,.35),0,0,0);
+      faceDisc(p,.013,.005,shadow,-.18,.084,.127);
+    },
+    compass(p,m){
+      const brass=finish(0x998259,.34,.48), coral=finish(0xa44938,.59), ivory=finish(0xe4d2a9,.86);
+      faceDisc(p,.167,.064,m,0,.171,0);
+      faceDisc(p,.149,.004,ivory,0,.171,.033);
+      collar(p,[[.157,.028],[.169,.029],[.169,.047],[.152,.050],[.144,.047]],brass,0,.171,0);
+      const face=moving(p,'compass-face',0,.171,.039,true);
+      faceDisc(face,.145,.004,ivory,0,0,0);
+      drawn(face,.281,.281,(c,w,h)=>{
+        c.strokeStyle='#645844';c.fillStyle='#554b3d';c.textAlign='center';c.textBaseline='middle';
+        c.font=w*.082+'px Georgia';
+        for(let i=0;i<48;i++){
+          const angle=i*Math.PI/24,x=Math.sin(angle),y=-Math.cos(angle);
+          const inner=i%12===0?.363:i%4===0?.391:.420;
+          c.lineWidth=i%12===0?.003:.0017;
+          c.beginPath();c.moveTo(w*(.5+x*inner),h*(.5+y*inner));c.lineTo(w*(.5+x*.465),h*(.5+y*.465));c.stroke();
+          if(i%12===0)c.fillText('NESW'[i/12],w*(.5+x*.312),h*(.5+y*.312));
+        }
+      },0,0,.004,false,770);
+      const needle=moving(face,'needle',0,0,.011);
+      for(const [direction,tint] of [[1,coral],[-1,shadow]]){
+        const blade=new T.Shape();
+        blade.moveTo(-.014,0);blade.lineTo(0,direction*.092);blade.lineTo(.014,0);blade.closePath();
+        relief(needle,blade,.002,0,tint,0,0,0);
+      }
+      faceDisc(needle,.012,.012,brass,0,0,.004);
+      wire(p,[[-.027,.336,0],[-.036,.369,0],[0,.394,0],[.036,.369,0],[.027,.336,0]],.008,brass);
     },
     radio(p,m){
       box(p,.53,.348,.22,m,0,.18,0,.027);
@@ -273,11 +365,32 @@ export function furnishRoomObjects({walls, world, half, narrow, group, box, bead
       wire(p,[[0,.04,0],[-.032,.138,0],[-.013,.208,0]],.029,gilt);
     },
     caliper(p,m){
-      box(p,.49,.045,.046,m,0,.114,0,.006);
-      box(p,.046,.21,.046,m,-.216,.184,0,.004);
-      box(p,.039,.159,.043,gilt,.108,.190,.017,.004);
-      box(p,.122,.075,.042,shadow,.108,.136,.021,.007);
-      for(let i=0;i<7;i++)box(p,.005,.022,.005,line,-.162+i*.049,.121,.025);
+      box(p,.54,.061,.042,m,0,.130,0,.003);
+      function jaw(root,x,dir){
+        const shape=new T.Shape();
+        const points=[[0,-.053],[.042,-.055],[.046,.101],[.022,.145],[-.008,.149],[-.004,.051]];
+        shape.moveTo(dir*points[0][0],points[0][1]);
+        for(const [a,b] of points.slice(1))shape.lineTo(dir*a,b);
+        shape.closePath();relief(root,shape,.027,.004,m,x,.13,-.015);
+      }
+      jaw(p,-.245,-1);
+      const slide=moving(p,'slide',.064,0,0,true);
+      jaw(slide,0,1);
+      box(slide,.103,.084,.057,shadow,0,.130,0,.004);
+      box(slide,.080,.028,.006,gilt,0,.122,.031,.004);
+      drawn(slide,.072,.022,(c,w,h)=>{
+        c.fillStyle='#4d3b2b';
+        for(let i=0;i<=5;i++)c.fillRect(.006+i*.01174,0,.0015,h*(i%5===0?.86:.52));
+      },0,.122,.035,false,990);
+      cylinder(slide,.018,.018,.019,gilt,.030,.178,0,12);
+      drawn(p,.455,.047,(c,w,h)=>{
+        c.fillStyle='#55402e';
+        for(let i=0;i<31;i++){
+          const x=w*i/31,long=i%5===0;
+          c.fillRect(x,h*.54,long?.0025:.0016,h*(long?.44:.24));
+          if(long){c.font=h*.36+'px Georgia';c.fillText(i/5,x,h*.45);}
+        }
+      },-.010,.131,.023,false,950);
     },
     chip(p,m){
       box(p,.43,.308,.067,m,0,.157,0,.013);
@@ -438,7 +551,7 @@ export function furnishRoomObjects({walls, world, half, narrow, group, box, bead
     }
     const surface=kind==='book'||kind==='fabric' ? covers.get(color) : finish(color,...(finishes[kind]||[.59,0]));
     builders[kind](prop,surface,label,color);
-    if(grounded)prop.position.y+=y-new T.Box3().setFromObject(prop,true).min.y;
+    if(grounded)prop.position.y+=y-new T.Box3().setFromObject(prop).min.y;
     tag(prop,'prop-'+id,[0,0,0],.5,.5);
     prop.userData.roomProp=label;
     return prop;
@@ -453,7 +566,7 @@ export function furnishRoomObjects({walls, world, half, narrow, group, box, bead
     const props=shuffled(rows).map(row=>{
       const root=piece(wall,row,0,0,0,scale);
       root.rotation.y=(random()-.5)*.14;
-      const bounds=new T.Box3().setFromObject(root,true).applyMatrix4(local);
+      const bounds=new T.Box3().setFromObject(root).applyMatrix4(local);
       const size=bounds.getSize(new T.Vector3());
       const support=Math.min(1,(shelfFront-clearance)/size.z);
       return {root,bounds,width:size.x*support,support};

@@ -5,7 +5,7 @@ import { lampProjection } from './desk-lamp.js?v=1';
 import { paintScope, followProbe } from './desk-scope.js?v=1';
 import { airframeGeometry, wingUnderside } from './model-plane.js?v=2';
 import { mergeGeometries } from './vendor/three/BufferGeometryUtils.js';
-import { decorateRoom } from './desk-room.js?v=11';
+import { decorateRoom } from './desk-room.js?v=12';
 import { corkMaterial, curledPrint, scopeScale } from './desk-finishes.js?v=1';
 import { RoundedBoxGeometry } from './vendor/three/RoundedBoxGeometry.js';
 
@@ -38,21 +38,25 @@ export function furnish(scene, narrow, repaint, software=false) {
     m.castShadow = true; m.receiveShadow = true; parent.add(m); return m;
   }
   function box(parent,w,h,d,mat,x=0,y=0,z=0,r=0) {
+    // Tiny bevels are subpixel in the software view. Keep rounded silhouettes
+    // on larger pieces such as the drawers, worktop and instrument cases.
+    if(software&&Math.min(w,h,d)<.13)r=0;
     const key = [w,h,d,r].join(',');
     if (!geometry.has(key)) geometry.set(key,r ? new RoundedBoxGeometry(w,h,d,1,Math.min(r,h/2,w/2,d/2)) : new T.BoxGeometry(w,h,d));
     return mesh(parent,geometry.get(key),mat,x,y,z);
   }
   function cylinder(p,top,bottom,h,mat,x,y,z,n=22) {
+    if(software)n=Math.min(n,16);
     return mesh(p,new T.CylinderGeometry(top,bottom,h,n),mat,x,y,z);
   }
   function bead(p,x,y,z,rx,ry,rz,mat) {
     const key='sphere';
-    if (!geometry.has(key)) geometry.set(key,new T.SphereGeometry(1,14,10));
+    if (!geometry.has(key)) geometry.set(key,new T.SphereGeometry(1,software?10:14,software?8:10));
     const m=mesh(p,geometry.get(key),mat,x,y,z);m.scale.set(rx,ry,rz);return m;
   }
   function wire(p,points,r,mat) {
     const path=new T.CatmullRomCurve3(points.map(v=>new T.Vector3(...v)));
-    return mesh(p,new T.TubeGeometry(path,Math.max(10,points.length*3),r,6,false),mat);
+    return mesh(p,new T.TubeGeometry(path,Math.max(10,points.length*(software?2:3)),r,software?5:6,false),mat);
   }
   const loader = new T.TextureLoader().setCrossOrigin(undefined);
   function photo(uri,onLoad) {
@@ -412,7 +416,7 @@ export function furnish(scene, narrow, repaint, software=false) {
   box(scope,.92,.58,.04,finish(0x4a534b),-.234,.57,.503,.028);
   box(scope,.836,.500,.022,finish(0x263a34,.58),-.234,.57,.516,.014);
   drawn(scope,.50,.662,scopeScale,.48,.571,.492,false,780);
-  const scopeScreen=drawn(scope,.80,.47,(c,w,h)=>{
+  function drawGraticule(c,w,h,gain=.26,cycles=4.5){
     const glass=c.createRadialGradient(w*.42,h*.47,0,w*.48,h*.47,w*.62);
     glass.addColorStop(0,'#20453b');glass.addColorStop(.72,'#102e2d');glass.addColorStop(1,'#061c20');
     c.fillStyle=glass;c.fillRect(0,0,w,h);c.strokeStyle='#345248';c.lineWidth=.003;
@@ -428,8 +432,13 @@ export function furnish(scene, narrow, repaint, software=false) {
       c.beginPath();c.moveTo(w/2-.006,y);c.lineTo(w/2+.006,y);c.stroke();
     }
     c.shadowColor='#b8f796';c.shadowBlur=5;c.strokeStyle='#d4f3a9';c.lineWidth=.007;c.beginPath();
-    for(let i=0;i<=190;i++){const x=i/190*w,y=h*(.50+.26*Math.sin(i/190*Math.PI*4.5));if(i)c.lineTo(x,y);else c.moveTo(x,y);}c.stroke();c.shadowBlur=0;
-  },-.232,.57,.53).material;
+    for(let i=0;i<=190;i++){const x=i/190*w,y=h*(.50+gain*Math.sin(i/190*Math.PI*cycles));if(i)c.lineTo(x,y);else c.moveTo(x,y);}c.stroke();c.shadowBlur=0;
+  }
+  const scopeScreen=drawn(scope,.80,.47,drawGraticule,-.232,.57,.53).material;
+  function tuneScope(gain,sweep){
+    drawGraticule(scopeScreen.map.image.getContext('2d'),.80,.47,gain,sweep);
+    scopeScreen.map.needsUpdate=true;
+  }
   scopeScreen.emissive.set(0xd4ead2);
   scopeScreen.emissiveMap=scopeScreen.map;
   scopeScreen.emissiveIntensity=.035;
@@ -442,14 +451,22 @@ export function furnish(scene, narrow, repaint, software=false) {
     light.addColorStop(1,'#e5eee900');
     c.fillStyle=light;c.fillRect(w*.08,0,w*.84,h);
   },0,0,0);
-  for(const [x,y,r] of [[.49,.66,.109],[.41,.40,.067],[.62,.40,.067]]){
-    const knob=x===.49?detail('tuner',scope,x,y,.53):group(scope,x,y,.53);
+  for(const [name,x,y,r] of [['tuner',.49,.66,.109],['gain',.41,.40,.067],['sweep',.62,.40,.067]]){
+    const knob=detail(name,scope,x,y,.53);
     const collar=cylinder(knob,r*1.17,r*1.17,.012,finish(0x787c68,.49),0,0,-.027,22);
     collar.rotation.x=Math.PI/2;
     const k=cylinder(knob,r,r*.98,.094,finish(0x444c42,.69),0,0,.003,18);k.rotation.x=Math.PI/2;
     const face=cylinder(knob,r*.82,r*.87,.012,finish(0x54584b,.59),0,0,.049,30);face.rotation.x=Math.PI/2;
     box(knob,.013,r*.59,.008,cream,0,r*.29,.057);
+    for(let i=0;i<12;i++){
+      const angle=i*Math.PI/6;
+      const grip=box(knob,.012,r*.13,.062,finish(0x3c443c,.74),Math.sin(angle)*r,Math.cos(angle)*r,.009);
+      grip.rotation.z=-angle;
+    }
   }
+  letter(scope,'GAIN',.105,.027,.410,.288,.493,{bold:true,font:'monospace'});
+  letter(scope,'TIME',.105,.027,.620,.288,.493,{bold:true,font:'monospace'});
+  for(let i=0;i<4;i++)box(scope,.119,.023,.006,finish(0x45534c),.843,.61+i*.056,-.196,.003).rotation.y=Math.PI/2;
   bead(scope,.625,.779,.500,.018,.018,.010,finish(0x73352e,.40));
   bead(scope,.627,.781,.507,.010,.010,.006,finish(0xcf8b6b,.33));
   const screenGlow=detail('scope-glow',scope,-.232,.57,.534);
@@ -776,7 +793,12 @@ export function furnish(scene, narrow, repaint, software=false) {
   cylinder(shade,.079,.075,.115,brassDark,0,-.007,0);
   const bulbGlass=new T.MeshStandardMaterial({color:0xfbf1ce,emissive:0xffcb7a,emissiveIntensity:.08,roughness:.25});
   bead(shade,0,-.15,0,.099,.148,.099,bulbGlass);
-  const toggle=cylinder(lamp,.045,.051,.075,brassDark,.22,.117,.08,14);toggle.rotation.z=-.25;
+  cylinder(lamp,.067,.071,.018,brass,.23,.111,.092,20);
+  const toggle=detail('lamp-switch',lamp,.23,.122,.092);
+  const post=cylinder(toggle,.028,.036,.054,brassDark,0,.029,0,14);post.rotation.z=-.22;
+  bead(toggle,-.010,.065,0,.026,.021,.025,brass);
+  const cable=finish(0x51433b,.85);
+  wire(lamp,[[.26,.049,-.27],[.36,.030,-.34],[.42,.011,-.57],[.34,.010,-.82],[.33,.007,-1.13]],.015,cable);
   // Pencils lie against the blotter, and a personal photograph sits on the shelf.
   for(let i=0;i<2;i++){
     const p=tag(group(world,(narrow?1.53:1.97)+i*.14,.053,.16+i*.11),i?'pencil':'rose-pencil',[0,0,0],.09,.50);p.rotation.y=.14+i*.075;
@@ -1036,7 +1058,7 @@ export function furnish(scene, narrow, repaint, software=false) {
     beam.addColorStop(0,'#eab9cb99');beam.addColorStop(1,'#eab9cb00');c.fillStyle=beam;c.fillRect(0,0,w,h);
   },0,0,0);
   stageLights.visible=false;
-  const coves=decorateRoom(world,{narrow,half,group,box,bead,cylinder,wire,finish,photo,tag,drawn,weave,wood,trim,floorMat,night});
+  const {coves,walls}=decorateRoom(world,{narrow,half,group,box,bead,cylinder,wire,finish,photo,tag,drawn,weave,wood,trim,floorMat,night});
   // Small displayed pieces come forward at their existing mounting points.
   const displayPoses=new Map();
   const lifts={
@@ -1117,12 +1139,14 @@ export function furnish(scene, narrow, repaint, software=false) {
   }
   // Combine rigid geometry between joints; hinges, drawer travel and picking remain independent.
   const roomProps=new Map(), previewGeometry=new Set();
-  const rigid=new Set([world,flap,cover,...details.values()]);
+  // Keep wall batches separate so the camera can cull the geometry behind it.
+  const staticRoots=new Set([world,...Object.values(walls)]);
+  const rigid=new Set([...staticRoots,flap,cover,...details.values()]);
   world.updateMatrixWorld(true);
   for(const [id,item] of targets){
     const {root}=item;
     if(!root.userData.roomProp){rigid.add(root);continue;}
-    item.bounds=new T.Box3().setFromObject(root,true);
+    item.bounds=new T.Box3().setFromObject(root);
     item.point.copy(root.worldToLocal(item.bounds.getCenter(new T.Vector3())));
     const size=item.bounds.getSize(new T.Vector3());
     item.w=Math.max(size.x,size.z)/root.scale.x;
@@ -1147,7 +1171,7 @@ export function furnish(scene, narrow, repaint, software=false) {
   world.traverse(m=>{
     if(!m.isMesh)return;
     let parent=m.parent;while(!rigid.has(parent))parent=parent.parent;
-    if(parent===world && !m.parent.userData.roomProp){
+    if(staticRoots.has(parent) && !m.parent.userData.roomProp){
       if(!m.geometry.boundingBox)m.geometry.computeBoundingBox();
       if(!m.material.isMeshBasicMaterial)occluders.push(m.geometry.boundingBox.clone().applyMatrix4(m.matrixWorld));
     }
@@ -1177,15 +1201,23 @@ export function furnish(scene, narrow, repaint, software=false) {
       continue;
     }
     const inverse=parent.matrixWorld.clone().invert();
+    const indexed=meshes.some(m=>m.geometry.index);
+    const transform=new T.Matrix4();
     const parts=meshes.map(m=>{
-      const g=m.geometry.index?m.geometry.toNonIndexed():m.geometry.clone();
+      const g=m.geometry.clone();
+      if(indexed&&!g.index){
+        const size=g.attributes.position.count;
+        const indices=size>65535?new Uint32Array(size):new Uint16Array(size);
+        for(let i=0;i<size;i++)indices[i]=i;
+        g.setIndex(new T.BufferAttribute(indices,1));
+      }
       if(mat!==m.material){
         const color=new T.BufferAttribute(new Float32Array(3*g.attributes.position.count),3);
         const {r,g:green,b}=m.material.color;
         for(let i=0;i<color.count;i++)color.setXYZ(i,r,green,b);
         g.setAttribute('color',color);
       }
-      return g.applyMatrix4(new T.Matrix4().multiplyMatrices(inverse,m.matrixWorld));
+      return g.applyMatrix4(transform.multiplyMatrices(inverse,m.matrixWorld));
     });
     const combined=mergeGeometries(parts);parts.forEach(g=>g.dispose());
     meshes.forEach(m=>m.removeFromParent());
@@ -1194,5 +1226,5 @@ export function furnish(scene, narrow, repaint, software=false) {
   }
   source.forEach(g=>{if(!previewGeometry.has(g))g.dispose();});
   const flexCable=followProbe(cableWire.children[0],cableTip,probeRest);
-  return {world,targets,roomProps,details,occluders,drawer,flap,cover,lamp,bulbGlass:fastMaterials.get(bulbGlass)||bulbGlass,scopeScreen:fastMaterials.get(scopeScreen)||scopeScreen,contactMap,daylight,night,coves,poseHover,projectLampShadow,flexCable,titleLooseFile,pencilBounds:{book:book.position.x+(narrow?.24:.43),mat:matRight-.10},sketchTexture:sketchFace.material.map};
+  return {world,targets,roomProps,details,occluders,drawer,flap,cover,lamp,bulbGlass:fastMaterials.get(bulbGlass)||bulbGlass,scopeScreen:fastMaterials.get(scopeScreen)||scopeScreen,tuneScope,contactMap,daylight,night,coves,poseHover,projectLampShadow,flexCable,titleLooseFile,pencilBounds:{book:book.position.x+(narrow?.24:.43),mat:matRight-.10},sketchTexture:sketchFace.material.map};
 }

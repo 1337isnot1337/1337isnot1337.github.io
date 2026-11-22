@@ -1,5 +1,5 @@
 import * as T from './vendor/three/three.module.min.js';
-import { buildWindowView } from './room-window-view.js?v=3';
+import { buildWindowView } from './room-window-view.js?v=4';
 
 // The hutch sits against the window wall.
 export function buildRoomShell(world, {group,box,bead,cylinder,wire,finish,photo,drawn,weave,wood,trim,floorMat,night}) {

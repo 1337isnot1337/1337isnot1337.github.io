@@ -374,6 +374,7 @@ html[data-view="desk"] .studio-ready .desk-reading { margin-top:66px; scroll-mar
 }
 .object-view::backdrop { background:transparent; }
 .turn-surface { position:absolute; inset:0; cursor:grab; touch-action:pinch-zoom; outline-offset:-6px; }
+.turn-surface[data-shelf-control] { cursor:pointer; }
 .turn-surface.is-turning { cursor:grabbing; }
 .turn-surface:focus:not(:focus-visible) { outline:none; }
 .put-object-back { position:absolute; z-index:2; top:16px; right:16px; border-radius:50%; font:400 29px/1 var(--headline); width:46px; height:46px; padding:0; }

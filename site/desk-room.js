@@ -1,6 +1,6 @@
 import * as T from './vendor/three/three.module.min.js';
-import { furnishRoomObjects } from './room-objects.js?v=4';
-import { buildRoomShell } from './room-shell.js?v=7';
+import { furnishRoomObjects } from './room-objects.js?v=5';
+import { buildRoomShell } from './room-shell.js?v=8';
 
 // Atlas order: name, source aspect ratio, wall x/y, physical width, rotation.
 const artwork = [
@@ -174,5 +174,5 @@ export function decorateRoom(world, { narrow, half, group, box, bead, cylinder, 
     vine(world, side * (half - .22), 3.41, -1.01, narrow ? .92 : 1.45, side + 1.4,
       [[-side * .03, .081, -.75], [0, .157, -.57], [0, .119, -.22]]);
   }
-  return coves;
+  return {coves,walls};
 }
