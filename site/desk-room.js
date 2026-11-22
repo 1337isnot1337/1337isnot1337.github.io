@@ -1,6 +1,6 @@
 import * as T from './vendor/three/three.module.min.js';
 import { furnishRoomObjects } from './room-objects.js?v=4';
-import { buildRoomShell } from './room-shell.js?v=6';
+import { buildRoomShell } from './room-shell.js?v=7';
 
 // Atlas order: name, source aspect ratio, wall x/y, physical width, rotation.
 const artwork = [
@@ -55,8 +55,8 @@ function ivyGeometry() {
 }
 const ivyLeaf=ivyGeometry();
 
-export function decorateRoom(world, { narrow, half, group, box, bead, cylinder, wire, finish, photo, tag, drawn, weave, wood, trim, floorMat }) {
-  const walls=buildRoomShell(world,{group,box,bead,cylinder,wire,finish,photo,drawn,weave,wood,trim,floorMat});
+export function decorateRoom(world, { narrow, half, group, box, bead, cylinder, wire, finish, photo, tag, drawn, weave, wood, trim, floorMat, night }) {
+  const {walls,coves}=buildRoomShell(world,{group,box,bead,cylinder,wire,finish,photo,drawn,weave,wood,trim,floorMat,night});
   const atlas = photo('/assets/furniture/room-atlas.webp?v=4');
   const ink = new T.MeshStandardMaterial({ map: atlas, roughness: .93, alphaTest: .28 });
   const cutout = ink.clone();
@@ -153,27 +153,14 @@ export function decorateRoom(world, { narrow, half, group, box, bead, cylinder, 
   }
 
   for (const [side, offset, wall] of [[-1,0,walls.music],[1,8,walls.science]]) {
-    box(wall,9.55,.10,.09,finish(0xa38a71),0,3.72,.04,.010);
-    const glow = side < 0 ? '#f3bb8f' : '#d9b1d7';
-    drawn(wall, 9.36, .71, (context, w, h) => {
-      const fall = context.createLinearGradient(0, 0, 0, h);
-      fall.addColorStop(0, glow + '94');
-      fall.addColorStop(.31, glow + '3a');
-      fall.addColorStop(1, glow + '00');
-      context.fillStyle = fall;
-      context.fillRect(0, 0, w, h);
-    }, 0, 3.33, .018);
-    const diffuser = new T.MeshStandardMaterial({ color: glow, emissive: glow, emissiveIntensity: .83, transparent: true });
-    box(wall, 9.37, .033, .018, diffuser, 0, 3.682, .092, .006).castShadow = false;
-
     for (let i = 0; i < 8; i++) poster(wall, offset + i);
     if(side<0)poster(wall,16);
     const shelfX = side < 0 ? -4.02 : 3.2;
     const shelfY = side < 0 ? -.62 : -.76;
     box(wall, 1.12, .092, .63, trim, shelfX, shelfY, .325, .021);
     flowers(wall, shelfX, shelfY + .047, side < 0 ? 0x738376 : 0xb78d84);
-    vine(wall, 4.32, 3.72, .088, 2.87, 2 + side);
-    vine(wall, -4.19, 3.71, .088, 1.82, .4 + side);
+    vine(wall, 4.32, 6.45, .125, 5.60, 2 + side);
+    vine(wall, -4.19, 6.45, .125, 4.55, .4 + side);
   }
 
   furnishRoomObjects({walls,world,half,narrow,group,box,bead,cylinder,wire,finish,drawn,tag,weave,wood,trim});
@@ -187,4 +174,5 @@ export function decorateRoom(world, { narrow, half, group, box, bead, cylinder, 
     vine(world, side * (half - .22), 3.41, -1.01, narrow ? .92 : 1.45, side + 1.4,
       [[-side * .03, .081, -.75], [0, .157, -.57], [0, .119, -.22]]);
   }
+  return coves;
 }

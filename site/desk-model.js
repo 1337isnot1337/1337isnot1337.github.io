@@ -5,7 +5,7 @@ import { lampProjection } from './desk-lamp.js?v=1';
 import { paintScope, followProbe } from './desk-scope.js?v=1';
 import { airframeGeometry, wingUnderside } from './model-plane.js?v=2';
 import { mergeGeometries } from './vendor/three/BufferGeometryUtils.js';
-import { decorateRoom } from './desk-room.js?v=10';
+import { decorateRoom } from './desk-room.js?v=11';
 import { corkMaterial, curledPrint, scopeScale } from './desk-finishes.js?v=1';
 import { RoundedBoxGeometry } from './vendor/three/RoundedBoxGeometry.js';
 
@@ -13,6 +13,7 @@ export function furnish(scene, narrow, repaint, software=false) {
   const width = narrow ? 5.6 : 9.6;
   const half = width / 2;
   const world = new T.Group();
+  const night={value:0};
   scene.add(world);
   const targets = new Map();
   const details = new Map();
@@ -1035,7 +1036,24 @@ export function furnish(scene, narrow, repaint, software=false) {
     beam.addColorStop(0,'#eab9cb99');beam.addColorStop(1,'#eab9cb00');c.fillStyle=beam;c.fillRect(0,0,w,h);
   },0,0,0);
   stageLights.visible=false;
-  decorateRoom(world,{narrow,half,group,box,bead,cylinder,wire,finish,photo,tag,drawn,weave,wood,trim,floorMat});
+  const coves=decorateRoom(world,{narrow,half,group,box,bead,cylinder,wire,finish,photo,tag,drawn,weave,wood,trim,floorMat,night});
+  // Small displayed pieces come forward at their existing mounting points.
+  const displayPoses=new Map();
+  const lifts={
+    'robot-photo':[0,.061,-.083],epoch:[.015,.055,-.076],
+    cup:[.028,0,-.095],pinboard:[0,.024,0],
+  };
+  for(const [id,{root}] of targets){
+    const lift=lifts[id]||(root.userData.roomPoster?[0,.038,-.028]:null);
+    if(lift)displayPoses.set(id,{root,y:root.position.y,z:root.position.z,tilt:root.rotation.x,lift});
+  }
+  function poseHover(id,amount){
+    const pose=displayPoses.get(id);
+    if(!pose)return;
+    pose.root.position.y=pose.y+pose.lift[0]*amount;
+    pose.root.position.z=pose.z+pose.lift[1]*amount;
+    pose.root.rotation.x=pose.tilt+pose.lift[2]*amount;
+  }
   // Bake short-range occlusion onto the work surface once. No full-screen AO pass.
   const contact=document.createElement('canvas');contact.width=512;contact.height=256;
   const ctx=contact.getContext('2d');
@@ -1065,14 +1083,15 @@ export function furnish(scene, narrow, repaint, software=false) {
     mat.onBeforeCompile=shader=>{
       if(workSurface)shader.uniforms.deskContact={value:contactMap};
       shader.uniforms.deskDaylight=daylight;
+      shader.uniforms.deskNight=night;
       shader.vertexShader='varying vec3 vFurniturePosition;\n'+shader.vertexShader.replace('#include <project_vertex>',
         '#include <project_vertex>\n vFurniturePosition=(modelMatrix*vec4(transformed,1.0)).xyz;');
-      shader.fragmentShader=(workSurface?'uniform sampler2D deskContact;\n':'')+'uniform float deskDaylight;\nvarying vec3 vFurniturePosition;\n'+shader.fragmentShader.replace('#include <lights_fragment_end>',`#include <lights_fragment_end>
+      shader.fragmentShader=(workSurface?'uniform sampler2D deskContact;\n':'')+'uniform float deskDaylight, deskNight;\nvarying vec3 vFurniturePosition;\n'+shader.fragmentShader.replace('#include <lights_fragment_end>',`#include <lights_fragment_end>
         float u=dot(vFurniturePosition,vec3(.92,-.32,.40))-deskDaylight;
         float v=dot(vFurniturePosition,vec3(-.21,.61,1.0))-.37*deskDaylight;
         float glazing=(1.0-smoothstep(2.4,2.7,abs(u+1.46)))*(1.0-smoothstep(1.92,2.2,abs(v-.47)));
         float panes=smoothstep(.036,.12,abs(u+.91))*smoothstep(.035,.13,abs(v-.27));
-        float daylight=.31+.69*glazing*panes;
+        float daylight=mix(.31+.69*glazing*panes,1.0,deskNight);
         reflectedLight.directDiffuse*=daylight;
         reflectedLight.directSpecular*=daylight;
         // The rear of each shelf receives less skylight than its open lip.
@@ -1080,6 +1099,15 @@ export function furnish(scene, narrow, repaint, software=false) {
         float rim=min(abs(vFurniturePosition.y-1.51),abs(vFurniturePosition.y-.06));
         float bounce=1.0-.27*recess-.15*recess*exp(-rim*3.0);
         reflectedLight.indirectDiffuse*=bounce;
+        // A line source falls off across its wall and down into the room.
+        float drop=6.51-vFurniturePosition.y;
+        float roomHeight=1.0+.41*drop*drop;
+        vec4 across=vec4(vFurniturePosition.x+9.38,9.38-vFurniturePosition.x,
+          vFurniturePosition.z+2.51,10.48-vFurniturePosition.z);
+        vec4 coveWash=1.0/(roomHeight+.65*across*across);
+        vec3 cove=coveWash.x*vec3(1.0,.45,.23)+coveWash.y*vec3(.65,.48,1.0)
+          +coveWash.z*vec3(1.0,.67,.40)+coveWash.w*vec3(.47,.45,1.0);
+        reflectedLight.indirectDiffuse+=diffuseColor.rgb*cove*mix(.13,1.28,deskNight)*bounce;
         ${workSurface?`if(vFurniturePosition.y>-.02 && vFurniturePosition.y<.046){
           vec2 deskUV=vec2(vFurniturePosition.x/${width.toFixed(1)}+.5,vFurniturePosition.z/4.55+.5);
           float contact=texture2D(deskContact,deskUV).r;
@@ -1166,5 +1194,5 @@ export function furnish(scene, narrow, repaint, software=false) {
   }
   source.forEach(g=>{if(!previewGeometry.has(g))g.dispose();});
   const flexCable=followProbe(cableWire.children[0],cableTip,probeRest);
-  return {world,targets,roomProps,details,occluders,drawer,flap,cover,lamp,bulbGlass:fastMaterials.get(bulbGlass)||bulbGlass,scopeScreen:fastMaterials.get(scopeScreen)||scopeScreen,contactMap,daylight,projectLampShadow,flexCable,titleLooseFile,pencilBounds:{book:book.position.x+(narrow?.24:.43),mat:matRight-.10},sketchTexture:sketchFace.material.map};
+  return {world,targets,roomProps,details,occluders,drawer,flap,cover,lamp,bulbGlass:fastMaterials.get(bulbGlass)||bulbGlass,scopeScreen:fastMaterials.get(scopeScreen)||scopeScreen,contactMap,daylight,night,coves,poseHover,projectLampShadow,flexCable,titleLooseFile,pencilBounds:{book:book.position.x+(narrow?.24:.43),mat:matRight-.10},sketchTexture:sketchFace.material.map};
 }

@@ -1,11 +1,12 @@
 import * as T from './vendor/three/three.module.min.js';
-import { buildWindowView } from './room-window-view.js?v=2';
+import { buildWindowView } from './room-window-view.js?v=3';
 
 // The hutch sits against the window wall.
-export function buildRoomShell(world, {group,box,bead,cylinder,wire,finish,photo,drawn,weave,wood,trim,floorMat}) {
+export function buildRoomShell(world, {group,box,bead,cylinder,wire,finish,photo,drawn,weave,wood,trim,floorMat,night}) {
   const width=9.55, backZ=-2.68, frontZ=10.65, floor=-3.07, ceiling=6.65;
   const length=frontZ-backZ, middle=(frontZ+backZ)/2;
   const molding=finish(0xd1bca8,.83);
+  const coves=[];
   const texture=document.createElement('canvas');
   texture.width=texture.height=192;
   const ctx=texture.getContext('2d'), surface=ctx.createImageData(192,192);
@@ -32,7 +33,7 @@ export function buildRoomShell(world, {group,box,bead,cylinder,wire,finish,photo
   walls.music.rotation.y=Math.PI/2;
   walls.science.rotation.y=-Math.PI/2;
   const opening={left:-2.97,right:2.75,bottom:3.39,top:6.19};
-  function wall(parent,span,paint,wainscot,window){
+  function wall(parent,span,paint,wainscot,glow,window){
     const plaster=new T.MeshStandardMaterial({color:paint,map:plasterGrain,bumpMap:plasterGrain,bumpScale:.008,roughness:.97});
     const wallSection=(left,right,bottom,top)=>{
       box(parent,right-left,top-bottom,.26,plaster,(left+right)/2,(bottom+top)/2,-.13).castShadow=false;
@@ -50,14 +51,22 @@ export function buildRoomShell(world, {group,box,bead,cylinder,wire,finish,photo
     const crown=finish(0xe2ceba,.84);
     box(parent,span,.120,.200,crown,0,ceiling-.058,.079,.027).castShadow=false;
     box(parent,span,.049,.123,molding,0,ceiling-.137,.057,.012).castShadow=false;
+    // The channels butt into the crown at all four corners. The lens faces down
+    // into the room, with its driver and wiring hidden behind the moulding.
+    const channel=finish(0xb8a796,.68,.18);
+    box(parent,span-.11,.049,.112,channel,0,ceiling-.112,.177,.008).castShadow=false;
+    const color=new T.Color(glow);
+    const lens=new T.MeshBasicMaterial({color:color.clone().multiplyScalar(.58),toneMapped:false});
+    box(parent,span-.12,.023,.081,lens,0,ceiling-.140,.197,.005).castShadow=false;
+    coves.push({lens,color});
     for(let x=-span*.5+.75;x<span*.5-.35;x+=1.54){
       box(parent,.025,1.32,.018,finish(wainscot,.84),x,floor+.74,.044,.003).castShadow=false;
     }
   }
-  wall(walls.back,2*width,0xb3bcb0,0x637d78,opening);
-  wall(walls.front,2*width,0xc2aca0,0x92796b);
-  wall(walls.music,length,0xb9b99e,0x788571);
-  wall(walls.science,length,0xc0aab1,0x897589);
+  wall(walls.back,2*width,0xb3bcb0,0x637d78,0xffd6a6,opening);
+  wall(walls.front,2*width,0xc2aca0,0x92796b,0xb6b3ff);
+  wall(walls.music,length,0xb9b99e,0x788571,0xffb283);
+  wall(walls.science,length,0xc0aab1,0x897589,0xd6b8fa);
   box(world,2*width,.16,length,floorMat,0,floor-.08,middle).castShadow=false;
   const ceilingPlaster=new T.MeshStandardMaterial({
     color:0xefe2d0,map:plasterGrain,bumpMap:plasterGrain,bumpScale:.005,
@@ -152,7 +161,7 @@ export function buildRoomShell(world, {group,box,bead,cylinder,wire,finish,photo
     }
     bead(rear,center+sign*(span/2+.56),top+.24,.317,.074,.050,.047,molding);
   }
-  buildWindowView(group(rear,0,0,-.30),{photo,cylinder,finish});
+  buildWindowView(group(rear,0,0,-.30),{photo,cylinder,finish,night});
 
   const entry=walls.front, door=finish(0x5b756b,.78);
   box(entry,3.11,6.03,.145,trim,2.46,-.034,.079,.018);
@@ -175,7 +184,7 @@ export function buildRoomShell(world, {group,box,bead,cylinder,wire,finish,photo
   const runnerFabric=rug.clone();runnerFabric.color.set(0x89717c);
   const runner=box(world,2.55,.025,4.85,runnerFabric,-6.65,floor+.012,4.04,.011);
   runner.rotation.y=.09;runner.castShadow=false;
-  return walls;
+  return {walls,coves};
 }
 
 // A contour print on the cloth backing of the rear display.

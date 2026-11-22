@@ -119,6 +119,10 @@ const server = http.createServer((req,res) => {
    await page.locator('.mode-switch').click();
    await page.locator('.swiper-initialized').waitFor();
    assert.equal(new URL(page.url()).pathname, '/boring/');
+   assert.equal(await page.locator('.furniture-canvas, link[href^="/pixelation.css"]').count(),0,
+     `${name}: switching to Boring mode releases the 3D desk`);
+   assert.equal(await page.evaluate(()=>performance.getEntriesByType('resource').some(r=>/\/vendor\/three\/|\/furniture\.js/.test(r.name))),false,
+     `${name}: Boring mode does not request the renderer`);
    if(name==='mobile'){
      const source = await page.locator('.swiper-slide-active .print img').evaluate(async img=>{
        await img.decode();return img.currentSrc;
@@ -137,6 +141,7 @@ const server = http.createServer((req,res) => {
    assert.deepEqual(mapRequests,[],`${name}: closed map must not request image`);
    await page.locator('.mode-switch').click();
    assert.equal(new URL(page.url()).pathname, '/');
+   assert.equal(await page.locator('.furniture-canvas').count(),1,`${name}: the desk returns with its canvas`);
    await page.locator('.object-scope').click();
    await page.locator('#desk-map summary').click();
    await page.waitForFunction(()=>{const img=document.querySelector('#desk-map-image img');return img?.complete && img.naturalWidth>0;});
@@ -664,8 +669,6 @@ const server = http.createServer((req,res) => {
   assert.equal(await shelfMouse.locator('dialog[open]').count(),0,'releasing a drag keeps the reader closed');
   assert.equal(await shelfMouse.locator('.furniture-canvas, link[href^="/pixelation.css"]').count(),0,
     'Boring mode ships neither a desk canvas nor its pixel filter');
-  assert.equal(await shelfMouse.evaluate(()=>performance.getEntriesByType('resource').some(r=>r.name.includes('/vendor/three/'))),false,
-    'direct shelf visits do not download the 3D engine');
   await shelfMouse.locator('.mode-switch').click();
   await shelfMouse.locator('.graphics-warning:visible').waitFor();
   const pickup=shelfMouse.locator('.pickup');

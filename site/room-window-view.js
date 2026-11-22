@@ -1,8 +1,31 @@
 import * as T from './vendor/three/three.module.min.js';
 
-export function buildWindowView(outdoors, {photo,cylinder,finish}) {
+export function buildWindowView(outdoors, {photo,cylinder,finish,night}) {
   // Every ray through the window meets this rear arc, even from the side of the desk.
   const landscape=new T.MeshBasicMaterial({color:0xb8c4c5,side:T.BackSide,toneMapped:false});
+  landscape.onBeforeCompile=shader=>{
+    shader.uniforms.windowNight=night;
+    shader.fragmentShader='uniform float windowNight;\n'+shader.fragmentShader.replace('#include <map_fragment>',`
+      #include <map_fragment>
+      #ifdef USE_MAP
+        float luminance=dot(diffuseColor.rgb,vec3(.2126,.7152,.0722));
+        vec3 moonlit=vec3(.009,.017,.036)+vec3(.026,.047,.093)*luminance
+          +diffuseColor.rgb*vec3(.049,.076,.132);
+        vec2 sky=vec2(vMapUv.x,clamp(vMapUv.y,0.0,1.0));
+        float upperSky=smoothstep(.63,.76,sky.y);
+        vec2 starGrid=sky*vec2(123.0,85.0);
+        vec2 cell=floor(starGrid);
+        float grain=fract(sin(dot(cell,vec2(21.19,56.43)))*4373.63);
+        float star=(1.0-smoothstep(.020,.19,length(fract(starGrid)-vec2(.5))))*step(.967,grain);
+        vec2 moon=(sky-vec2(.535,.814))*vec2(1.5,1.0);
+        float moonDistance=length(moon);
+        float disk=1.0-smoothstep(.013,.015,moonDistance);
+        float halo=(1.0-smoothstep(.008,.078,moonDistance))*.055;
+        moonlit+=upperSky*(vec3(.54,.68,.87)*star*.73+vec3(.67,.74,.80)*(disk+halo));
+        diffuseColor.rgb=mix(diffuseColor.rgb,moonlit,windowNight);
+      #endif
+    `);
+  };
   const valley=photo('/assets/furniture/window-valley.webp',()=>{
     // Give the distant scenery a fine pixel grid while keeping the room's geometry crisp.
     const pixels=document.createElement('canvas');

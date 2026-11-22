@@ -1,10 +1,10 @@
 import * as T from './vendor/three/three.module.min.js';
-import { furnish } from './desk-model.js?v=36';
+import { furnish } from './desk-model.js?v=37';
 import { inspectDeskObjects } from './desk-inspect.js?v=16';
 
 import { attachDeskPointer } from './desk-pointer.js?v=23';
 
-import { deskLife } from './desk-life.js?v=14';
+import { deskLife } from './desk-life.js?v=15';
 import { deskView } from './desk-view.js?v=13';
 import { drawerTravel } from './desk-drawer.js?v=1';
 
@@ -44,6 +44,13 @@ export function mountFurniture(stage,showGraphicsFallback) {
   const bulb=new T.PointLight(0xffce8a,0,8,2);
   const beam=new T.SpotLight(0xffd39a,0,8,.72,.85,1.9);
   scene.add(bulb,beam,beam.target);
+  const dayColor=sky.color.clone(),nightColor=new T.Color(0xa9bae9);
+  const fallbackWash=[];
+  if(software)for(const [x,color] of [[-7.8,0xffb283],[7.8,0xc3a9ff]]){
+    const reflection=new T.PointLight(color,.35,0,1.15);
+    reflection.position.set(x,5.95,2.1);scene.add(reflection);fallbackWash.push(reflection);
+  }
+  let nightTravel=0;
   // The workshop panorama is already convolved for each roughness level.
   // The atlas stores linear radiance / 16 encoded as sRGB, with row zero at the bottom.
   let lightReady=Boolean(software);
@@ -161,7 +168,12 @@ export function mountFurniture(stage,showGraphicsFallback) {
     }
   }
   let boundedModel=null,hovered='';
-  const previews={proof:0,archive:0,scope:0};
+  const previews=new Map();
+  const hoverable=new Set([
+    'plane','file','proof','archive','scope','book','letters','tape','drawer','lamp','plant',
+    'pencil','rose-pencil','cup','blotter','pinboard','robot-photo','epoch',
+  ]);
+  const peek=id=>previews.get(id)||0;
   function paint(time) {
     frame=0;
     if(!visible||contextLost||document.hidden||!dirty||!layout()||!lightReady)return;
@@ -169,6 +181,20 @@ export function mountFurniture(stage,showGraphicsFallback) {
 
     const elapsed=Math.max(.001,(time-lastTime)/1000);lastTime=time;
     const dt=Math.min(.06,Math.max(.016,elapsed));
+    const nightGoal=Number(lampOn);
+    if(nightTravel!==nightGoal){
+      const step=Math.min(.055,elapsed)/(motion.matches?.38:1.65);
+      nightTravel=lampOn?Math.min(1,nightTravel+step):Math.max(0,nightTravel-step);
+    }
+    const night=T.MathUtils.smoothstep(nightTravel,0,1);
+    model.night.value=night;
+    sky.color.lerpColors(dayColor,nightColor,night);
+    sky.intensity=T.MathUtils.lerp(daySky,.56,night);
+    sun.intensity=T.MathUtils.lerp(2.16,.12,night);
+    fill.intensity=T.MathUtils.lerp(.74,.35,night);
+    if(!software)scene.environmentIntensity=T.MathUtils.lerp(6.4,2.8,night);
+    for(const {lens,color} of model.coves)lens.color.copy(color).multiplyScalar(.58+night*.83);
+    for(const reflection of fallbackWash)reflection.intensity=.35+night*4.2;
     const amount=(motion.matches||software)?1:1-Math.exp(-dt*12);
     const target=(value,goal)=>Math.abs(value-goal)<.004?goal:T.MathUtils.lerp(value,goal,amount);
     const prevDrawer=drawerAmount,prevFile=fileAngle,prevBook=bookAngle;
@@ -177,35 +203,42 @@ export function mountFurniture(stage,showGraphicsFallback) {
     const preview=reading?'':hovered;
     if(reading)view.look(0,0);
     let previewMoved=false,previewMoving=false;
-    for(const id of Object.keys(previews)){
-      const goal=Number(preview===id),next=target(previews[id],goal);
-      previewMoved ||= next!==previews[id];
+    for(const [id,value] of previews){
+      const goal=Number(preview===id),next=target(value,goal);
+      previewMoved ||= next!==value;
       previewMoving ||= next!==goal;
-      previews[id]=next;
+      previews.set(id,next);
     }
-    model.details.get('proof-volume').position.z=-1.56+previews.proof*.102;
-    model.details.get('archive-volume').position.z=-1.56+previews.archive*.102;
-    model.scopeScreen.emissiveIntensity=.035+previews.scope*.46;
+    model.details.get('proof-volume').position.z=-1.56+peek('proof')*.102;
+    model.details.get('archive-volume').position.z=-1.56+peek('archive')*.102;
+    model.scopeScreen.emissiveIntensity=.035+peek('scope')*.46;
     const drawerMotion=travel.step(dt,motion.matches||software);
     drawerAmount=drawerMotion.amount;
     life.drawerMomentum(drawerMotion.impulse);
-    const folderGoal=Math.max(life.folderPose(opened==='catalogue'),preview==='file'?.23:0);
-    fileAngle=target(fileAngle,folderGoal);bookAngle=target(bookAngle,opened==='about'?1:0);
-    model.drawer.position.z=2.17+drawerAmount*1.53;
+    const folderGoal=Math.max(life.folderPose(opened==='catalogue'),peek('file')*.23);
+    const notebookGoal=Math.max(Number(opened==='about'),peek('book')*.16);
+    fileAngle=target(fileAngle,folderGoal);bookAngle=target(bookAngle,notebookGoal);
+    model.drawer.position.z=2.17+drawerAmount*1.53+(1-drawerAmount)*peek('drawer')*.043;
     model.flap.rotation.x=-fileAngle*1.22;model.cover.rotation.z=bookAngle*2.40;
     if((prevDrawer!==drawerAmount && (drawerAmount===0||drawerAmount===1)) ||
        (prevFile!==fileAngle && fileAngle===folderGoal) || (previewMoved && !previewMoving) ||
        (prevBook!==bookAngle && (bookAngle===0||bookAngle===1)))engine.shadowMap.needsUpdate=true;
     const posture=view.step(Math.min(.12,elapsed),motion.matches);
-    const events=life.update(time,dt,drawerAmount,lampOn,held,posture,fileAngle,preview==='plane');
+    const events=life.update(time,dt,drawerAmount,lampOn,held,posture,fileAngle,previews);
+    for(const [id,value] of previews){
+      model.poseHover(id,value);
+      if(value===0 && preview!==id)previews.delete(id);
+    }
     const shade=model.details.get('shade');
     shade.localToWorld(bulb.position.set(0,-.22,0));
     shade.localToWorld(beam.target.position.set(0,-2.8,0));
     beam.position.copy(bulb.position);
-    bulb.intensity=lampOn?13*events.warm:0;
-    beam.intensity=lampOn?11*events.warm:0;
+    const warmth=night*events.warm;
+    bulb.intensity=14*warmth+peek('lamp')*.40;
+    beam.intensity=16*warmth;
+    model.bulbGlass.emissiveIntensity=.08+2.12*warmth+peek('lamp')*.31;
     if(inspector.paint(time,dt)){
-      if(events.active && !document.hidden)redraw();
+      if((events.active || nightTravel!==nightGoal) && !document.hidden)redraw();
       return;
     }
     // A sun patch and the resting moth can advance without an idle render loop.
@@ -262,7 +295,7 @@ export function mountFurniture(stage,showGraphicsFallback) {
       lamp.hidden=false;links.get('plant').hidden=false;
     }
     if(posture.move)refreshHover(time);
-    if((events.active && !document.hidden) || (centeredObject && !motion.matches) || posture.move || gazeX!==targetX||gazeY!==targetY||drawerMotion.moving||fileAngle!==folderGoal||bookAngle!==(opened==='about'?1:0)||previewMoving)redraw();
+    if((events.active && !document.hidden) || (centeredObject && !motion.matches) || posture.move || gazeX!==targetX||gazeY!==targetY||drawerMotion.moving||fileAngle!==folderGoal||bookAngle!==notebookGoal||previewMoving||nightTravel!==nightGoal)redraw();
   }
   function faceObject(id){
     if(!model?.targets.has(id))return;
@@ -281,8 +314,12 @@ export function mountFurniture(stage,showGraphicsFallback) {
   const {leave:leaveDesk,refreshHover}=attachDeskPointer(stage,{
     targets:links,
     hover(id){
-      const next=id==='plane'||id==='file'||Object.hasOwn(previews,id)?id:'';
-      if(next!==hovered){hovered=next;redraw();}
+      const next=hoverable.has(id)||id.endsWith('-print')||model?.targets.get(id)?.root.userData.roomPoster?id:'';
+      if(next!==hovered){
+        hovered=next;
+        if(next&&!previews.has(next))previews.set(next,0);
+        redraw();
+      }
     },
     zoomBy(delta){view.wheel(delta);redraw();},
     stopLook(){view.look(0,0);},
@@ -410,8 +447,6 @@ export function mountFurniture(stage,showGraphicsFallback) {
   const lamp=links.get('lamp');
   lamp.addEventListener('click',()=>{
     lampOn=!lampOn;life.lampChange(lampOn);lamp.setAttribute('aria-pressed',String(lampOn));
-    model.bulbGlass.emissiveIntensity=lampOn?2.2:.08;
-    bulb.intensity=lampOn?22:0;sky.intensity=lampOn?.95:daySky;sun.intensity=lampOn?.80:2.12;
     redraw();
   });
   stage.addEventListener('drawer-change',()=>{

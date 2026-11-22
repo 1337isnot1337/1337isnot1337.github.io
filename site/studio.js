@@ -35,10 +35,11 @@
     }
   }
   setView(page.dataset.view||"desk");
-  if (location.pathname === "/" && location.hash === "#projects") {
+  if (location.pathname === "/" && page.dataset.view === "shelf") {
     sceneCanvas?.remove();
     document.querySelector('link[href^="/pixelation.css"]')?.remove();
-    history.replaceState(history.state, "", modeAddress("shelf"));
+    const fragment=location.hash==="#projects" ? "" : location.hash;
+    history.replaceState(history.state, "", modeAddress("shelf")+fragment);
   }
   function showGraphicsFallback(message) {
     stage.classList.remove("is-loading","is-rendered");
@@ -52,7 +53,7 @@
   function showFurniture() {
     if (sceneStarted || !deskIsReadyToMount()) return;
     sceneStarted=true;
-    import("./furniture.js?v=54").then(module => {
+    import("./furniture.js?v=55").then(module => {
       if (!deskIsReadyToMount()) { sceneStarted=false; return; }
       try { module.mountFurniture(stage,showGraphicsFallback); }
       catch { showGraphicsFallback(); }
@@ -187,16 +188,14 @@
     if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey
         || event.altKey || event.shiftKey || !link || link.origin!==location.origin
         || link.search!==location.search) return;
-    if (link !== switcher && (!link.hash || link.pathname !== location.pathname)) return;
+    if (link === switcher || !link.hash || link.pathname !== location.pathname) return;
     const target = document.getElementById(link.hash.slice(1));
-    if(link===switcher || link.hash==="#projects" || link.hash==="#studio"){
+    if(link.hash==="#projects" || link.hash==="#studio"){
       event.preventDefault();
-      const view = link === switcher
-        ? (page.dataset.view === "desk" ? "shelf" : "desk")
-        : (link.hash === "#studio" ? "desk" : "shelf");
+      const view=link.hash==="#studio" ? "desk" : "shelf";
       const address = modeAddress(view);
+      if(page.dataset.view!==view){location.assign(address);return;}
       if (location.pathname + location.search + location.hash !== address) history.pushState(null, "", address);
-      setView(view);
       const focus=link.classList.contains("back-to-desk") && page.dataset.view==="desk" && opener ? opener : switcher;
       reveal(studio);returnY=null;opener=null;
       window.scrollTo({top:0,behavior:"instant"});
