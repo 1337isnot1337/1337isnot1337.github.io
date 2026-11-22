@@ -242,6 +242,16 @@ def apply_reader_skin(output):
     return {"asset": f"assets/{name}", "sha256": digest, "pages": len(pages)}
 
 
+def add_portfolio_home(output):
+    nav = '<nav class="site-nav" aria-label="Main navigation">'
+    home = '<a class="portfolio-home" href="https://itsdavis.com/">Home</a>'
+    for page in output.rglob("*.html"):
+        text = page.read_text()
+        if text.count(nav) != 1 or home in text:
+            raise ValueError(f"Unrecognized catalogue navigation: {page}")
+        page.write_text(text.replace(nav, f"{nav}\n      {home}", 1))
+
+
 def promote(staged, output):
     # Only replace generated catalogue output, never an unrelated directory.
     if output.is_symlink():
@@ -302,6 +312,7 @@ def release(current, fallback, output, base_url, config, run_url=None):
             provenance["notice_pages"] = annotate_snapshot(selected, provenance, config)
         verify_annotation(selected, provenance)
         provenance["website_reader"] = apply_reader_skin(selected)
+        add_portfolio_home(selected)
         provenance["breadcrumb_schema_pages"] = add_breadcrumb_schema(selected)
         (selected / "catalogue-provenance.json").write_text(json.dumps(provenance, indent=2) + "\n")
         check_output(selected_source, selected)

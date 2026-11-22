@@ -17,6 +17,7 @@ a { color: var(--reader-link); }
 a:hover { color: #572038; }
 .site-header, .site-footer { background: #fffdf9; }
 .brand:hover, .site-footer a:hover { color: var(--reader-link); }
+.site-nav .portfolio-home { color: var(--reader-link); font-weight: 650; }
 input, select, textarea { caret-color: var(--reader-link); }
 button, a, input, select { -webkit-tap-highlight-color: #e4cbd8; }
 .intro-description a, #clear-filters, .clear-filters, .text-button,
@@ -27,6 +28,9 @@ button, a, input, select { -webkit-tap-highlight-color: #e4cbd8; }
 .catalogue-tools input::placeholder { color: var(--muted); }
 .result-title a:hover { color: var(--reader-link); text-decoration-color: var(--rule-strong); }
 .prose { color: var(--ink); font-size: 1.25rem; }
+@media (max-width: 365px) {
+  .site-nav { column-gap: 8px; font-size: .8125rem; }
+}
 @media (max-width: 720px) {
   .prose { font-size: 1.125rem; }
 }

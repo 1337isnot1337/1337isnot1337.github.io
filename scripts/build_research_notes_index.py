@@ -139,7 +139,7 @@ def render(entries: list[dict]) -> str:
 <a class="skip" href="#content">Skip to content</a>
 <header class="mast"><div class="page-width mast-inner">
   <a class="byline" href="/">Cinna Davis</a>
-  <nav aria-label="Main navigation"><a href="/">Shelf</a><a href="/projects/">Projects</a><a href="/about/">About</a></nav>
+  <nav aria-label="Main navigation"><a href="/">Home</a><a href="/projects/">Projects</a><a href="/about/">About</a></nav>
 </div></header>
 <main id="content" class="project-page">
   <nav class="crumbs" aria-label="Breadcrumb"><a href="/">Home</a><span aria-hidden="true">/</span><a href="/projects/">Projects</a><span aria-hidden="true">/</span><span aria-current="page">Research notes</span></nav>

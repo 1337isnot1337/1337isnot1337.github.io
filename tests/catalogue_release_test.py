@@ -56,6 +56,7 @@ class CatalogueRelease(unittest.TestCase):
                 '<meta name="twitter:title" content="Test">'
                 '<meta name="twitter:description" content="Test description">'
                 '<script type="application/ld+json">{"name":"Test","description":"Test description"}</script></head><body>'
+                '<header><nav class="site-nav" aria-label="Main navigation"><a href="/">Results</a></nav></header>'
                 '<main id="main" class="container"><h1>Partial result on an open problem</h1>'
                 '<p>Lean: formalized stated result. The general conjecture remains open.</p>'
                 f'<a href="{release.REPOSITORY}/blob/main/results/test/README.md">View source</a>'
@@ -68,7 +69,11 @@ class CatalogueRelease(unittest.TestCase):
             raise subprocess.CalledProcessError(1, ['builder'])
 
     def run_release(self):
-        return release.release(self.current, self.fallback, self.output, 'https://example.test/', self.config)
+        result = release.release(self.current, self.fallback, self.output, 'https://example.test/', self.config)
+        for page in self.output.rglob('*.html'):
+            self.assertRegex(page.read_text(), r'<nav class="site-nav" aria-label="Main navigation">\s*'
+                             r'<a class="portfolio-home" href="https://itsdavis\.com/">Home</a>')
+        return result
 
     def test_reader_skin_copies_hashed_site_style_without_changing_body(self):
         staged = Path(self.temp.name) / 'reader-preview'
