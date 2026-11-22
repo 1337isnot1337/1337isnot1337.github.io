@@ -21,7 +21,6 @@ const artwork = [
   ['fermilab', 'science', 2.149709, -0.56, 1.266, 1.93, -0.06],
   ['tux', 'science', 0.842697, 2.06, -0.55, 0.94, 0.115],
   ['atla', 'front', 1.333984, 1.44, 4.58, 2.48, -0.038],
-  ['banshee-philadelphia', 'music', 0.75, -2.51, -0.74, 0.93, 0.084],
   ['banshee-wordmark', 'music', 1.37195, -4.65, 5.64, 1.29, -0.089],
   ['cure', 'music', 1, -0.04, -0.16, 1.62, -0.027],
   ['europa', 'front', 0.670635, 7.22, 2.45, 1.7, 0.04],
@@ -36,7 +35,6 @@ const artwork = [
   ['mothica-paris', 'front', 0.8, -0.22, 2.16, 1.23, 0.075],
   ['babychaos-prayers', 'front', 0.714286, -4.72, 5.4, 1.22, 0.044],
   ['ic3peak-tokyo', 'science', 0.8, -4.48, 4.73, 1.28, -0.07],
-  ['melanie-trilogy', 'back', 1, 4.73, 1.78, 1.56, -0.034],
 ];
 const atlasRows=Math.ceil(artwork.length/4);
 const leafColors = [0x72925d, 0x4a7147, 0x538254, 0x688254, 0x8a9b66];
@@ -74,7 +72,7 @@ const ivyLeaf=ivyGeometry();
 
 export function decorateRoom(world, { desk, narrow, half, group, box, bead, cylinder, wire, finish, photo, tag, drawn, weave, wood, trim, floorMat, night }) {
   const {walls,coves}=buildRoomShell(world,{group,box,bead,cylinder,wire,finish,photo,drawn,weave,wood,trim,floorMat,night});
-  const atlas = photo('/assets/furniture/room-atlas.webp?v=6');
+  const atlas = photo('/assets/furniture/room-atlas.webp?v=7');
   const ink = new T.MeshStandardMaterial({ map: atlas, roughness: .93, alphaTest: .28 });
   const cutout = ink.clone();
   cutout.side = T.DoubleSide;

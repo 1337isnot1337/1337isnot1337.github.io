@@ -19,7 +19,6 @@ The room atlas contains reproductions of publicly published art and photographs.
 - [Aubrey de Grey](https://commons.wikimedia.org/wiki/File:Aubrey_de_Grey.jpg)
 - [Fermilab, Wilson Hall at sunset](https://lss.fnal.gov/archive/2023/slides/fermilab-slides-23-333-csaid.pdf), cropped from the cover photo in the Fermilab slide archive
 - [Tux, the Linux penguin](https://commons.wikimedia.org/wiki/File:Tux.svg), drawn by Larry Ewing with The GIMP, with vector work by Simon Budig and Garrett LeSage
-- [Banshee at Nikki Lopez](https://ma.to/event/banshee-nikki-lopez-6-nov-2026), VERSION III concert flyer from the Nikki Lopez listing
 - [Banshee wordmark](https://banshee-shop.myshopify.com/), artwork from the artist’s official store
 - [Alien Stage, Cure](https://music.apple.com/us/song/1739046382), official soundtrack cover
 - [Europa](https://www.jpl.nasa.gov/images/europa-jpl-travel-poster/), NASA/JPL-Caltech, illustration by Liz Barrios De La Torre
@@ -34,7 +33,6 @@ The room atlas contains reproductions of publicly published art and photographs.
 - [Mothica at Backstage By The Mill](https://verygroup.fr/veryshow/artists/mothica/), Veryshow concert artwork via [Concerts Paris](https://concerts.paris/en/events/tour-mothica)
 - [Babychaos, Prayers](https://store.jeremysaffer.com/products/babychaos-prayers-signed-limited-edition-8x12-metallic-print), signed print photographed by Jeremy Saffer
 - [IC3PEAK, Coming Home in Tokyo](https://avyss-magazine.com/2025/08/23/63306/), Tokyo tour flyer as published by AVYSS
-- [Melanie Martinez, The Trilogy Tour](https://www.313presents.com/news/detail/melanie-martinez-brings-north-american-arena-tour-to-little-caesars-arena-friday-june-14-2024), Little Caesars Arena concert artwork from 313 Presents
 
 The project prints on the corkboard are separate illustrations for the site.
 
