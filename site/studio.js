@@ -10,6 +10,7 @@
   const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)");
   const reader = studio.querySelector(".desk-reading");
   const stage = overview.querySelector(".desktop-picture");
+  const sceneCanvas = stage.querySelector("canvas");
   let opener = null;
   let returnY = null;
   const switcher=document.querySelector(".mode-switch");
@@ -35,6 +36,8 @@
   }
   setView(page.dataset.view||"desk");
   if (location.pathname === "/" && location.hash === "#projects") {
+    sceneCanvas?.remove();
+    document.querySelector('link[href^="/pixelation.css"]')?.remove();
     history.replaceState(history.state, "", modeAddress("shelf"));
   }
   function showGraphicsFallback(message) {
@@ -44,27 +47,29 @@
     warning.hidden=false;
   }
   function deskIsReadyToMount() {
-    return page.dataset.view==='desk' && sceneNearby && !studio.dataset.open && !document.querySelector('.open-project[open]');
+    return sceneCanvas?.isConnected && page.dataset.view==='desk' && sceneNearby && !studio.dataset.open && !document.querySelector('.open-project[open]');
   }
   function showFurniture() {
     if (sceneStarted || !deskIsReadyToMount()) return;
     sceneStarted=true;
-    import("./furniture.js?v=53").then(module => {
+    import("./furniture.js?v=54").then(module => {
       if (!deskIsReadyToMount()) { sceneStarted=false; return; }
       try { module.mountFurniture(stage,showGraphicsFallback); }
       catch { showGraphicsFallback(); }
     }, () => showGraphicsFallback("The 3D desk couldn’t download. Reload to try again."));
   }
-  if ("IntersectionObserver" in window) {
-    new IntersectionObserver(([entry]) => {
-      sceneNearby=entry.isIntersecting;
+  if (sceneCanvas?.isConnected) {
+    if ("IntersectionObserver" in window) {
+      new IntersectionObserver(([entry]) => {
+        sceneNearby=entry.isIntersecting;
+        showFurniture();
+      }, {rootMargin:"140px"}).observe(overview);
+    } else {
+      sceneNearby=true;
       showFurniture();
-    }, {rootMargin:"140px"}).observe(overview);
-  } else {
-    sceneNearby=true;
-    showFurniture();
+    }
+    document.querySelector(".open-project")?.addEventListener("close",showFurniture);
   }
-  document.querySelector(".open-project")?.addEventListener("close",showFurniture);
 
   const stops = new Map([
     ["desk", "The workbench"], ["catalogue", "The project files"], ["about", "Robot code"],

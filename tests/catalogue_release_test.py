@@ -1,5 +1,4 @@
 """Release boundary checks, independent of Pandoc and changing research data."""
-from base64 import b64decode
 import json
 import contextlib
 import io
@@ -77,12 +76,7 @@ class CatalogueRelease(unittest.TestCase):
         before = {page: page.read_text().split('</head>', 1)[1] for page in staged.rglob('*.html')}
         info = release.apply_reader_skin(staged)
         self.assertEqual(info['pages'], 2)
-        site = release.HERE.parent / 'site'
-        css = (staged / info['asset']).read_bytes()
-        self.assertTrue(css.startswith((site / 'research-reader.css').read_bytes() + b'\n'))
-        grid = re.search(rb'url\("data:image/svg\+xml;base64,([^#]+)#grid"\)', css)
-        self.assertIsNotNone(grid)
-        self.assertEqual(b64decode(grid.group(1)), (site / 'assets/pixel-grid.svg').read_bytes())
+        self.assertEqual((staged / info['asset']).read_bytes(), (release.HERE.parent / 'site/research-reader.css').read_bytes())
         for page, body in before.items():
             text = page.read_text()
             self.assertEqual(text.split('</head>', 1)[1], body)

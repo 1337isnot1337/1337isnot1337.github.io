@@ -1,40 +1,10 @@
-/* Sample one pixel in each 2px square and blend it with the original frame. */
+/* Treat the rendered scene as an image. The reading layer stays independent. */
 @media screen and (forced-colors: none) and (prefers-contrast: no-preference) {
-  :root {
-    --pixel-grid: url("/assets/pixel-grid.svg?v=3#grid");
+  .desktop-picture.is-rendered .furniture-canvas[data-pixel-sampling] {
+    image-rendering: pixelated;
   }
 
-  /* Firefox skips SVG tiling in backdrop filters. Filter the page sections
-     directly there so fixed controls keep their viewport positioning. */
-  @supports (-moz-appearance: none) {
-    body > :is(a, aside, div, footer, header, main, nav, section),
-    dialog:modal {
-      filter: var(--pixel-grid);
-    }
-
-    /* The viewport-sized SVG surface is too costly while the room is moving.
-       The canvas itself uses a coarser drawing buffer in this mode. */
-    html[data-view="desk"] body > main:has(.desktop-picture.is-rendered) {
-      filter: none;
-    }
-    .desktop-picture.is-rendered .furniture-canvas {
-      image-rendering: pixelated;
-    }
-    html[data-view="desk"] .stationery:has(.desktop-picture.is-rendered) [data-room] {
-      filter: var(--pixel-grid);
-    }
-  }
-
-  @supports (backdrop-filter: url("#grid")) and (not (-moz-appearance: none)) {
-    /* Modal dialogs paint above the document, so put the filter over the dialog instead. */
-    html:not(:has(dialog:modal))::after,
-    dialog:modal::after {
-      content: "";
-      position: fixed;
-      inset: 0;
-      z-index: 2147483647;
-      pointer-events: none;
-      backdrop-filter: var(--pixel-grid);
-    }
+  .desktop-picture.is-rendered .furniture-canvas:not([data-pixel-sampling]) {
+    filter: url("/assets/pixel-grid.svg?v=3#grid");
   }
 }

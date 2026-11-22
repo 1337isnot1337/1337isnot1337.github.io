@@ -17,7 +17,9 @@ export function mountFurniture(stage,showGraphicsFallback) {
   const gl=engine.getContext();
   const debug=gl.getExtension('WEBGL_debug_renderer_info');
   const software=debug && /swiftshader|llvmpipe/i.test(gl.getParameter(debug.UNMASKED_RENDERER_WEBGL));
-  const needsCanvasGrid=CSS.supports('-moz-appearance','none');
+  // Use the renderer's own sampling where SVG tiling would run in software.
+  const needsCanvasGrid=software||CSS.supports('-moz-appearance','none');
+  canvas.toggleAttribute('data-pixel-sampling',needsCanvasGrid);
   const pixelGrid=matchMedia('(forced-colors: none) and (prefers-contrast: no-preference)');
   function setResolution(){
     const limit=needsCanvasGrid && pixelGrid.matches ? .72 : software ? .85 : 1.4;

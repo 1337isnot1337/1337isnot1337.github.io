@@ -69,6 +69,8 @@ const server = http.createServer((req,res) => {
    assert.equal(await page.locator('script[src$="/swiper-bundle.min.js"]').count(),0,
      'the desk does not request the carousel library');
    assert.equal(await page.locator('.mode-switch span:visible').innerText(),'Boring mode');
+   assert.equal(await page.evaluate(()=>getComputedStyle(document.documentElement,'::after').backdropFilter||'none'),
+     'none','the desk treats the canvas and the page separately');
    const social=page.locator('.desk-profiles a:visible');
    assert.deepEqual(await social.evaluateAll(links=>links.map(a=>[a.getAttribute('aria-label'),a.textContent.trim()])),
      [['GitHub',''],['LinkedIn',''],['X','']]);
@@ -276,6 +278,9 @@ const server = http.createServer((req,res) => {
    await page.locator('.open-project').waitFor({state:'hidden'});
    await page.goForward();
    await page.locator('dialog[open]').waitFor();
+   assert.deepEqual(await page.locator('.open-project').evaluate(el=>[
+     getComputedStyle(el).filter,getComputedStyle(el,'::after').backdropFilter||'none'
+   ]),['none','none'],'project text stays crisp when the reader opens');
    await page.keyboard.press('Escape');
    await page.locator('.open-project').waitFor({state:'hidden'});
    // Native dialog close events are queued after the open attribute clears.
@@ -657,6 +662,8 @@ const server = http.createServer((req,res) => {
   await shelfMouse.mouse.up();
   assert.notEqual(await centerPrint.getAttribute('data-project'),'flyover','mouse drag moves through the shelf');
   assert.equal(await shelfMouse.locator('dialog[open]').count(),0,'releasing a drag keeps the reader closed');
+  assert.equal(await shelfMouse.locator('.furniture-canvas, link[href^="/pixelation.css"]').count(),0,
+    'Boring mode ships neither a desk canvas nor its pixel filter');
   assert.equal(await shelfMouse.evaluate(()=>performance.getEntriesByType('resource').some(r=>r.name.includes('/vendor/three/'))),false,
     'direct shelf visits do not download the 3D engine');
   await shelfMouse.locator('.mode-switch').click();
