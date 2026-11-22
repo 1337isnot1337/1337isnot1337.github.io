@@ -1,11 +1,11 @@
 import * as T from './vendor/three/three.module.min.js';
-import { furnish } from './desk-model.js?v=35';
-import { inspectDeskObjects } from './desk-inspect.js?v=15';
+import { furnish } from './desk-model.js?v=36';
+import { inspectDeskObjects } from './desk-inspect.js?v=16';
 
-import { attachDeskPointer } from './desk-pointer.js?v=22';
+import { attachDeskPointer } from './desk-pointer.js?v=23';
 
-import { deskLife } from './desk-life.js?v=13';
-import { deskView } from './desk-view.js?v=12';
+import { deskLife } from './desk-life.js?v=14';
+import { deskView } from './desk-view.js?v=13';
 import { drawerTravel } from './desk-drawer.js?v=1';
 
 export function mountFurniture(stage,showGraphicsFallback) {
@@ -20,7 +20,7 @@ export function mountFurniture(stage,showGraphicsFallback) {
   const needsCanvasGrid=CSS.supports('-moz-appearance','none');
   const pixelGrid=matchMedia('(forced-colors: none) and (prefers-contrast: no-preference)');
   function setResolution(){
-    const limit=needsCanvasGrid && pixelGrid.matches ? .65 : software ? .85 : 1.4;
+    const limit=needsCanvasGrid && pixelGrid.matches ? .72 : software ? .85 : 1.4;
     engine.setPixelRatio(Math.min(devicePixelRatio,limit));
   }
   setResolution();
@@ -158,7 +158,8 @@ export function mountFurniture(stage,showGraphicsFallback) {
       targetStyles.set(id,next);
     }
   }
-  let boundedModel=null;
+  let boundedModel=null,hovered='';
+  const previews={proof:0,archive:0,scope:0};
   function paint(time) {
     frame=0;
     if(!visible||contextLost||document.hidden||!dirty||!layout()||!lightReady)return;
@@ -169,20 +170,32 @@ export function mountFurniture(stage,showGraphicsFallback) {
     const amount=(motion.matches||software)?1:1-Math.exp(-dt*12);
     const target=(value,goal)=>Math.abs(value-goal)<.004?goal:T.MathUtils.lerp(value,goal,amount);
     const prevDrawer=drawerAmount,prevFile=fileAngle,prevBook=bookAngle;
+    const held=inspector.active();
+    const reading=held||opened||document.querySelector('dialog[open]');
+    const preview=reading?'':hovered;
+    if(reading)view.look(0,0);
+    let previewMoved=false,previewMoving=false;
+    for(const id of Object.keys(previews)){
+      const goal=Number(preview===id),next=target(previews[id],goal);
+      previewMoved ||= next!==previews[id];
+      previewMoving ||= next!==goal;
+      previews[id]=next;
+    }
+    model.details.get('proof-volume').position.z=-1.56+previews.proof*.102;
+    model.details.get('archive-volume').position.z=-1.56+previews.archive*.102;
+    model.scopeScreen.emissiveIntensity=.035+previews.scope*.46;
     const drawerMotion=travel.step(dt,motion.matches||software);
     drawerAmount=drawerMotion.amount;
     life.drawerMomentum(drawerMotion.impulse);
-    const folderGoal=life.folderPose(opened==='catalogue');
+    const folderGoal=Math.max(life.folderPose(opened==='catalogue'),preview==='file'?.23:0);
     fileAngle=target(fileAngle,folderGoal);bookAngle=target(bookAngle,opened==='about'?1:0);
     model.drawer.position.z=2.17+drawerAmount*1.53;
     model.flap.rotation.x=-fileAngle*1.22;model.cover.rotation.z=bookAngle*2.40;
     if((prevDrawer!==drawerAmount && (drawerAmount===0||drawerAmount===1)) ||
-       (prevFile!==fileAngle && (fileAngle===0||fileAngle===1)) ||
+       (prevFile!==fileAngle && fileAngle===folderGoal) || (previewMoved && !previewMoving) ||
        (prevBook!==bookAngle && (bookAngle===0||bookAngle===1)))engine.shadowMap.needsUpdate=true;
-    const held=inspector.active();
-    if(held||opened||document.querySelector('dialog[open]'))view.look(0,0);
     const posture=view.step(Math.min(.12,elapsed),motion.matches);
-    const events=life.update(time,dt,drawerAmount,lampOn,held,posture,fileAngle);
+    const events=life.update(time,dt,drawerAmount,lampOn,held,posture,fileAngle,preview==='plane');
     const shade=model.details.get('shade');
     shade.localToWorld(bulb.position.set(0,-.22,0));
     shade.localToWorld(beam.target.position.set(0,-2.8,0));
@@ -232,7 +245,7 @@ export function mountFurniture(stage,showGraphicsFallback) {
     if(!software&&(detailMoved||sunChanged))engine.shadowMap.needsUpdate=true;
     if(camera.zoom!==posture.zoom){camera.zoom=posture.zoom;camera.updateProjectionMatrix();}
     camera.lookAt(aim);engine.render(scene,camera);projectTargets(posture.yaw);
-    if(!stage.classList.contains('is-rendered') || prevDrawer!==drawerAmount || prevFile!==fileAngle || prevBook!==bookAngle || model!==boundedModel || events.active || detailMoved){
+    if(!stage.classList.contains('is-rendered') || prevDrawer!==drawerAmount || prevFile!==fileAngle || prevBook!==bookAngle || model!==boundedModel || events.active || detailMoved || previewMoved){
       detailMoved=false;
       for(const group of hitGroups.values()){
         group.box.makeEmpty();
@@ -246,7 +259,8 @@ export function mountFurniture(stage,showGraphicsFallback) {
       warning.hidden=!software;
       lamp.hidden=false;links.get('plant').hidden=false;
     }
-    if((events.active && !document.hidden) || (centeredObject && !motion.matches) || posture.move || gazeX!==targetX||gazeY!==targetY||drawerMotion.moving||fileAngle!==folderGoal||bookAngle!==(opened==='about'?1:0))redraw();
+    if(posture.move)refreshHover(time);
+    if((events.active && !document.hidden) || (centeredObject && !motion.matches) || posture.move || gazeX!==targetX||gazeY!==targetY||drawerMotion.moving||fileAngle!==folderGoal||bookAngle!==(opened==='about'?1:0)||previewMoving)redraw();
   }
   function faceObject(id){
     if(!model?.targets.has(id))return;
@@ -262,13 +276,17 @@ export function mountFurniture(stage,showGraphicsFallback) {
   const extraMeshes=[];
   const shown=mesh=>{for(let n=mesh;n;n=n.parent)if(!n.visible)return false;return true;};
   const candidates=[],hits=[];
-  const leaveDesk=attachDeskPointer(stage,{
+  const {leave:leaveDesk,refreshHover}=attachDeskPointer(stage,{
     targets:links,
+    hover(id){
+      const next=id==='plane'||id==='file'||Object.hasOwn(previews,id)?id:'';
+      if(next!==hovered){hovered=next;redraw();}
+    },
     zoomBy(delta){view.wheel(delta);redraw();},
     stopLook(){view.look(0,0);},
     track(x,y,overObject) {
       life.pointerMoved(x,y,performance.now());
-      if(view.look(overObject?0:x,overObject?0:y)){
+      if(view.look(x,y,overObject)){
         centerUntil=0;
         redraw();
       }
@@ -330,7 +348,11 @@ export function mountFurniture(stage,showGraphicsFallback) {
       }
       return life.tap(name);
     },
-    gesture(name,dx,dy,time){
+    gesture(name,dx,dy,time,start){
+      // Covers and handles have a vertical grip. A sideways drag can pass
+      // across them just like a drag that starts on the desk surface.
+      if(start==='horizontal' && ['handle','scope','proof-volume','archive-volume','file','file-cover','book','tape'].includes(name))return false;
+      if(start==='down' && ['scope','proof-volume','archive-volume','file','file-cover','tape'].includes(name))return false;
       if(name==='handle'){
         travel.drag(dy,time);redraw();return true;
       }

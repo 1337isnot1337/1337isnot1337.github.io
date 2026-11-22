@@ -419,7 +419,7 @@ export function deskLife(stage, getModel, redraw, reduced) {
       node.position.copy(original.position);node.quaternion.copy(original.quaternion);
     });
   }
-  function update(time,dt,drawerAmount,lampOn,inHand,{yaw,below,rear},flap) {
+  function update(time,dt,drawerAmount,lampOn,inHand,{yaw,below,rear},flap,planePreview) {
     const model=getModel(),motion=!reduced.matches;
     const drift=motion?Math.sin((time-started)/90000)*.32:0;
     if(wrote&&currentSketch&&model.sketchTexture.image!==currentSketch && !part('scratch').userData.drawn){
@@ -521,10 +521,10 @@ export function deskLife(stage, getModel, redraw, reduced) {
     if(motion){
       const remaining=Math.min(propTravel,dt*(4+propTravel*.95));
       propTravel-=remaining;
-      planeAngle+=planeSpeed*dt+remaining;
+      planeAngle+=(planeSpeed+(planePreview?13:0))*dt+remaining;
       planeSpeed*=Math.exp(-dt*1.52);
     }
-    part('propeller').rotation.z=planeAngle;
+    part('propeller').rotation.z=planeAngle+(planePreview&&!motion?.52:0);
     if(!planeGrab){
       const blend=motion?1-Math.exp(-dt*12):1;
       lift=Math.abs(lift)<.003?0:lerp(lift,0,blend);
@@ -691,7 +691,7 @@ export function deskLife(stage, getModel, redraw, reduced) {
     }
     const warm=warmAt ? clamp((time-warmAt)/750,0,1):1;
     return { drift, warm, active: Boolean(
-      Math.abs(planeSpeed)>.025||propTravel>0||(!planeGrab&&lift>.005)||(!planeGrab&&Math.abs(aimOffset)>.01)||Math.hypot(marbleSpeed,marbleDepthSpeed)>.022||(motion&&swing<1)||linerLift!==linerGoal||
+      (motion&&planePreview)||Math.abs(planeSpeed)>.025||propTravel>0||(!planeGrab&&lift>.005)||(!planeGrab&&Math.abs(aimOffset)>.01)||Math.hypot(marbleSpeed,marbleDepthSpeed)>.022||(motion&&swing<1)||linerLift!==linerGoal||
       afterglow>0||pencilMoving||ribbonFlick>.004||guideLift!==foldGoal||(!folderHeld&&peekFolder>0)||clipGoal!==clipCompression||(inHand==='plant'&&time-plantOpen<15600)||(inHand==='plant'&&dewTilt>0&&dew<1)||freeDrop.visible||ripple.visible||hop>0||leafBends.size||falling<1||cableMoving||resolution<1||stickerLift!==sticker||flying||(lampOn&&warm<1)), wakeAt:lampOn&&!moth.visible ? mothIdle+14000 : 0};
   }
   return {tap,gestures,movePrint,stow,drawerChange,drawerMomentum,pullComplaint,lampChange,brushLeaf,cupAction,pointerMoved,startleMoth,inspect,folderPose,pullSlip,windTape,releaseProps,updateInspection,update};

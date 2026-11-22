@@ -1,7 +1,7 @@
 /* Sample one pixel in each 2px square and blend it with the original frame. */
 @media screen and (forced-colors: none) and (prefers-contrast: no-preference) {
   :root {
-    --pixel-grid: url("/assets/pixel-grid.svg?v=2#grid");
+    --pixel-grid: url("/assets/pixel-grid.svg?v=3#grid");
   }
 
   /* Firefox skips SVG tiling in backdrop filters. Filter the page sections

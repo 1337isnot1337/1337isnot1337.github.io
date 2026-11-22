@@ -33,7 +33,7 @@
 }
 :root {
   --ink: #422c41;
-  --muted: #665364;
+  --muted: #5c4b59;
   --berry: #7d3251;
   --paper: #fffbf6;
   --hair: #bdabba;
@@ -48,7 +48,7 @@ body {
   background: var(--paper);
   color: var(--ink);
   font-family: "DM Sans", Arial, sans-serif;
-  font-size: 16px;
+  font-size: 17px;
   line-height: 1.5;
 }
 a {
@@ -503,12 +503,12 @@ h1 {
 }
 .detail-heading > p,
 .print-type {
-  font: 11px/1.5 var(--mono);
+  font: 12px/1.5 var(--mono);
   color: #5b4b55;
 }
 .detail h2 {
-  font-size: clamp(24px, 3vw, 38px);
-  letter-spacing: -0.045em;
+  font-size: clamp(25px, 3vw, 39px);
+  letter-spacing: -0.033em;
   line-height: 1.1;
 }
 .open-project {
@@ -819,8 +819,8 @@ body.modal-open {
   box-shadow: 0 1px 2px #462b352a;
 }
 .index a span { min-width: 0; }
-.index a strong { display: block; font-size: 15px; font-weight: 650; }
-.index a small { display: block; color: var(--muted); font-size: 12px; line-height: 1.4; margin-top: 2px; }
+.index a strong { display: block; font-size: 16px; font-weight: 650; }
+.index a small { display: block; color: var(--muted); font-size: 13px; line-height: 1.4; margin-top: 2px; }
 .index li + li { border-top: 1px solid #bdabba55; }
 .index a[aria-current="true"] {
   background: #f2e6ea;

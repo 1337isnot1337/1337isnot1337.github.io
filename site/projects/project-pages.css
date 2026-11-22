@@ -1,10 +1,10 @@
 /* Standalone project and profile pages use the homepage typography and palette. */
 .project-page {max-width:1100px;width:90%;margin:0 auto;padding:34px 0 90px}
-.project-page .crumbs {font:12px/1.5 var(--mono);color:var(--muted);display:flex;flex-wrap:wrap;gap:10px;margin:0 0 34px}
+.project-page .crumbs {font:13px/1.5 var(--mono);color:var(--muted);display:flex;flex-wrap:wrap;gap:10px;margin:0 0 34px}
 .project-page .crumbs a {color:var(--berry)}
 .project-page .eyebrow {font:12px/1.5 var(--mono);letter-spacing:.07em;text-transform:uppercase;color:var(--berry);margin:0 0 16px}
 .project-page .hero {display:grid;grid-template-columns:minmax(0,1.38fr) minmax(230px,.68fr);align-items:center;gap:clamp(28px,6vw,100px);border-bottom:1px solid var(--hair);padding-bottom:58px}
-.project-page h1 {font:690 clamp(39px,5.2vw,70px)/1.06 var(--headline);letter-spacing:-.055em;max-width:14ch}
+.project-page h1 {font:690 clamp(39px,5.2vw,70px)/1.08 var(--headline);letter-spacing:-.038em;max-width:14ch}
 .project-page .lead {font-size:clamp(17px,1.7vw,21px);line-height:1.62;color:var(--muted);margin:22px 0 24px;max-width:58ch}
 .project-page .hero-figure{margin:0;background:#eee4eb;padding:22px 22px 17px;transform:rotate(1.4deg);border:1px solid #cdb8c0;box-shadow:10px 12px 28px #422c411b}
 .project-page .hero-figure img{display:block;width:100%;height:auto;max-height:350px;object-fit:contain}
@@ -15,7 +15,7 @@
 .project-page .content-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(230px,.4fr);gap:clamp(28px,7vw,110px);padding-top:46px}
 .project-page .prose h2{font:650 clamp(26px,3vw,36px)/1.15 var(--headline);letter-spacing:-.03em;margin:0 0 19px}
 .project-page .prose h3{font:650 21px/1.25 var(--headline);margin:34px 0 12px}
-.project-page .prose p{margin:0 0 17px;font-size:16px;line-height:1.77;max-width:68ch}
+.project-page .prose p{margin:0 0 17px;font-size:17px;line-height:1.7;max-width:68ch}
 .project-page .prose p + h2,.project-page .prose ul + h2{margin-top:43px}
 .project-page .prose ul {padding-left:23px;margin:10px 0 24px;line-height:1.7}
 .project-page .prose li {margin:8px 0}

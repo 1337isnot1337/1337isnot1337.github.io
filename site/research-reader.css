@@ -26,7 +26,10 @@ button, a, input, select { -webkit-tap-highlight-color: #e4cbd8; }
 .catalogue-tools input:focus, .catalogue-tools select:focus { border-color: var(--reader-link); }
 .catalogue-tools input::placeholder { color: var(--muted); }
 .result-title a:hover { color: var(--reader-link); text-decoration-color: var(--rule-strong); }
-.prose { color: var(--ink); }
+.prose { color: var(--ink); font-size: 1.25rem; }
+@media (max-width: 720px) {
+  .prose { font-size: 1.125rem; }
+}
 /* Native MathML may exceed a narrow line in either display mode. Keep
    complete expressions scrollable in their text container, not off the page. */
 .prose p:has(math), .prose ul:has(math), .prose ol:has(math) { max-width:100%; overflow-x:auto; scrollbar-width:thin; scrollbar-color:var(--rule-strong) transparent; }

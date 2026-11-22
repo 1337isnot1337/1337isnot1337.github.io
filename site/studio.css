@@ -58,7 +58,7 @@ html[data-view] .is-loading > .desk-load-status {
   transform:translateX(-50%);
   width:max-content; max-width:13rem; height:auto; clip-path:none;
   padding:4px 8px; border-radius:4px; background:#30261e; color:#fff7e8;
-  font:600 .8125rem/1.25 var(--headline); text-align:center; overflow-wrap:anywhere; pointer-events:none;
+  font:650 .875rem/1.25 var(--headline); text-align:center; overflow-wrap:anywhere; pointer-events:none;
 }
 .is-rendered:not([data-pointer-input]) .desk-objects [data-object][aria-label]:focus-visible::after { content:attr(aria-label); }
 .graphics-warning {
@@ -66,7 +66,7 @@ html[data-view] .is-loading > .desk-load-status {
   transform:translateX(-50%); width:max-content; max-width:90%; margin:0;
   font:500 13px/1.4 var(--headline); border-radius:3px; padding:9px 13px;
 }
-.is-rendered .graphics-warning { top:auto; bottom:12px; font-size:12px; pointer-events:none; }
+.is-rendered .graphics-warning { top:auto; bottom:12px; font-size:13px; pointer-events:none; }
 .desk-reading { position:relative; background:#f6ebdb; }
 .studio-ready .desk-reading {
   scroll-margin-top:clamp(22px,6svh,65px); grid-area:1/1; align-self:start; z-index:3; width:min(94%,1220px); margin:var(--opening,20vh) auto 42px;
@@ -110,7 +110,7 @@ html[data-view] .is-loading > .desk-load-status {
 .stationery .desk-heading h2,.stationery .catalogue-head h2,.notebook-heading h2,.letter-heading h2 {
   margin: 0;
   font: 670 clamp(33px, 4.1vw, 59px)/1.04 var(--headline);
-  letter-spacing: -.055em;
+  letter-spacing: -.036em;
 }
 .stationery .desk-sheet {
   border: 1px solid #c9bba4;
@@ -262,10 +262,10 @@ html[data-view] .is-rendered .desk-objects :is(a,button) { cursor:inherit; }
 .pickup::backdrop { background:#211d25a6; }
 .pickup-head,.pickup-foot,.sketch-tools { display:flex; align-items:center; justify-content:space-between; gap:10px; }
 .pickup-head { padding-bottom:12px; }
-.pickup h2 { font:620 clamp(20px,3vw,30px)/1.1 var(--headline); margin:0; letter-spacing:-.035em; }
+.pickup h2 { font:640 clamp(21px,3.2vw,32px)/1.1 var(--headline); margin:0; letter-spacing:-.029em; }
 .pickup button,.pickup a { color:#553f50; }
 .pickup-head button,.pickup-foot button,.sketch-tools button,.pickup-foot a {
-  font:550 14px/1.25 var(--headline); padding:9px 7px; min-height:38px; border:0; background:transparent; text-underline-offset:3px;
+  font:600 15px/1.25 var(--headline); padding:9px 7px; min-height:38px; border:0; background:transparent; text-underline-offset:3px;
 }
 .pickup-head button { border:1px solid #a69795; border-radius:3px; padding-inline:12px; }
 .pickup-foot { margin-top:9px; flex-wrap:wrap; }
@@ -329,7 +329,7 @@ html[data-view="desk"] .desk-overview, html[data-view="desk"] .desktop-picture {
 .mode-switch {
   position:fixed; z-index:12; top:max(14px,env(safe-area-inset-top)); right:max(16px,env(safe-area-inset-right));
   display:inline-flex; align-items:center; gap:7px; height:44px; padding:0 14px; border:1px solid #806b62; border-radius:24px;
-  font:650 14px/1 var(--headline); text-decoration:none; white-space:nowrap;
+  font:670 15px/1 var(--headline); text-decoration:none; white-space:nowrap;
   color:#4c3945; background:#fff9ef; box-shadow:0 2px 0 #826e63,0 3px 13px #30241c30; touch-action:manipulation;
 }
 .mode-switch:hover,.profile-links a:hover { color:#823955; background:#fff; }

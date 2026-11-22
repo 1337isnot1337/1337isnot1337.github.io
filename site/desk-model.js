@@ -5,7 +5,7 @@ import { lampProjection } from './desk-lamp.js?v=1';
 import { paintScope, followProbe } from './desk-scope.js?v=1';
 import { airframeGeometry, wingUnderside } from './model-plane.js?v=2';
 import { mergeGeometries } from './vendor/three/BufferGeometryUtils.js';
-import { decorateRoom } from './desk-room.js?v=9';
+import { decorateRoom } from './desk-room.js?v=10';
 import { corkMaterial, curledPrint, scopeScale } from './desk-finishes.js?v=1';
 import { RoundedBoxGeometry } from './vendor/three/RoundedBoxGeometry.js';
 
@@ -86,9 +86,9 @@ export function furnish(scene, narrow, repaint, software=false) {
       c.fillStyle=options.ink||'#3c3326';c.textAlign='center';c.textBaseline='middle';
       c.resetTransform();
       const {width,height}=c.canvas;
-      c.font=(options.italic?'italic ':'')+(options.bold?'bold ':'')+Math.round(height*.78)+'px '+(options.font||'Georgia');
-      c.fillText(label,width/2,height*.53,width*.94);
-    },x,y,z,options.flat);
+      c.font=(options.italic?'italic ':'')+(options.bold?'bold ':'')+Math.round(height*.83)+'px '+(options.font||'Georgia');
+      c.fillText(label,width/2,height*.53,width*.96);
+    },x,y,z,options.flat,430);
   }
   function illustration(p,uri,w,h,x,y,z,flat=false) {
     const m=mesh(p,new T.PlaneGeometry(w,h),new T.MeshStandardMaterial({map:photo(uri),roughness:.84}),x,y,z);
@@ -411,7 +411,7 @@ export function furnish(scene, narrow, repaint, software=false) {
   box(scope,.92,.58,.04,finish(0x4a534b),-.234,.57,.503,.028);
   box(scope,.836,.500,.022,finish(0x263a34,.58),-.234,.57,.516,.014);
   drawn(scope,.50,.662,scopeScale,.48,.571,.492,false,780);
-  drawn(scope,.80,.47,(c,w,h)=>{
+  const scopeScreen=drawn(scope,.80,.47,(c,w,h)=>{
     const glass=c.createRadialGradient(w*.42,h*.47,0,w*.48,h*.47,w*.62);
     glass.addColorStop(0,'#20453b');glass.addColorStop(.72,'#102e2d');glass.addColorStop(1,'#061c20');
     c.fillStyle=glass;c.fillRect(0,0,w,h);c.strokeStyle='#345248';c.lineWidth=.003;
@@ -428,7 +428,10 @@ export function furnish(scene, narrow, repaint, software=false) {
     }
     c.shadowColor='#b8f796';c.shadowBlur=5;c.strokeStyle='#d4f3a9';c.lineWidth=.007;c.beginPath();
     for(let i=0;i<=190;i++){const x=i/190*w,y=h*(.50+.26*Math.sin(i/190*Math.PI*4.5));if(i)c.lineTo(x,y);else c.moveTo(x,y);}c.stroke();c.shadowBlur=0;
-  },-.232,.57,.53);
+  },-.232,.57,.53).material;
+  scopeScreen.emissive.set(0xd4ead2);
+  scopeScreen.emissiveMap=scopeScreen.map;
+  scopeScreen.emissiveIntensity=.035;
   drawn(detail('glass-glare',scope,-.234,.57,.536),.79,.47,(c,w,h)=>{
     const light=c.createLinearGradient(w*.15,0,w*.82,h*.85);
     light.addColorStop(0,'#e5eee900');
@@ -479,7 +482,7 @@ export function furnish(scene, narrow, repaint, software=false) {
     c.beginPath();c.moveTo(.24,.061);c.lineTo(.26,.034);c.lineTo(.29,.083);c.lineTo(.32,.058);c.stroke();
   },-.03,-.11,.003);
   circuit.parent.visible=false;
-  letter(scope,'EXPERIMENTS',1.09,.15,-.17,.176,.499,{bold:true,ink:'#31382e',font:'sans-serif'});
+  letter(scope,'EXPERIMENTS',1.16,.16,-.17,.178,.499,{bold:true,ink:'#252c24',font:'sans-serif'});
   const cableWire=detail('cable-wire',scope);
   wire(cableWire,[[.57,.23,.52],[.76,.065,.75],[.62,.03,1.03],[.34,.026,.98],probeRest],.019,finish(0x9b493c));
   // A banked propeller plane above a hardwood base. The complete display is one pick target.
@@ -497,7 +500,7 @@ export function furnish(scene, narrow, repaint, software=false) {
   const plaque=group(stand,0,.165,.81);
   plaque.rotation.x=-.88;
   box(plaque,1.98,.32,.043,brassDark,0,0,0,.018);
-  letter(plaque,'DOPPLERGEIST',1.84,.253,0,0,.025,{paper:'#f2deb5',ink:'#4b2936',bold:true,font:'sans-serif'});
+  letter(plaque,'DOPPLERGEIST',1.85,.267,0,0,.025,{paper:'#f4e4c1',ink:'#3c2130',bold:true,font:'sans-serif'});
   for(const x of [-.95,.95])bead(plaque,x,0,.024,.018,.018,.009,brass);
 
   const plane=detail('airframe',stand,-.04,.58,-.15);
@@ -564,7 +567,7 @@ export function furnish(scene, narrow, repaint, software=false) {
   letter(file,'PROJECT INDEX',1,.15,0,.10,-.50,{flat:true,bold:true});
   const flap=detail('file-cover',file,0,.142,-.58);
   box(flap,1.96,.022,1.24,front,0,0,.62,.01);
-  letter(flap,'Project files',1.58,.34,.01,.014,.54,{flat:true,ink:'#42362e',italic:true});
+  letter(flap,'Project files',1.69,.37,.01,.014,.54,{flat:true,ink:'#392b24',italic:true,bold:true});
   letter(file,'INDEX',.50,.11,-.52,.030,-.71,{flat:true,bold:true});
   // Two blind score lines at the fold let the folder expand as it fills.
   for(const z of [.055,.094])box(flap,1.85,.002,.009,stock,0,.013,z);
@@ -575,8 +578,8 @@ export function furnish(scene, narrow, repaint, software=false) {
   box(book,1.27,.039,1.66,plum,0,.029,0,.017);box(book,1.20,.14,1.57,cream,0,.112,.005,.023);
   box(book,.065,.21,1.65,plum,-.605,.115,0,.022);
   const cover=group(book,-.607,.196,0);box(cover,1.27,.042,1.66,plum,.61,0,0,.018);
-  letter(cover,'Cinna’s',.91,.211,.64,.031,-.33,{flat:true,italic:true,ink:'#ffe5b1'});
-  letter(cover,'notebook',1.01,.227,.64,.031,-.11,{flat:true,bold:true,ink:'#ffe5b1'});
+  letter(cover,'Cinna’s',.98,.226,.64,.031,-.34,{flat:true,italic:true,ink:'#fff0c9'});
+  letter(cover,'notebook',1.09,.248,.64,.031,-.105,{flat:true,bold:true,ink:'#fff0c9'});
   drawn(book,1.15,.125,(c,w,h)=>{
     c.fillStyle='#e6d7bc';c.fillRect(0,0,w,h);
     for(let i=0;i<17;i++){c.fillStyle=i%3?'#aa977b':'#d1bda2';c.fillRect(random()*.09,i*h/17,w-random()*.12,.002);}
@@ -600,7 +603,7 @@ export function furnish(scene, narrow, repaint, software=false) {
   contactCard.rotation.y=-.10;contactCard.visible=false;
   const envelope=detail('wax',letters,0,0,0);
   const wax=cylinder(envelope,.125,.13,.031,finish(0x9e5353,.5),0,.11,-.026,12);
-  letter(letters,'Letters',.80,.214,.21,.100,.20,{flat:true,italic:true});
+  letter(letters,'Letters',.84,.225,.21,.100,.20,{flat:true,italic:true,bold:true});
   drawn(letters,.46,.22,(c,w,h)=>{
     c.strokeStyle='#796c6f';c.lineWidth=.009;c.beginPath();c.arc(.085,h*.50,.077,0,2*Math.PI);c.stroke();
     for(let i=0;i<3;i++){c.beginPath();c.moveTo(.13,.063+i*.04);c.bezierCurveTo(.23,i*.04,.29,.14+i*.04,w,.05+i*.04);c.stroke();}
@@ -1132,7 +1135,7 @@ export function furnish(scene, narrow, repaint, software=false) {
         color:mat.color,map:mat.map,side:mat.side,vertexColors:mat.vertexColors,transparent:mat.transparent,
         depthWrite:mat.depthWrite,alphaTest:mat.alphaTest,opacity:mat.opacity,polygonOffset:mat.polygonOffset,
         polygonOffsetFactor:mat.polygonOffsetFactor,polygonOffsetUnits:mat.polygonOffsetUnits,
-        emissive:mat.emissive,emissiveIntensity:mat.emissiveIntensity
+        emissive:mat.emissive,emissiveMap:mat.emissiveMap,emissiveIntensity:mat.emissiveIntensity
       }));
       surface=fastMaterials.get(mat);
     }
@@ -1163,5 +1166,5 @@ export function furnish(scene, narrow, repaint, software=false) {
   }
   source.forEach(g=>{if(!previewGeometry.has(g))g.dispose();});
   const flexCable=followProbe(cableWire.children[0],cableTip,probeRest);
-  return {world,targets,roomProps,details,occluders,drawer,flap,cover,lamp,bulbGlass:fastMaterials.get(bulbGlass)||bulbGlass,contactMap,daylight,projectLampShadow,flexCable,titleLooseFile,pencilBounds:{book:book.position.x+(narrow?.24:.43),mat:matRight-.10},sketchTexture:sketchFace.material.map};
+  return {world,targets,roomProps,details,occluders,drawer,flap,cover,lamp,bulbGlass:fastMaterials.get(bulbGlass)||bulbGlass,scopeScreen:fastMaterials.get(scopeScreen)||scopeScreen,contactMap,daylight,projectLampShadow,flexCable,titleLooseFile,pencilBounds:{book:book.position.x+(narrow?.24:.43),mat:matRight-.10},sketchTexture:sketchFace.material.map};
 }

@@ -28,12 +28,20 @@ for(const hand of document.querySelectorAll('[data-turn-paper]')){
   });
   hand.addEventListener('pointermove',event=>{
     if(grip?.id!==event.pointerId)return;
+    if(!(event.buttons&1)){letGo();return;}
     yaw=grip.yaw+(event.clientX-grip.x)*grip.scale;
     pitch=grip.pitch-(event.clientY-grip.y)*grip.scale;
     orient();
   });
-  function letGo(){grip=null;hand.classList.remove('holding');}
-  hand.addEventListener('lostpointercapture',letGo);
+  function letGo(event){
+    if(event?.pointerId!==undefined && grip?.id!==event.pointerId)return;
+    const ended=grip;
+    grip=null;hand.classList.remove('holding');
+    if(ended && hand.hasPointerCapture(ended.id))hand.releasePointerCapture(ended.id);
+  }
+  for(const type of ['pointerup','pointercancel','lostpointercapture'])hand.addEventListener(type,letGo);
+  hand.addEventListener('dragstart',event=>{if(grip)event.preventDefault();});
+  window.addEventListener('blur',letGo);
   const turns={ArrowLeft:[-15,0],ArrowRight:[15,0],ArrowUp:[0,15],ArrowDown:[0,-15]};
   hand.addEventListener('keydown',event=>{
     const turn=turns[event.key];

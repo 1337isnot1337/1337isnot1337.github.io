@@ -25,13 +25,13 @@ export function deskView(){
     depth=clamp(depth+y*.98,-.68,1);
   }
 
-  function look(x,y){
+  function look(x,y,overObject=false){
     const wasLooking=Boolean(lookX||lookY);
     lookX=edgeSpeed(x,horizontalSteeringStart);
     lookY=edgeSpeed(y,verticalSteeringStart);
     const looking=Boolean(lookX||lookY);
     if(!looking)lookDelay=0;
-    else if(!wasLooking)lookDelay=.16;
+    else if(!wasLooking)lookDelay=overObject?.38:.16;
     return looking;
   }
 

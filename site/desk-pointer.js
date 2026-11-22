@@ -1,9 +1,10 @@
 import { attachHeldArrows } from './desk-arrows.js?v=1';
 
 // Keep the browser cursor at its real hotspot. Only an orbit owns the pointer.
-export function attachDeskPointer(stage,{pick,track,stopLook=()=>{},orbitBy,endOrbit,part,gesture,tapPart,zoomBy,targets=new Map([...stage.querySelectorAll('[data-object]')].map(el=>[el.dataset.object,el]))}) {
+export function attachDeskPointer(stage,{pick,track,hover=()=>{},stopLook=()=>{},orbitBy,endOrbit,part,gesture,tapPart,zoomBy,targets=new Map([...stage.querySelectorAll('[data-object]')].map(el=>[el.dataset.object,el]))}) {
   const canvas=stage.querySelector('canvas');
-  let press=null, frame=0, x=0, y=0, overControl=false, suppress=false;
+  let press=null, frame=0, x=0, y=0, overControl=false, tracking=false, suppress=false;
+  let clickTarget, pointerInside=false, nextCameraPick=0;
   const active=()=>stage.classList.contains('is-rendered') && !stage.closest('.desk-overview').inert;
   function targetAt(clientX,clientY){
     const r=canvas.getBoundingClientRect();
@@ -12,54 +13,72 @@ export function attachDeskPointer(stage,{pick,track,stopLook=()=>{},orbitBy,endO
     return target && !target.hidden ? target : null;
   }
   function endPress(cancelled=false){
-    if(press && canvas.hasPointerCapture(press.id))canvas.releasePointerCapture(press.id);
-    if(press?.dragging)endOrbit(performance.now(),cancelled);
+    const ended=press;
     press=null;stage.classList.remove('looking-around');
+    if(ended && stage.hasPointerCapture(ended.id))stage.releasePointerCapture(ended.id);
+    if(ended?.mode)endOrbit(performance.now(),cancelled);
   }
   function leave(){
     endPress(true);cancelAnimationFrame(frame);frame=0;
-    stopLook();
+    pointerInside=false;clickTarget=undefined;
+    stopLook();hover('');
     delete stage.dataset.aim;
   }
   function aim(e,follow=true){
     if(e.pointerType!=='mouse')return;
+    pointerInside=true;
     x=e.clientX;y=e.clientY;
     overControl=Boolean(e.target.closest('[data-object]'));
+    tracking=follow;
     if(!frame)frame=requestAnimationFrame(()=>{
       frame=0;
       const enabled=active();
       const target=enabled && targetAt(x,y);
-      if(follow && enabled && !press && !document.querySelector('dialog[open]')){
+      if(tracking && enabled && !press && !document.querySelector('dialog[open]')){
         const r=stage.getBoundingClientRect();
+        hover(target?.dataset.object||'');
         track((x-r.left)/r.width*2-1,(y-r.top)/r.height*2-1,overControl||Boolean(target));
       }
       stage.dataset.aim=target ? 'object':'desk';
     });
   }
+  function refreshHover(time){
+    if(!pointerInside || press || frame || time<nextCameraPick || !active() || document.querySelector('dialog[open]'))return;
+    nextCameraPick=time+100;
+    const target=targetAt(x,y);
+    hover(target?.dataset.object||'');
+    stage.dataset.aim=target?'object':'desk';
+  }
   stage.addEventListener('pointerdown',e=>{
     if(!active()||!e.isPrimary||e.button!==0||e.target.closest('.loose-file-slip'))return;
-    cancelAnimationFrame(frame);frame=0;stopLook();
-    suppress=false;
+    cancelAnimationFrame(frame);frame=0;stopLook();hover('');
+    suppress=false;clickTarget=undefined;
     const target=targetAt(e.clientX,e.clientY);
-    press={id:e.pointerId,x:e.clientX,y:e.clientY,lastX:e.clientX,lastY:e.clientY,dragging:false,part:part()||target?.dataset.object};
+    press={id:e.pointerId,lastX:e.clientX,lastY:e.clientY,mode:null,target,part:part()||target?.dataset.object};
+    stage.setPointerCapture(e.pointerId);
   });
   stage.addEventListener('pointermove',e=>{
     if(!active())return;
-    if(press?.id===e.pointerId && e.buttons){
-      const dx=e.clientX-press.x,dy=e.clientY-press.y;
-      if(!press.dragging && Math.hypot(dx,dy)>7){
-        press.dragging=true;canvas.setPointerCapture(e.pointerId);stage.classList.add('looking-around');
-      }
-      if(press.dragging){
-        const x=(e.clientX-press.lastX)/stage.clientWidth,y=(e.clientY-press.lastY)/stage.clientHeight;
-        if(!gesture(press.part,x,y,e.timeStamp))orbitBy(x,y,e.timeStamp);
+    if(press?.id===e.pointerId){
+      if(!(e.buttons&1)){suppress=true;endPress(true);}
+      else{
+        const dx=e.clientX-press.lastX,dy=e.clientY-press.lastY;
+        if(!press.mode && Math.hypot(dx,dy)<=7)return;
+        const start=press.mode ? null : Math.abs(dx)>=Math.abs(dy) ? 'horizontal' : dy<0 ? 'up' : 'down';
+        const moveX=dx/stage.clientWidth,moveY=dy/stage.clientHeight;
+        const handled=press.mode!=='orbit' && gesture(press.part,moveX,moveY,e.timeStamp,start);
+        if(!press.mode){
+          press.mode=handled?'object':'orbit';
+          stage.classList.add('looking-around');
+        }
+        if(press.mode==='orbit')orbitBy(moveX,moveY,e.timeStamp);
         press.lastX=e.clientX;press.lastY=e.clientY;return;
       }
     }
     aim(e);
   });
   stage.addEventListener('touchmove',e=>{
-    if(press?.dragging && e.touches.length===1 && e.cancelable)e.preventDefault();
+    if(press?.mode && e.touches.length===1 && e.cancelable)e.preventDefault();
   },{passive:false});
   stage.addEventListener('wheel',e=>{
     if(!active() || e.ctrlKey || e.metaKey || !e.deltaY || document.querySelector('dialog[open]'))return;
@@ -72,21 +91,22 @@ export function attachDeskPointer(stage,{pick,track,stopLook=()=>{},orbitBy,endO
   (x,y,time)=>{stopLook();orbitBy(x*1.25,y*.87,time);});
   stage.addEventListener('pointerup',e=>{
     if(press?.id!==e.pointerId)return;
-    suppress=press.dragging || Boolean(press.part && tapPart(press.part));
+    clickTarget=press.target;
+    suppress=Boolean(press.mode || (press.part && tapPart(press.part)));
     endPress();if(active())aim(e,false);
   });
-  stage.addEventListener('pointercancel',leave);
-  canvas.addEventListener('lostpointercapture',e=>{
+  stage.addEventListener('pointercancel',e=>{if(press?.id===e.pointerId)leave();});
+  stage.addEventListener('lostpointercapture',e=>{
     if(press?.id!==e.pointerId)return;
     suppress=true;
     endPress(true);
   });
-  stage.addEventListener('pointerleave',()=>{if(!press?.dragging)leave();});
+  stage.addEventListener('pointerleave',()=>{if(!press)leave();});
   stage.addEventListener('dragstart',e=>{if(active())e.preventDefault();});
   stage.addEventListener('click',e=>{
     if(!active() || !e.detail || e.button!==0 || e.target.closest('.loose-file-slip'))return;
-    const target=suppress ? null : targetAt(e.clientX,e.clientY);
-    suppress=false;
+    const target=suppress ? null : clickTarget===undefined ? targetAt(e.clientX,e.clientY) : clickTarget;
+    suppress=false;clickTarget=undefined;
     if(target===e.target.closest('[data-object]') && target)return;
     e.preventDefault();e.stopImmediatePropagation();
     if(!target)return;
@@ -104,5 +124,5 @@ export function attachDeskPointer(stage,{pick,track,stopLook=()=>{},orbitBy,endO
     if(e.key==='Tab')stopLook();
   });
   document.addEventListener('portfolio-view',()=>{stopArrows();leave();});
-  return leave;
+  return {leave,refreshHover};
 }

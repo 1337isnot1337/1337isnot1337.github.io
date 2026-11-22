@@ -47,7 +47,9 @@ export function buildRoomShell(world, {group,box,bead,cylinder,wire,finish,photo
     box(parent,span,1.42,.036,finish(wainscot,.96),0,floor+.72,.021).castShadow=false;
     box(parent,span,.080,.071,molding,0,floor+1.44,.034,.014).castShadow=false;
     box(parent,span,.13,.072,trim,0,floor+.072,.034,.010).castShadow=false;
-    box(parent,span,.115,.083,molding,0,ceiling-.064,.030,.013).castShadow=false;
+    const crown=finish(0xe2ceba,.84);
+    box(parent,span,.120,.200,crown,0,ceiling-.058,.079,.027).castShadow=false;
+    box(parent,span,.049,.123,molding,0,ceiling-.137,.057,.012).castShadow=false;
     for(let x=-span*.5+.75;x<span*.5-.35;x+=1.54){
       box(parent,.025,1.32,.018,finish(wainscot,.84),x,floor+.74,.044,.003).castShadow=false;
     }
@@ -57,7 +59,23 @@ export function buildRoomShell(world, {group,box,bead,cylinder,wire,finish,photo
   wall(walls.music,length,0xb9b99e,0x788571);
   wall(walls.science,length,0xc0aab1,0x897589);
   box(world,2*width,.16,length,floorMat,0,floor-.08,middle).castShadow=false;
-  box(world,2*width,.115,length,finish(0xc8beb4,.97),0,ceiling+.0575,middle).castShadow=false;
+  const ceilingPlaster=new T.MeshStandardMaterial({
+    color:0xefe2d0,map:plasterGrain,bumpMap:plasterGrain,bumpScale:.005,
+    roughness:.97,emissive:0xb59a82,emissiveIntensity:.17,
+  });
+  box(world,2*width,.115,length,ceilingPlaster,0,ceiling+.0575,middle).castShadow=false;
+  // Low-profile painted rails frame recessed plaster panels above the room.
+  const rail=finish(0xe7d6c2,.86);
+  for(const x of [-width+.48,-width/3,width/3,width-.48]){
+    box(world,.24,.089,length-.94,rail,x,ceiling-.040,middle,.019).castShadow=false;
+    box(world,.16,.024,length-.94,molding,x,ceiling-.092,middle,.009).castShadow=false;
+  }
+  for(const z of [backZ+.47,backZ+length/3,frontZ-length/3,frontZ-.47]){
+    for(const [start,end] of [[-width+.60,-width/3-.12],[-width/3+.12,width/3-.12],[width/3+.12,width-.60]]){
+      box(world,end-start,.089,.24,rail,(start+end)/2,ceiling-.040,z,.019).castShadow=false;
+      box(world,end-start,.024,.16,molding,(start+end)/2,ceiling-.092,z,.009).castShadow=false;
+    }
+  }
 
   const rear=walls.back;
   const {left,right,bottom,top}=opening;

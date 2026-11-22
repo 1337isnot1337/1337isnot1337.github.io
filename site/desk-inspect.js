@@ -40,6 +40,7 @@ export function inspectDeskObjects(stage,engine,room,deskCamera,getModel,redraw,
   let detailedPrint=null;
   const ray=new T.Raycaster(),screenPoint=new T.Vector2();
   function hitsObject(e){
+    part='';
     if(!source)return true;
     const r=surface.getBoundingClientRect();
     screenPoint.set((e.clientX-r.left)/r.width*2-1,1-(e.clientY-r.top)/r.height*2);
@@ -48,7 +49,6 @@ export function inspectDeskObjects(stage,engine,room,deskCamera,getModel,redraw,
       for(let n=result.object;n;n=n.parent)if(!n.visible)return false;
       return true;
     });
-    part='';
     for(let n=hit?.object;n&&!part;n=n.parent)part=n.userData.detail||'';
     return Boolean(hit);
   }
@@ -127,8 +127,8 @@ export function inspectDeskObjects(stage,engine,room,deskCamera,getModel,redraw,
   function putBack(){
     if(!active)return;
     stopArrows();
-    life.stow(active,yaw);life.inspect('',active,null,'close');active='';source=null;press=null;tap=null;
-    surface.classList.remove('is-turning');releasePrint();stand.clear();snapshot?.dispose();snapshot=null;
+    life.stow(active,yaw);life.inspect('',active,null,'close');active='';source=null;part='';
+    cancelPress();releasePrint();stand.clear();snapshot?.dispose();snapshot=null;
     backdrop.uniforms.frame.value=null;stage.classList.remove('inspecting');redraw();
   }
   dialog.addEventListener('close',()=>{if(!dialog.open)putBack();});
@@ -165,9 +165,11 @@ export function inspectDeskObjects(stage,engine,room,deskCamera,getModel,redraw,
     tap=null;
     press={id:e.pointerId,x:e.clientX,y:e.clientY,part,onObject,dragging:false,
       sensitivity:1.25*Math.PI/Math.max(320,Math.min(surface.clientWidth,surface.clientHeight))};
+    surface.setPointerCapture(e.pointerId);
   });
   surface.addEventListener('pointermove',e=>{
-    if(!press || press.id!==e.pointerId || !e.buttons){
+    if(press?.id===e.pointerId && !(e.buttons&1))cancelPress(e);
+    if(!press || press.id!==e.pointerId){
       if(active==='plant'&&hitsObject(e)&&part==='springtail'){
         life.inspect(part,active,null,'hover');redraw();
       }
@@ -176,7 +178,7 @@ export function inspectDeskObjects(stage,engine,room,deskCamera,getModel,redraw,
     const dx=e.clientX-press.x,dy=e.clientY-press.y;
     if(!press.dragging){
       if(Math.hypot(dx,dy)<=6)return;
-      press.dragging=true;surface.setPointerCapture(e.pointerId);
+      press.dragging=true;
       surface.classList.add('is-turning');
     }
     const x=dx*press.sensitivity,y=dy*press.sensitivity;
@@ -202,18 +204,20 @@ export function inspectDeskObjects(stage,engine,room,deskCamera,getModel,redraw,
   });
   surface.addEventListener('pointerup',e=>{
     if(press?.id!==e.pointerId)return;
-    const ended=press;press=null;surface.classList.remove('is-turning');
+    const ended=press;cancelPress();
     if(ended.dragging){
       if(active==='archive'||active==='proof')life.pullSlip(ended.part,0,0,true);
     }else if(Math.hypot(e.clientX-ended.x,e.clientY-ended.y)<=6)tap=ended;
   });
   function cancelPress(e){
-    if(press?.id!==e.pointerId)return;
+    if(e && press?.id!==e.pointerId)return;
+    const ended=press;
     press=null;tap=null;surface.classList.remove('is-turning');
+    if(ended && surface.hasPointerCapture(ended.id))surface.releasePointerCapture(ended.id);
   }
   surface.addEventListener('pointercancel',cancelPress);
   surface.addEventListener('lostpointercapture',cancelPress);
-  surface.addEventListener('pointerleave',e=>{if(!press?.dragging)cancelPress(e);});
+  window.addEventListener('blur',()=>cancelPress());
   window.addEventListener('hashchange',close);
   function paint(time,dt){
     if(!active || !dialog.open)return false;

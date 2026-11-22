@@ -15,7 +15,7 @@
       <feMergeNode in="corner"/>
     </feMerge>
     <feComponentTransfer in="pixels" result="softened">
-      <feFuncA type="linear" slope=".42"/>
+      <feFuncA type="linear" slope=".32"/>
     </feComponentTransfer>
     <feComposite in="softened" in2="SourceGraphic" operator="over"/>
   </filter>
