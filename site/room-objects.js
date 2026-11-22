@@ -1,5 +1,6 @@
 import * as T from './vendor/three/three.module.min.js';
 import { paintRoomPrint } from './room-print.js?v=2';
+import { addLowCabinet } from './room-furnishings.js?v=1';
 
 // Independent props grouped by where they live. Dimensions are relative to the desk.
 const collections = {
@@ -729,10 +730,13 @@ export function furnishRoomObjects({walls, world, half, narrow, group, box, bead
     if(kind==='dial')prop.userData.dialLabel=label;
     return prop;
   }
-  function ledge(wall, x,y, length, rows, scale=.92) {
-    box(wall,length,.073,.54,wood,x,y-.038,.24,.014);
-    box(wall,length+.05,.038,.05,trim,x,y-.066,.512,.010);
-    for(const sign of [-1,1])box(wall,.095,.21,.17,trim,x+sign*(length/2-.26),y-.15,.082,.012);
+  function ledge(wall, x,y, length, rows, scale=.92, cabinet) {
+    if(cabinet)addLowCabinet(wall,x,y,length,cabinet,{box,bead,finish,wood,trim});
+    else{
+      box(wall,length,.073,.54,wood,x,y-.038,.24,.014);
+      box(wall,length+.05,.038,.05,trim,x,y-.066,.512,.010);
+      for(const sign of [-1,1])box(wall,.095,.21,.17,trim,x+sign*(length/2-.26),y-.15,.082,.012);
+    }
     wall.updateWorldMatrix(true,false);
     const local=wall.matrixWorld.clone().invert();
     const clearance=.12,shelfFront=.49;
@@ -769,12 +773,12 @@ export function furnishRoomObjects({walls, world, half, narrow, group, box, bead
   ledge(back,6.11,3.43,4.22,window.slice(15),1.16);
 
   const records=collections.records;
-  ledge(music,-.18,-2.25,8.35,records.slice(0,10),1.20);
+  ledge(music,-.18,-2.25,8.35,records.slice(0,10),1.20,'records');
   ledge(music,-1.66,4.27,6.40,records.slice(10,16),1.16);
   ledge(music,5.18,1.32,1.78,records.slice(16),1.07);
 
   const instruments=collections.instruments;
-  ledge(science,.13,-2.04,8.8,instruments.slice(0,10),1.16);
+  ledge(science,.13,-2.04,8.8,instruments.slice(0,10),1.16,'instruments');
   ledge(science,.68,4.35,7.35,instruments.slice(10,16),1.16);
   ledge(science,-4.97,1.91,2.15,instruments.slice(16),1.10);
 

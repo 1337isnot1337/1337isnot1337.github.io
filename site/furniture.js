@@ -1,5 +1,5 @@
 import * as T from './vendor/three/three.module.min.js';
-import { furnish } from './desk-model.js?v=44';
+import { furnish } from './desk-model.js?v=45';
 import { inspectDeskObjects } from './desk-inspect.js?v=20';
 
 import { attachDeskPointer } from './desk-pointer.js?v=23';
@@ -51,7 +51,9 @@ export function mountFurniture(stage,showGraphicsFallback) {
   const fill=new T.DirectionalLight(0xcce2ef,.74);fill.position.set(5.4,6.2,-8);scene.add(fill);
   const bulb=new T.PointLight(0xffce8a,0,8,2);
   const beam=new T.SpotLight(0xffd39a,0,8,.72,.85,1.9);
-  scene.add(bulb,beam,beam.target);
+  const readingLight=new T.SpotLight(0xffd19a,0,5.7,.79,.76,1.75);
+  readingLight.target.position.set(-7.21,-2.3,7.60);
+  scene.add(bulb,beam,beam.target,readingLight,readingLight.target);
   const dayColor=sky.color.clone(),nightColor=new T.Color(0xa9bae9);
   const fallbackWash=[];
   if(software)for(const [x,color] of [[-7.8,0xffb283],[7.8,0xc3a9ff]]){
@@ -78,7 +80,7 @@ export function mountFurniture(stage,showGraphicsFallback) {
   const drawer=links.get('drawer'), posterSwitch=links.get('poster-switch');
   let posterMode='professional';
   const fixtures=[
-    {id:'study-door',property:'rotation',distance:-.78},
+    {id:'study-door',property:'rotation',distance:1.36},
     {id:'window-sash',property:'position',distance:1.18},
   ];
   for(const fixture of fixtures){
@@ -122,6 +124,7 @@ export function mountFurniture(stage,showGraphicsFallback) {
       textures.forEach(t=>t.dispose());materials.forEach(m=>m.dispose());geometries.forEach(g=>g.dispose());
     }
     model=furnish(scene,narrow,redraw,software,posterMode);hitGroups.clear();extraMeshes.length=0;
+    readingLight.position.copy(model.readingBulb);
     for(const fixture of fixtures){
       fixture.joint=model.targets.get(fixture.id).root[fixture.property];
       fixture.home=fixture.joint.y;
@@ -236,6 +239,7 @@ export function mountFurniture(stage,showGraphicsFallback) {
     sky.intensity=T.MathUtils.lerp(daySky,.56,night);
     sun.intensity=T.MathUtils.lerp(2.16,.12,night);
     fill.intensity=T.MathUtils.lerp(.74,.35,night);
+    readingLight.intensity=night*25;
     if(!software)scene.environmentIntensity=T.MathUtils.lerp(6.4,2.8,night);
     for(const {lens,color} of model.coves)lens.color.copy(color).multiplyScalar(.58+night*.83);
     for(const reflection of fallbackWash)reflection.intensity=.35+night*4.2;

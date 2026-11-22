@@ -1,6 +1,6 @@
 import * as T from './vendor/three/three.module.min.js';
-import { furnishRoomObjects } from './room-objects.js?v=7';
-import { buildRoomShell } from './room-shell.js?v=10';
+import { furnishRoomObjects } from './room-objects.js?v=8';
+import { buildRoomShell } from './room-shell.js?v=11';
 import { posterSets } from './room-posters.js?v=2';
 
 const leafColors = [0x72925d, 0x4a7147, 0x538254, 0x688254, 0x8a9b66];
@@ -37,7 +37,7 @@ function ivyGeometry() {
 const ivyLeaf=ivyGeometry();
 
 export function decorateRoom(world, { desk, narrow, half, group, box, bead, cylinder, wire, finish, photo, tag, drawn, weave, wood, trim, floorMat, night }) {
-  const {walls,coves}=buildRoomShell(world,{group,box,bead,cylinder,wire,finish,photo,drawn,weave,wood,trim,floorMat,night,tag});
+  const {walls,coves,readingBulb}=buildRoomShell(world,{group,box,bead,cylinder,wire,finish,photo,drawn,weave,wood,trim,floorMat,night,tag});
   const prints = new Map();
   const paper = new T.MeshStandardMaterial({ color: 0xe8dfce, roughness: .97, side: T.BackSide });
   const stem = finish(0x5e6e43);
@@ -173,5 +173,5 @@ export function decorateRoom(world, { desk, narrow, half, group, box, bead, cyli
     vine(desk, side * (half - .22), 3.41, -1.01, narrow ? .92 : 1.45, side + 1.4,
       [[-side * .03, .081, -.75], [0, .157, -.57], [0, .119, -.22]]);
   }
-  return {coves,walls,showPosters};
+  return {coves,walls,showPosters,readingBulb};
 }

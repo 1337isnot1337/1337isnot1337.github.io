@@ -1,11 +1,12 @@
 import * as T from './vendor/three/three.module.min.js';
 import { buildWindowView } from './room-window-view.js?v=5';
+import { addRug, furnishReadingCorner } from './room-furnishings.js?v=1';
 
 // The hutch sits against the window wall.
 export function buildRoomShell(world, {group,box,bead,cylinder,wire,finish,photo,drawn,weave,wood,trim,floorMat,night,tag}) {
   const width=9.55, backZ=-2.68, frontZ=10.65, floor=-3.07, ceiling=6.65;
   const length=frontZ-backZ, middle=(frontZ+backZ)/2;
-  const molding=finish(0xd1bca8,.83);
+  const molding=finish(0xd3c5b2,.83);
   const coves=[];
   const texture=document.createElement('canvas');
   texture.width=texture.height=192;
@@ -52,7 +53,8 @@ export function buildRoomShell(world, {group,box,bead,cylinder,wire,finish,photo
       const x=(start+end)/2, size=end-start;
       box(parent,size,1.42,.036,finish(wainscot,.96),x,floor+.72,.021).castShadow=false;
       box(parent,size,.080,.071,molding,x,floor+1.44,.034,.014).castShadow=false;
-      box(parent,size,.13,.072,trim,x,floor+.072,.034,.010).castShadow=false;
+      box(parent,size,.205,.071,molding,x,floor+.111,.051,.012).castShadow=false;
+      box(parent,size,.063,.071,trim,x,floor+.034,.083,.011).castShadow=false;
     }
     const crown=finish(0xe2ceba,.84);
     box(parent,span,.120,.200,crown,0,ceiling-.058,.079,.027).castShadow=false;
@@ -70,28 +72,23 @@ export function buildRoomShell(world, {group,box,bead,cylinder,wire,finish,photo
       box(parent,.025,1.32,.018,finish(wainscot,.84),x,floor+.74,.044,.003).castShadow=false;
     }
   }
-  wall(walls.back,2*width,0xb3bcb0,0x637d78,0xffd6a6,opening);
-  wall(walls.front,2*width,0xc2aca0,0x92796b,0xb6b3ff,doorway);
-  wall(walls.music,length,0xb9b99e,0x788571,0xffb283);
-  wall(walls.science,length,0xc0aab1,0x897589,0xd6b8fa);
+  wall(walls.back,2*width,0xb8c0ad,0x697d70,0xffd6a6,opening);
+  wall(walls.front,2*width,0xc8b9a7,0x747b6b,0xb6b3ff,doorway);
+  wall(walls.music,length,0xb8c0ad,0x697d70,0xffb283);
+  wall(walls.science,length,0xb8c0ad,0x697d70,0xd6b8fa);
   box(world,2*width,.16,length,floorMat,0,floor-.08,middle).castShadow=false;
   const ceilingPlaster=new T.MeshStandardMaterial({
     color:0xefe2d0,map:plasterGrain,bumpMap:plasterGrain,bumpScale:.005,
     roughness:.97,emissive:0xb59a82,emissiveIntensity:.17,
   });
   box(world,2*width,.115,length,ceilingPlaster,0,ceiling+.0575,middle).castShadow=false;
-  // Low-profile painted rails frame recessed plaster panels above the room.
-  const rail=finish(0xe7d6c2,.86);
-  for(const x of [-width+.48,-width/3,width/3,width-.48]){
-    box(world,.24,.089,length-.94,rail,x,ceiling-.040,middle,.019).castShadow=false;
-    box(world,.16,.024,length-.94,molding,x,ceiling-.092,middle,.009).castShadow=false;
-  }
-  for(const z of [backZ+.47,backZ+length/3,frontZ-length/3,frontZ-.47]){
-    for(const [start,end] of [[-width+.60,-width/3-.12],[-width/3+.12,width/3-.12],[width/3+.12,width-.60]]){
-      box(world,end-start,.089,.24,rail,(start+end)/2,ceiling-.040,z,.019).castShadow=false;
-      box(world,end-start,.024,.16,molding,(start+end)/2,ceiling-.092,z,.009).castShadow=false;
-    }
-  }
+  const ceilingLight=group(world,0,ceiling,4.80);
+  const ceilingBrass=finish(0x897655,.47,.58);
+  cylinder(ceilingLight,.64,.57,.089,ceilingBrass,0,-.041,0,32).castShadow=false;
+  cylinder(ceilingLight,.58,.57,.048,molding,0,-.106,0,32).castShadow=false;
+  const opal=finish(0xf3e1bd,.33);
+  bead(ceilingLight,0,-.124,0,.551,.159,.551,opal).castShadow=false;
+  bead(ceilingLight,0,-.283,0,.042,.018,.042,ceilingBrass).castShadow=false;
 
   const rear=walls.back;
   const {left,right,bottom,top}=opening;
@@ -183,34 +180,56 @@ export function buildRoomShell(world, {group,box,bead,cylinder,wire,finish,photo
   buildWindowView(group(rear,0,-windowDrop,-.30),{photo,cylinder,finish,night});
 
   const entry=walls.front, door=finish(0x5b756b,.78);
-  const hinge=tag(group(entry,1.05,-.071,.162),'study-door',[2.49,-.17,.19],.68,.88);
+  const hinge=tag(group(entry,1.05,-.071,-.083),'study-door',[2.49,-.17,.23],.68,.88);
+  const leaf=group(hinge,0,0,.074);
   for(const x of [1.00,3.92])box(entry,.18,6.03,.204,trim,x,-.039,.063,.018);
   box(entry,3.10,.168,.20,trim,2.46,2.904,.062,.012);
-  const hall=finish(0x675950,.94);
-  box(entry,3.24,6.12,.11,hall,2.46,-.052,-2.1);
-  for(const x of [1.01,3.89])box(entry,.106,6.04,2.20,hall,x,-.055,-1.02);
-  box(entry,3.1,.09,2.15,wood,2.46,floor-.046,-1.025);
-  box(entry,3.13,.10,2.16,hall,2.46,2.88,-1.025);
-  box(hinge,2.82,5.79,.13,door,1.41,0,0,.022);
+  // The jamb opens into a short hall with a turn past the inner casing.
+  const hall=finish(0x999183,.93), hallShade=finish(0x746d61,.91);
+  box(entry,.108,6.04,3.85,hall,1.01,-.055,-1.88);
+  box(entry,.108,6.04,1.96,hall,3.89,-.055,-.942);
+  box(entry,5.93,6.12,.14,hallShade,3.84,-.052,-3.83);
+  box(entry,.12,6.08,1.94,hallShade,6.74,-.051,-2.85);
+  box(entry,2.89,6.08,.14,hall,5.35,-.051,-1.97);
+  box(entry,3.10,.09,3.82,floorMat,2.46,floor-.046,-1.952);
+  box(entry,2.97,.09,1.93,floorMat,5.31,floor-.046,-2.891);
+  box(entry,3.14,.10,3.91,hall,2.46,2.89,-1.889);
+  box(entry,2.97,.10,1.93,hallShade,5.31,2.89,-2.891);
+  box(entry,.074,.22,3.66,molding,1.08,floor+.117,-1.93);
+  box(entry,.075,.22,1.83,molding,3.83,floor+.117,-.974);
+  box(entry,5.73,.22,.067,molding,3.86,floor+.117,-3.72);
+  box(entry,2.51,.018,3.02,finish(0x786552,.96),2.46,floor+.01,-1.78,.009).castShadow=false;
+  box(leaf,2.82,5.79,.13,door,1.41,0,0,.022);
   for(const y of [-1.46,.98]){
-    box(hinge,2.49,2.05,.041,finish(0x455c54,.89),1.41,y+.071,.073,.022);
-    box(hinge,2.32,1.89,.038,door,1.41,y+.071,.093,.022);
+    box(leaf,2.49,2.05,.041,finish(0x455c54,.89),1.41,y+.071,.073,.022);
+    box(leaf,2.32,1.89,.038,door,1.41,y+.071,.093,.022);
   }
-  box(hinge,.163,.35,.047,finish(0xaa8b5f,.49,.28),2.49,-.209,.107,.019);
-  bead(hinge,2.49,-.172,.187,.084,.072,.062,finish(0xbd9b66,.44,.36));
-  box(entry,3.09,.069,.225,trim,2.46,-2.972,.172,.013);
+  const hardware=finish(0xaa8b5f,.49,.40);
+  for(const side of [-1,1]){
+    box(leaf,.163,.35,.046,hardware,2.49,-.209,side*.085,.018);
+    bead(leaf,2.49,-.172,side*.155,.084,.072,.062,finish(0xbd9b66,.44,.36));
+  }
+  for(const y of [-2.15,.01,2.13]){
+    box(entry,.084,.186,.026,hardware,1.061,y-.071,-.053,.005);
+    cylinder(entry,.023,.023,.154,hardware,1.056,y-.071,-.083,12);
+  }
+  box(entry,3.09,.059,.312,trim,2.46,floor+.029,.067,.013);
+  const faceplate=finish(0xe2d7c4,.68), slot=finish(0x675848,.88);
+  box(entry,.231,.351,.035,faceplate,4.21,.66,.037,.026);
+  box(entry,.081,.135,.041,faceplate,4.21,.663,.064,.011).rotation.x=.19;
+  for(const y of [.531,.79])bead(entry,4.21,y,.060,.013,.013,.006,hardware);
+  box(entry,.308,.215,.030,faceplate,-7.33,-2.27,.061,.026);
+  for(const x of [-7.40,-7.26]){
+    for(const dx of [-.025,.025])box(entry,.014,.044,.008,slot,x+dx,-2.252,.079,.003);
+    box(entry,.025,.016,.008,slot,x,-2.304,.079,.003);
+  }
   box(entry,5.85,2.12,.112,trim,-4.18,2.18,.055,.029);
   drawn(entry,5.61,1.87,paintValleyCloth,-4.18,2.18,.117,false,180);
 
-  // Runners sit on the floor, with the desk feet still grounded.
-  const rug=new T.MeshStandardMaterial({color:0x64716b,map:weave,bumpMap:weave,bumpScale:.020,roughness:.98});
-  box(world,8.24,.022,4.56,rug,0,floor+.011,-.37,.010).castShadow=false;
-  for(const x of [-3.94,3.94])box(world,.049,.008,4.29,molding,x,floor+.026,-.37,.005).castShadow=false;
-  for(const z of [-2.52,1.78])box(world,7.90,.008,.040,molding,0,floor+.028,z,.004).castShadow=false;
-  const runnerFabric=rug.clone();runnerFabric.color.set(0x89717c);
-  const runner=box(world,2.55,.025,4.85,runnerFabric,-6.65,floor+.012,4.04,.011);
-  runner.rotation.y=.09;runner.castShadow=false;
-  return {walls,coves,hinge,sash};
+  addRug(world,0,floor,-.22,8.24,4.82,[0x61746c,0x4c655c,0xb2aa86],{box,drawn,finish});
+  addRug(world,-7.18,floor,7.40,3.91,4.85,[0x9a7665,0x805e51,0xbca686],{box,drawn,finish});
+  const readingBulb=furnishReadingCorner(world,floor,{group,box,bead,cylinder,wire,finish,drawn,weave,wood,trim});
+  return {walls,coves,hinge,sash,readingBulb};
 }
 
 // A contour print on the cloth backing of the rear display.
