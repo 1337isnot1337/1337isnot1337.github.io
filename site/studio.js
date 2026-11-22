@@ -11,6 +11,7 @@
   const reader = studio.querySelector(".desk-reading");
   const stage = overview.querySelector(".desktop-picture");
   const sceneCanvas = stage.querySelector("canvas");
+  const deskProgress = stage.querySelector(".desk-load-progress");
   let opener = null;
   let returnY = null;
   const switcher=document.querySelector(".mode-switch");
@@ -53,9 +54,11 @@
   function showFurniture() {
     if (sceneStarted || !deskIsReadyToMount()) return;
     sceneStarted=true;
-    import("./furniture.js?v=68").then(module => {
+    deskProgress.value=2;
+    import("./furniture.js?v=69").then(module => {
       if (!deskIsReadyToMount()) { sceneStarted=false; return; }
-      try { module.mountFurniture(stage,showGraphicsFallback); }
+      deskProgress.value=3;
+      try { module.mountFurniture(stage,showGraphicsFallback,step=>{deskProgress.value=step;}); }
       catch { showGraphicsFallback(); }
     }, () => showGraphicsFallback("The 3D desk couldn’t download. Reload to try again."));
   }

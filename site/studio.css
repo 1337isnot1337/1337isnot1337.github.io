@@ -12,10 +12,21 @@
 html[data-view] .desktop-picture.is-loading { background:#c7bcaa; }
 html[data-view] .desktop-picture.is-loading > :is(.hutch-fallback,.desk-objects) { display:none; }
 html[data-view] .is-loading > .desk-load-status {
-  position:absolute; inset:0; display:grid; place-items:center; margin:0; color:#493d39;
-  font:500 15px/1.4 var(--headline); animation:desk-load-status .6s step-end;
+  position:absolute; inset:0; display:grid; place-content:center; justify-items:center;
+  grid-template-columns:minmax(0,15rem); gap:10px; padding:16px;
+  color:#493d39; font:550 15px/1.4 var(--headline);
 }
-@keyframes desk-load-status { from { opacity:0; } to { opacity:1; } }
+.desk-load-status p { margin:0; }
+.desk-load-progress {
+  appearance:none; width:100%; height:8px; overflow:hidden;
+  border:1px solid #746457; border-radius:4px; background:#e5d9c6;
+}
+.desk-load-progress::-webkit-progress-bar { background:transparent; }
+.desk-load-progress::-webkit-progress-value { background:#634636; }
+.desk-load-progress::-moz-progress-bar { background:#634636; }
+@media (forced-colors:active) {
+  .desk-load-progress { appearance:auto; }
+}
 .furniture-canvas { display:block; position:absolute; inset:0; width:100%; height:100%; opacity:0; }
 .desktop-picture.is-rendered .furniture-canvas { opacity:1; }
 .hutch-fallback { position:absolute; inset:24% 0 0; border-block:12px ridge #795737; background:#865d40 url(assets/furniture/grain.webp) center/cover; }

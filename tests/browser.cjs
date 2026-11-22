@@ -86,6 +86,8 @@ const server = http.createServer((req,res) => {
      assert.equal(webgl,false,'a browser with WebGL2 renders the desk instead of falling back');
     }
     if(await page.locator('.is-rendered').count()){
+     assert.equal(await page.locator('.desk-load-progress').getAttribute('value'),'5');
+     assert.equal(await page.locator('.desk-load-progress').isVisible(),false);
      const stage=page.locator('.desktop-picture'),lamp=page.locator('[data-object="lamp"]');
      const r=await lamp.boundingBox();
      await page.mouse.move(r.x+r.width*.5,r.y+r.height*.95);
@@ -596,9 +598,12 @@ const server = http.createServer((req,res) => {
   const rendererRequested=cold.waitForRequest('**/furniture.js?*');
   await cold.goto(base,{waitUntil:'commit'});
   await cold.locator('.desk-load-status').waitFor();
+  const progress=cold.getByRole('progressbar',{name:'Opening the desk…'});
+  assert.equal(await progress.getAttribute('value'),'1');
   const coldFallback=cold.locator('.hutch-fallback,.desk-objects,.graphics-warning');
   assert.equal(await coldFallback.evaluateAll(elements=>elements.filter(el=>el.getClientRects().length).length),0,'static desk stays hidden before deferred startup');
   releaseStudio();await rendererRequested;
+  assert.equal(await progress.getAttribute('value'),'2');
   assert.equal(await coldFallback.evaluateAll(elements=>elements.filter(el=>el.getClientRects().length).length),0,'renderer download keeps fallback hidden');
   releaseRenderer();
   await cold.locator('.graphics-warning:visible').waitFor();

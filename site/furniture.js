@@ -10,7 +10,7 @@ import { drawerTravel } from './desk-drawer.js?v=1';
 import { setClock } from './shelf-clock.js?v=1';
 import { bindRoomActions } from './room-actions.js?v=3';
 
-export function mountFurniture(stage,showGraphicsFallback) {
+export function mountFurniture(stage,showGraphicsFallback,reportProgress) {
   const canvas = stage.querySelector('canvas');
   if (!document.createElement('canvas').getContext('2d'))throw new Error('Canvas drawing unavailable');
   const options={alpha:false,powerPreference:'default'};
@@ -105,6 +105,7 @@ export function mountFurniture(stage,showGraphicsFallback) {
     catch (error) { suspendDesk();console.error("Desk rendering failed",error); }
   }
   function rebuild() {
+    const firstBuild=!model;
     if(model){
       scene.remove(model.world);model.contactMap.dispose();
       const textures=new Set(),materials=new Set(),geometries=new Set();
@@ -148,6 +149,7 @@ export function mountFurniture(stage,showGraphicsFallback) {
     });
     model.bulbGlass.emissiveIntensity=lampOn?2.2:.08;
     model.lamp.localToWorld(bulb.position.set(-.24,1.13,.24));engine.shadowMap.needsUpdate=true;
+    if(firstBuild)reportProgress(4);
   }
   function layout() {
     if(!needsLayout)return true;
@@ -352,6 +354,7 @@ export function mountFurniture(stage,showGraphicsFallback) {
       boundedModel=model;
     }
     if(!stage.classList.contains('is-rendered')){
+      reportProgress(5);
       stage.classList.remove('is-loading');stage.classList.add('is-rendered');
       if(software)warning.textContent='The desk is using software rendering. Enable graphics acceleration for smoother movement.';
       warning.hidden=!software;

@@ -68,8 +68,8 @@
     "></script>
     <script defer src="/rook-graph.js?v=3"></script>
     <script>document.documentElement.dataset.view = /^\/boring(?:\/|$)/.test(location.pathname) || /^(#projects|#flyover|#cpu|#schedule|#conjectures|#factoring|#conway)$/.test(location.hash) ? "shelf" : "desk";</script>
-    <link rel="stylesheet" href="/studio.css?v=23" />
-    <script defer src="/studio.js?v=69" onerror="if (!location.pathname.startsWith('/boring')) delete document.documentElement.dataset.view"></script>
+    <link rel="stylesheet" href="/studio.css?v=24" />
+    <script defer src="/studio.js?v=70" onerror="if (!location.pathname.startsWith('/boring')) delete document.documentElement.dataset.view"></script>
     <script defer src="/paper-turn.js?v=5"></script>
     <script defer src="/desk-keepsakes.js?v=11"></script>
     <script defer src="/paper-dismiss.js?v=2"></script>
@@ -112,7 +112,10 @@
 
           <h1 id="studio-title" class="visually-hidden" tabindex="-1">Cinna Davis — software, mathematics and research</h1>
           <div class="desktop-picture is-loading">
-            <p class="desk-load-status" role="status">Opening the desk…</p>
+            <div class="desk-load-status">
+              <p id="desk-load-label" role="status">Opening the desk…</p>
+              <progress class="desk-load-progress" max="5" value="1" aria-labelledby="desk-load-label"></progress>
+            </div>
             <canvas class="furniture-canvas" aria-hidden="true"></canvas>
             <div class="hutch-fallback" aria-hidden="true"></div>
             <nav class="desk-objects" aria-label="Objects on the desk">
