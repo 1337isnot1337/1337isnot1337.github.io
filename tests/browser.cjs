@@ -140,7 +140,7 @@ const server = http.createServer((req,res) => {
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth <= innerWidth), `${name}: horizontal page overflow`);
    assert.deepEqual(mapRequests,[],`${name}: closed map must not request image`);
    await page.locator('.mode-switch').click();
-   assert.equal(new URL(page.url()).pathname, '/');
+   await page.waitForURL(base + '/');
    assert.equal(await page.locator('.furniture-canvas').count(),1,`${name}: the desk returns with its canvas`);
    await page.locator('.object-scope').click();
    await page.locator('#desk-map summary').click();
