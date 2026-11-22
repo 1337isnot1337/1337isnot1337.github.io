@@ -1,4 +1,5 @@
 import * as T from './vendor/three/three.module.min.js';
+import { shelfGems } from './shelf-gems.js?v=1';
 
 const actions={shutter:'release the shutter',slide:'move the caliper jaw',play:'start or stop the tape',
   'compass-face':'tap the compass'};
@@ -7,7 +8,7 @@ export function shelfInspection(copy){
   const parts=new Map();
   copy.traverse(node=>{if(node.userData.shelfPart)parts.set(node.userData.shelfPart,node);});
   const primary=Object.keys(actions).find(action=>parts.has(action));
-  if(!primary)return null;
+  if(!primary)return shelfGems(copy,parts);
   const shutter=parts.get('shutter'),slide=parts.get('slide'),play=parts.get('play'),needle=parts.get('needle');
   const axis=new T.Vector3(),north=new T.Vector3(),inverse=new T.Quaternion();
   const home=shutter?.position.y;

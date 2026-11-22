@@ -1,6 +1,6 @@
 import * as T from './vendor/three/three.module.min.js';
 import { attachHeldArrows } from './desk-arrows.js?v=1';
-import { shelfInspection } from './shelf-inspection.js?v=1';
+import { shelfInspection } from './shelf-inspection.js?v=2';
 
 // One renderer serves the room and the object in hand. Capture the room once per pickup.
 export function inspectDeskObjects(stage,engine,room,deskCamera,getModel,redraw,life,motion){
@@ -61,7 +61,7 @@ export function inspectDeskObjects(stage,engine,room,deskCamera,getModel,redraw,
   }
   function restPose(){
     yaw=active.includes('pencil')?-.72:-.24;
-    pitch=['drawer-note','crumb-plan','shim','screw'].includes(active)?.90:
+    pitch=['drawer-note','crumb-plan','shim','screw'].includes(active)?.90:active==='prop-small-keys'?.68:
       active.includes('pencil')?.94:active==='cup'?.32:active==='prop-pocket-compass'?-.72:.16;
   }
   function zoomBy(delta){
@@ -144,6 +144,9 @@ export function inspectDeskObjects(stage,engine,room,deskCamera,getModel,redraw,
   };
   surface.addEventListener('keydown',e=>{
     if(e.altKey||e.ctrlKey||e.metaKey)return;
+    if(working?.key?.(e.key.toLowerCase())){
+      e.preventDefault();redraw();return;
+    }
     if(active.startsWith('room-') && (e.key==='Enter' || e.key===' ')){
       e.preventDefault();followPoster();return;
     }

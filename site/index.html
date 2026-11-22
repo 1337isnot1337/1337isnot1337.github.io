@@ -70,8 +70,8 @@
     "></script>
     <script defer src="/rook-graph.js?v=3"></script>
     <script>document.documentElement.dataset.view = /^\/boring(?:\/|$)/.test(location.pathname) || /^(#projects|#flyover|#cpu|#schedule|#conjectures|#factoring|#conway)$/.test(location.hash) ? "shelf" : "desk";</script>
-    <link rel="stylesheet" href="/studio.css?v=22" />
-    <script defer src="/studio.js?v=61" onerror="if (!location.pathname.startsWith('/boring')) delete document.documentElement.dataset.view"></script>
+    <link rel="stylesheet" href="/studio.css?v=23" />
+    <script defer src="/studio.js?v=62" onerror="if (!location.pathname.startsWith('/boring')) delete document.documentElement.dataset.view"></script>
     <script defer src="/paper-turn.js?v=5"></script>
     <script defer src="/desk-keepsakes.js?v=11"></script>
     <script defer src="/paper-dismiss.js?v=2"></script>
@@ -235,6 +235,8 @@
               <button type="button" class="object-lamp" data-object="lamp" aria-pressed="false" hidden><span>Desk lamp</span></button>
               <button type="button" class="object-drawer" data-object="drawer" aria-expanded="false" aria-controls="drawer-letter drawer-posters" hidden><span>Desk drawer</span></button>
               <button type="button" id="drawer-posters" data-object="poster-switch" aria-label="Frivolous wall posters" aria-pressed="false" hidden></button>
+              <button type="button" data-object="study-door" data-room-fixture aria-label="Study door open" aria-pressed="false" hidden></button>
+              <button type="button" data-object="window-sash" data-room-fixture aria-label="Window open" aria-pressed="false" hidden></button>
               <button type="button" id="drawer-letter" class="postcat" data-object="keepsake" aria-haspopup="dialog" hidden><span>Take the postcard</span></button>
             </nav>
             <p class="graphics-warning" role="status" hidden>The 3D desk needs canvas and WebGL. Enable graphics acceleration in your browser to see it.</p>

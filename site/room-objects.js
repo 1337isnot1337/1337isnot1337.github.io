@@ -120,87 +120,130 @@ export function furnishRoomObjects({walls, world, half, narrow, group, box, bead
       box(p,.37,.53,.32,page,0,.292,0,.010);
       for(let i=0;i<9;i++)box(p,.346,.0014,.004,stock,0,.5576,-.134+i*.033);
       for(const x of [-.197,.197])box(p,.035,.60,.35,m,x,.303,0,.005);
-      box(p,.42,.60,.046,m,0,.303,.173,.010);
-      box(p,.19,.017,.007,gilt,0,.128,.199);
-      box(p,.19,.017,.007,gilt,0,.463,.199);
-      print(p,label,.32,.23,color,'chart',0,.30,.200);
+      print(p,label,.29,.42,color,'chart',0,.302,.163);
+      const cover=moving(p,'book-cover',-.204,.303,.177,true);
+      box(cover,.42,.60,.046,m,.204,0,0,.010);
+      box(cover,.19,.017,.007,gilt,.204,-.175,.026);
+      box(cover,.19,.017,.007,gilt,.204,.160,.026);
+      print(cover,label,.32,.23,color,'chart',.204,-.003,.027);
     },
     frame(p,m,label,color){
       box(p,.49,.48,.058,m,0,.245,0,.012);
-      print(p,label,.414,.407,color,'chart',0,.245,.035);
+      box(p,.420,.414,.005,shadow,0,.245,.032,.004);
+      const mount=moving(p,'frame-print',0,.245,.037,true);
+      box(mount,.419,.411,.005,page,0,0,-.002,.004);
+      print(mount,label,.414,.407,color,'chart',0,0,.001);
     },
     chart(p,m,label,color){
       box(p,.53,.42,.029,m,0,.22,0,.010);
       print(p,label,.493,.376,color,'chart',0,.22,.018);
+      const cursor=moving(p,'chart-cursor',-.174,.21,.022,true);
+      box(cursor,.007,.243,.004,gilt,0,-.008,0,.001);
+      for(const y of [-.127,.119])box(cursor,.024,.025,.005,m,0,y,0,.002);
     },
     botanical(p,m,label,color){
       box(p,.43,.51,.044,m,0,.256,0,.008);
       print(p,label,.386,.46,color,'botanical',0,.256,.025);
+      const glass=moving(p,'plant-glass',-.205,.256,.034,true);
+      const clear=new T.MeshPhysicalMaterial({color:0xe7ebe0,transparent:true,opacity:.18,roughness:.14,depthWrite:false});
+      box(glass,.398,.472,.005,clear,.205,0,0,.006);
+      box(glass,.018,.042,.009,gilt,.394,.023,.005,.002);
     },
     swatch(p,m,label,color){
       box(p,.48,.29,.030,m,0,.145,0,.007);
-      print(p,label,.438,.25,color,'swatch',0,.145,.018);
+      for(const [index,tint] of [0x657d84,0xa0867d,color].entries()){
+        const chip=index===2?moving(p,'swatch-card',-.19,.095,.023,true):group(p,-.19,.095,.018+index*.002);
+        print(chip,label,.438,.25,tint,'swatch',.19,.05,.002);
+      }
     },
     ticket(p,m,label,color){
       box(p,.44,.27,.021,m,0,.135,0,.008);
       print(p,label,.409,.24,color,'ticket',0,.135,.014);
       bead(p,-.17,.248,.021,.022,.022,.010,gilt);
+      const stub=moving(p,'ticket-stub',.159,.135,.019,true);
+      box(stub,.100,.225,.004,stock,0,0,0,.002);
+      for(let i=0;i<7;i++)box(stub,.019,.004,.002,line,.001,.075-i*.024,.003);
     },
     packet(p,m,label,color){
       box(p,.40,.375,.079,m,0,.188,0,.015);
       print(p,label,.364,.320,color,label==='Beamline foldout'?'chart':'botanical',0,.188,.044);
+      const flap=moving(p,'packet-fold',0,.342,.052,true);
+      box(flap,.391,.063,.011,stock,0,-.024,.001,.006);
+      box(flap,.081,.017,.006,gilt,0,-.043,.008,.004);
     },
     envelope(p,m){
       box(p,.46,.305,.037,page,0,.153,0,.009);
       wire(p,[[-.225,.297,.022],[0,.14,.025],[.225,.297,.022]],.004,line);
       faceDisc(p,.037,.013,m,0,.14,.027);
       box(p,.07,.067,.006,gilt,.164,.246,.024);
+      const slip=moving(p,'envelope-slip',0,.169,.006,true);
+      box(slip,.333,.233,.006,stock,0,0,0,.007);
+      for(let i=0;i<4;i++)box(slip,.208-i*.026,.005,.002,line,-.037,.056-i*.027,.006);
+      box(slip,.067,.018,.012,gilt,0,.11,.018,.002);
     },
     bowl(p,m){
       const points=[[0,.016],[.11,.016],[.15,.044],[.21,.115],[.225,.155],[.211,.156],[.195,.114],[.13,.059],[0,.053]];
       const shell=new T.Mesh(new T.LatheGeometry(points.map(v=>new T.Vector2(...v)),24),m);
       shell.castShadow=true;shell.receiveShadow=true;p.add(shell);
-      for(const [x,z] of [[-.075,.04],[.065,-.065]])cylinder(p,.038,.038,.014,gilt,x,.058,z,12);
+      const coins=moving(p,'bowl-coins',0,.058,0,true);
+      for(const [x,z] of [[-.075,.04],[.065,-.065]])cylinder(coins,.038,.038,.014,gilt,x,0,z,12);
+      faceDisc(coins,.023,.006,line,-.075,.007,.04);
     },
-    can(p,m){
+    can(p,m,label){
       cylinder(p,.123,.105,.33,m,0,.169,0,20);
       cylinder(p,.125,.125,.019,gilt,0,.335,0,20);
       cylinder(p,.103,.103,.015,shadow,0,.335,0,20);
       wire(p,[[.11,.12,0],[.21,.16,0],[.21,.27,0],[.111,.292,0]],.018,m);
-      wire(p,[[-.09,.10,0],[-.19,.15,0],[-.26,.30,0]],.019,m);
+      if(label==='Watering can'){
+        const spout=moving(p,'can-spout',-.09,.10,0,true);
+        wire(spout,[[0,0,0],[-.10,.05,0],[-.17,.20,0]],.019,m);
+        const drops=moving(spout,'water-drops',-.17,.173,.003);
+        for(let i=0;i<4;i++)bead(drops,-i*.015,-i*.035,0,.009,.017,.009,finish(0xaac9d1,.35));
+        drops.visible=false;
+      }else{
+        const tool=moving(p,'can-tool',-.046,.198,0,true);
+        cylinder(tool,.014,.012,.203,gilt,0,0,0,12);
+        bead(tool,0,.116,0,.015,.021,.015,finish(0x973745));
+        bead(tool,0,.135,0,.021,.013,.019,page);
+      }
     },
     sprig(p,m){
       cylinder(p,.124,.102,.265,m,0,.134,0,20);
       cylinder(p,.118,.118,.019,gilt,0,.269,0,20);
+      const stems=moving(p,'sprig-stems',0,0,0,true);
       for(let j=-1;j<=1;j++){
         const x=j*.12, y=.51+(.16-Math.abs(j)*.07);
-        wire(p,[[.016*j,.25,0],[x*.5,.42,.014],[x,y,.035]],.009,finish(0x647a57));
-        bead(p,x-.02,y-.093,.046,.054,.019,.018,finish(0x78925d)).rotation.z=.4*j;
+        wire(stems,[[.016*j,.25,0],[x*.5,.42,.014],[x,y,.035]],.009,finish(0x647a57));
+        bead(stems,x-.02,y-.093,.046,.054,.019,.018,finish(0x78925d)).rotation.z=.4*j;
         for(let k=0;k<3;k++){
-          bead(p,x+Math.cos(k*2.1)*.03,y+Math.sin(k*2.1)*.038,.042,.032,.033,.019,m);
+          bead(stems,x+Math.cos(k*2.1)*.03,y+Math.sin(k*2.1)*.038,.042,.032,.033,.019,m);
         }
-        bead(p,x,y,.067,.017,.017,.012,gilt);
+        bead(stems,x,y,.067,.017,.017,.012,gilt);
       }
     },
     flask(p,m){
       cylinder(p,.075,.17,.265,m,0,.145,0,24);
       cylinder(p,.065,.073,.142,glaze,0,.342,0,20);
-      cylinder(p,.076,.067,.039,gilt,0,.417,0,18);
+      const cork=moving(p,'flask-cork',0,.417,0,true);
+      cylinder(cork,.076,.067,.039,gilt,0,0,0,18);
       box(p,.13,.073,.009,page,0,.16,.131,.012);
       box(p,.081,.009,.003,line,0,.156,.137);
     },
     reel(p,m){
-      faceDisc(p,.202,.065,m,0,.217,0);
-      for(let ring=0;ring<3;ring++)faceDisc(p,.179-ring*.036,.007,ring%2?m:shadow,0,.217,.037+ring*.006);
-      for(let n=0;n<3;n++)faceDisc(p,.025,.014,page,Math.cos(n*2.094)*.11,.217+Math.sin(n*2.094)*.11,.051);
-      faceDisc(p,.04,.022,gilt,0,.217,.061);
+      const reel=moving(p,'reel-core',0,.217,0,true);
+      faceDisc(reel,.202,.065,m,0,0,0);
+      for(let ring=0;ring<3;ring++)faceDisc(reel,.179-ring*.036,.007,ring%2?m:shadow,0,0,.037+ring*.006);
+      for(let n=0;n<3;n++)faceDisc(reel,.025,.014,page,Math.cos(n*2.094)*.11,Math.sin(n*2.094)*.11,.051);
+      faceDisc(reel,.04,.022,gilt,0,0,.061);
     },
     record(p,m,label,color){
       box(p,.42,.45,.047,m,-.045,.228,0,.009);
-      faceDisc(p,.143,.022,shadow,.09,.232,.021);
-      faceDisc(p,.126,.006,m,.09,.232,.034);
-      faceDisc(p,.102,.007,line,.09,.232,.039);
-      faceDisc(p,.032,.01,gilt,.09,.232,.046);
+      const disc=moving(p,'record-disc',.09,.232,.021,true);
+      faceDisc(disc,.143,.022,shadow,0,0,0);
+      faceDisc(disc,.126,.006,m,0,0,.013);
+      faceDisc(disc,.102,.007,line,0,0,.018);
+      faceDisc(disc,.032,.01,gilt,0,0,.025);
+      box(disc,.010,.027,.003,page,.078,.091,.021).rotation.z=-.65;
       box(p,.26,.34,.026,m,-.102,.205,.037);
       print(p,label,.23,.29,color,'chart',-.102,.205,.053);
     },
@@ -209,27 +252,41 @@ export function furnishRoomObjects({walls, world, half, narrow, group, box, bead
       box(p,.32,.089,.007,page,0,.155,.043);
       box(p,.301,.009,.003,gilt,0,.183,.048);
       box(p,.239,.037,.006,shadow,0,.141,.049);
-      for(const x of [-.07,.07]){
-        faceDisc(p,.033,.012,gilt,x,.142,.057);
-        faceDisc(p,.013,.013,shadow,x,.142,.062);
+      for(const [n,x] of [-.07,.07].entries()){
+        const spool=moving(p,'cassette-'+n,x,.142,.057,true);
+        faceDisc(spool,.033,.012,gilt,0,0,0);
+        faceDisc(spool,.013,.013,shadow,0,0,.005);
         for(let i=0;i<6;i++){
           const angle=i*Math.PI/3;
-          const spoke=box(p,.005,.009,.005,page,x+Math.sin(angle)*.018,.142+Math.cos(angle)*.018,.064);
+          const spoke=box(spool,.005,.009,.005,page,Math.sin(angle)*.018,Math.cos(angle)*.018,.007);
           spoke.rotation.z=-angle;
         }
       }
       for(const x of [-.183,.183])for(const y of [.043,.199])faceDisc(p,.009,.006,gilt,x,y,.043);
     },
-    dial(p,m){
+    dial(p,m,label){
       faceDisc(p,.202,.063,m,0,.213,0);
       faceDisc(p,.17,.008,page,0,.213,.036);
       for(let j=0;j<12;j++){
         const angle=j*Math.PI/6;
-        const marker=box(p,.012,.025,.008,line,Math.sin(angle)*.144,.213+Math.cos(angle)*.144,.044);
+        const marker=box(p,j%3===0?.014:.010,j%3===0?.031:.024,.008,line,
+          Math.sin(angle)*.144,.213+Math.cos(angle)*.144,.044);
         marker.rotation.z=-angle;
       }
-      box(p,.016,.106,.01,line,-.022,.249,.051).rotation.z=.52;
-      box(p,.014,.134,.012,gilt,.039,.252,.054).rotation.z=-.76;
+      const dial=moving(p,'dial-face',0,.213,.049,true);
+      faceDisc(dial,.17,.003,page,0,0,-.012);
+      if(label.toLowerCase().endsWith('clock')){
+        for(const [unit,length,width,tint,z] of [
+          ['hour',.085,.016,line,.002],['minute',.121,.011,gilt,.007],
+          ['second',.139,.005,finish(0xaa4b41,.56),.012],
+        ]){
+          const hand=moving(p,'clock-hand-'+unit,0,.213,.049+z);
+          box(hand,width,length,.004,tint,0,length/2-.007,0,.001);
+        }
+      }else{
+        const needle=moving(dial,'dial-needle',0,0,.006,true);
+        box(needle,.013,.134,.006,gilt,0,.045,0,.002);
+      }
       faceDisc(p,.020,.016,m,0,.213,.063);
     },
     camera(p,m){
@@ -329,8 +386,18 @@ export function furnishRoomObjects({walls, world, half, narrow, group, box, bead
       box(p,.53,.348,.22,m,0,.18,0,.027);
       box(p,.466,.27,.022,page,0,.176,.116,.017);
       box(p,.267,.149,.016,shadow,-.056,.208,.132,.009);
-      wire(p,[[-.175,.20,.143],[-.133,.236,.143],[-.084,.171,.143],[-.023,.227,.143],[.068,.204,.143]],.008,gilt);
-      faceDisc(p,.039,.026,line,.156,.208,.136);
+      const formula=[
+        t=>Math.sin(4*Math.PI*t),t=>1-4*Math.abs((t*2+.25)%1-.5),
+        t=>Math.sin(4*Math.PI*t)>0?.92:-.92,
+      ];
+      for(const [i,signal] of formula.entries()){
+        const track=moving(p,'radio-trace-'+i,-.056,.208,.145);
+        wire(track,Array.from({length:36},(_,j)=>[(j/35-.5)*.231,signal(j/35)*.051,0]),.0038,gilt);
+        track.visible=i===0;
+      }
+      const knob=moving(p,'radio-knob',.156,.208,.136,true);
+      faceDisc(knob,.039,.026,line,0,0,0);
+      box(knob,.004,.023,.002,gilt,0,.007,.015);
       faceDisc(p,.023,.022,m,.155,.118,.137);
       wire(p,[[-.13,.346,0],[-.11,.398,0],[.12,.398,0],[.13,.346,0]],.015,line);
     },
@@ -338,30 +405,69 @@ export function furnishRoomObjects({walls, world, half, narrow, group, box, bead
       box(p,.45,.321,.162,m,0,.161,0,.022);
       box(p,.37,.185,.014,page,0,.201,.087,.018);
       for(let i=-3;i<=3;i++)box(p,.008,.024,.006,line,i*.042,.241-Math.abs(i)*.009,.097).rotation.z=i*.15;
-      box(p,.009,.109,.008,gilt,-.027,.202,.104).rotation.z=.45;
-      for(const x of [-.09,.09])faceDisc(p,.027,.015,shadow,x,.085,.102);
+      const needle=moving(p,'meter-needle',0,.148,.104);
+      box(needle,.009,.103,.006,gilt,0,.049,0,.002);
+      needle.rotation.z=.76;
+      faceDisc(needle,.011,.012,m,0,0,.007);
+      const switcher=moving(p,'meter-switch',-.09,.085,.102,true);
+      faceDisc(switcher,.027,.015,shadow,0,0,0);
+      box(switcher,.027,.005,.003,gilt,0,0,.011);
+      faceDisc(p,.027,.015,shadow,.09,.085,.102);
     },
     keys(p,m){
       box(p,.63,.118,.30,m,0,.061,0,.019);
-      for(let i=0;i<9;i++)box(p,.054,.049,.205,page,-.254+i*.064,.133,.028,.006);
-      for(const j of [0,1,3,4,6,7])box(p,.033,.050,.109,shadow,-.223+j*.064,.157,-.022,.006);
+      box(p,.555,.018,.048,gilt,0,.117,-.093,.007);
+      for(const x of [-.275,.275]){
+        faceDisc(p,.006,.008,shadow,x,.059,.153);
+        box(p,.013,.042,.228,m,x,.124,.029,.005);
+      }
+      for(const [i,note] of [60,62,64,65,67,69,71,72,74].entries()){
+        const key=moving(p,'piano-'+note,-.254+i*.064,.133,-.065,true);
+        box(key,.054,.042,.205,page,0,0,.093,.006);
+      }
+      for(const [i,note] of [[0,61],[1,63],[3,66],[4,68],[5,70],[7,73]]){
+        const key=moving(p,'piano-'+note,-.223+i*.064,.157,-.074,true);
+        box(key,.033,.045,.109,shadow,0,0,.052,.006);
+      }
     },
     headphones(p,m){
       wire(p,[[-.18,.159,0],[-.205,.375,0],[-.09,.475,0],[.09,.475,0],[.207,.375,0],[.18,.159,0]],.032,m);
       for(const x of [-.17,.17]){
-        bead(p,x,.145,.019,.082,.122,.083,shadow);
-        bead(p,x*.86,.146,.025,.070,.105,.071,m);
+        const cup=x<0?moving(p,'headphone-cup',x,.145,.019,true):group(p,x,.145,.019);
+        bead(cup,0,0,0,.082,.122,.083,shadow);
+        bead(cup,-x*.14,.001,.006,.070,.105,.071,m);
       }
     },
     spool(p,m){
-      faceDisc(p,.163,.028,gilt,0,.18,.069);
-      faceDisc(p,.163,.028,gilt,0,.18,-.069);
-      for(let j=-4;j<=4;j++)faceDisc(p,.131,.016,m,0,.18,j*.014);
-      faceDisc(p,.047,.031,shadow,0,.18,.084);
+      const spindle=moving(p,'spool-core',0,.18,0,true);
+      faceDisc(spindle,.163,.028,gilt,0,0,.069);
+      faceDisc(spindle,.163,.028,gilt,0,0,-.069);
+      for(let j=-4;j<=4;j++)faceDisc(spindle,.131,.016,m,0,0,j*.014);
+      faceDisc(spindle,.047,.031,shadow,0,0,.084);
+      box(spindle,.009,.019,.004,m,.081,.097,.084).rotation.z=-.74;
     },
     loupe(p,m){
       faceDisc(p,.139,.043,m,0,.335,0);
-      faceDisc(p,.104,.018,glaze,0,.335,.026);
+      const lens=moving(p,'loupe-lens',0,.335,.026,true);
+      faceDisc(lens,.104,.018,glaze,0,0,0);
+      drawn(lens,.155,.070,(c,w,h)=>{
+        c.fillStyle='#688481';c.fillRect(0,0,w,h);
+        c.strokeStyle='#dfdabe';c.lineWidth=.003;
+        for(let i=0;i<=10;i++){
+          const x=.006+(w-.012)*i/10;
+          c.beginPath();c.moveTo(x,h*.83);c.lineTo(x,h*(i%5===0?.18:.49));c.stroke();
+        }
+      },0,0,.010,false,620);
+      const sample=moving(lens,'loupe-magnification',0,0,.012);
+      drawn(sample,.164,.083,(c,w,h)=>{
+        c.fillStyle='#b5c9ad';c.fillRect(0,0,w,h);
+        c.strokeStyle='#3c514c';c.lineWidth=.006;
+        for(let i=0;i<=6;i++){
+          const x=.007+(w-.014)*i/6;
+          c.beginPath();c.moveTo(x,h*.87);c.lineTo(x,h*(i===3?.13:.43));c.stroke();
+        }
+      },0,0,0,false,620);
+      sample.visible=false;
       wire(p,[[0,.04,0],[-.032,.138,0],[-.013,.208,0]],.029,gilt);
     },
     caliper(p,m){
@@ -397,6 +503,11 @@ export function furnishRoomObjects({walls, world, half, narrow, group, box, bead
       box(p,.229,.151,.019,shadow,0,.167,.045,.009);
       box(p,.14,.074,.018,glaze,0,.169,.057,.011);
       for(const y of [.092,.239])for(let i=0;i<7;i++)box(p,.009,.038,.005,gilt,-.125+i*.042,y,.041);
+      const power=moving(p,'chip-power',.143,.257,.045,true);
+      faceDisc(power,.022,.009,gilt,0,0,0);
+      const lights=moving(p,'chip-diode',0,.169,.068);
+      for(let i=-1;i<=1;i++)bead(lights,i*.037,0,.001,.012,.012,.004,new T.MeshBasicMaterial({color:0x93fb9c}));
+      lights.visible=false;
     },
     rack(p,m){
       box(p,.54,.068,.245,m,0,.047,0,.012);
@@ -404,44 +515,63 @@ export function furnishRoomObjects({walls, world, half, narrow, group, box, bead
       for(const x of [-.25,.25])box(p,.035,.26,.235,gilt,x,.149,0,.003);
       for(let j=0;j<4;j++){
         const x=-.177+j*.119;
-        cylinder(p,.035,.035,.295,glaze,x,.195,0,12);
-        cylinder(p,.04,.04,.055,j%2?m:gilt,x,.334,0,12);
+        const tube=moving(p,'sample-tube-'+j,x,.195,0,true);
+        cylinder(tube,.035,.035,.295,glaze,0,0,0,12);
+        cylinder(tube,.04,.04,.055,j%2?m:gilt,0,.139,0,12);
       }
     },
     prism(p,m){
       const shape=new T.ConeGeometry(.217,.43,3);
+      const optic=moving(p,'prism-optic',0,.227,0,true);
       const piece=new T.Mesh(shape,m);
-      piece.position.y=.227;piece.rotation.y=.42;piece.castShadow=true;p.add(piece);
+      piece.rotation.y=.42;piece.castShadow=true;optic.add(piece);
       box(p,.37,.028,.30,gilt,0,.015,0,.015);
+      const rays=moving(p,'prism-spectrum',0,.18,.11);
+      const light=color=>new T.MeshBasicMaterial({color});
+      box(rays,.164,.004,.003,light(0xffedcf),-.13,.028,0);
+      for(const [i,color] of [0xd77b78,0xf0b36e,0xe7da92,0x8aba8c,0x79b4ca,0x9d8fc5].entries()){
+        const ray=box(rays,.173,.004,.003,light(color),.089,.023-i*.014,.002);
+        ray.rotation.z=.11-i*.11;
+      }
+      rays.visible=false;
     },
     crystal(p,m){
       box(p,.39,.027,.29,shadow,0,.016,0,.024);
+      const sample=moving(p,'crystal-sample',0,.025,0,true);
       for(const [x,y,w,angle] of [[-.098,.122,.096,.42],[.035,.171,.122,-.16],[.121,.090,.063,-.43]]){
         const stone=new T.Mesh(new T.OctahedronGeometry(w),m);
-        stone.position.set(x,y,0);stone.scale.y=1.45;stone.rotation.z=angle;stone.castShadow=true;p.add(stone);
+        stone.position.set(x,y-.025,0);stone.scale.y=1.45;stone.rotation.z=angle;stone.castShadow=true;sample.add(stone);
       }
     },
     key(p,m){
-      faceDisc(p,.087,.024,m,-.114,.14,0);
-      faceDisc(p,.035,.027,shadow,-.114,.14,.012);
-      box(p,.26,.033,.025,gilt,.065,.14,0,.006);
-      box(p,.039,.053,.029,m,.144,.106,0,.003);
-      box(p,.032,.038,.027,m,.188,.111,0,.003);
+      const key=moving(p,'key-shaft',0,.14,0,true);
+      faceDisc(key,.087,.024,m,-.114,0,0);
+      faceDisc(key,.035,.027,shadow,-.114,0,.012);
+      box(key,.26,.033,.025,gilt,.065,0,0,.006);
+      box(key,.039,.053,.029,m,.144,-.034,0,.003);
+      box(key,.032,.038,.027,m,.188,-.029,0,.003);
     },
     fabric(p,m){
-      for(let i=0;i<3;i++){
-        box(p,.46-i*.023,.035,.28-i*.009,m,0,.028+i*.033,0,.017);
-        for(const x of [-.142,.136])box(p,.015,.007,.237,gilt,x,.047+i*.033,0);
-      }
+      for(let i=0;i<2;i++)box(p,.46-i*.023,.035,.28-i*.009,m,0,.028+i*.033,0,.017);
+      const fold=moving(p,'fabric-fold',0,.094,-.126,true);
+      box(fold,.414,.034,.262,m,0,0,.125,.016);
+      for(const x of [-.142,.136])box(fold,.015,.007,.237,gilt,x,.018,.12);
     },
     tote(p,m){
       box(p,.41,.37,.17,m,0,.186,0,.033);
       wire(p,[[-.101,.33,0],[-.097,.497,0],[.088,.497,0],[.10,.33,0]],.019,gilt);
-      box(p,.274,.124,.019,page,0,.195,.088,.018);
-      box(p,.187,.012,.004,m,0,.209,.100);
+      const pocket=moving(p,'tote-pocket',0,.145,.088,true);
+      box(pocket,.274,.124,.019,page,0,.050,0,.018);
+      box(pocket,.187,.012,.004,m,0,.064,.012);
+      box(p,.08,.081,.005,stock,.056,.216,.091,.003);
     },
     crate(p,m){
-      box(p,.47,.27,.34,m,0,.135,0,.014);
+      box(p,.47,.057,.34,m,0,.031,0,.011);
+      for(const x of [-.218,.218])box(p,.034,.211,.34,m,x,.145,0,.008);
+      for(const z of [-.151,.151])box(p,.44,.21,.036,m,0,.144,z,.008);
+      for(let i=0;i<3;i++)box(p,.090,.039,.104,stock,-.11+i*.10,.076,i*.03-.05,.005);
+      const lid=moving(p,'crate-lid',0,.253,-.151,true);
+      box(lid,.475,.039,.342,m,0,.010,.151,.012);
       for(const y of [.071,.164,.222])box(p,.43,.021,.016,trim,0,y,.177,.004);
       box(p,.11,.049,.009,gilt,0,.163,.189,.005);
       box(p,.081,.018,.011,shadow,0,.165,.196,.003);
@@ -449,19 +579,30 @@ export function furnishRoomObjects({walls, world, half, narrow, group, box, bead
     tube(p,m){
       const cylinderTube=cylinder(p,.072,.072,.536,m,0,.112,0,24);
       cylinderTube.rotation.z=1.31;
-      for(const x of [-.194,.194]){
-        const band=cylinder(p,.079,.079,.024,gilt,x,.112-x*.265,0,24);
+      for(const x of [-.247,.247]){
+        const base=x<0?moving(p,'tube-cap',x,.112-x*.265,0,true):group(p,x,.112-x*.265,0);
+        const band=cylinder(base,.079,.079,.039,gilt,0,0,0,24);
         band.rotation.z=1.31;
+        if(x<0){
+          const roll=cylinder(base,.049,.049,.135,stock,.048,-.013,0,20);
+          roll.rotation.z=1.31;
+        }
       }
     },
     brush(p,m){
       box(p,.48,.087,.17,m,0,.079,0,.028);
       box(p,.381,.042,.145,gilt,0,.03,0,.012);
-      for(let i=0;i<9;i++)box(p,.013,.036,.129,line,-.159+i*.039,.021,0,.004);
+      const bristles=moving(p,'brush-bristles',0,.045,0,true);
+      for(let i=0;i<9;i++)box(bristles,.013,.036,.129,line,-.159+i*.039,-.024,0,.004);
     },
     lantern(p,m){
       cylinder(p,.109,.116,.052,m,0,.033,0,20);
-      cylinder(p,.087,.102,.22,glaze,0,.163,0,20);
+      const lamp=moving(p,'lantern-glow',0,.163,0,true);
+      const glass=finish(0x9b9f74,.29);
+      cylinder(lamp,.087,.102,.22,glass,0,0,0,20);
+      const filament=moving(lamp,'lantern-lit',0,0,0);
+      cylinder(filament,.089,.104,.2205,new T.MeshBasicMaterial({color:0xffbc67}),0,0,0,20);
+      filament.visible=false;
       cylinder(p,.084,.115,.054,m,0,.303,0,20);
       wire(p,[[-.07,.315,0],[-.049,.409,0],[.049,.409,0],[.07,.315,0]],.014,gilt);
     },
@@ -469,7 +610,8 @@ export function furnishRoomObjects({walls, world, half, narrow, group, box, bead
       bead(p,0,.139,0,.136,.099,.101,m);
       bead(p,.101,.201,.018,.062,.057,.054,m);
       bead(p,-.117,.164,-.014,.094,.031,.041,m).rotation.z=-.39;
-      bead(p,.153,.189,.036,.038,.021,.020,gilt);
+      const beak=moving(p,'bird-beak',.123,.191,.036,true);
+      bead(beak,.030,-.002,0,.038,.021,.020,gilt);
       bead(p,.114,.211,.066,.012,.012,.009,line);
       for(const x of [-.029,.037])bead(p,x,.040,0,.027,.017,.024,gilt);
     },
@@ -479,18 +621,20 @@ export function furnishRoomObjects({walls, world, half, narrow, group, box, bead
         const a=i*Math.PI/5,r=i%2?.080:.155;
         if(i===0)shape.moveTo(0,r);else shape.lineTo(Math.sin(a)*r,Math.cos(a)*r);
       }
-      shape.closePath();relief(p,shape,.016,.008,m,0,.203,-.010);
-      faceDisc(p,.030,.022,gilt,0,.203,.020);
+      const rotor=moving(p,'star-rotor',0,.203,0,true);
+      shape.closePath();relief(rotor,shape,.016,.008,m,0,0,-.010);
+      faceDisc(rotor,.030,.022,gilt,0,0,.020);
       for(let i=0;i<5;i++){
         const a=i*2*Math.PI/5;
-        wire(p,[[0,.203,.027],[Math.sin(a)*.109,.203+Math.cos(a)*.109,.015]],.0028,gilt);
+        wire(rotor,[[0,0,.027],[Math.sin(a)*.109,Math.cos(a)*.109,.015]],.0028,gilt);
       }
       cylinder(p,.023,.039,.080,shadow,0,.044,0,12);
     },
     glider(p,m){
       bead(p,0,.146,0,.247,.041,.044,gilt);
       box(p,.138,.024,.346,m,-.018,.143,0,.02);
-      box(p,.070,.021,.150,m,-.174,.150,0,.012);
+      const elevator=moving(p,'glider-elevator',-.153,.150,0,true);
+      box(elevator,.070,.021,.150,m,-.021,0,0,.012);
       box(p,.064,.081,.021,m,-.18,.188,0,.005);
       cylinder(p,.023,.044,.126,shadow,0,.070,0,12);
     },
@@ -511,14 +655,17 @@ export function furnishRoomObjects({walls, world, half, narrow, group, box, bead
         for(const y of [.218,.228])wire(p,[[x*.57,y,.115],[x*1.30,y+.007,.105],[x*1.80,y+.009,.094]],.0017,line);
       }
       bead(p,0,.234,.121,.016,.010,.007,nose);
-      wire(p,[[-.064,.092,-.053],[-.124,.073,-.058],[-.161,.051,-.013],[-.142,.039,.062],[-.097,.042,.102]],.020,m);
-      bead(p,-.097,.042,.102,.020,.020,.020,m);
+      const tail=moving(p,'cat-tail',-.064,.092,-.053,true);
+      wire(tail,[[0,0,0],[-.060,-.019,-.005],[-.097,-.041,.04],[-.078,-.053,.115],[-.033,-.050,.155]],.020,m);
+      bead(tail,-.033,-.050,.155,.020,.020,.020,m);
     },
     gramophone(p,m){
       box(p,.30,.116,.27,m,0,.059,0,.016);
       box(p,.327,.023,.288,trim,0,.029,0,.006);
-      cylinder(p,.097,.098,.021,line,0,.131,0,20);
-      cylinder(p,.025,.025,.003,gilt,0,.143,0,16);
+      const disc=moving(p,'gramophone-disc',0,.131,0,true);
+      cylinder(disc,.097,.098,.021,line,0,0,0,20);
+      cylinder(disc,.025,.025,.003,gilt,0,.012,0,16);
+      bead(disc,.052,.012,.051,.008,.002,.008,m);
       wire(p,[[-.106,.13,.081],[-.099,.166,.072],[-.045,.160,.012]],.007,gilt);
       wire(p,[[.08,.13,-.06],[.085,.258,-.057],[.053,.332,-.023]],.022,gilt);
       const profile=[[.025,-.083],[.031,-.046],[.050,.001],[.080,.042],[.115,.068],[.126,.080],
@@ -554,6 +701,10 @@ export function furnishRoomObjects({walls, world, half, narrow, group, box, bead
     if(grounded)prop.position.y+=y-new T.Box3().setFromObject(prop).min.y;
     tag(prop,'prop-'+id,[0,0,0],.5,.5);
     prop.userData.roomProp=label;
+    prop.userData.shelfKind=kind;
+    if(kind==='cat')prop.userData.shelfControl='cat-tail';
+    if(kind==='bird')prop.userData.shelfControl='bird-beak';
+    if(kind==='dial')prop.userData.dialLabel=label;
     return prop;
   }
   function ledge(wall, x,y, length, rows, scale=.92) {

@@ -1,12 +1,13 @@
 import * as T from './vendor/three/three.module.min.js';
-import { furnish } from './desk-model.js?v=42';
-import { inspectDeskObjects } from './desk-inspect.js?v=18';
+import { furnish } from './desk-model.js?v=43';
+import { inspectDeskObjects } from './desk-inspect.js?v=19';
 
 import { attachDeskPointer } from './desk-pointer.js?v=23';
 
 import { deskLife } from './desk-life.js?v=17';
 import { deskView } from './desk-view.js?v=13';
 import { drawerTravel } from './desk-drawer.js?v=1';
+import { setClock } from './shelf-clock.js?v=1';
 
 export function mountFurniture(stage,showGraphicsFallback) {
   const canvas = stage.querySelector('canvas');
@@ -76,6 +77,18 @@ export function mountFurniture(stage,showGraphicsFallback) {
   let model,frame=0,visible=true,dirty=true,drawerAmount=0,opened='',fileAngle=0,bookAngle=0;
   const drawer=links.get('drawer'), posterSwitch=links.get('poster-switch');
   let posterMode='professional';
+  const fixtures=[
+    {id:'study-door',property:'rotation',distance:-.78},
+    {id:'window-sash',property:'position',distance:1.18},
+  ];
+  for(const fixture of fixtures){
+    fixture.button=links.get(fixture.id);
+    fixture.button.addEventListener('click',()=>{
+      fixture.open=!fixture.open;
+      fixture.button.setAttribute('aria-pressed',String(fixture.open));
+      redraw();
+    });
+  }
   const travel=drawerTravel(drawer.getAttribute('aria-expanded')==='true');
   const hitGroups=new Map(),bounds=new T.Box3(),intersection=new T.Vector3();
   let lastTime=0,lampOn=false;
@@ -84,7 +97,12 @@ export function mountFurniture(stage,showGraphicsFallback) {
   let gazeX=0, gazeY=0, targetX=0, targetY=0;
   const life=deskLife(stage,()=>model,redraw,motion);
   const inspector=inspectDeskObjects(stage,engine,scene,camera,()=>model,redraw,life,motion);
-  let ambientTimer=0;
+  let ambientTimer=0,clockTimer=0;
+  function scheduleClock() {
+    if(!clockTimer)clockTimer=setTimeout(()=>{
+      clockTimer=0;redraw();
+    },1003-Date.now()%1000);
+  }
   let lastPart='',pickedUp='',pickupTravel=0,centered='',centerUntil=0;
   function redraw() {
     dirty=true;
@@ -104,6 +122,11 @@ export function mountFurniture(stage,showGraphicsFallback) {
       textures.forEach(t=>t.dispose());materials.forEach(m=>m.dispose());geometries.forEach(g=>g.dispose());
     }
     model=furnish(scene,narrow,redraw,software,posterMode);hitGroups.clear();extraMeshes.length=0;
+    for(const fixture of fixtures){
+      fixture.joint=model.targets.get(fixture.id).root[fixture.property];
+      fixture.home=fixture.joint.y;
+      if(fixture.open)fixture.joint.y=fixture.home+fixture.distance;
+    }
     model.posterCap.position.y=posterMode==='frivolous'?.034:.053;
     const navigation=stage.querySelector('.desk-objects');
     for(const [id,{root}] of model.roomProps){
@@ -172,7 +195,7 @@ export function mountFurniture(stage,showGraphicsFallback) {
       vector.copy(point).project(camera);
       const x=(vector.x+1)*.5*viewWidth,y=(1-vector.y)*.5*viewHeight;
       const outside=depth<=camera.near||x<10||x>viewWidth-10||y<12||y>viewHeight-10;
-      if((root.userData.roomPoster||root.userData.roomProp||el===posterSwitch)&&el.hidden!==outside)el.hidden=outside;
+      if((root.userData.roomPoster||root.userData.roomProp||el===posterSwitch||el.hasAttribute('data-room-fixture'))&&el.hidden!==outside)el.hidden=outside;
       if(el.hasAttribute('data-outside')!==outside)el.toggleAttribute('data-outside',outside);
       const state=saved||{matrix:new T.Matrix4(),rect:[]};
       state.root=root;state.matrix.copy(root.matrixWorld);
@@ -218,8 +241,18 @@ export function mountFurniture(stage,showGraphicsFallback) {
     for(const reflection of fallbackWash)reflection.intensity=.35+night*4.2;
     const amount=(motion.matches||software)?1:1-Math.exp(-dt*12);
     const target=(value,goal)=>Math.abs(value-goal)<.004?goal:T.MathUtils.lerp(value,goal,amount);
+    let fixtureMoving=false;
+    for(const fixture of fixtures){
+      const goal=fixture.home+(fixture.open?fixture.distance:0),before=fixture.joint.y;
+      fixture.joint.y=target(before,goal);
+      detailMoved ||= fixture.joint.y!==before;
+      fixtureMoving ||= fixture.joint.y!==goal;
+    }
     const prevDrawer=drawerAmount,prevFile=fileAngle,prevBook=bookAngle;
     const held=inspector.active();
+    const currentTime=new Date();
+    for(const hands of model.roomClocks.values())setClock(hands,currentTime);
+    if(model.roomClocks.has(held))scheduleClock();
     const reading=held||opened||document.querySelector('dialog[open]');
     const preview=reading?'':hovered;
     if(reading)view.look(0,0);
@@ -308,6 +341,9 @@ export function mountFurniture(stage,showGraphicsFallback) {
     // smaller drawing buffer, with the same CSS size and hit coordinates.
     if(software)setResolution(Boolean(posture.move||drawerMotion.moving));
     camera.lookAt(aim);engine.render(scene,camera);projectTargets();
+    for(const id of model.roomClocks.keys()){
+      if(!links.get(id).hidden){scheduleClock();break;}
+    }
     if(!stage.classList.contains('is-rendered') || prevDrawer!==drawerAmount || prevFile!==fileAngle || prevBook!==bookAngle || model!==boundedModel || events.active || detailMoved || previewMoved){
       detailMoved=false;
       boundsDirty=true;
@@ -320,7 +356,7 @@ export function mountFurniture(stage,showGraphicsFallback) {
       lamp.hidden=false;links.get('plant').hidden=false;
     }
     if(posture.move)refreshHover(time);
-    if((events.active && !document.hidden) || (centeredObject && !motion.matches) || posture.move || gazeX!==targetX||gazeY!==targetY||drawerMotion.moving||fileAngle!==folderGoal||bookAngle!==notebookGoal||previewMoving||nightTravel!==nightGoal)redraw();
+    if((events.active && !document.hidden) || (centeredObject && !motion.matches) || posture.move || gazeX!==targetX||gazeY!==targetY||drawerMotion.moving||fileAngle!==folderGoal||bookAngle!==notebookGoal||previewMoving||fixtureMoving||nightTravel!==nightGoal)redraw();
   }
   function faceObject(id){
     if(!model?.targets.has(id))return;
@@ -519,7 +555,7 @@ export function mountFurniture(stage,showGraphicsFallback) {
     showGraphicsFallback();
     links.forEach(el=>{
       el.removeAttribute('data-outside');
-      if(el.matches('[data-room-prop],[data-room-poster]'))el.hidden=true;
+      if(el.matches('[data-room-prop],[data-room-poster],[data-room-fixture]'))el.hidden=true;
     });
     inspector.close();lamp.hidden=true;links.get('plant').hidden=true;
     posterSwitch.hidden=true;

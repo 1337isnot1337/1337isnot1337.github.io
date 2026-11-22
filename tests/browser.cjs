@@ -709,9 +709,11 @@ const server = http.createServer((req,res) => {
   const clearance=await shelfMouse.evaluate(async()=>{
     const T=await import('/vendor/three/three.module.min.js');
     const {furnish}=await import('/desk-model.js');
+    const {shelfInspection}=await import('/shelf-inspection.js');
     return [false,true].map(narrow=>{
       const model=furnish(new T.Scene(),narrow,()=>{},true);
       const props=[...model.roomProps];
+      const missingActions=props.filter(([,item])=>!shelfInspection(item.preview.clone(true))?.primary).map(([id])=>id);
       const overlaps=[];
       for(let index=0;index<props.length;index++){
         const [id,{bounds}]=props[index];
@@ -728,12 +730,13 @@ const server = http.createServer((req,res) => {
           flapClearsScope=false;break;
         }
       }
-      return {flapClearsScope,overlaps};
+      return {flapClearsScope,overlaps,missingActions};
     });
   });
   for(const layout of clearance){
     assert.equal(layout.flapClearsScope,true,'folder clears the entire oscilloscope');
     assert.deepEqual(layout.overlaps,[],'shuffled props have clearance in both layouts');
+    assert.deepEqual(layout.missingActions,[],'every shelf prop has a working inspection control');
   }
   await shelfMouse.locator('[data-object="robot-photo"]').click();
   await pickup.locator('.photo-link').click();

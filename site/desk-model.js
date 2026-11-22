@@ -5,7 +5,8 @@ import { lampProjection } from './desk-lamp.js?v=1';
 import { paintScope, followProbe } from './desk-scope.js?v=1';
 import { airframeGeometry, wingUnderside } from './model-plane.js?v=2';
 import { mergeGeometries } from './vendor/three/BufferGeometryUtils.js';
-import { decorateRoom } from './desk-room.js?v=16';
+import { decorateRoom } from './desk-room.js?v=17';
+import { clockHands, setClock } from './shelf-clock.js?v=1';
 import { corkMaterial, curledPrint, scopeScale } from './desk-finishes.js?v=1';
 import { RoundedBoxGeometry } from './vendor/three/RoundedBoxGeometry.js';
 
@@ -1116,7 +1117,7 @@ export function furnish(scene, narrow, repaint, software=false, posterMode='prof
     };
   }
   // Combine rigid geometry between joints; hinges, drawer travel and picking remain independent.
-  const roomProps=new Map(), previewGeometry=new Set();
+  const roomProps=new Map(), roomClocks=new Map(), previewGeometry=new Set();
   // Keep wall batches separate so the camera can cull the geometry behind it.
   const staticRoots=new Set([room,world,...Object.values(walls)]);
   const rigid=new Set([...staticRoots,flap,cover,...details.values()]);
@@ -1129,8 +1130,17 @@ export function furnish(scene, narrow, repaint, software=false, posterMode='prof
     const size=item.bounds.getSize(new T.Vector3());
     item.w=Math.max(size.x,size.z)/root.scale.x;
     item.h=size.y/root.scale.y;
+    const hands=clockHands(root);
+    if(hands){
+      roomClocks.set(id,hands);
+      Object.values(hands).forEach(hand=>rigid.add(hand));
+      setClock(hands,new Date());
+    }
     item.preview=root.clone(true);
     item.preview.traverse(mesh=>{if(mesh.isMesh)previewGeometry.add(mesh.geometry);});
+    const tucked=[];
+    root.traverse(part=>{if(!part.visible)tucked.push(part);});
+    tucked.forEach(part=>part.removeFromParent());
     roomProps.set(id,item);
   }
   const batches=new Map(),source=new Set(),solidVariants=new Map(),fastMaterials=new Map();
@@ -1204,5 +1214,5 @@ export function furnish(scene, narrow, repaint, software=false, posterMode='prof
   }
   source.forEach(g=>{if(!previewGeometry.has(g))g.dispose();});
   const flexCable=followProbe(cableWire.children[0],cableTip,probeRest);
-  return {world:room,desk:world,deskScale,targets,roomProps,details,occluders,drawer,flap,cover,lamp,bulbGlass:fastMaterials.get(bulbGlass)||bulbGlass,scopeScreen:fastMaterials.get(scopeScreen)||scopeScreen,tuneScope,contactMap,daylight,night,coves,showPosters,posterCap,poseHover,projectLampShadow,flexCable,titleLooseFile,pencilBounds:{book:book.position.x+(narrow?.24:.43),mat:matRight-.10},sketchTexture:sketchFace.material.map};
+  return {world:room,desk:world,deskScale,targets,roomProps,roomClocks,details,occluders,drawer,flap,cover,lamp,bulbGlass:fastMaterials.get(bulbGlass)||bulbGlass,scopeScreen:fastMaterials.get(scopeScreen)||scopeScreen,tuneScope,contactMap,daylight,night,coves,showPosters,posterCap,poseHover,projectLampShadow,flexCable,titleLooseFile,pencilBounds:{book:book.position.x+(narrow?.24:.43),mat:matRight-.10},sketchTexture:sketchFace.material.map};
 }

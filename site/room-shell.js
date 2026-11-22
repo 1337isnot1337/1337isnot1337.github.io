@@ -2,7 +2,7 @@ import * as T from './vendor/three/three.module.min.js';
 import { buildWindowView } from './room-window-view.js?v=5';
 
 // The hutch sits against the window wall.
-export function buildRoomShell(world, {group,box,bead,cylinder,wire,finish,photo,drawn,weave,wood,trim,floorMat,night}) {
+export function buildRoomShell(world, {group,box,bead,cylinder,wire,finish,photo,drawn,weave,wood,trim,floorMat,night,tag}) {
   const width=9.55, backZ=-2.68, frontZ=10.65, floor=-3.07, ceiling=6.65;
   const length=frontZ-backZ, middle=(frontZ+backZ)/2;
   const molding=finish(0xd1bca8,.83);
@@ -34,6 +34,7 @@ export function buildRoomShell(world, {group,box,bead,cylinder,wire,finish,photo
   walls.science.rotation.y=-Math.PI/2;
   const windowDrop=1.23;
   const opening={left:-2.97,right:2.75,bottom:3.39-windowDrop,top:6.19-windowDrop};
+  const doorway={left:1.04,right:3.88,bottom:floor,top:2.84};
   function wall(parent,span,paint,wainscot,glow,window){
     const plaster=new T.MeshStandardMaterial({color:paint,map:plasterGrain,bumpMap:plasterGrain,bumpScale:.008,roughness:.97});
     const wallSection=(left,right,bottom,top)=>{
@@ -43,12 +44,16 @@ export function buildRoomShell(world, {group,box,bead,cylinder,wire,finish,photo
       const {left,right,bottom,top}=window;
       wallSection(-span/2,left,floor,ceiling);
       wallSection(right,span/2,floor,ceiling);
-      wallSection(left,right,floor,bottom);
+      if(bottom>floor)wallSection(left,right,floor,bottom);
       wallSection(left,right,top,ceiling);
     }else wallSection(-span/2,span/2,floor,ceiling);
-    box(parent,span,1.42,.036,finish(wainscot,.96),0,floor+.72,.021).castShadow=false;
-    box(parent,span,.080,.071,molding,0,floor+1.44,.034,.014).castShadow=false;
-    box(parent,span,.13,.072,trim,0,floor+.072,.034,.010).castShadow=false;
+    const dado=window===doorway?[[-span/2,doorway.left],[doorway.right,span/2]]:[[-span/2,span/2]];
+    for(const [start,end] of dado){
+      const x=(start+end)/2, size=end-start;
+      box(parent,size,1.42,.036,finish(wainscot,.96),x,floor+.72,.021).castShadow=false;
+      box(parent,size,.080,.071,molding,x,floor+1.44,.034,.014).castShadow=false;
+      box(parent,size,.13,.072,trim,x,floor+.072,.034,.010).castShadow=false;
+    }
     const crown=finish(0xe2ceba,.84);
     box(parent,span,.120,.200,crown,0,ceiling-.058,.079,.027).castShadow=false;
     box(parent,span,.049,.123,molding,0,ceiling-.137,.057,.012).castShadow=false;
@@ -61,11 +66,12 @@ export function buildRoomShell(world, {group,box,bead,cylinder,wire,finish,photo
     box(parent,span-.12,.023,.081,lens,0,ceiling-.140,.197,.005).castShadow=false;
     coves.push({lens,color});
     for(let x=-span*.5+.75;x<span*.5-.35;x+=1.54){
+      if(window===doorway&&x>doorway.left&&x<doorway.right)continue;
       box(parent,.025,1.32,.018,finish(wainscot,.84),x,floor+.74,.044,.003).castShadow=false;
     }
   }
   wall(walls.back,2*width,0xb3bcb0,0x637d78,0xffd6a6,opening);
-  wall(walls.front,2*width,0xc2aca0,0x92796b,0xb6b3ff);
+  wall(walls.front,2*width,0xc2aca0,0x92796b,0xb6b3ff,doorway);
   wall(walls.music,length,0xb9b99e,0x788571,0xffb283);
   wall(walls.science,length,0xc0aab1,0x897589,0xd6b8fa);
   box(world,2*width,.16,length,floorMat,0,floor-.08,middle).castShadow=false;
@@ -90,11 +96,13 @@ export function buildRoomShell(world, {group,box,bead,cylinder,wire,finish,photo
   const rear=walls.back;
   const {left,right,bottom,top}=opening;
   const center=(left+right)/2, span=right-left, height=top-bottom, mid=(top+bottom)/2;
-  for(const x of [left,center,right]){
+  for(const x of [left,right]){
     box(rear,.105,height+.15,.28,trim,x,mid,-.055,.009).castShadow=false;
     box(rear,.039,height+.075,.058,molding,x+.034,mid,.091,.006).castShadow=false;
   }
-  for(const y of [bottom,mid,top]){
+  box(rear,.105,height/2,.19,trim,center,mid+height/4,-.091,.009).castShadow=false;
+  box(rear,.039,height/2+.021,.046,molding,center+.029,mid+height/4,.021,.005).castShadow=false;
+  for(const y of [bottom,top]){
     box(rear,span+.14,.09,.28,trim,center,y,-.055,.009).castShadow=false;
     box(rear,span+.06,.031,.057,molding,center,y+.029,.088,.006).castShadow=false;
   }
@@ -103,15 +111,25 @@ export function buildRoomShell(world, {group,box,bead,cylinder,wire,finish,photo
   const glass=new T.MeshStandardMaterial({
     color:0xc6d9df,roughness:.16,metalness:.12,transparent:true,opacity:.055,depthWrite:false
   });
-  for(const sign of [-1,1])for(const vertical of [-1,1]){
-    const pane=box(rear,span/2-.094,height/2-.080,.008,glass,center+sign*span/4,mid+vertical*height/4,-.10);
-    pane.castShadow=false;pane.receiveShadow=false;
+  const sash=tag(group(rear,center,mid,.10),'window-sash',[0,-.06,.073],.75,.51);
+  const lower=height/2;
+  for(const sign of [-1,1]){
+    const fixed=box(rear,span/2-.094,lower-.080,.008,glass,center+sign*span/4,mid+height/4,-.10);
+    const sliding=box(sash,span/2-.13,lower-.083,.008,glass,sign*span/4,-height/4,-.005);
+    fixed.castShadow=sliding.castShadow=false;
+    fixed.receiveShadow=sliding.receiveShadow=false;
+  }
+  for(const x of [-span/2+.052,0,span/2-.052])
+    box(sash,.088,lower+.017,.080,trim,x,-lower/2,0,.008);
+  for(const y of [0,-lower+.030]){
+    box(sash,span-.085,.089,.088,trim,0,y,0,.011);
+    box(sash,span-.09,.028,.024,molding,0,y+.028,.05,.004);
   }
   const latch=finish(0xb69664,.39,.55);
-  box(rear,.29,.106,.043,latch,center-.032,mid-.064,.115,.018);
-  box(rear,.16,.031,.050,latch,center-.026,mid+.021,.133,.009);
-  bead(rear,center+.04,mid+.039,.162,.029,.027,.020,latch);
-  for(const dx of [-.100,.100])bead(rear,center-.03+dx,mid-.065,.139,.012,.012,.008,finish(0x6a5340,.45,.45));
+  box(sash,.29,.106,.043,latch,-.032,-.064,.078,.018);
+  box(sash,.16,.031,.050,latch,-.026,.021,.094,.009);
+  bead(sash,.04,.039,.121,.029,.027,.020,latch);
+  for(const dx of [-.100,.100])bead(sash,-.03+dx,-.065,.104,.012,.012,.008,finish(0x6a5340,.45,.45));
   const curtain=new T.MeshStandardMaterial({
     color:0xa17c7e,map:weave,bumpMap:weave,bumpScale:.009,roughness:.91,side:T.DoubleSide
   });
@@ -165,14 +183,21 @@ export function buildRoomShell(world, {group,box,bead,cylinder,wire,finish,photo
   buildWindowView(group(rear,0,-windowDrop,-.30),{photo,cylinder,finish,night});
 
   const entry=walls.front, door=finish(0x5b756b,.78);
-  box(entry,3.11,6.03,.145,trim,2.46,-.034,.079,.018);
-  box(entry,2.82,5.79,.13,door,2.46,-.071,.162,.022);
+  const hinge=tag(group(entry,1.05,-.071,.162),'study-door',[2.49,-.17,.19],.68,.88);
+  for(const x of [1.00,3.92])box(entry,.18,6.03,.204,trim,x,-.039,.063,.018);
+  box(entry,3.10,.168,.20,trim,2.46,2.904,.062,.012);
+  const hall=finish(0x675950,.94);
+  box(entry,3.24,6.12,.11,hall,2.46,-.052,-2.1);
+  for(const x of [1.01,3.89])box(entry,.106,6.04,2.20,hall,x,-.055,-1.02);
+  box(entry,3.1,.09,2.15,wood,2.46,floor-.046,-1.025);
+  box(entry,3.13,.10,2.16,hall,2.46,2.88,-1.025);
+  box(hinge,2.82,5.79,.13,door,1.41,0,0,.022);
   for(const y of [-1.46,.98]){
-    box(entry,2.49,2.05,.041,finish(0x455c54,.89),2.46,y,.235,.022);
-    box(entry,2.32,1.89,.038,door,2.46,y,.255,.022);
+    box(hinge,2.49,2.05,.041,finish(0x455c54,.89),1.41,y+.071,.073,.022);
+    box(hinge,2.32,1.89,.038,door,1.41,y+.071,.093,.022);
   }
-  box(entry,.163,.35,.047,finish(0xaa8b5f,.49,.28),3.54,-.28,.269,.019);
-  bead(entry,3.54,-.243,.349,.084,.072,.062,finish(0xbd9b66,.44,.36));
+  box(hinge,.163,.35,.047,finish(0xaa8b5f,.49,.28),2.49,-.209,.107,.019);
+  bead(hinge,2.49,-.172,.187,.084,.072,.062,finish(0xbd9b66,.44,.36));
   box(entry,3.09,.069,.225,trim,2.46,-2.972,.172,.013);
   box(entry,5.85,2.12,.112,trim,-4.18,2.18,.055,.029);
   drawn(entry,5.61,1.87,paintValleyCloth,-4.18,2.18,.117,false,180);
@@ -185,7 +210,7 @@ export function buildRoomShell(world, {group,box,bead,cylinder,wire,finish,photo
   const runnerFabric=rug.clone();runnerFabric.color.set(0x89717c);
   const runner=box(world,2.55,.025,4.85,runnerFabric,-6.65,floor+.012,4.04,.011);
   runner.rotation.y=.09;runner.castShadow=false;
-  return {walls,coves};
+  return {walls,coves,hinge,sash};
 }
 
 // A contour print on the cloth backing of the rear display.
