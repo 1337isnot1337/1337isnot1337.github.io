@@ -49,6 +49,8 @@ work on contribution pages. Each existing project site keeps its own canonical U
 generated. Each HTML page advertises its Markdown companion, and each companion
 links back to its source. DOPPLERGEIST publishes its own `/DOPPLERGEIST/llms.txt`.
 
+Current project pages include a collapsed citation request. The build carries the same request and source URL into the corresponding Markdown. The curated source links identify original authors, proofs, experiments, and upstream contributions where applicable.
+
 [Ramp's experiment](https://engineering.ramp.com/post/marketing-to-ai-agents)
 counted about 370 matches for a test offer in 32 days. Markdown received broader
 bot targeting than the other formats, which complicates the format comparison.
@@ -78,3 +80,7 @@ Google documentation:
 - [URL inspection and request indexing](https://support.google.com/webmasters/answer/9012289)
 - [Profile page structured data](https://developers.google.com/search/docs/appearance/structured-data/profile-page)
 - [AI features and your website](https://developers.google.com/search/docs/appearance/ai-features)
+
+## Traffic analytics
+
+Use [Cloudflare Web Analytics](https://dash.cloudflare.com/?to=/:account/web-analytics) and select **itsdavis.com**. The Pages workflow reads the public beacon token from the `CF_WEB_ANALYTICS_TOKEN` repository variable and adds it to the deployed HTML. DOPPLERGEIST is published separately and uses the same hostname’s token in its site HTML. The Riemann witness site has its own analytics property.

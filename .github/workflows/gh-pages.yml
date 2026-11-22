@@ -79,6 +79,10 @@ jobs:
       - run: npm run test:browser
       - name: Build the plain-text index and Markdown companions
         run: node scripts/build_discovery.cjs
+      - name: Add Cloudflare Web Analytics to the published HTML
+        env:
+          CF_WEB_ANALYTICS_TOKEN: ${{ vars.CF_WEB_ANALYTICS_TOKEN }}
+        run: node scripts/build_analytics.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
