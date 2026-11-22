@@ -77,6 +77,8 @@ jobs:
             npx playwright install-deps chromium
           fi
       - run: npm run test:browser
+      - name: Build the plain-text index and Markdown companions
+        run: node scripts/build_discovery.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:

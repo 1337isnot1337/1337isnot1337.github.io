@@ -12,3 +12,7 @@ __pycache__/
 
 # Built from the shared portfolio page
 /site/boring/
+
+# Built from the public HTML pages
+/site/llms.txt
+/site/plain/

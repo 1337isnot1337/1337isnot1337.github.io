@@ -39,7 +39,40 @@ Do not add fabricated credentials, keyword blocks, misleading structured data,
 or unsupported research claims to improve rankings. Changes to the HTML should
 keep `tests/seo.test.cjs` passing.
 
+## AI search discovery
+
+GitHub Pages builds `/llms.txt` and seven public Markdown companions under `/plain/`.
+`scripts/build_discovery.cjs` converts the canonical HTML with Pandoc after the
+research-notes index is generated. The HTML advertises each Markdown companion,
+and the companion links back to its source. DOPPLERGEIST and Solved Conjectures
+retain their own documentation. The index links directly to those sources.
+
+[Ramp's experiment](https://engineering.ramp.com/post/marketing-to-ai-agents)
+counted about 370 matches for a test offer in 32 days. Markdown received broader
+bot targeting than the other formats, which complicates the format comparison.
+Use the public companions as an additional reading format. Google documents
+that its generative search features use its normal Search indexing requirements.
+
+### Baseline and repeatable checks
+
+Web-search spot check on 2026-11-22, before the Markdown release:
+
+| Query | Observed source |
+| --- | --- |
+| Cinna Davis software mathematics research portfolio | `itsdavis.com/projects/` and the homepage surfaced. |
+| DOPPLERGEIST aircraft Doppler audio geolocation software Cinna Davis historical ADS-B official documentation | The `itsdavis.com` DOPPLERGEIST homepage and method page surfaced. |
+| source-available software that compares aircraft Doppler audio with historical ADS-B flight tracks | The DOPPLERGEIST GitHub repository and PyPI package surfaced. |
+| collections of solved combinatorics conjectures with Lean proofs and counterexamples where each entry reports verification status | [SilentStars' Solved Conjectures listing](https://silentstars.dev/projects/1337isnot1337--solved-conjectures/) surfaced and links to the canonical catalogue. |
+
+To measure AI answer citations, run these queries with web search enabled in
+fresh chats in the engines being compared. Record the date, engine, prompt, whether
+it names the project, whether it cites `itsdavis.com`, the exact cited URLs,
+and whether those URLs support the answer. Compare several runs per engine on
+the same queries. Keep links to the site, its repositories, and independent
+sources as separate counts. The table above measures public search results.
+
 Google documentation:
 - [SEO starter guide](https://developers.google.com/search/docs/fundamentals/seo-starter-guide)
 - [URL inspection and request indexing](https://support.google.com/webmasters/answer/9012289)
 - [Profile page structured data](https://developers.google.com/search/docs/appearance/structured-data/profile-page)
+- [AI features and your website](https://developers.google.com/search/docs/appearance/ai-features)
