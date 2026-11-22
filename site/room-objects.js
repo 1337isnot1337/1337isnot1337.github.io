@@ -1,6 +1,6 @@
 import * as T from './vendor/three/three.module.min.js';
 import { paintRoomPrint } from './room-print.js?v=2';
-import { addBookcase, addLowCabinet } from './room-furnishings.js?v=2';
+import { addBookcase, addLowCabinet } from './room-furnishings.js?v=3';
 
 // Independent props grouped by where they live. Dimensions are relative to the desk.
 const collections = {
@@ -68,7 +68,7 @@ const collections = {
 
 // Match compact and wide layouts within one visit. A fresh load gets a new order.
 const placementSeed=Math.floor(Math.random()*2**32);
-export function furnishRoomObjects({walls, world, half, narrow, group, box, bead, cylinder, wire, finish, drawn, tag, weave, wood, trim}) {
+export function furnishRoomObjects({walls, world, half, narrow, group, box, bead, cylinder, wire, finish, drawn, tag, detail, weave, wood, trim}) {
   const line = finish(0x4e3b3e), page = finish(0xece0c7,.92);
   const gilt = finish(0xb4965e,.43,.35), glaze = finish(0x829c9e,.25,.12);
   const shadow = finish(0x51474d,.76);
@@ -731,7 +731,7 @@ export function furnishRoomObjects({walls, world, half, narrow, group, box, bead
     return prop;
   }
   function ledge(wall, x,y, length, rows, scale=.92, cabinet) {
-    if(cabinet==='library')addBookcase(wall,x,y,length,{box,finish,wood,trim});
+    if(cabinet==='library')addBookcase(wall,x,y,length,{group,box,finish,wood,trim,tag,detail});
     else if(cabinet)addLowCabinet(wall,x,y,length,cabinet,{box,bead,finish,wood,trim});
     else{
       box(wall,length,.073,.54,wood,x,y-.038,.24,.014);

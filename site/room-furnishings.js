@@ -32,7 +32,7 @@ export function addLowCabinet(wall,x,y,length,style,{box,bead,finish,wood,trim})
   }
 }
 
-export function addBookcase(wall,x,y,length,{box,finish,wood,trim}) {
+export function addBookcase(wall,x,y,length,{group,box,finish,wood,trim,tag,detail}) {
   const floor=y-1.76, depth=.97, bay=(length-.24)/3;
   const back=finish(0x675244,.94), brass=finish(0xb89a70,.53,.41);
   box(wall,length,.10,depth,wood,x,y-.05,.465,.021);
@@ -69,10 +69,30 @@ export function addBookcase(wall,x,y,length,{box,finish,wood,trim}) {
       }else{
         const crate=finish(col===1?0x9d846b:0x7e7c6d,.90);
         const stackX=center+bay/2-.45;
-        box(wall,.68,.435,.53,crate,stackX,base+.22,.586,.018);
-        box(wall,.706,.063,.56,crate,stackX,base+.46,.587,.012);
-        box(wall,.165,.067,.012,brass,stackX,base+.303,.855,.008);
-        box(wall,.103,.034,.006,back,stackX,base+.303,.861,.005);
+        if(row===0&&col===1){
+          const archive=group(wall,stackX,base,.586);
+          tag(archive,'library-box',[0,.25,.24],.70,.49);
+          box(archive,.706,.051,.56,crate,0,.449,0,.012);
+          box(archive,.68,.419,.048,crate,0,.213,-.241,.008);
+          for(const side of [-1,1])box(archive,.042,.419,.52,crate,side*.319,.213,-.008,.007);
+          const tray=detail('library-box-tray',archive);
+          box(tray,.581,.039,.489,back,0,.029,.008,.006);
+          for(const side of [-1,1])box(tray,.030,.174,.49,crate,side*.27,.127,.008,.006);
+          box(tray,.545,.174,.031,crate,0,.127,-.224,.007);
+          box(tray,.596,.392,.051,crate,0,.223,.241,.009);
+          box(tray,.160,.069,.014,brass,0,.304,.272,.008);
+          box(tray,.102,.029,.008,back,0,.304,.280,.005);
+          for(const [i,color] of [0xd5bc8e,0x9da990,0xbb8675,0x88a1a0,0xbcaa81].entries()){
+            const z=-.115+i*.072;
+            box(tray,.473,.228+i*.012,.024,finish(color,.93),0,.168+i*.006,z,.003);
+            box(tray,.093,.043,.026,finish(color,.93),-.155+(i%3)*.14,.295+i*.012,z,.004);
+          }
+        }else{
+          box(wall,.68,.435,.53,crate,stackX,base+.22,.586,.018);
+          box(wall,.706,.063,.56,crate,stackX,base+.46,.587,.012);
+          box(wall,.165,.067,.012,brass,stackX,base+.303,.855,.008);
+          box(wall,.103,.034,.006,back,stackX,base+.303,.861,.005);
+        }
       }
     }
   }
@@ -146,7 +166,7 @@ function floorContact(world,floor,x,z,width,depth,drawn){
   contact.receiveShadow=false;
 }
 
-export function furnishReadingCorner(world,floor,{group,box,bead,cylinder,wire,finish,drawn,weave,wood,trim}) {
+export function furnishReadingCorner(world,floor,{group,box,bead,cylinder,wire,finish,drawn,weave,wood,trim,tag,detail}) {
   const upholstery=new T.MeshStandardMaterial({color:0x536b65,map:weave,bumpMap:weave,bumpScale:.012,roughness:.95});
   const welt=finish(0x41554d,.84), brass=finish(0xa58458,.49,.52);
   const cushion=new T.MeshStandardMaterial({color:0x9c6050,map:weave,bumpMap:weave,bumpScale:.009,roughness:.94});
@@ -190,10 +210,27 @@ export function furnishReadingCorner(world,floor,{group,box,bead,cylinder,wire,f
   cylinder(table,.700,.713,.047,trim,0,1.260,0,36);
   const book=group(table,-.15,1.380,.13);
   book.rotation.y=-.30;
-  box(book,.55,.038,.39,finish(0x685254,.83),0,0,0,.009);
+  tag(book,'reading-book',[0,.06,0],.55,.38);
+  const binding=finish(0x685254,.83);
+  box(book,.55,.038,.39,binding,0,0,0,.009);
   box(book,.52,.053,.365,finish(0xe1d5b9,.93),0,.033,0,.006);
-  box(book,.55,.019,.39,finish(0x685254,.83),0,.064,0,.006);
-  box(book,.472,.001,.028,brass,0,.075,-.098,.005);
+  box(book,.021,.067,.389,binding,-.263,.026,0,.006);
+  const cover=detail('reading-book-cover',book,-.273,.067,0);
+  box(cover,.55,.019,.39,binding,.273,.003,0,.006);
+  box(cover,.472,.001,.028,brass,.273,.014,-.098,.005);
+  drawn(book,.472,.324,(ink,w,h)=>{
+    ink.strokeStyle='#998665';ink.lineWidth=.0018;
+    for(let i=1;i<=9;i++){
+      ink.beginPath();ink.moveTo(.023,i*h/10);ink.lineTo(w-.023,i*h/10);ink.stroke();
+    }
+    ink.strokeStyle='#4c5b65';ink.lineWidth=.003;
+    for(let i=0;i<3;i++){
+      ink.beginPath();ink.ellipse(w*.66,h*.55,.051+i*.022,.022+i*.018,-.46,0,Math.PI*2);ink.stroke();
+    }
+    ink.fillStyle='#4c5b65';ink.beginPath();ink.arc(w*.66,h*.55,.012,0,Math.PI*2);ink.fill();
+    ink.font='italic 0.028px Georgia';ink.fillText('Moon notes',.043,.071);
+    ink.font='italic 0.020px Georgia';ink.fillText('bring a coat',.038,.257);
+  },0,.061,0,true,420);
   box(book,.093,.009,.090,finish(0xb79963,.83),-.058,.015,.20,.005).rotation.y=.24;
   const tea=group(table,.30,1.362,-.23);
   const ceramic=finish(0xbaaa88,.30);
@@ -205,16 +242,23 @@ export function furnishReadingCorner(world,floor,{group,box,bead,cylinder,wire,f
   wire(tea,[[.106,.197,0],[.169,.196,0],[.182,.139,0],[.119,.109,0]],.015,ceramic);
 
   const lamp=group(world,-8.76,floor,9.26);
+  tag(lamp,'reading-lamp',[.285,3.13,.18],.86,.73);
   cylinder(lamp,.31,.36,.093,brass,0,.049,0,24);
   cylinder(lamp,.036,.047,3.69,brass,0,1.90,0,14);
-  const shade=new T.MeshStandardMaterial({color:0xcdbb94,map:weave,roughness:.90,side:T.DoubleSide});
+  const shade=new T.MeshStandardMaterial({color:0xcdbb94,map:weave,roughness:.90,side:T.DoubleSide,
+    emissive:0xd89858,emissiveMap:weave,emissiveIntensity:0});
   const fabric=new T.Mesh(new T.CylinderGeometry(.327,.63,.67,36,1,true),shade);
-  fabric.position.y=3.75;fabric.castShadow=true;fabric.receiveShadow=true;lamp.add(fabric);
+  fabric.castShadow=true;fabric.receiveShadow=true;
+  detail('reading-shade',lamp,0,3.75,0).add(fabric);
   for(const [r,y] of [[.329,4.084],[.629,3.416]]){
     const hem=new T.Mesh(new T.TorusGeometry(r,.016,6,36),finish(0xa69270,.84));
     hem.position.y=y;hem.rotation.x=-Math.PI/2;lamp.add(hem);
   }
   bead(lamp,0,3.641,0,.10,.15,.10,finish(0xe6d7b5,.42));
+  const chain=detail('reading-chain',lamp,.29,3.58,.17);
+  wire(chain,[[0,.07,0],[.006,-.238,.002],[.012,-.445,.004]],.008,brass);
+  for(let i=0;i<9;i++)bead(chain,i*.0013,-i*.046,i*.0004,.011,.011,.011,brass);
+  bead(chain,.012,-.448,.004,.028,.049,.029,brass);
   wire(lamp,[[0,.045,.26],[-.14,.029,.44],[-.38,.029,.46],[-.70,.033,.48]],.014,finish(0x4f463b,.88)).castShadow=false;
   for(const [x,z,a,b] of [[-7.13,7.81,2.84,2.54],[-7.55,5.69,1.45,1.34],[-8.76,9.26,.92,.84]])
     floorContact(world,floor,x,z,a,b,drawn);
@@ -323,7 +367,7 @@ export function furnishSharedStudy(world,floor,tools) {
   addProjectCart(world,floor,tools);
 }
 
-function addProjectCart(world,floor,{group,box,bead,cylinder,wire,finish,drawn,wood}){
+function addProjectCart(world,floor,{group,box,bead,cylinder,wire,finish,drawn,wood,tag,detail}){
   const frame=finish(0x576866,.59,.27), rubber=finish(0x3d3b38,.94);
   const cart=group(world,6.27,floor,5.85);
   cart.rotation.y=-.46;
@@ -341,10 +385,34 @@ function addProjectCart(world,floor,{group,box,bead,cylinder,wire,finish,drawn,w
     [1.12,2.006,.28],[.943,1.926,.39],[.862,1.64,.397]],.032,frame);
   const steel=finish(0x889695,.51,.43), caseBlue=finish(0x6d7e8b,.76);
   const toolbox=group(cart,-.405,.863,.06);
-  box(toolbox,.80,.271,.642,caseBlue,0,.147,0,.025);
-  box(toolbox,.803,.072,.652,caseBlue,0,.312,0,.017);
-  for(const x of [-.234,.234])box(toolbox,.072,.089,.019,steel,x,.290,.332,.006);
-  wire(toolbox,[[-.144,.352,0],[-.120,.409,0],[.120,.409,0],[.144,.352,0]],.019,frame);
+  tag(toolbox,'cart-toolbox',[0,.18,.30],.80,.33);
+  box(toolbox,.80,.070,.642,caseBlue,0,.047,0,.023);
+  for(const x of [-.378,.378])box(toolbox,.044,.182,.64,caseBlue,x,.152,0,.009);
+  for(const z of [-.297,.297])box(toolbox,.728,.182,.045,caseBlue,0,.152,z,.009);
+  box(toolbox,.699,.036,.545,rubber,0,.108,0,.008);
+  const lid=detail('project-toolbox-lid',toolbox,0,.252,-.307);
+  box(lid,.803,.057,.639,caseBlue,0,.025,.315,.015);
+  box(lid,.707,.016,.552,finish(0x485961,.79),0,.001,.317,.008);
+  for(const x of [-.234,.234]){
+    box(toolbox,.063,.055,.021,steel,x,.212,.330,.006);
+    box(lid,.064,.038,.018,steel,x,.008,.634,.006);
+    cylinder(toolbox,.025,.025,.099,steel,x,.249,-.324,12).rotation.z=Math.PI/2;
+  }
+  wire(lid,[[-.144,.055,.317],[-.118,.105,.317],[.118,.105,.317],[.144,.055,.317]],.015,frame);
+  const wrench=group(toolbox,-.145,.148,.003);
+  wrench.rotation.y=.25;
+  box(wrench,.039,.022,.338,steel,0,0,0,.010);
+  const ring=new T.Mesh(new T.TorusGeometry(.042,.013,7,16),steel);
+  ring.position.z=-.178;ring.rotation.x=-Math.PI/2;wrench.add(ring);
+  wire(wrench,[[-.039,0,.192],[-.038,0,.159],[0,0,.139],[.038,0,.159],[.039,0,.192]],.013,steel);
+  const driver=group(toolbox,.10,.155,-.015);
+  driver.rotation.y=-.43;
+  cylinder(driver,.029,.022,.164,finish(0xa86650,.66),0,0,.079,12).rotation.x=Math.PI/2;
+  cylinder(driver,.010,.010,.163,steel,0,0,-.080,10).rotation.x=Math.PI/2;
+  for(let i=0;i<3;i++){
+    const socket=new T.Mesh(new T.TorusGeometry(.023+i*.004,.012,6,12),steel);
+    socket.position.set(.249,.152,-.123+i*.097);socket.rotation.x=-Math.PI/2;toolbox.add(socket);
+  }
   const rolled=finish(0xd4c9a9,.91);
   for(const [x,y] of [[.34,.326],[.58,.328],[.47,.468]]){
     const planning=cylinder(cart,.105,.102,.64,rolled,x,y,0,20);
@@ -357,16 +425,29 @@ function addProjectCart(world,floor,{group,box,bead,cylinder,wire,finish,drawn,w
 
   const mat=finish(0x455a56,.94);
   box(cart,1.47,.024,.70,mat,-.073,1.730,.015,.011);
-  const rover=group(cart,-.33,1.745,.027);
+  const rover=group(cart,-.33,1.808,.027);
   rover.rotation.y=-.26;
+  tag(rover,'cart-rover',[0,.14,.02],.68,.31);
+  box(rover,.39,.047,.37,rubber,0,-.030,0,.009);
+  for(const z of [-.136,.136])box(rover,.152,.132,.052,frame,0,.047,z,.009);
   box(rover,.58,.054,.492,steel,0,.129,0,.012);
   box(rover,.39,.049,.31,finish(0x627d64,.72),0,.185,-.037,.008);
   box(rover,.130,.027,.111,finish(0x393935,.71),-.059,.223,-.069,.004);
+  let wheelIndex=0;
   for(const z of [.15,-.146])for(const x of [-.291,.291]){
-    const tire=cylinder(rover,.128,.128,.072,rubber,x,.126,z,20);
-    tire.rotation.z=Math.PI/2;
-    bead(rover,x*1.16,.126,z,.012,.052,.052,steel);
+    const wheel=detail('rover-wheel-'+wheelIndex++,rover,x,.126,z);
+    wheel.rotation.z=Math.PI/2;
+    cylinder(wheel,.128,.128,.072,rubber,0,0,0,20);
+    const outside=-Math.sign(x)*.044;
+    cylinder(wheel,.071,.071,.016,steel,0,outside,0,16);
+    for(let i=0;i<5;i++){
+      const a=i*Math.PI*.4;
+      bead(wheel,.050*Math.cos(a),outside*1.20,.050*Math.sin(a),.010,.005,.010,frame);
+    }
+    box(wheel,.018,.007,.045,finish(0xc2a477,.81),0,outside,.096,.003);
   }
+  const indicator=detail('rover-diode',rover,.097,.217,.091);
+  bead(indicator,0,0,0,.022,.022,.022,new T.MeshBasicMaterial({color:0x614634}));
   wire(rover,[[.115,.225,-.028],[.184,.265,.056],[.148,.168,.208]],.008,finish(0xab6654,.73));
   wire(rover,[[-.162,.225,-.101],[-.241,.258,-.033],[-.226,.166,.114]],.008,frame);
   box(cart,.372,.089,.246,caseBlue,.462,1.789,.046,.012).rotation.y=.12;
@@ -374,8 +455,10 @@ function addProjectCart(world,floor,{group,box,bead,cylinder,wire,finish,drawn,w
   floorContact(world,floor,6.27,5.85,2.24,1.22,drawn);
 }
 
-function addRubberPlant(world,floor,{group,cylinder,wire,finish,drawn}) {
+function addRubberPlant(world,floor,{group,cylinder,wire,finish,drawn,tag,detail}) {
   const root=group(world,7.87,floor,8.58);
+  tag(root,'rubber-plant',[.05,1.73,.13],1.40,2.75);
+  const stems=detail('rubber-plant-stems',root,0,.70,0);
   const pot=finish(0x926051,.50), rim=finish(0xbb8267,.38);
   const profile=[[.34,0],[.39,.04],[.403,.135],[.461,.53],[.495,.707],[.495,.755],[.447,.768],[.442,.706],[.380,.141],[0,.131]];
   const bowl=new T.Mesh(new T.LatheGeometry(profile.map(([x,y])=>new T.Vector2(x,y)),32),pot);
@@ -406,9 +489,10 @@ function addRubberPlant(world,floor,{group,cylinder,wire,finish,drawn}) {
     [[0,.70,.10],[-.08,1.48,.20],[-.02,2.30,.28],[.07,3.09,.30]],
   ];
   for(const [b,path] of branches.entries()){
-    wire(root,path,.028-b*.004,stem);
+    const anchoredPath=path.map(([x,y,z])=>[x,y-.70,z]);
+    wire(stems,anchoredPath,.028-b*.004,stem);
     for(let i=1;i<path.length;i++){
-      const leaf=group(root,...path[i]);
+      const leaf=group(stems,...anchoredPath[i]);
       leaf.rotation.set(-.17+i*.05,(b*2.12+i*1.81),-.15*Math.sin(i*3+b));
       leaf.scale.setScalar(.86+i*.08);
       const surface=new T.Mesh(shape,greens[(b+i)%greens.length]);

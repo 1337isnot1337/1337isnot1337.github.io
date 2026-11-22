@@ -1,9 +1,9 @@
 import * as T from './vendor/three/three.module.min.js';
 import { buildWindowView } from './room-window-view.js?v=5';
-import { addRug, furnishReadingCorner, furnishSharedStudy } from './room-furnishings.js?v=2';
+import { addRug, furnishReadingCorner, furnishSharedStudy } from './room-furnishings.js?v=3';
 
 // The hutch sits against the window wall.
-export function buildRoomShell(world, {group,box,bead,cylinder,wire,finish,photo,drawn,weave,wood,trim,floorMat,night,tag}) {
+export function buildRoomShell(world, {group,box,bead,cylinder,wire,finish,photo,drawn,weave,wood,trim,floorMat,night,tag,detail}) {
   const width=9.55, backZ=-2.68, frontZ=10.65, floor=-3.07, ceiling=6.65;
   const length=frontZ-backZ, middle=(frontZ+backZ)/2;
   const molding=finish(0xd3c5b2,.83);
@@ -229,8 +229,8 @@ export function buildRoomShell(world, {group,box,bead,cylinder,wire,finish,photo
   addRug(world,0,floor,-.22,8.24,4.82,[0x61746c,0x4c655c,0xb2aa86],{box,drawn,finish});
   addRug(world,-5.91,floor,6.72,6.33,6.24,[0x916958,0x674d4d,0xc9b18b,0xbb9272],{box,drawn,finish});
   addRug(world,-1.81,floor,8.02,1.50,4.62,[0x647477,0x4e6063,0xb3a892],{box,drawn,finish});
-  const readingBulb=furnishReadingCorner(world,floor,{group,box,bead,cylinder,wire,finish,drawn,weave,wood,trim});
-  furnishSharedStudy(world,floor,{group,box,bead,cylinder,wire,finish,drawn,weave,wood,trim,tag});
+  const readingBulb=furnishReadingCorner(world,floor,{group,box,bead,cylinder,wire,finish,drawn,weave,wood,trim,tag,detail});
+  furnishSharedStudy(world,floor,{group,box,bead,cylinder,wire,finish,drawn,weave,wood,trim,tag,detail});
   return {walls,coves,hinge,sash,readingBulb};
 }
 

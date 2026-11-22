@@ -1,5 +1,5 @@
 import * as T from './vendor/three/three.module.min.js';
-import { furnish } from './desk-model.js?v=46';
+import { furnish } from './desk-model.js?v=47';
 import { inspectDeskObjects } from './desk-inspect.js?v=20';
 
 import { attachDeskPointer } from './desk-pointer.js?v=23';
@@ -8,6 +8,7 @@ import { deskLife } from './desk-life.js?v=17';
 import { deskView } from './desk-view.js?v=13';
 import { drawerTravel } from './desk-drawer.js?v=1';
 import { setClock } from './shelf-clock.js?v=1';
+import { bindRoomActions } from './room-actions.js?v=1';
 
 export function mountFurniture(stage,showGraphicsFallback) {
   const canvas = stage.querySelector('canvas');
@@ -79,18 +80,7 @@ export function mountFurniture(stage,showGraphicsFallback) {
   let model,frame=0,visible=true,dirty=true,drawerAmount=0,opened='',fileAngle=0,bookAngle=0;
   const drawer=links.get('drawer'), posterSwitch=links.get('poster-switch');
   let posterMode='professional';
-  const fixtures=[
-    {id:'study-door',property:'rotation',distance:1.36},
-    {id:'window-sash',property:'position',distance:1.18},
-  ];
-  for(const fixture of fixtures){
-    fixture.button=links.get(fixture.id);
-    fixture.button.addEventListener('click',()=>{
-      fixture.open=!fixture.open;
-      fixture.button.setAttribute('aria-pressed',String(fixture.open));
-      redraw();
-    });
-  }
+  const roomActions=bindRoomActions(links,redraw);
   const travel=drawerTravel(drawer.getAttribute('aria-expanded')==='true');
   const hitGroups=new Map(),bounds=new T.Box3(),intersection=new T.Vector3();
   let lastTime=0,lampOn=false;
@@ -125,11 +115,7 @@ export function mountFurniture(stage,showGraphicsFallback) {
     }
     model=furnish(scene,narrow,redraw,software,posterMode);hitGroups.clear();extraMeshes.length=0;
     readingLight.position.copy(model.readingBulb);
-    for(const fixture of fixtures){
-      fixture.joint=model.targets.get(fixture.id).root[fixture.property];
-      fixture.home=fixture.joint.y;
-      if(fixture.open)fixture.joint.y=fixture.home+fixture.distance;
-    }
+    roomActions.mount(model);
     model.posterCap.position.y=posterMode==='frivolous'?.034:.053;
     const navigation=stage.querySelector('.desk-objects');
     for(const [id,{root}] of model.roomProps){
@@ -239,19 +225,14 @@ export function mountFurniture(stage,showGraphicsFallback) {
     sky.intensity=T.MathUtils.lerp(daySky,.56,night);
     sun.intensity=T.MathUtils.lerp(2.16,.12,night);
     fill.intensity=T.MathUtils.lerp(.74,.35,night);
-    readingLight.intensity=night*25;
     if(!software)scene.environmentIntensity=T.MathUtils.lerp(6.4,2.8,night);
     for(const {lens,color} of model.coves)lens.color.copy(color).multiplyScalar(.58+night*.83);
     for(const reflection of fallbackWash)reflection.intensity=.35+night*4.2;
     const amount=(motion.matches||software)?1:1-Math.exp(-dt*12);
     const target=(value,goal)=>Math.abs(value-goal)<.004?goal:T.MathUtils.lerp(value,goal,amount);
-    let fixtureMoving=false;
-    for(const fixture of fixtures){
-      const goal=fixture.home+(fixture.open?fixture.distance:0),before=fixture.joint.y;
-      fixture.joint.y=target(before,goal);
-      detailMoved ||= fixture.joint.y!==before;
-      fixtureMoving ||= fixture.joint.y!==goal;
-    }
+    const roomMotion=roomActions.paint({time,dt,night,nightGoal,reduced:motion.matches,ease:target});
+    readingLight.intensity=roomMotion.readingLevel*25;
+    detailMoved ||= roomMotion.geometryMoved;
     const prevDrawer=drawerAmount,prevFile=fileAngle,prevBook=bookAngle;
     const held=inspector.active();
     const currentTime=new Date();
@@ -360,7 +341,7 @@ export function mountFurniture(stage,showGraphicsFallback) {
       lamp.hidden=false;links.get('plant').hidden=false;
     }
     if(posture.move)refreshHover(time);
-    if((events.active && !document.hidden) || (centeredObject && !motion.matches) || posture.move || gazeX!==targetX||gazeY!==targetY||drawerMotion.moving||fileAngle!==folderGoal||bookAngle!==notebookGoal||previewMoving||fixtureMoving||nightTravel!==nightGoal)redraw();
+    if((events.active && !document.hidden) || (centeredObject && !motion.matches) || posture.move || gazeX!==targetX||gazeY!==targetY||drawerMotion.moving||fileAngle!==folderGoal||bookAngle!==notebookGoal||previewMoving||roomMotion.moving||nightTravel!==nightGoal)redraw();
   }
   function faceObject(id){
     if(!model?.targets.has(id))return;

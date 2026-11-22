@@ -5,7 +5,7 @@ import { lampProjection } from './desk-lamp.js?v=1';
 import { paintScope, followProbe } from './desk-scope.js?v=1';
 import { airframeGeometry, wingUnderside } from './model-plane.js?v=2';
 import { mergeGeometries } from './vendor/three/BufferGeometryUtils.js';
-import { decorateRoom } from './desk-room.js?v=20';
+import { decorateRoom } from './desk-room.js?v=21';
 import { clockHands, setClock } from './shelf-clock.js?v=1';
 import { corkMaterial, curledPrint, scopeScale } from './desk-finishes.js?v=1';
 import { RoundedBoxGeometry } from './vendor/three/RoundedBoxGeometry.js';
@@ -1034,7 +1034,7 @@ export function furnish(scene, narrow, repaint, software=false, posterMode='prof
   }
   bead(moth,0,0,0,.011,.011,.051,finish(0x685341));
   moth.visible=false;
-  const {coves,walls,showPosters,readingBulb}=decorateRoom(room,{desk:world,narrow,half,group,box,bead,cylinder,wire,finish,photo,tag,drawn,weave,wood,trim,floorMat,night});
+  const {coves,walls,showPosters,readingBulb}=decorateRoom(room,{desk:world,narrow,half,group,box,bead,cylinder,wire,finish,photo,tag,detail,drawn,weave,wood,trim,floorMat,night});
   showPosters(posterMode);
   // Small displayed pieces come forward at their existing mounting points.
   const displayPoses=new Map();
