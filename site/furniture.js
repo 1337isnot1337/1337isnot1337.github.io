@@ -1,5 +1,5 @@
 import * as T from './vendor/three/three.module.min.js';
-import { furnish } from './desk-model.js?v=49';
+import { furnish } from './desk-model.js?v=50';
 import { inspectDeskObjects } from './desk-inspect.js?v=20';
 
 import { attachDeskPointer } from './desk-pointer.js?v=25';
@@ -8,7 +8,7 @@ import { deskLife } from './desk-life.js?v=17';
 import { deskView } from './desk-view.js?v=14';
 import { drawerTravel } from './desk-drawer.js?v=1';
 import { setClock } from './shelf-clock.js?v=1';
-import { bindRoomActions } from './room-actions.js?v=2';
+import { bindRoomActions } from './room-actions.js?v=3';
 
 export function mountFurniture(stage,showGraphicsFallback) {
   const canvas = stage.querySelector('canvas');

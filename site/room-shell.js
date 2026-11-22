@@ -1,5 +1,5 @@
 import * as T from './vendor/three/three.module.min.js';
-import { buildWindowView } from './room-window-view.js?v=5';
+import { buildWindowView } from './room-window-view.js?v=6';
 import { addRug, furnishReadingCorner, furnishSharedStudy } from './room-furnishings.js?v=3';
 
 // The hutch sits against the window wall.
@@ -174,18 +174,33 @@ export function buildRoomShell(world, {group,box,bead,cylinder,wire,finish,photo
     const panel=new T.Mesh(drape,curtain);panel.castShadow=true;panel.receiveShadow=true;
     panel.userData.liveCloth=true;
     drapes.add(panel);
-    const tieback=detail('drape-tie-'+sign,drapes,edge,0,0);
-    const tie=Array.from({length:7},(_,i)=>{
-      const [x,y]=fold(i/6,.597+Math.sin(i*.5)*.014);
-      return [x-edge,y,.053+Math.sin(i*Math.PI/6)*.044];
+    const [inner,tieY]=fold(0,.60), outer=fold(1,.60)[0];
+    const hookX=sign*(span/2+.43), hookY=tieY+.09;
+    wire(drapes,[[hookX,hookY,-.31],[hookX,hookY,-.19],[hookX,hookY+.035,-.164]],.025,rings).castShadow=false;
+    bead(drapes,hookX,hookY,-.31,.062,.078,.021,rings).castShadow=false;
+    const end=[hookX,hookY+.025,-.17];
+    const front=Array.from({length:5},(_,i)=>{
+      const u=1-i/4;
+      return [fold(u,.60)[0],tieY+.023-.031*Math.sin(Math.PI*u),.096];
     });
-    for(const offset of [0,.019]){
-      wire(tieback,tie.map(([x,y,z])=>[x,y+offset,z]),.013,braid).castShadow=false;
-    }
-    const [x,y,z]=tie[1];
-    bead(tieback,x,y+.010,z+.009,.035,.027,.024,braid);
-    wire(tieback,[[x,y,z],[x+.03*sign,y-.11,z+.016],[x+.015*sign,y-.17,z+.013]],.011,braid).castShadow=false;
-    bead(tieback,x+.015*sign,y-.18,z+.015,.017,.034,.014,braid);
+    const curve=points=>new T.CatmullRomCurve3(points.map(point=>new T.Vector3(...point)));
+    const fastened=curve([end,...front,[inner-sign*.046,tieY-.005,.021],
+      [inner,tieY-.006,-.111],[outer,tieY+.01,-.117],[hookX,hookY+.018,-.181]]);
+    const drop=fastened.getLength()*.40;
+    const loose=curve([end,[hookX+sign*.050,hookY-drop*.26,-.152],
+      [hookX+sign*.074,hookY-drop*.76,-.146],[hookX+sign*.018,hookY-drop,-.141],
+      [hookX-sign*.067,hookY-drop*.81,-.155],[hookX-sign*.044,hookY-drop*.31,-.175],
+      [hookX,hookY+.018,-.181]]);
+    const rope=new T.TubeGeometry(fastened,44,.018,6);
+    const hanging=new T.TubeGeometry(loose,44,.018,6);
+    rope.morphAttributes.position=[hanging.attributes.position];
+    rope.morphAttributes.normal=[hanging.attributes.normal];
+    rope.computeBoundingBox();
+    rope.computeBoundingSphere();
+    const cord=new T.Mesh(rope,braid);
+    cord.receiveShadow=true;
+    cord.userData.drapeCord=true;
+    drapes.add(cord);
     for(let n=0;n<6;n++){
       const hanger=detail('drape-ring-'+sign+'-'+n,drapes,edge+sign*(.043+n*.128),height/2+.225,0);
       hanger.userData.drapeEnd=sign*(.05+n*(span/2+.12)/5);

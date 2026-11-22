@@ -17,10 +17,16 @@ export function buildWindowView(outdoors, {photo,cylinder,finish,night}) {
     shader.fragmentShader='uniform float windowNight;\n'+shader.fragmentShader.replace('#include <map_fragment>',`
       #include <map_fragment>
       #ifdef USE_MAP
+        vec2 sky=vMapUv;
+        // The photo ends before the cylindrical backdrop does. Blend to
+        // open sky before the top row can smear across steep sightlines.
+        vec3 highSky=mix(vec3(.178,.344,.637),vec3(.330,.325,.490),smoothstep(.56,.96,sky.x));
+        float abovePhoto=clamp(sky.y-1.0,0.0,1.0);
+        highSky=mix(highSky,vec3(.072,.196,.409),abovePhoto*.7);
+        diffuseColor.rgb=mix(diffuseColor.rgb,highSky,smoothstep(.87,1.0,sky.y));
         float luminance=dot(diffuseColor.rgb,vec3(.2126,.7152,.0722));
         vec3 moonlit=vec3(.009,.017,.036)+vec3(.026,.047,.093)*luminance
           +diffuseColor.rgb*vec3(.049,.076,.132);
-        vec2 sky=vec2(vMapUv.x,clamp(vMapUv.y,0.0,1.0));
         float upperSky=smoothstep(.63,.76,sky.y);
         vec2 starGrid=sky*vec2(123.0,85.0);
         vec2 cell=floor(starGrid);

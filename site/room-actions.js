@@ -17,16 +17,19 @@ export function bindRoomActions(links,redraw) {
 
   const lamp=links.get('reading-lamp'), rover=links.get('cart-rover');
   const curtains=links.get('window-drapes');
-  let drapesClosed=false, drapes=0, cloth, rings, ties;
+  let drapesClosed=false, drapes=0, coverage=0, cloth, rings, ties;
   curtains.addEventListener('click',()=>{
     drapesClosed=!drapesClosed;
     curtains.setAttribute('aria-pressed',String(drapesClosed));
     redraw();
   });
+  const smooth=t=>t*t*(3-2*t);
   function setDrapes(amount){
-    for(const panel of cloth)panel.morphTargetInfluences[0]=amount;
-    for(const [ring,rest] of rings)ring.position.x=rest+(ring.userData.drapeEnd-rest)*amount;
-    for(const tie of ties)tie.visible=amount<.085;
+    const release=smooth(Math.min(1,amount/.25));
+    coverage=smooth(Math.max(0,(amount-.25)/.75));
+    for(const tie of ties)tie.morphTargetInfluences[0]=release;
+    for(const panel of cloth)panel.morphTargetInfluences[0]=coverage;
+    for(const [ring,rest] of rings)ring.position.x=rest+(ring.userData.drapeEnd-rest)*coverage;
   }
   let lampOverride=null, lampLevel=0, lampStarted=-Infinity;
   let roverStarted=-Infinity, plantStarted=-Infinity, roverTimer;
@@ -63,9 +66,10 @@ export function bindRoomActions(links,redraw) {
       stems=model.details.get('rubber-plant-stems');
       wheels=[0,1,2,3].map(i=>model.details.get('rover-wheel-'+i));
       diode=model.details.get('rover-diode').children[0].material;
-      cloth=model.targets.get('window-drapes').root.children.filter(part=>part.userData.liveCloth);
+      const drapeParts=model.targets.get('window-drapes').root.children;
+      cloth=drapeParts.filter(part=>part.userData.liveCloth);
       rings=[...model.details].filter(([name])=>name.startsWith('drape-ring-')).map(([,ring])=>[ring,ring.position.x]);
-      ties=[-1,1].map(side=>model.details.get('drape-tie-'+side));
+      ties=drapeParts.filter(part=>part.userData.drapeCord);
       setDrapes(drapes);
     },
     paint({time,dt,night,nightGoal,reduced,ease}){
@@ -111,13 +115,13 @@ export function bindRoomActions(links,redraw) {
       stems.rotation.x=-sway*.52;
       const curtainGoal=Number(drapesClosed);
       if(drapes!==curtainGoal){
-        const step=reduced?1:dt*1.42;
+        const step=reduced?1:dt*1.20;
         drapes+=Math.sign(curtainGoal-drapes)*Math.min(step,Math.abs(curtainGoal-drapes));
         setDrapes(drapes);
         geometryMoved=true;
         moving ||= drapes!==curtainGoal;
       }
-      return {moving,geometryMoved,readingLevel:lampLevel,drapes};
+      return {moving,geometryMoved,readingLevel:lampLevel,drapes:coverage};
     }
   };
 }
