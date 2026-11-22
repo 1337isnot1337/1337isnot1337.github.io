@@ -29,7 +29,8 @@ button, a, input, select { -webkit-tap-highlight-color: #e4cbd8; }
 .result-title a:hover { color: var(--reader-link); text-decoration-color: var(--rule-strong); }
 .prose { color: var(--ink); font-size: 1.25rem; }
 @media (max-width: 365px) {
-  .site-nav { column-gap: 8px; font-size: .8125rem; }
+  .site-nav { column-gap: 6px; font-size: .8125rem; }
+  .site-nav a:focus-visible { outline-offset: 2px; }
 }
 @media (max-width: 720px) {
   .prose { font-size: 1.125rem; }
