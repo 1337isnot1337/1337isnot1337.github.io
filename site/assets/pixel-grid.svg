@@ -8,11 +8,15 @@
     <feOffset in="sample" dx="1" dy="0" result="east"/>
     <feOffset in="sample" dx="0" dy="1" result="south"/>
     <feOffset in="sample" dx="1" dy="1" result="corner"/>
-    <feMerge>
+    <feMerge result="pixels">
       <feMergeNode in="sample"/>
       <feMergeNode in="east"/>
       <feMergeNode in="south"/>
       <feMergeNode in="corner"/>
     </feMerge>
+    <feComponentTransfer in="pixels" result="softened">
+      <feFuncA type="linear" slope=".42"/>
+    </feComponentTransfer>
+    <feComposite in="softened" in2="SourceGraphic" operator="over"/>
   </filter>
 </svg>

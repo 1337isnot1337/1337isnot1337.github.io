@@ -17,7 +17,13 @@ export function mountFurniture(stage,showGraphicsFallback) {
   const gl=engine.getContext();
   const debug=gl.getExtension('WEBGL_debug_renderer_info');
   const software=debug && /swiftshader|llvmpipe/i.test(gl.getParameter(debug.UNMASKED_RENDERER_WEBGL));
-  engine.setPixelRatio(Math.min(devicePixelRatio, software ? .85 : 1.4));
+  const needsCanvasGrid=CSS.supports('-moz-appearance','none');
+  const pixelGrid=matchMedia('(forced-colors: none) and (prefers-contrast: no-preference)');
+  function setResolution(){
+    const limit=needsCanvasGrid && pixelGrid.matches ? .65 : software ? .85 : 1.4;
+    engine.setPixelRatio(Math.min(devicePixelRatio,limit));
+  }
+  setResolution();
   engine.shadowMap.enabled=!software;
   engine.shadowMap.type=software ? T.BasicShadowMap : T.PCFSoftShadowMap;
   engine.shadowMap.autoUpdate=false;
@@ -400,6 +406,9 @@ export function mountFurniture(stage,showGraphicsFallback) {
   document.addEventListener('portfolio-view',resized);
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)redraw();});
   motion.addEventListener('change',redraw);
+  if(needsCanvasGrid) pixelGrid.addEventListener('change',()=>{
+    setResolution();redraw();
+  });
   function suspendDesk() {
     contextLost=true;leaveDesk();warning.textContent=unavailable;
     showGraphicsFallback();
