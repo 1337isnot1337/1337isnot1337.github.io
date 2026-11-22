@@ -135,6 +135,7 @@ export function buildRoomShell(world, {group,box,bead,cylinder,wire,finish,photo
   const rod=cylinder(rear,.035,.035,span+1.10,finish(0x917454,.54,.24),center,top+.24,.317,19);
   rod.rotation.z=Math.PI/2;
   const drapes=tag(group(rear,center,mid,.317),'window-drapes',[0,.19,0],span,height);
+  drapes.userData.visibleAnchors=[-1,1].map(sign=>new T.Vector3(sign*(span/2+.13),.19,0));
   for(const sign of [-1,1]){
     const edge=sign*(span/2-.20);
     const positions=[],closed=[],indices=[],uv=[];

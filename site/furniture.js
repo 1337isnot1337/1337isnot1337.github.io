@@ -1,8 +1,8 @@
 import * as T from './vendor/three/three.module.min.js';
-import { furnish } from './desk-model.js?v=48';
+import { furnish } from './desk-model.js?v=49';
 import { inspectDeskObjects } from './desk-inspect.js?v=20';
 
-import { attachDeskPointer } from './desk-pointer.js?v=24';
+import { attachDeskPointer } from './desk-pointer.js?v=25';
 
 import { deskLife } from './desk-life.js?v=17';
 import { deskView } from './desk-view.js?v=14';
@@ -166,6 +166,7 @@ export function mountFurniture(stage,showGraphicsFallback) {
   }
   const targetStyles=new Map(),projectedCamera=new T.Matrix4(),projectedLens=new T.Matrix4();
   const targetProperties=['--screen-x','--screen-y','--hit-width','--hit-height'];
+  const onScreen=(depth,x,y)=>depth>camera.near&&x>=10&&x<=viewWidth-10&&y>=12&&y<=viewHeight-10;
   function projectTargets() {
     const lens=viewHeight*camera.zoom/(2*Math.tan(T.MathUtils.degToRad(camera.fov/2)));
     const moved=!projectedCamera.equals(camera.matrixWorld) || !projectedLens.equals(camera.projectionMatrix);
@@ -180,10 +181,19 @@ export function mountFurniture(stage,showGraphicsFallback) {
       const saved=targetStyles.get(id);
       if(!moved && saved?.root===root && saved.matrix.equals(root.matrixWorld))continue;
       point.copy(local).applyMatrix4(root.matrixWorld);
-      const depth=-vector.copy(point).applyMatrix4(camera.matrixWorldInverse).z;
+      let depth=-vector.copy(point).applyMatrix4(camera.matrixWorldInverse).z;
       vector.copy(point).project(camera);
-      const x=(vector.x+1)*.5*viewWidth,y=(1-vector.y)*.5*viewHeight;
-      const outside=depth<=camera.near||x<10||x>viewWidth-10||y<12||y>viewHeight-10;
+      let x=(vector.x+1)*.5*viewWidth,y=(1-vector.y)*.5*viewHeight;
+      if(!onScreen(depth,x,y)&&root.userData.visibleAnchors){
+        for(const anchor of root.userData.visibleAnchors){
+          point.copy(anchor).applyMatrix4(root.matrixWorld);
+          depth=-vector.copy(point).applyMatrix4(camera.matrixWorldInverse).z;
+          vector.copy(point).project(camera);
+          x=(vector.x+1)*.5*viewWidth;y=(1-vector.y)*.5*viewHeight;
+          if(onScreen(depth,x,y))break;
+        }
+      }
+      const outside=!onScreen(depth,x,y);
       if((root.userData.roomPoster||root.userData.roomProp||el===posterSwitch||el.hasAttribute('data-room-fixture'))&&el.hidden!==outside)el.hidden=outside;
       if(el.hasAttribute('data-outside')!==outside)el.toggleAttribute('data-outside',outside);
       const state=saved||{matrix:new T.Matrix4(),rect:[]};

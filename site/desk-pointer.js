@@ -100,7 +100,6 @@ export function attachDeskPointer(stage,{pick,track,hover=()=>{},stopLook=()=>{}
     suppress=true;
     endPress(true);
   });
-  stage.addEventListener('pointerenter',aim);
   stage.addEventListener('pointerleave',()=>{if(!press)leave();});
   stage.addEventListener('dragstart',e=>{if(active())e.preventDefault();});
   stage.addEventListener('click',e=>{
@@ -121,7 +120,9 @@ export function attachDeskPointer(stage,{pick,track,hover=()=>{},stopLook=()=>{}
   document.addEventListener('pointerdown',()=>{stage.dataset.pointerInput='';},true);
   document.addEventListener('keydown',e=>{
     if(!e.altKey && !e.ctrlKey && !e.metaKey)delete stage.dataset.pointerInput;
-    if(e.key==='Tab')stopLook();
+    if(e.key==='Tab'||e.key==='Enter'||e.key===' '){
+      cancelAnimationFrame(frame);frame=0;stopLook();
+    }
   });
   document.addEventListener('portfolio-view',()=>{stopArrows();leave();});
   return {leave,refreshHover};
