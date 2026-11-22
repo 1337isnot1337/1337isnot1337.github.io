@@ -620,22 +620,6 @@
     const seal=insertOnce(letterForm.querySelector('.letter-heading'),'wax','span','delivered despite the handwriting');
     waveAt(seal);
   });
-  document.addEventListener('desk-cassette-side-b',()=>{
-    const leaf=studio.querySelector('#off-the-clock .leaf-writing');
-    if(leaf.querySelector('[data-private=cassette]'))return;
-    const side=insertOnce(leaf,'cassette','div','');
-    side.classList.add('handwritten-liner');
-    side.append(make('b','SIDE B'),make('p','Four tracks. The last one keeps winding.'));
-    const tracklist=leaf.querySelector('ul').cloneNode(true);
-    side.append(tracklist);
-    waveAt(side);
-  });
-  let rewound=0;
-  document.addEventListener('desk-tape',event=>{
-    rewound+=event.detail;
-    if(Math.abs(rewound)>3)document.dispatchEvent(new Event('desk-cassette-side-b'));
-  });
-
   const epoch=studio.querySelector('#about-teaching');
   epoch.querySelector('.leaf-art').addEventListener('dblclick',()=>{
     if(epoch.querySelector('form'))return;

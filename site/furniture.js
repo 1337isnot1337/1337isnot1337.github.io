@@ -1,10 +1,10 @@
 import * as T from './vendor/three/three.module.min.js';
-import { furnish } from './desk-model.js?v=41';
-import { inspectDeskObjects } from './desk-inspect.js?v=17';
+import { furnish } from './desk-model.js?v=42';
+import { inspectDeskObjects } from './desk-inspect.js?v=18';
 
 import { attachDeskPointer } from './desk-pointer.js?v=23';
 
-import { deskLife } from './desk-life.js?v=16';
+import { deskLife } from './desk-life.js?v=17';
 import { deskView } from './desk-view.js?v=13';
 import { drawerTravel } from './desk-drawer.js?v=1';
 
@@ -74,7 +74,8 @@ export function mountFurniture(stage,showGraphicsFallback) {
   const vector=new T.Vector3(), point=new T.Vector3(), aim=new T.Vector3();
   const ray=new T.Raycaster(),mouse=new T.Vector2();
   let model,frame=0,visible=true,dirty=true,drawerAmount=0,opened='',fileAngle=0,bookAngle=0;
-  const drawer=links.get('drawer');
+  const drawer=links.get('drawer'), posterSwitch=links.get('poster-switch');
+  let posterMode='professional';
   const travel=drawerTravel(drawer.getAttribute('aria-expanded')==='true');
   const hitGroups=new Map(),bounds=new T.Box3(),intersection=new T.Vector3();
   let lastTime=0,lampOn=false;
@@ -102,7 +103,8 @@ export function mountFurniture(stage,showGraphicsFallback) {
       for(const item of model.roomProps.values())item.preview.traverse(collect);
       textures.forEach(t=>t.dispose());materials.forEach(m=>m.dispose());geometries.forEach(g=>g.dispose());
     }
-    model=furnish(scene,narrow,redraw,software);hitGroups.clear();extraMeshes.length=0;
+    model=furnish(scene,narrow,redraw,software,posterMode);hitGroups.clear();extraMeshes.length=0;
+    model.posterCap.position.y=posterMode==='frivolous'?.034:.053;
     const navigation=stage.querySelector('.desk-objects');
     for(const [id,{root}] of model.roomProps){
       if(links.has(id))continue;
@@ -158,6 +160,11 @@ export function mountFurniture(stage,showGraphicsFallback) {
     projectedCamera.copy(camera.matrixWorld);projectedLens.copy(camera.projectionMatrix);
     for(const [id,{root,point:local,w,h}] of model.targets) {
       const el=links.get(id);
+      if((root.userData.roomPoster&&!root.visible)||(el===posterSwitch&&drawerAmount<.54)){
+        el.hidden=true;
+        targetStyles.delete(id);
+        continue;
+      }
       const saved=targetStyles.get(id);
       if(!moved && saved?.root===root && saved.matrix.equals(root.matrixWorld))continue;
       point.copy(local).applyMatrix4(root.matrixWorld);
@@ -165,7 +172,7 @@ export function mountFurniture(stage,showGraphicsFallback) {
       vector.copy(point).project(camera);
       const x=(vector.x+1)*.5*viewWidth,y=(1-vector.y)*.5*viewHeight;
       const outside=depth<=camera.near||x<10||x>viewWidth-10||y<12||y>viewHeight-10;
-      if((root.userData.roomPoster||root.userData.roomProp)&&el.hidden!==outside)el.hidden=outside;
+      if((root.userData.roomPoster||root.userData.roomProp||el===posterSwitch)&&el.hidden!==outside)el.hidden=outside;
       if(el.hasAttribute('data-outside')!==outside)el.toggleAttribute('data-outside',outside);
       const state=saved||{matrix:new T.Matrix4(),rect:[]};
       state.root=root;state.matrix.copy(root.matrixWorld);
@@ -183,7 +190,7 @@ export function mountFurniture(stage,showGraphicsFallback) {
   let boundedModel=null,hovered='';
   const previews=new Map();
   const hoverable=new Set([
-    'plane','file','proof','archive','scope','book','letters','tape','drawer','lamp','plant',
+    'plane','file','proof','archive','scope','book','letters','drawer','lamp','plant',
     'pencil','rose-pencil','cup','blotter','pinboard','robot-photo','epoch',
   ]);
   const peek=id=>previews.get(id)||0;
@@ -417,8 +424,8 @@ export function mountFurniture(stage,showGraphicsFallback) {
     gesture(name,dx,dy,time,start){
       // Covers and handles have a vertical grip. A sideways drag can pass
       // across them just like a drag that starts on the desk surface.
-      if(start==='horizontal' && ['handle','scope','proof-volume','archive-volume','file','file-cover','book','tape'].includes(name))return false;
-      if(start==='down' && ['scope','proof-volume','archive-volume','file','file-cover','tape'].includes(name))return false;
+      if(start==='horizontal' && ['handle','scope','proof-volume','archive-volume','file','file-cover','book'].includes(name))return false;
+      if(start==='down' && ['scope','proof-volume','archive-volume','file','file-cover'].includes(name))return false;
       if(name==='handle'){
         travel.drag(dy,time);redraw();return true;
       }
@@ -482,6 +489,17 @@ export function mountFurniture(stage,showGraphicsFallback) {
     life.drawerChange(open,open?1:-1,false);
     redraw();
   });
+  posterSwitch.addEventListener('click',()=>{
+    if(posterSwitch.hidden||!model)return;
+    const frivolous=posterMode==='professional';
+    posterMode=frivolous?'frivolous':'professional';
+    posterSwitch.setAttribute('aria-pressed',String(frivolous));
+    model.showPosters(posterMode);
+    model.posterCap.position.y=frivolous?.034:.053;
+    targetStyles.clear();
+    boundsDirty=true;
+    redraw();
+  });
   section.closest('#studio').addEventListener('desk-room',e=>{opened=e.detail||'';if(opened)leaveDesk();redraw();});
   function resized(){needsLayout=true;redraw();}
   if('IntersectionObserver' in window)new IntersectionObserver(([entry])=>{
@@ -504,6 +522,7 @@ export function mountFurniture(stage,showGraphicsFallback) {
       if(el.matches('[data-room-prop],[data-room-poster]'))el.hidden=true;
     });
     inspector.close();lamp.hidden=true;links.get('plant').hidden=true;
+    posterSwitch.hidden=true;
   }
   canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();suspendDesk();});
   canvas.addEventListener('webglcontextrestored',()=>{contextLost=false;engine.shadowMap.needsUpdate=true;redraw();});

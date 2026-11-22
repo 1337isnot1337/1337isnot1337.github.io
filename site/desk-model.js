@@ -5,11 +5,11 @@ import { lampProjection } from './desk-lamp.js?v=1';
 import { paintScope, followProbe } from './desk-scope.js?v=1';
 import { airframeGeometry, wingUnderside } from './model-plane.js?v=2';
 import { mergeGeometries } from './vendor/three/BufferGeometryUtils.js';
-import { decorateRoom } from './desk-room.js?v=15';
+import { decorateRoom } from './desk-room.js?v=16';
 import { corkMaterial, curledPrint, scopeScale } from './desk-finishes.js?v=1';
 import { RoundedBoxGeometry } from './vendor/three/RoundedBoxGeometry.js';
 
-export function furnish(scene, narrow, repaint, software=false) {
+export function furnish(scene, narrow, repaint, software=false, posterMode='professional') {
   const width = narrow ? 5.6 : 9.6;
   const half = width / 2;
   const room = new T.Group();
@@ -158,6 +158,13 @@ export function furnish(scene, narrow, repaint, software=false) {
   fitted.visible=false;
   const handle=detail('handle',drawer,0,.15,.18);
   wire(handle,[[-.31,0,0],[-.29,-.04,.11],[-.18,-.084,.15],[.18,-.084,.15],[.29,-.04,.11],[.31,0,0]],.034,brass);
+  const posterSwitch=tag(group(drawer,dw/2-.074,.203,-.30),'poster-switch',[0,.060,0],.28,.25);
+  posterSwitch.rotation.z=1.02;
+  cylinder(posterSwitch,.115,.123,.041,brassDark,0,.008,0,24);
+  cylinder(posterSwitch,.092,.097,.023,finish(0x342420,.53),0,.038,0,24);
+  const posterCap=detail('poster-switch-cap',posterSwitch,0,.053,0);
+  cylinder(posterCap,.072,.080,.033,finish(0xc82e35,.37),0,.012,0,24);
+  bead(posterCap,0,.028,0,.072,.020,.072,finish(0xcf393c,.29));
   const drawerNote=detail('drawer-note',drawer,.11,.389,.181);
   box(drawerNote,.57,.015,.25,cream,0,0,.012,.005);
   box(drawerNote,.55,.008,.11,paper,.008,.010,-.043).rotation.z=.035;
@@ -632,35 +639,6 @@ export function furnish(scene, narrow, repaint, software=false) {
     c.strokeStyle='#796c6f';c.lineWidth=.009;c.beginPath();c.arc(.085,h*.50,.077,0,2*Math.PI);c.stroke();
     for(let i=0;i<3;i++){c.beginPath();c.moveTo(.13,.063+i*.04);c.bezierCurveTo(.23,i*.04,.29,.14+i*.04,w,.05+i*.04);c.stroke();}
   },.34,.118,-.252,true);
-  // Two actual cassette reels sit behind the transparent window.
-  const tape=tag(group(world,narrow?-1.04:-1.42,.063,narrow?1.49:1.59),'tape',[0,.09,0],1.01,.60);
-  tape.rotation.y=.19;tape.scale.setScalar(narrow?.56:.68);
-  box(tape,1.04,.083,.64,finish(0x65617b),0,.05,0,.032);
-  box(tape,.92,.012,.39,finish(0xd4b5bb),0,.098,-.049,.005);
-  box(tape,.58,.012,.14,finish(0x525056),0,.106,-.015,.005);
-  for(const [index,x] of [-.22,.22].entries()){
-    const reel=detail('reel-'+index,tape,x,.137,-.017);
-    cylinder(reel,.068,.068,.017,cream,0,-.012,0);
-    cylinder(reel,.029,.029,.019,finish(0x3d3437),0,0,0);
-    for(let tooth=0;tooth<6;tooth++){
-      const a=tooth*Math.PI/3;
-      box(reel,.012,.010,.014,brassDark,.046*Math.sin(a),-.002,.046*Math.cos(a));
-    }
-  }
-  const eatenTape=detail('eaten-tape',tape,0,.088,.31);
-  wire(eatenTape,[[-.12,0,0],[-.05,.01,.14],[.10,.004,.18],[.13,.008,.07],[.07,0,0]],.008,finish(0x51423c));
-  eatenTape.visible=false;
-  const windingPencil=detail('tape-pencil',tape,.43,.17,.08);
-  cylinder(windingPencil,.028,.028,.57,finish(0xb5788c),0,.272,0,6);
-  cylinder(windingPencil,.027,0,.082,cream,0,-.049,0,6);
-  cylinder(windingPencil,.029,.029,.052,finish(0xd58c84),0,.588,0,12);
-  windingPencil.rotation.z=-.64;windingPencil.visible=false;
-  letter(tape,'Side B · one very long loop',.72,.106,0,.005,-.12,{flat:true,ink:'#ddbdd4',italic:true}).rotation.x=Math.PI/2;
-  const litEdge=detail('tape-light-edge',tape,0,.053,.324);
-  letter(litEdge,'S T A G E   B',.51,.039,0,0,.002,{ink:'#f7cd98',italic:true});
-  litEdge.visible=false;
-  letter(tape,'off the clock',.82,.119,0,.109,-.178,{flat:true,italic:true});
-  for(const x of [-.43,.43])for(const z of [-.23,.23])cylinder(tape,.017,.017,.009,brass,x,.099,z,8);
   // One curved blade and a painted vein texture are shared by every leaf on the cutting.
   const leafShape=new T.PlaneGeometry(1,1,12,20);
   const vertices=leafShape.attributes.position,leafUV=leafShape.attributes.uv;
@@ -1056,15 +1034,8 @@ export function furnish(scene, narrow, repaint, software=false) {
   bead(moth,0,0,0,.011,.011,.051,finish(0x685341));
   moth.visible=false;
   // Faded wallpaper and wainscoting give the room scale on a tall screen.
-  const stageLights=detail('stage-lights',world,1.63,.82,-2.128);
-  drawn(stageLights,.50,.30,(c,w,h)=>{
-    const glow=c.createRadialGradient(w*.40,h*.5,.017,w*.40,h*.5,.17);
-    glow.addColorStop(0,'#f4c488a8');glow.addColorStop(1,'#f4c48800');c.fillStyle=glow;c.fillRect(0,0,w,h);
-    const beam=c.createRadialGradient(w*.73,h*.5,.01,w*.73,h*.5,.15);
-    beam.addColorStop(0,'#eab9cb99');beam.addColorStop(1,'#eab9cb00');c.fillStyle=beam;c.fillRect(0,0,w,h);
-  },0,0,0);
-  stageLights.visible=false;
-  const {coves,walls}=decorateRoom(room,{desk:world,narrow,half,group,box,bead,cylinder,wire,finish,photo,tag,drawn,weave,wood,trim,floorMat,night});
+  const {coves,walls,showPosters}=decorateRoom(room,{desk:world,narrow,half,group,box,bead,cylinder,wire,finish,photo,tag,drawn,weave,wood,trim,floorMat,night});
+  showPosters(posterMode);
   // Small displayed pieces come forward at their existing mounting points.
   const displayPoses=new Map();
   const lifts={
@@ -1097,7 +1068,7 @@ export function furnish(scene, narrow, repaint, software=false) {
   }
   contactShadow(stand,1.99,.87,.05);
   contactShadow(file,1.85,1.26,.05); contactShadow(book,1.19,1.58,.05);
-  contactShadow(tape,.99,.58,.035); contactShadow(letters,1.28,.74,.025);
+  contactShadow(letters,1.28,.74,.025);
   contactShadow(scope,1.57,.78,.12); contactShadow(lamp,.78,.78,.38); contactShadow(mug,.25,.25,.12);
   const contactMap=new T.CanvasTexture(contact);contactMap.flipY=false;
   // Daylight through the window falls in world space across every surface.
@@ -1233,5 +1204,5 @@ export function furnish(scene, narrow, repaint, software=false) {
   }
   source.forEach(g=>{if(!previewGeometry.has(g))g.dispose();});
   const flexCable=followProbe(cableWire.children[0],cableTip,probeRest);
-  return {world:room,desk:world,deskScale,targets,roomProps,details,occluders,drawer,flap,cover,lamp,bulbGlass:fastMaterials.get(bulbGlass)||bulbGlass,scopeScreen:fastMaterials.get(scopeScreen)||scopeScreen,tuneScope,contactMap,daylight,night,coves,poseHover,projectLampShadow,flexCable,titleLooseFile,pencilBounds:{book:book.position.x+(narrow?.24:.43),mat:matRight-.10},sketchTexture:sketchFace.material.map};
+  return {world:room,desk:world,deskScale,targets,roomProps,details,occluders,drawer,flap,cover,lamp,bulbGlass:fastMaterials.get(bulbGlass)||bulbGlass,scopeScreen:fastMaterials.get(scopeScreen)||scopeScreen,tuneScope,contactMap,daylight,night,coves,showPosters,posterCap,poseHover,projectLampShadow,flexCable,titleLooseFile,pencilBounds:{book:book.position.x+(narrow?.24:.43),mat:matRight-.10},sketchTexture:sketchFace.material.map};
 }

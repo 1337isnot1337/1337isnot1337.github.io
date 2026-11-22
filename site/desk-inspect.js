@@ -9,8 +9,7 @@ export function inspectDeskObjects(stage,engine,room,deskCamera,getModel,redraw,
   const turnLabel=surface.getAttribute('aria-label');
   const objects={
     plant:['The windowsill cutting'], cup:['The pencil cup','Borrow a pencil'],
-    pencil:['Graphite pencil','Draw with it'], 'rose-pencil':['Rose pencil','Draw with it'],
-    tape:['Off the clock','Read the liner notes']
+    pencil:['Graphite pencil','Draw with it'], 'rose-pencil':['Rose pencil','Draw with it']
   };
   const display=new T.Scene(), camera=new T.PerspectiveCamera(35,1,.02,40);
   const stand=new T.Group();display.add(stand);
@@ -62,7 +61,7 @@ export function inspectDeskObjects(stage,engine,room,deskCamera,getModel,redraw,
   }
   function restPose(){
     yaw=active.includes('pencil')?-.72:-.24;
-    pitch=active==='tape'||['drawer-note','crumb-plan','shim','screw'].includes(active)?.90:
+    pitch=['drawer-note','crumb-plan','shim','screw'].includes(active)?.90:
       active.includes('pencil')?.94:active==='cup'?.32:active==='prop-pocket-compass'?-.72:.16;
   }
   function zoomBy(delta){
@@ -190,7 +189,6 @@ export function inspectDeskObjects(stage,engine,room,deskCamera,getModel,redraw,
     }
     const x=dx*press.sensitivity,y=dy*press.sensitivity;
     if(working?.drag(press.control,x,y,stand.quaternion))redraw();
-    else if(active==='tape' && press.onObject && life.windTape(press.part,x,y))redraw();
     else if((active==='archive'||active==='proof')&&life.pullSlip(press.part,x,y))redraw();
     else {
       if(active==='plant')life.brushLeaf(press.part,x,y);

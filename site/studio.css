@@ -36,7 +36,6 @@ html[data-view] .is-loading > .desk-load-status {
 .object-file { left:26%; top:59%; }
 .object-epoch { left:83%; top:28%; }
 .object-book { left:70%; top:61%; }
-.object-tape { left:15%; top:75%; }
 .object-letters { left:68%; top:76%; }
 .object-drawer,.postcat { left:48%; top:89%; }
 .is-rendered .desk-objects :is(a,button) {
@@ -44,7 +43,7 @@ html[data-view] .is-loading > .desk-load-status {
   min-height:0; max-width:none; padding:0; transform:translate(-50%,-50%); border:0; box-shadow:none; background:none;
 }
 .is-rendered .desk-objects [data-outside] { visibility:hidden; }
-.desk-objects :is([data-room-poster],[data-room-prop])[hidden] { display:none; }
+.desk-objects :is([data-room-poster],[data-room-prop],#drawer-posters)[hidden] { display:none; }
 .desk-objects [data-room-prop] { pointer-events:none; }
 .is-rendered .desk-objects span {
   position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap;

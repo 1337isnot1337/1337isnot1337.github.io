@@ -1,42 +1,8 @@
 import * as T from './vendor/three/three.module.min.js';
 import { furnishRoomObjects } from './room-objects.js?v=5';
 import { buildRoomShell } from './room-shell.js?v=9';
+import { posterSets } from './room-posters.js?v=1';
 
-// Atlas order: artwork, wall, aspect ratio, mounting x/y, width, angle.
-const artwork = [
-  ['banshee-may-he-rot', 'music', 1, -0.72, 3.23, 1.18, -0.07],
-  ['banshee-germany', 'music', 0.717456, -1.33, 1.59, 1.02, 0.027],
-  ['fables', 'front', 1, 5.54, 1.52, 1.25, 0.054],
-  ['luka', 'music', 1, 1.0, 2.78, 0.99, 0.1],
-  ['till', 'music', 1, 3.46, -0.56, 1.08, -0.065],
-  ['ivan', 'front', 1, 4.92, 3.7, 1.14, 0.11],
-  ['korra', 'music', 1.333984, 2.5, 1.34, 2.15, -0.051],
-  ['seven-havens', 'music', 0.666667, -3.49, 1.83, 1.88, 0.036],
-  ['openai', 'science', 0.712831, 3.6, 3.23, 1.34, 0.05],
-  ['anthropic', 'science', 1.777778, 1.19, 3.15, 2.43, -0.056],
-  ['neuralink', 'science', 1.904762, 2.43, 1.45, 1.66, 0.064],
-  ['musk', 'science', 0.6664, -2.71, 2.29, 2.13, -0.026],
-  ['spacex', 'science', 0.665601, 4.84, 0.4, 1.31, -0.052],
-  ['aubrey', 'science', 0.719424, -0.76, 3.38, 1.02, 0.06],
-  ['fermilab', 'science', 2.149709, -0.56, 1.266, 1.93, -0.06],
-  ['tux', 'science', 0.842697, 2.06, -0.55, 0.94, 0.115],
-  ['atla', 'front', 1.333984, 1.44, 4.58, 2.48, -0.038],
-  ['banshee-wordmark', 'music', 1.37195, -4.65, 5.64, 1.29, -0.089],
-  ['cure', 'music', 1, -0.04, -0.16, 1.62, -0.027],
-  ['europa', 'front', 0.670635, 7.22, 2.45, 1.7, 0.04],
-  ['grand-tour', 'back', 0.670635, -6.18, 5.49, 1.22, -0.069],
-  ['earthrise', 'back', 1, 6.2, 5.2, 1.82, 0.065],
-  ['cosmic-cliffs', 'science', 2.892562, 2.3, 5.78, 3.65, -0.035],
-  ['golden-record', 'music', 1, 4.94, 3.78, 1.11, 0.073],
-  ['bubble-tracks', 'science', 1.5, 0.58, 0.15, 1.32, -0.112],
-  ['voyager-record', 'front', 0.98777, 6.18, 5.38, 1.4, -0.066],
-  ['foxwedding-wreck', 'front', 1, -7.96, 1.55, 1.3, 0.044],
-  ['jazmin-traumatic', 'back', 1, -4.49, 2.74, 1.38, 0.051],
-  ['mothica-paris', 'front', 0.8, -0.22, 2.16, 1.23, 0.075],
-  ['babychaos-prayers', 'front', 0.714286, -4.72, 5.4, 1.22, 0.044],
-  ['ic3peak-tokyo', 'science', 0.8, -4.48, 4.73, 1.28, -0.07],
-];
-const atlasRows=Math.ceil(artwork.length/4);
 const leafColors = [0x72925d, 0x4a7147, 0x538254, 0x688254, 0x8a9b66];
 
 function ivyGeometry() {
@@ -72,10 +38,7 @@ const ivyLeaf=ivyGeometry();
 
 export function decorateRoom(world, { desk, narrow, half, group, box, bead, cylinder, wire, finish, photo, tag, drawn, weave, wood, trim, floorMat, night }) {
   const {walls,coves}=buildRoomShell(world,{group,box,bead,cylinder,wire,finish,photo,drawn,weave,wood,trim,floorMat,night});
-  const atlas = photo('/assets/furniture/room-atlas.webp?v=7');
-  const ink = new T.MeshStandardMaterial({ map: atlas, roughness: .93, alphaTest: .28 });
-  const cutout = ink.clone();
-  cutout.side = T.DoubleSide;
+  const prints = new Map();
   const paper = new T.MeshStandardMaterial({ color: 0xe8dfce, roughness: .97, side: T.BackSide });
   const stem = finish(0x5e6e43);
   const leafCanvas=document.createElement('canvas');
@@ -100,19 +63,21 @@ export function decorateRoom(world, { desk, narrow, half, group, box, bead, cyli
     color,map:leafGrain,roughness:.57,side:T.DoubleSide,
   }));
 
-  function poster([id, wall, aspect, x, y, w, tilt], index) {
+  function poster([id, wall, aspect, x, y, w, tilt], index, collection) {
+    const { roots, ink, cutout, rows } = collection;
     const height = w / aspect;
     const frame = tag(group(walls[wall], x, y, .071), 'room-' + id, [0, 0, 0], w, height);
     frame.userData.roomPoster = true;
+    roots.push(frame);
     frame.rotation.z = tilt;
     const plane = new T.PlaneGeometry(w, height);
     const uv = plane.attributes.uv;
-    const column = index % 4, row = Math.floor(index / 4);
+    const column = index % 7, row = Math.floor(index / 7);
     // Avoid mip-map bleeding from the next print along the atlas edge.
     const pad = .02;
     for (let i = 0; i < uv.count; i++) {
-      uv.setXY(i, (column + pad + uv.getX(i) * (1 - 2 * pad)) / 4,
-        (atlasRows - 1 - row + pad + uv.getY(i) * (1 - 2 * pad)) / atlasRows);
+      uv.setXY(i, (column + pad + uv.getX(i) * (1 - 2 * pad)) / 7,
+        (rows - 1 - row + pad + uv.getY(i) * (1 - 2 * pad)) / rows);
     }
     const print = new T.Mesh(plane, id === 'tux' ? cutout : ink);
     print.receiveShadow = true;
@@ -165,7 +130,29 @@ export function decorateRoom(world, { desk, narrow, half, group, box, bead, cyli
     }
   }
 
-  artwork.forEach(poster);
+  for (const [name, artworks] of Object.entries(posterSets)) {
+    const atlas = new T.Texture();
+    atlas.colorSpace = T.SRGBColorSpace;
+    atlas.anisotropy = 4;
+    const ink = new T.MeshStandardMaterial({ map: atlas, roughness: .93, alphaTest: .28 });
+    const cutout = ink.clone();
+    cutout.side = T.DoubleSide;
+    const collection = { roots: [], atlas, ink, cutout, rows: Math.ceil(artworks.length / 7) };
+    prints.set(name, collection);
+    artworks.forEach((art, index) => poster(art, index, collection));
+  }
+  function showPosters(name) {
+    const current = prints.get(name);
+    if (!current.requested) {
+      current.requested = true;
+      const loaded = photo('/assets/furniture/room-atlas-' + name + '.webp?v=1', () => {
+        current.atlas.image = loaded.image;
+        current.atlas.needsUpdate = true;
+      });
+    }
+    for (const [key, collection] of prints)
+      for (const root of collection.roots) root.visible = key === name;
+  }
   for (const [side, wall] of [[-1,walls.music],[1,walls.science]]) {
     const shelfX = side < 0 ? -4.02 : 3.2;
     const shelfY = side < 0 ? -.62 : -.76;
@@ -186,5 +173,5 @@ export function decorateRoom(world, { desk, narrow, half, group, box, bead, cyli
     vine(desk, side * (half - .22), 3.41, -1.01, narrow ? .92 : 1.45, side + 1.4,
       [[-side * .03, .081, -.75], [0, .157, -.57], [0, .119, -.22]]);
   }
-  return {coves,walls};
+  return {coves,walls,showPosters};
 }

@@ -53,13 +53,14 @@
   function showFurniture() {
     if (sceneStarted || !deskIsReadyToMount()) return;
     sceneStarted=true;
-    import("./furniture.js?v=59").then(module => {
+    import("./furniture.js?v=60").then(module => {
       if (!deskIsReadyToMount()) { sceneStarted=false; return; }
       try { module.mountFurniture(stage,showGraphicsFallback); }
       catch { showGraphicsFallback(); }
     }, () => showGraphicsFallback("The 3D desk couldn’t download. Reload to try again."));
   }
   if (sceneCanvas?.isConnected) {
+    import("./desk-moths.js?v=1");
     if ("IntersectionObserver" in window) {
       new IntersectionObserver(([entry]) => {
         sceneNearby=entry.isIntersecting;

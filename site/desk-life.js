@@ -30,10 +30,9 @@ export function deskLife(stage, getModel, redraw, reduced) {
   const pencils=deskPencils();
   let ribbonFlick=0,sheetHeld=false,sheetX=0,sheetZ=0,sheetHeight=0;
   const started=performance.now();
-  let recording=null,chewed=false,tape=0,folded=false,unclipped=false,split=false,ribbonShift=0;
-  let reelPreviewAngle=0;
-  let envelopeLift=0,tapePencilSeated=false,tapePencilPull=0;
-  let serviceOpened=false,deskLeafFile=null,drawnFile='',tapeUp=0,stowedScrew=false,lookedAtScrew=false;
+  let recording=null,chewed=false,folded=false,unclipped=false,split=false,ribbonShift=0;
+  let envelopeLift=0;
+  let serviceOpened=false,deskLeafFile=null,drawnFile='',stowedScrew=false,lookedAtScrew=false;
 
   const reversedBooks=new Set();
   let peekFolder=0,folderHeld=false,clipCompression=0;
@@ -73,7 +72,6 @@ export function deskLife(stage, getModel, redraw, reduced) {
   document.addEventListener('desk-clip',event=>{
     const {id,on}=event.detail;if(id)paperclips.set(id,on);redraw();
   });
-  document.addEventListener('desk-tape',event=>{tape=clamp(tape+event.detail,-8,19);redraw();});
   drawing.querySelector('.drawer-post').addEventListener('beforetoggle',event=>{
     postcardHeld=event.newState==='open';
     redraw();
@@ -193,7 +191,6 @@ export function deskLife(stage, getModel, redraw, reduced) {
     'rose-pencil'(dx,dy,time){pencils.drag('rose-pencil',dx,dy,time);},
     'flat-sketch'(dx,dy){carrySheet(dx,dy);},
     'folded-sketch'(dx,dy){carrySheet(dx,dy);},
-    tape(dx,dy){tapeUp=clamp(tapeUp-dy*9,0,1.54);},
     'pad-corner'(){guide=true;},
     'file-cover'(dx,dy){liftFolder(dy);},
     file(dx,dy){liftFolder(dy);},
@@ -202,19 +199,6 @@ export function deskLife(stage, getModel, redraw, reduced) {
   function peelEnvelope(dx,dy){
     envelopeLift=clamp(envelopeLift-dy*7+Math.abs(dx)*1.8,0,1);
     if(envelopeLift>.15)split=true;
-  }
-  function windTape(part,dx,dy){
-    if(part!=='tape-pencil'&&!part.startsWith('reel-'))return false;
-    if(part==='tape-pencil'&&!tapePencilSeated){
-      tapePencilPull=clamp(tapePencilPull+(Math.abs(dx)+Math.abs(dy))*.91,0,1);
-      if(tapePencilPull>.51)tapePencilSeated=true;
-      return true;
-    }
-    if(tapePencilSeated || part.startsWith('reel-')){
-      document.dispatchEvent(new CustomEvent('desk-tape',{detail:(dx-dy)*.86}));
-      return true;
-    }
-    return false;
   }
   function moveClip(dx,dy){
     clipCompression=clamp(clipCompression+Math.abs(dx)*7+Math.abs(dy)*7,0,1);
@@ -412,9 +396,6 @@ export function deskLife(stage, getModel, redraw, reduced) {
     if(event==='tap' && ['research-question','research-erratum','proof-card'].includes(name)){
       document.dispatchEvent(new CustomEvent('desk-book-slip',{detail:name}));
     }
-    if(id==='tape'&&event==='pose'&&Math.sin(delta.pitch)*Math.cos(delta.yaw)<-.50){
-      document.dispatchEvent(new Event('desk-cassette-side-b'));
-    }
   }
   function updateInspection(copy) {
     copy?.traverse(node=>{
@@ -428,7 +409,7 @@ export function deskLife(stage, getModel, redraw, reduced) {
   function update(time,dt,drawerAmount,lampOn,inHand,{yaw,below,rear},flap,previews) {
     const model=getModel(),motion=!reduced.matches;
     const peek=id=>previews.get(id)||0;
-    const planePreview=peek('plane'),tapePreview=peek('tape');
+    const planePreview=peek('plane');
     const drift=motion?Math.sin((time-started)/90000)*.32:0;
     if(wrote&&currentSketch&&model.sketchTexture.image!==currentSketch && !part('scratch').userData.drawn){
       part('scratch').userData.drawn=true;onSketch({detail:currentSketch});
@@ -677,27 +658,7 @@ export function deskLife(stage, getModel, redraw, reduced) {
       slip.rotation.y=id==='proof-card'?t*Math.PI:0;
       slip.rotation.z=base.rotation-t*.23;
     }
-    const cassetteTilt=tapeUp+tapePreview*.17;
-    object('tape').rotation.x=-cassetteTilt;
-    move('tape',0,Math.sin(cassetteTilt)*.29,0);
-    const stageLit=lampOn&&tapeUp>1.02&&lampAngle<-.22;
-    part('stage-lights').visible=stageLit;
-    part('tape-light-edge').visible=stageLit;
     for(const id of ['proof','archive'])part(id+'-volume').rotation.y=(id==='proof'?.14:-.12)+(reversedBooks.has(id)?Math.PI:0);
-    if(motion)reelPreviewAngle+=dt*10*tapePreview;
-    const reelTurn=tape+reelPreviewAngle+(motion?0:tapePreview*.63);
-    part('reel-0').rotation.y=reelTurn*1.2;part('reel-1').rotation.y=reelTurn*.82;
-    const chewedTape=part('eaten-tape');
-    const slack=clamp((-tape-3)/4,0,1);
-    chewedTape.visible=slack>0;
-    chewedTape.scale.set(1,1,.25+slack*.75);
-    const handle=part('tape-pencil');
-    handle.visible=inHand==='tape'&&borrowedIndex>=0;
-    if(handle.visible){
-      const intro=tapePencilSeated?1:tapePencilPull;
-      handle.position.set(lerp(.43,.22,intro),lerp(.17,.175,intro),lerp(.08,-.017,intro));
-      handle.rotation.set(0,tapePencilSeated?tape*.82:0,lerp(-.64,-.09,intro));
-    }else if(borrowedIndex<0){tapePencilSeated=false;tapePencilPull=0;}
     for(const [id,on] of paperclips)part('pin-clip-'+id).visible=on;
     for(const [id,angle] of prints)object(id).rotation.z=angle;
     for(const [id,[x,y]] of printOffsets){
@@ -715,8 +676,8 @@ export function deskLife(stage, getModel, redraw, reduced) {
     }
     const warm=warmAt ? clamp((time-warmAt)/750,0,1):1;
     return { drift, warm, active: Boolean(
-      (motion&&(planePreview||tapePreview))||Math.abs(planeSpeed)>.025||propTravel>0||(!planeGrab&&lift>.005)||(!planeGrab&&Math.abs(aimOffset)>.01)||Math.hypot(marbleSpeed,marbleDepthSpeed)>.022||(motion&&swing<1)||linerLift!==linerGoal||
+      (motion&&planePreview)||Math.abs(planeSpeed)>.025||propTravel>0||(!planeGrab&&lift>.005)||(!planeGrab&&Math.abs(aimOffset)>.01)||Math.hypot(marbleSpeed,marbleDepthSpeed)>.022||(motion&&swing<1)||linerLift!==linerGoal||
       afterglow>0||pencilMoving||ribbonFlick>.004||guideLift!==foldGoal||(!folderHeld&&peekFolder>0)||clipGoal!==clipCompression||(inHand==='plant'&&time-plantOpen<15600)||(inHand==='plant'&&dewTilt>0&&dew<1)||freeDrop.visible||ripple.visible||hop>0||leafBends.size||falling<1||cableMoving||resolution<1||stickerLift!==sticker||flying||(lampOn&&warm<1)), wakeAt:lampOn&&!moth.visible ? mothIdle+14000 : 0};
   }
-  return {tap,gestures,movePrint,stow,drawerChange,drawerMomentum,pullComplaint,lampChange,brushLeaf,cupAction,pointerMoved,startleMoth,inspect,folderPose,pullSlip,windTape,releaseProps,updateInspection,update};
+  return {tap,gestures,movePrint,stow,drawerChange,drawerMomentum,pullComplaint,lampChange,brushLeaf,cupAction,pointerMoved,startleMoth,inspect,folderPose,pullSlip,releaseProps,updateInspection,update};
 }
