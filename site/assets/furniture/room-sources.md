@@ -19,6 +19,16 @@ The room atlas contains reproductions of publicly published art and photographs.
 - [Aubrey de Grey](https://commons.wikimedia.org/wiki/File:Aubrey_de_Grey.jpg)
 - [Fermilab, Wilson Hall at sunset](https://lss.fnal.gov/archive/2023/slides/fermilab-slides-23-333-csaid.pdf), cropped from the cover photo in the Fermilab slide archive
 - [Tux, the Linux penguin](https://commons.wikimedia.org/wiki/File:Tux.svg), drawn by Larry Ewing with The GIMP, with vector work by Simon Budig and Garrett LeSage
+- [Banshee, Birth of Venus](https://music.apple.com/us/album/birth-of-venus/1694156199), release artwork
+- [Banshee, The Secrets to Altering Reality](https://music.apple.com/us/album/the-secrets-to-altering-reality/1862301194), release artwork
+- [Alien Stage, Cure](https://music.apple.com/us/song/1739046382), official soundtrack cover
+- [Europa](https://www.jpl.nasa.gov/images/europa-jpl-travel-poster/), NASA/JPL-Caltech, illustration by Liz Barrios De La Torre
+- [The Grand Tour](https://www.jpl.nasa.gov/images/the-grand-tour-jpl-travel-poster/), NASA/JPL-Caltech and Invisible Creature
+- [Earthrise](https://science.nasa.gov/resource/apollo-8s-iconic-earthrise/), William Anders and NASA
+- [Cosmic Cliffs](https://science.nasa.gov/asset/webb/cosmic-cliffs-in-the-carina-nebula-nircam-and-miri-composite-image/), NASA, ESA, CSA, and STScI
+- [Voyager Golden Record cover](https://science.nasa.gov/image-detail/voyager-record-cover-446eb9/), NASA/JPL-Caltech
+- [Fermilab bubble chamber and particle tracks](https://news.fnal.gov/2017/09/month-fermilab-history-september/), Fermilab History and Archives
+- [Mounting the Voyager Golden Record](https://science.nasa.gov/image-detail/the-golden-record-30269492703-o/), NASA/JPL-Caltech
 
 The project prints on the corkboard are separate illustrations for the site.
 

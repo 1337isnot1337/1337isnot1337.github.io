@@ -1,5 +1,5 @@
 import * as T from './vendor/three/three.module.min.js';
-import { buildWindowView } from './room-window-view.js?v=4';
+import { buildWindowView } from './room-window-view.js?v=5';
 
 // The hutch sits against the window wall.
 export function buildRoomShell(world, {group,box,bead,cylinder,wire,finish,photo,drawn,weave,wood,trim,floorMat,night}) {
@@ -32,7 +32,8 @@ export function buildRoomShell(world, {group,box,bead,cylinder,wire,finish,photo
   walls.front.rotation.y=Math.PI;
   walls.music.rotation.y=Math.PI/2;
   walls.science.rotation.y=-Math.PI/2;
-  const opening={left:-2.97,right:2.75,bottom:3.39,top:6.19};
+  const windowDrop=1.23;
+  const opening={left:-2.97,right:2.75,bottom:3.39-windowDrop,top:6.19-windowDrop};
   function wall(parent,span,paint,wainscot,glow,window){
     const plaster=new T.MeshStandardMaterial({color:paint,map:plasterGrain,bumpMap:plasterGrain,bumpScale:.008,roughness:.97});
     const wallSection=(left,right,bottom,top)=>{
@@ -161,7 +162,7 @@ export function buildRoomShell(world, {group,box,bead,cylinder,wire,finish,photo
     }
     bead(rear,center+sign*(span/2+.56),top+.24,.317,.074,.050,.047,molding);
   }
-  buildWindowView(group(rear,0,0,-.30),{photo,cylinder,finish,night});
+  buildWindowView(group(rear,0,-windowDrop,-.30),{photo,cylinder,finish,night});
 
   const entry=walls.front, door=finish(0x5b756b,.78);
   box(entry,3.11,6.03,.145,trim,2.46,-.034,.079,.018);
@@ -178,9 +179,9 @@ export function buildRoomShell(world, {group,box,bead,cylinder,wire,finish,photo
 
   // Runners sit on the floor, with the desk feet still grounded.
   const rug=new T.MeshStandardMaterial({color:0x64716b,map:weave,bumpMap:weave,bumpScale:.020,roughness:.98});
-  box(world,11.75,.022,6.46,rug,0,floor+.011,.03,.010).castShadow=false;
-  for(const x of [-5.64,5.64])box(world,.058,.008,6.20,molding,x,floor+.026,.03,.005).castShadow=false;
-  for(const z of [-2.98,3.04])box(world,11.29,.008,.046,molding,0,floor+.028,z,.004).castShadow=false;
+  box(world,8.24,.022,4.56,rug,0,floor+.011,-.37,.010).castShadow=false;
+  for(const x of [-3.94,3.94])box(world,.049,.008,4.29,molding,x,floor+.026,-.37,.005).castShadow=false;
+  for(const z of [-2.52,1.78])box(world,7.90,.008,.040,molding,0,floor+.028,z,.004).castShadow=false;
   const runnerFabric=rug.clone();runnerFabric.color.set(0x89717c);
   const runner=box(world,2.55,.025,4.85,runnerFabric,-6.65,floor+.012,4.04,.011);
   runner.rotation.y=.09;runner.castShadow=false;

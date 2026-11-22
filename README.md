@@ -2,6 +2,13 @@
 
 [Visit the desk](https://itsdavis.com/) · [Browse the project shelf](https://itsdavis.com/boring/)
 
+<details>
+<summary>Citation</summary>
+
+If you use this site or a project it links to, please cite the specific source and credit its authors. Cite the desk using [CITATION.cff](CITATION.cff). Follow the [project index](https://itsdavis.com/projects/) to the relevant work.
+
+</details>
+
 The homepage, interactive project examples, and self-hosted assets are in `site/`. To preview them locally, run:
 
 ```sh

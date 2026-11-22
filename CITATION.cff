@@ -1,0 +1,9 @@
+cff-version: 1.2.0
+title: Cinna Davis’s desk
+type: software
+authors:
+  - given-names: Cinna
+    family-names: Davis
+url: https://itsdavis.com/
+repository-code: https://github.com/1337isnot1337/1337isnot1337.github.io
+message: "If you use this site or a project it links to, please cite the specific source and credit its authors."

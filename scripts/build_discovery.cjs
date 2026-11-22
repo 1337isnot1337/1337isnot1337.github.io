@@ -23,6 +23,7 @@ const pages = [
 const index = ['# Cinna Davis', '', '> Software, mathematics, and research by Cinna Davis.', '',
   `[itsdavis.com](${origin}/) is the project portfolio. Each Markdown document links back to its source page.`,
   '', '## Portfolio'];
+let citation;
 
 for (const [route, label] of pages) {
   const canonical = origin + route;
@@ -37,6 +38,7 @@ for (const [route, label] of pages) {
   if (doc.querySelector('link[rel="canonical"]')?.href !== canonical || !source?.querySelector('h1') || !description) {
     throw new Error(`Incomplete public source: ${canonical}`);
   }
+  if (route === '/about/') citation = source.querySelector('#citation p').textContent;
 
   source.querySelectorAll('nav, script, style, img[alt=""], [aria-hidden="true"], .eyebrow')
     .forEach(element => element.remove());
@@ -81,6 +83,7 @@ for (const [route, label] of pages) {
 index.push('', '## Project documentation',
   `- [DOPPLERGEIST](${origin}/DOPPLERGEIST/llms.txt): Markdown overview, field notes, method, package, and citation. [Canonical site](${origin}/DOPPLERGEIST/).`,
   `- [Solved Conjectures](${origin}/solved-conjectures/): Proofs, counterexamples, and Lean verification status. [Repository and README](https://github.com/1337isnot1337/solved-conjectures).`,
+  '', '## Citation', citation, `[Citation details](${origin}/about/#citation)`,
   '', '## Source repositories',
   '- [Cinna Davis on GitHub](https://github.com/1337isnot1337)', '');
 fs.writeFileSync(path.join(site, 'llms.txt'), index.join('\n'));

@@ -5,16 +5,22 @@ import { lampProjection } from './desk-lamp.js?v=1';
 import { paintScope, followProbe } from './desk-scope.js?v=1';
 import { airframeGeometry, wingUnderside } from './model-plane.js?v=2';
 import { mergeGeometries } from './vendor/three/BufferGeometryUtils.js';
-import { decorateRoom } from './desk-room.js?v=12';
+import { decorateRoom } from './desk-room.js?v=13';
 import { corkMaterial, curledPrint, scopeScale } from './desk-finishes.js?v=1';
 import { RoundedBoxGeometry } from './vendor/three/RoundedBoxGeometry.js';
 
 export function furnish(scene, narrow, repaint, software=false) {
   const width = narrow ? 5.6 : 9.6;
   const half = width / 2;
+  const room = new T.Group();
   const world = new T.Group();
+  const deskScale=.70;
+  // Keep the desk built in its original local units. Seat its feet on the
+  // room floor and give the hutch a small clearance against the back wall.
+  world.scale.setScalar(deskScale);
+  world.position.set(0,-3.07*(1-deskScale),-1.02);
   const night={value:0};
-  scene.add(world);
+  room.add(world);scene.add(room);
   const targets = new Map();
   const details = new Map();
   function detail(name,parent,x=0,y=0,z=0) {
@@ -1058,7 +1064,7 @@ export function furnish(scene, narrow, repaint, software=false) {
     beam.addColorStop(0,'#eab9cb99');beam.addColorStop(1,'#eab9cb00');c.fillStyle=beam;c.fillRect(0,0,w,h);
   },0,0,0);
   stageLights.visible=false;
-  const {coves,walls}=decorateRoom(world,{narrow,half,group,box,bead,cylinder,wire,finish,photo,tag,drawn,weave,wood,trim,floorMat,night});
+  const {coves,walls}=decorateRoom(room,{desk:world,narrow,half,group,box,bead,cylinder,wire,finish,photo,tag,drawn,weave,wood,trim,floorMat,night});
   // Small displayed pieces come forward at their existing mounting points.
   const displayPoses=new Map();
   const lifts={
@@ -1097,7 +1103,7 @@ export function furnish(scene, narrow, repaint, software=false) {
   // Daylight through the window falls in world space across every surface.
   const daylight={value:0};
   const materials=new Set();
-  world.traverse(node=>{if(node.isMesh)materials.add(node.material);});
+  room.traverse(node=>{if(node.isMesh)materials.add(node.material);});
   for(const mat of materials) {
     if(mat.isMeshBasicMaterial)continue;
     const workSurface=mat===wood || mat===blotter;
@@ -1109,16 +1115,17 @@ export function furnish(scene, narrow, repaint, software=false) {
       shader.vertexShader='varying vec3 vFurniturePosition;\n'+shader.vertexShader.replace('#include <project_vertex>',
         '#include <project_vertex>\n vFurniturePosition=(modelMatrix*vec4(transformed,1.0)).xyz;');
       shader.fragmentShader=(workSurface?'uniform sampler2D deskContact;\n':'')+'uniform float deskDaylight, deskNight;\nvarying vec3 vFurniturePosition;\n'+shader.fragmentShader.replace('#include <lights_fragment_end>',`#include <lights_fragment_end>
-        float u=dot(vFurniturePosition,vec3(.92,-.32,.40))-deskDaylight;
-        float v=dot(vFurniturePosition,vec3(-.21,.61,1.0))-.37*deskDaylight;
+        vec3 onDesk=(vFurniturePosition-vec3(0.0,${world.position.y.toFixed(3)},${world.position.z.toFixed(3)}))/${deskScale.toFixed(2)};
+        float u=dot(onDesk,vec3(.92,-.32,.40))-deskDaylight;
+        float v=dot(onDesk,vec3(-.21,.61,1.0))-.37*deskDaylight;
         float glazing=(1.0-smoothstep(2.4,2.7,abs(u+1.46)))*(1.0-smoothstep(1.92,2.2,abs(v-.47)));
         float panes=smoothstep(.036,.12,abs(u+.91))*smoothstep(.035,.13,abs(v-.27));
         float daylight=mix(.31+.69*glazing*panes,1.0,deskNight);
         reflectedLight.directDiffuse*=daylight;
         reflectedLight.directSpecular*=daylight;
         // The rear of each shelf receives less skylight than its open lip.
-        float recess=(1.0-smoothstep(-2.16,-1.15,vFurniturePosition.z));
-        float rim=min(abs(vFurniturePosition.y-1.51),abs(vFurniturePosition.y-.06));
+        float recess=(1.0-smoothstep(-2.16,-1.15,onDesk.z));
+        float rim=min(abs(onDesk.y-1.51),abs(onDesk.y-.06));
         float bounce=1.0-.27*recess-.15*recess*exp(-rim*3.0);
         reflectedLight.indirectDiffuse*=bounce;
         // A line source falls off across its wall and down into the room.
@@ -1130,8 +1137,8 @@ export function furnish(scene, narrow, repaint, software=false) {
         vec3 cove=coveWash.x*vec3(1.0,.45,.23)+coveWash.y*vec3(.65,.48,1.0)
           +coveWash.z*vec3(1.0,.67,.40)+coveWash.w*vec3(.47,.45,1.0);
         reflectedLight.indirectDiffuse+=diffuseColor.rgb*cove*mix(.13,1.28,deskNight)*bounce;
-        ${workSurface?`if(vFurniturePosition.y>-.02 && vFurniturePosition.y<.046){
-          vec2 deskUV=vec2(vFurniturePosition.x/${width.toFixed(1)}+.5,vFurniturePosition.z/4.55+.5);
+        ${workSurface?`if(onDesk.y>-.02 && onDesk.y<.046){
+          vec2 deskUV=vec2(onDesk.x/${width.toFixed(1)}+.5,onDesk.z/4.55+.5);
           float contact=texture2D(deskContact,deskUV).r;
           reflectedLight.indirectDiffuse*=contact;reflectedLight.directDiffuse*=mix(.48,1.,contact);
         }`:''}`);
@@ -1140,9 +1147,9 @@ export function furnish(scene, narrow, repaint, software=false) {
   // Combine rigid geometry between joints; hinges, drawer travel and picking remain independent.
   const roomProps=new Map(), previewGeometry=new Set();
   // Keep wall batches separate so the camera can cull the geometry behind it.
-  const staticRoots=new Set([world,...Object.values(walls)]);
+  const staticRoots=new Set([room,world,...Object.values(walls)]);
   const rigid=new Set([...staticRoots,flap,cover,...details.values()]);
-  world.updateMatrixWorld(true);
+  room.updateMatrixWorld(true);
   for(const [id,item] of targets){
     const {root}=item;
     if(!root.userData.roomProp){rigid.add(root);continue;}
@@ -1168,7 +1175,7 @@ export function furnish(scene, narrow, repaint, software=false) {
     }
     return solidVariants.get(key);
   }
-  world.traverse(m=>{
+  room.traverse(m=>{
     if(!m.isMesh)return;
     let parent=m.parent;while(!rigid.has(parent))parent=parent.parent;
     if(staticRoots.has(parent) && !m.parent.userData.roomProp){
@@ -1226,5 +1233,5 @@ export function furnish(scene, narrow, repaint, software=false) {
   }
   source.forEach(g=>{if(!previewGeometry.has(g))g.dispose();});
   const flexCable=followProbe(cableWire.children[0],cableTip,probeRest);
-  return {world,targets,roomProps,details,occluders,drawer,flap,cover,lamp,bulbGlass:fastMaterials.get(bulbGlass)||bulbGlass,scopeScreen:fastMaterials.get(scopeScreen)||scopeScreen,tuneScope,contactMap,daylight,night,coves,poseHover,projectLampShadow,flexCable,titleLooseFile,pencilBounds:{book:book.position.x+(narrow?.24:.43),mat:matRight-.10},sketchTexture:sketchFace.material.map};
+  return {world:room,desk:world,deskScale,targets,roomProps,details,occluders,drawer,flap,cover,lamp,bulbGlass:fastMaterials.get(bulbGlass)||bulbGlass,scopeScreen:fastMaterials.get(scopeScreen)||scopeScreen,tuneScope,contactMap,daylight,night,coves,poseHover,projectLampShadow,flexCable,titleLooseFile,pencilBounds:{book:book.position.x+(narrow?.24:.43),mat:matRight-.10},sketchTexture:sketchFace.material.map};
 }

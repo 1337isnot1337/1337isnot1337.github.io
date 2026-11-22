@@ -1,5 +1,5 @@
 import * as T from './vendor/three/three.module.min.js';
-import { furnish } from './desk-model.js?v=38';
+import { furnish } from './desk-model.js?v=39';
 import { inspectDeskObjects } from './desk-inspect.js?v=17';
 
 import { attachDeskPointer } from './desk-pointer.js?v=23';
@@ -152,7 +152,7 @@ export function mountFurniture(stage,showGraphicsFallback) {
   }
   const targetStyles=new Map(),projectedCamera=new T.Matrix4(),projectedLens=new T.Matrix4();
   const targetProperties=['--screen-x','--screen-y','--hit-width','--hit-height'];
-  function projectTargets(yaw) {
+  function projectTargets() {
     const lens=viewHeight*camera.zoom/(2*Math.tan(T.MathUtils.degToRad(camera.fov/2)));
     const moved=!projectedCamera.equals(camera.matrixWorld) || !projectedLens.equals(camera.projectionMatrix);
     projectedCamera.copy(camera.matrixWorld);projectedLens.copy(camera.projectionMatrix);
@@ -164,8 +164,7 @@ export function mountFurniture(stage,showGraphicsFallback) {
       const depth=-vector.copy(point).applyMatrix4(camera.matrixWorldInverse).z;
       vector.copy(point).project(camera);
       const x=(vector.x+1)*.5*viewWidth,y=(1-vector.y)*.5*viewHeight;
-      const outside=depth<=camera.near||x<10||x>viewWidth-10||y<12||y>viewHeight-10
-        || (root.userData.roomPoster === true && Math.abs(yaw)<.29);
+      const outside=depth<=camera.near||x<10||x>viewWidth-10||y<12||y>viewHeight-10;
       if((root.userData.roomPoster||root.userData.roomProp)&&el.hidden!==outside)el.hidden=outside;
       if(el.hasAttribute('data-outside')!==outside)el.toggleAttribute('data-outside',outside);
       const state=saved||{matrix:new T.Matrix4(),rect:[]};
@@ -173,7 +172,8 @@ export function mountFurniture(stage,showGraphicsFallback) {
       if(!saved)targetStyles.set(id,state);
       if(outside)continue;
       const px=lens/depth;
-      const next=[x,y,Math.max(40,w*root.scale.x*px*.83),Math.max(37,h*root.scale.y*px*.68)].map(value=>Math.round(value*10));
+      vector.setFromMatrixScale(root.matrixWorld);
+      const next=[x,y,Math.max(40,w*vector.x*px*.83),Math.max(37,h*vector.y*px*.68)].map(value=>Math.round(value*10));
       for(const [i,property] of targetProperties.entries()){
         if(state.rect[i]!==next[i])el.style.setProperty(property,(next[i]/10)+'px');
       }
@@ -248,8 +248,9 @@ export function mountFurniture(stage,showGraphicsFallback) {
     shade.localToWorld(beam.target.position.set(0,-2.8,0));
     beam.position.copy(bulb.position);
     const warmth=night*events.warm;
-    bulb.intensity=14*warmth+peek('lamp')*.40;
-    beam.intensity=16*warmth;
+    const lightScale=model.deskScale**2;
+    bulb.intensity=(14*warmth+peek('lamp')*.40)*lightScale;
+    beam.intensity=16*warmth*lightScale;
     model.bulbGlass.emissiveIntensity=.08+2.12*warmth+peek('lamp')*.31;
     if(held && movingPixels)setResolution(false);
     if(inspector.paint(time,dt)){
@@ -283,6 +284,8 @@ export function mountFurniture(stage,showGraphicsFallback) {
     camera.position.z=aim.z+offsetZ*walkCos-offsetX*walkSin;
     aim.x=camera.position.x-offsetX*cos-offsetZ*sin;
     aim.z=camera.position.z-offsetZ*cos+offsetX*sin;
+    camera.position.applyMatrix4(model.desk.matrixWorld);
+    aim.applyMatrix4(model.desk.matrixWorld);
     const sunChanged=Math.abs(sun.position.x+4.7-events.drift)>.045;
     if(sunChanged)sun.position.x=-4.7+events.drift;
     model.daylight.value=events.drift;
@@ -297,7 +300,7 @@ export function mountFurniture(stage,showGraphicsFallback) {
     // Keep fine detail at rest. Only a software-rendered orbit uses a
     // smaller drawing buffer, with the same CSS size and hit coordinates.
     if(software)setResolution(Boolean(posture.move||drawerMotion.moving));
-    camera.lookAt(aim);engine.render(scene,camera);projectTargets(posture.yaw);
+    camera.lookAt(aim);engine.render(scene,camera);projectTargets();
     if(!stage.classList.contains('is-rendered') || prevDrawer!==drawerAmount || prevFile!==fileAngle || prevBook!==bookAngle || model!==boundedModel || events.active || detailMoved || previewMoved){
       detailMoved=false;
       boundsDirty=true;

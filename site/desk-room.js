@@ -1,27 +1,38 @@
 import * as T from './vendor/three/three.module.min.js';
 import { furnishRoomObjects } from './room-objects.js?v=5';
-import { buildRoomShell } from './room-shell.js?v=8';
+import { buildRoomShell } from './room-shell.js?v=9';
 
-// Atlas order: name, source aspect ratio, wall x/y, physical width, rotation.
+// Atlas order: artwork, wall, aspect ratio, mounting x/y, width, angle.
 const artwork = [
-  ['fairy-metal', 1, -2.48, 2.65, 1.46, -.025],
-  ['sirencore', 1, -.88, 2.73, 1.54, .013],
-  ['fables', 1, .82, 2.72, 1.64, -.010],
-  ['luka', 1, -2.48, 1.07, 1.51, .017],
-  ['till', 1, -.88, 1.07, 1.53, -.014],
-  ['ivan', 1, .82, 1.06, 1.62, -.017],
-  ['korra', 2732/2048, -2.03, -.66, 2.44, .010],
-  ['seven-havens', 2/3, 2.89, 1.72, 2.31, -.012],
-  ['openai', 700/982, 2.4, 2.31, 1.47, .015],
-  ['anthropic', 16/9, .21, 2.83, 2.62, -.014],
-  ['neuralink', 1200/630, -.22, .15, 1.80, .008],
-  ['musk', 1666/2500, -2.30, 1.88, 2.08, .016],
-  ['spacex', 1041/1564, 2.38, .28, 1.20, -.011],
-  ['aubrey', 500/695, -2.37, -.60, 1.15, -.019],
-  ['fermilab', 1479/688, .22, 1.38, 2.62, .013],
-  ['tux', 300/356, 1.25, -.10, 1.00, -.036],
-  ['atla', 2732/2048, .46, -.67, 2.33, .016],
+  ['fairy-metal', 'music', 1, -0.72, 3.23, 1.18, -0.07],
+  ['sirencore', 'music', 1, -1.33, 1.59, 1.38, 0.027],
+  ['fables', 'front', 1, 5.54, 1.52, 1.25, 0.054],
+  ['luka', 'music', 1, 1.0, 2.78, 0.99, 0.1],
+  ['till', 'music', 1, 3.46, -0.56, 1.08, -0.065],
+  ['ivan', 'front', 1, 4.92, 3.7, 1.14, 0.11],
+  ['korra', 'music', 1.333984, 2.5, 1.34, 2.15, -0.051],
+  ['seven-havens', 'music', 0.666667, -3.49, 1.83, 1.88, 0.036],
+  ['openai', 'science', 0.712831, 3.6, 3.23, 1.34, 0.05],
+  ['anthropic', 'science', 1.777778, 1.19, 3.15, 2.43, -0.056],
+  ['neuralink', 'science', 1.904762, 2.43, 1.45, 1.66, 0.064],
+  ['musk', 'science', 0.6664, -2.71, 2.29, 2.13, -0.026],
+  ['spacex', 'science', 0.665601, 4.84, 0.4, 1.31, -0.052],
+  ['aubrey', 'science', 0.719424, -0.76, 3.38, 1.02, 0.06],
+  ['fermilab', 'science', 2.149709, -0.56, 1.266, 1.93, -0.06],
+  ['tux', 'science', 0.842697, 2.06, -0.55, 0.94, 0.115],
+  ['atla', 'front', 1.333984, 1.44, 4.58, 2.48, -0.038],
+  ['birth-of-venus', 'music', 1, -2.51, -0.74, 1.24, 0.084],
+  ['secrets', 'music', 1, -4.65, 5.64, 1.19, -0.089],
+  ['cure', 'music', 1, -0.04, -0.16, 1.62, -0.027],
+  ['europa', 'front', 0.670635, 7.22, 2.45, 1.7, 0.04],
+  ['grand-tour', 'back', 0.670635, -6.18, 5.49, 1.22, -0.069],
+  ['earthrise', 'back', 1, 6.2, 5.2, 1.82, 0.065],
+  ['cosmic-cliffs', 'science', 2.892562, 2.3, 5.78, 3.65, -0.035],
+  ['golden-record', 'music', 1, 4.94, 3.78, 1.11, 0.073],
+  ['bubble-tracks', 'science', 1.5, 0.58, 0.15, 1.32, -0.112],
+  ['voyager-record', 'front', 0.98777, 6.18, 5.38, 1.4, -0.066],
 ];
+const atlasRows=Math.ceil(artwork.length/4);
 const leafColors = [0x72925d, 0x4a7147, 0x538254, 0x688254, 0x8a9b66];
 
 function ivyGeometry() {
@@ -55,9 +66,9 @@ function ivyGeometry() {
 }
 const ivyLeaf=ivyGeometry();
 
-export function decorateRoom(world, { narrow, half, group, box, bead, cylinder, wire, finish, photo, tag, drawn, weave, wood, trim, floorMat, night }) {
+export function decorateRoom(world, { desk, narrow, half, group, box, bead, cylinder, wire, finish, photo, tag, drawn, weave, wood, trim, floorMat, night }) {
   const {walls,coves}=buildRoomShell(world,{group,box,bead,cylinder,wire,finish,photo,drawn,weave,wood,trim,floorMat,night});
-  const atlas = photo('/assets/furniture/room-atlas.webp?v=4');
+  const atlas = photo('/assets/furniture/room-atlas.webp?v=5');
   const ink = new T.MeshStandardMaterial({ map: atlas, roughness: .93, alphaTest: .28 });
   const cutout = ink.clone();
   cutout.side = T.DoubleSide;
@@ -85,11 +96,9 @@ export function decorateRoom(world, { narrow, half, group, box, bead, cylinder, 
     color,map:leafGrain,roughness:.57,side:T.DoubleSide,
   }));
 
-  function poster(wall, index) {
-    const [id, aspect, x, y, w, tilt] = artwork[index];
+  function poster([id, wall, aspect, x, y, w, tilt], index) {
     const height = w / aspect;
-    const offset = index >= 8 && index < 16 ? -.48 : 0;
-    const frame = tag(group(wall, x + offset, y, .071), 'room-' + id, [0, 0, 0], w, height);
+    const frame = tag(group(walls[wall], x, y, .071), 'room-' + id, [0, 0, 0], w, height);
     frame.userData.roomPoster = true;
     frame.rotation.z = tilt;
     const plane = new T.PlaneGeometry(w, height);
@@ -99,7 +108,7 @@ export function decorateRoom(world, { narrow, half, group, box, bead, cylinder, 
     const pad = .02;
     for (let i = 0; i < uv.count; i++) {
       uv.setXY(i, (column + pad + uv.getX(i) * (1 - 2 * pad)) / 4,
-        (4 - row + pad + uv.getY(i) * (1 - 2 * pad)) / 5);
+        (atlasRows - 1 - row + pad + uv.getY(i) * (1 - 2 * pad)) / atlasRows);
     }
     const print = new T.Mesh(plane, id === 'tux' ? cutout : ink);
     print.receiveShadow = true;
@@ -152,26 +161,25 @@ export function decorateRoom(world, { narrow, half, group, box, bead, cylinder, 
     }
   }
 
-  for (const [side, offset, wall] of [[-1,0,walls.music],[1,8,walls.science]]) {
-    for (let i = 0; i < 8; i++) poster(wall, offset + i);
-    if(side<0)poster(wall,16);
+  artwork.forEach(poster);
+  for (const [side, wall] of [[-1,walls.music],[1,walls.science]]) {
     const shelfX = side < 0 ? -4.02 : 3.2;
     const shelfY = side < 0 ? -.62 : -.76;
     box(wall, 1.12, .092, .63, trim, shelfX, shelfY, .325, .021);
     flowers(wall, shelfX, shelfY + .047, side < 0 ? 0x738376 : 0xb78d84);
-    vine(wall, 4.32, 6.45, .125, 5.60, 2 + side);
-    vine(wall, -4.19, 6.45, .125, 4.55, .4 + side);
+    vine(wall, side<0 ? 5.66 : 5.93, 6.45, .125, 5.34, 2 + side);
+    vine(wall, side<0 ? -5.85 : -5.89, 6.45, .125, 4.15, .4 + side);
   }
 
-  furnishRoomObjects({walls,world,half,narrow,group,box,bead,cylinder,wire,finish,drawn,tag,weave,wood,trim});
+  furnishRoomObjects({walls,world:desk,half,narrow,group,box,bead,cylinder,wire,finish,drawn,tag,weave,wood,trim});
 
   // Smaller vines on the end of the hutch connect it to the rest of the room.
   for (const side of [-1, 1]) {
-    const pot = group(world, side * (half - .25), 3.25, -1.78);
+    const pot = group(desk, side * (half - .25), 3.25, -1.78);
     cylinder(pot, .17, .132, .23, finish(0xa86f52), 0, .12, 0, 20);
     cylinder(pot, .155, .155, .003, finish(0x5e4c38), 0, .239, 0, 20);
     // The stem clears the top and rolls over the front edge before it drops.
-    vine(world, side * (half - .22), 3.41, -1.01, narrow ? .92 : 1.45, side + 1.4,
+    vine(desk, side * (half - .22), 3.41, -1.01, narrow ? .92 : 1.45, side + 1.4,
       [[-side * .03, .081, -.75], [0, .157, -.57], [0, .119, -.22]]);
   }
   return {coves,walls};

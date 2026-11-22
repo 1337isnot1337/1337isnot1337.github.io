@@ -2,14 +2,16 @@ import * as T from './vendor/three/three.module.min.js';
 
 export function buildWindowView(outdoors, {photo,cylinder,finish,night}) {
   // Every ray through the window meets this rear arc, even from the side of the desk.
-  const valley=photo('/assets/furniture/window-valley.webp?v=2');
-  const sky=document.createElement('canvas');sky.width=sky.height=1;
-  const tint=sky.getContext('2d');tint.fillStyle='#b8c4c5';tint.fillRect(0,0,1,1);
-  valley.image=sky;valley.needsUpdate=true;
+  const landscape=new T.MeshBasicMaterial({color:0xb8c4c5,side:T.BackSide,toneMapped:false});
+  const valley=photo('/assets/furniture/window-valley.webp?v=2',()=>{
+    // The panorama gets its own GPU storage when the full image is ready.
+    landscape.map=valley;
+    landscape.color.set(0xffffff);
+    landscape.needsUpdate=true;
+  });
   valley.magFilter=T.NearestFilter;
   valley.minFilter=T.NearestMipmapLinearFilter;
   valley.anisotropy=1;
-  const landscape=new T.MeshBasicMaterial({map:valley,side:T.BackSide,toneMapped:false});
   landscape.onBeforeCompile=shader=>{
     shader.uniforms.windowNight=night;
     shader.fragmentShader='uniform float windowNight;\n'+shader.fragmentShader.replace('#include <map_fragment>',`
