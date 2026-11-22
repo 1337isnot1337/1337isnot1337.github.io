@@ -71,7 +71,7 @@
     <script defer src="/rook-graph.js?v=3"></script>
     <script>document.documentElement.dataset.view = /^\/boring(?:\/|$)/.test(location.pathname) || /^(#projects|#flyover|#cpu|#schedule|#conjectures|#factoring|#conway)$/.test(location.hash) ? "shelf" : "desk";</script>
     <link rel="stylesheet" href="/studio.css?v=23" />
-    <script defer src="/studio.js?v=64" onerror="if (!location.pathname.startsWith('/boring')) delete document.documentElement.dataset.view"></script>
+    <script defer src="/studio.js?v=65" onerror="if (!location.pathname.startsWith('/boring')) delete document.documentElement.dataset.view"></script>
     <script defer src="/paper-turn.js?v=5"></script>
     <script defer src="/desk-keepsakes.js?v=11"></script>
     <script defer src="/paper-dismiss.js?v=2"></script>
@@ -237,6 +237,7 @@
               <button type="button" id="drawer-posters" data-object="poster-switch" aria-label="Frivolous wall posters" aria-pressed="false" hidden></button>
               <button type="button" data-object="study-door" data-room-fixture aria-label="Study door open" aria-pressed="false" hidden></button>
               <button type="button" data-object="window-sash" data-room-fixture aria-label="Window open" aria-pressed="false" hidden></button>
+              <a data-object="study-chess" data-room-fixture data-project="conway" href="#conway" hidden><span>Chessboard · Conway’s 99-graph</span></a>
               <button type="button" id="drawer-letter" class="postcat" data-object="keepsake" aria-haspopup="dialog" hidden><span>Take the postcard</span></button>
             </nav>
             <p class="graphics-warning" role="status" hidden>The 3D desk needs canvas and WebGL. Enable graphics acceleration in your browser to see it.</p>

@@ -1,6 +1,6 @@
 import * as T from './vendor/three/three.module.min.js';
 import { paintRoomPrint } from './room-print.js?v=2';
-import { addLowCabinet } from './room-furnishings.js?v=1';
+import { addBookcase, addLowCabinet } from './room-furnishings.js?v=2';
 
 // Independent props grouped by where they live. Dimensions are relative to the desk.
 const collections = {
@@ -731,7 +731,8 @@ export function furnishRoomObjects({walls, world, half, narrow, group, box, bead
     return prop;
   }
   function ledge(wall, x,y, length, rows, scale=.92, cabinet) {
-    if(cabinet)addLowCabinet(wall,x,y,length,cabinet,{box,bead,finish,wood,trim});
+    if(cabinet==='library')addBookcase(wall,x,y,length,{box,finish,wood,trim});
+    else if(cabinet)addLowCabinet(wall,x,y,length,cabinet,{box,bead,finish,wood,trim});
     else{
       box(wall,length,.073,.54,wood,x,y-.038,.24,.014);
       box(wall,length+.05,.038,.05,trim,x,y-.066,.512,.010);
@@ -783,7 +784,7 @@ export function furnishRoomObjects({walls, world, half, narrow, group, box, bead
   ledge(science,-4.97,1.91,2.15,instruments.slice(16),1.10);
 
   const entry=collections.entry;
-  ledge(front,-4.12,-1.31,6.33,entry.slice(0,7),1.28);
+  ledge(front,-4.12,-1.31,6.33,entry.slice(0,7),1.28,'library');
   ledge(front,-3.90,1.70,6.0,entry.slice(7,13),1.22);
   ledge(front,6.72,-.61,4.40,entry.slice(13),1.09);
 
