@@ -666,8 +666,25 @@ const server = http.createServer((req,res) => {
   const paper=await centerPrint.boundingBox();
   await centerPrint.hover();
   await shelfMouse.waitForTimeout(250);
-  assert.deepEqual(await centerPrint.boundingBox(),paper,'hover keeps the printed edge under the pointer');
-  const row=Math.round(paper.y+paper.height/2);
+  assert.deepEqual(await centerPrint.boundingBox(),paper,'hover leaves the centered print in place');
+  const neighbor=shelfMouse.locator('.swiper-slide-next .print');
+  const target=await neighbor.getAttribute('data-project');
+  const sidePrint=await neighbor.boundingBox();
+  await shelfMouse.mouse.move(sidePrint.x+sidePrint.width/2,sidePrint.y+sidePrint.height/2);
+  await shelfMouse.waitForFunction(project=>{
+    const shelf=document.querySelector('.swiper').swiper;
+    return shelf.slides[shelf.activeIndex].querySelector('.print').dataset.project===project &&
+      Math.abs(shelf.translate+shelf.slidesGrid[shelf.activeIndex])<1.2;
+  },target);
+  await shelfMouse.waitForTimeout(200);
+  assert.equal(await centerPrint.getAttribute('data-project'),target,'hover settles on the intended side print');
+  assert.equal(await shelfMouse.locator('dialog[open]').count(),0,'hover does not open the reader');
+  await shelfMouse.locator('#prev').click();
+  await shelfMouse.waitForFunction(()=>!document.querySelector('.swiper').swiper.animating&&
+    document.querySelector('.swiper-slide-active .print').dataset.project==='flyover');
+  await centerPrint.scrollIntoViewIfNeeded();
+  const dragPaper=await centerPrint.boundingBox();
+  const row=Math.round(dragPaper.y+dragPaper.height/2);
   await shelfMouse.mouse.move(930,row);
   await shelfMouse.mouse.down();
   await shelfMouse.mouse.move(260,row,{steps:18});

@@ -29,6 +29,7 @@ let returningToShelf = false;
 let shelf = null;
 let requestedShelf = false;
 let coastFrame = 0;
+let hoverFrame = 0;
 let lastProject = '';
 let shelfDistance = 0;
 let previousSelection = null,lapStart=null,lapTimer=0;
@@ -65,7 +66,12 @@ function markLap(print){
   lapTimer=setTimeout(()=>mark.remove(),1850);
 }
 
-function stopCoast() {
+function stopHover() {
+  cancelAnimationFrame(hoverFrame);
+  hoverFrame = 0;
+}
+function stopShelfMotion() {
+  stopHover();
   cancelAnimationFrame(coastFrame);
   coastFrame = 0;
 }
@@ -80,6 +86,50 @@ function startShelf() {
   let selectedSlide = null;
   let hold=null,lastCorner=0,screwGrip=null,screwAngle=0;
   let priorCornerPrint=null;
+  let hoverSlide, hoverTime, pointerX, pointerY;
+  function canHover() {
+    const focus=document.activeElement;
+    return !reducedMotion.matches&&!document.hidden&&!dialog.open&&!projectIndex.open&&
+      !hold&&!coastFrame&&!shelf.animating&&
+      !(carousel.contains(focus)&&focus.matches(':focus-visible'));
+  }
+  function centerHoveredPrint(now) {
+    if(!canHover())return stopHover();
+    const position=shelf.slidesGrid[shelf.slides.indexOf(hoverSlide)];
+    if(!Number.isFinite(position))return stopHover();
+    const remaining=-position-shelf.translate;
+    const dt=Math.min(45,Math.max(0,now-hoverTime));
+    hoverTime=now;
+    const step=Math.min(Math.abs(remaining)*(1-Math.exp(-dt/135)),dt*3.2);
+    const arrived=Math.abs(remaining)<1.2;
+    shelf.setTranslate(arrived?-position:shelf.translate+Math.sign(remaining)*step);
+    shelf.updateActiveIndex();
+    shelf.updateSlidesClasses();
+    if(arrived){
+      shelf.loopFix({direction:remaining<0?'next':'prev',byMousewheel:true});
+      shelf.updateActiveIndex();
+      shelf.updateSlidesClasses();
+      stopHover();
+    }else hoverFrame=requestAnimationFrame(centerHoveredPrint);
+  }
+  carousel.addEventListener('pointermove',event=>{
+    if(event.pointerType!=='mouse'||event.buttons||!canHover())return;
+    if(pointerX!==undefined&&Math.hypot(event.clientX-pointerX,event.clientY-pointerY)<3)return;
+    pointerX=event.clientX;pointerY=event.clientY;
+    const slide=event.target.closest('.print')?.closest('.swiper-slide');
+    if(!slide)return stopHover();
+    if(hoverFrame&&slide===hoverSlide)return;
+    stopHover();
+    if(Math.abs(shelf.translate+shelf.slidesGrid[shelf.slides.indexOf(slide)])<1.2)return;
+    hoverSlide=slide;hoverTime=performance.now();
+    hoverFrame=requestAnimationFrame(centerHoveredPrint);
+  });
+  carousel.addEventListener('pointerleave',()=>{
+    stopHover();
+    pointerX=pointerY=undefined;
+  });
+  carousel.addEventListener('wheel',stopHover,{passive:true});
+  window.addEventListener('blur',stopHover);
   const screw=document.createElement('i');
   screw.className='shelf-screw';screw.setAttribute('aria-hidden','true');
   const washer=document.createElement('i');
@@ -104,6 +154,7 @@ function startShelf() {
   });
   for(const event of ['pointerup','pointercancel'])screw.addEventListener(event,()=>{screwGrip=null;});
   carousel.addEventListener('pointerdown',event=>{
+    stopHover();
     const print=event.target.closest('.print');
     if(!print||event.button!==0)return;
     const box=print.getBoundingClientRect();
@@ -221,15 +272,15 @@ function startShelf() {
     on: {
       touchStart(instance) {
         suppressShelfClick = Boolean(coastFrame);
-        stopCoast();
+        stopShelfMotion();
         instance.touchEventsData.velocities.length = 0;
       },
-      beforeTransitionStart: stopCoast,
+      beforeTransitionStart: stopShelfMotion,
       sliderMove() {
         showMotion(75);
       },
       scroll(instance) {
-        stopCoast();
+        stopShelfMotion();
         // Free scrolling can move slides around the loop after the wheel
         // module has already chosen a center print. Read its final position.
         instance.updateActiveIndex();
@@ -301,12 +352,12 @@ function startShelf() {
     }
   }, true);
   reducedMotion.addEventListener("change", () => {
-    stopCoast();
+    stopShelfMotion();
     shelf.params.speed = reducedMotion.matches ? 0 : 380;
   });
-  document.addEventListener("visibilitychange", stopCoast);
+  document.addEventListener("visibilitychange", stopShelfMotion);
   function stepPrint(direction) {
-    stopCoast();
+    stopShelfMotion();
     const total = shelf.slides.length;
     shelf.slideToLoop((shelf.realIndex + direction + total) % total);
   }
@@ -354,7 +405,7 @@ function showShelf() {
 }
 showShelf();
 document.addEventListener("portfolio-view", () => {
-  stopCoast();
+  stopShelfMotion();
   showShelf();
 });
 
@@ -381,7 +432,7 @@ function displayFromHash() {
   const deskRecording = document.querySelector('#desk-audio');
   if (deskRecording && !deskRecording.paused) deskRecording.pause();
   if (activeArticle === article && dialog.open) return;
-  stopCoast();
+  stopShelfMotion();
   const turning = dialog.open;
   if (activeArticle) {
     activeArticle.querySelector("audio")?.pause();

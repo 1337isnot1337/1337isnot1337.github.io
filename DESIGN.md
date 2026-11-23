@@ -70,7 +70,7 @@ A faint woven check sits behind the prints. The perspective, narrow paper edges 
 
 ## Shapes
 
-Each print has a small folded corner clipped into the paper. Hover deepens the shadow while its edge stays still. The main action and project index have pill outlines, and the two shelf arrows have round outlines. Controls gain a three-pixel violet focus ring with a three-pixel offset. The project dialog and its demonstration controls have small corner radii.
+Each print has a small folded corner clipped into the paper. Hover deepens its shadow. On a mouse, the shelf glides toward an off-center print and slows as it reaches the middle. The main action and project index have pill outlines, and the two shelf arrows have round outlines. Controls gain a three-pixel violet focus ring with a three-pixel offset. The project dialog and its demonstration controls have small corner radii.
 
 ## Components
 
