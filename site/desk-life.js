@@ -23,6 +23,7 @@ export function deskLife(stage, getModel, redraw, reduced) {
   let planeAngle=.62,planeSpeed=0,propTravel=0,noseDown=false,lift=0,aimOffset=0,planeGrab=false;
   let tuner=-1,previousTuner=-1,turningTuner=false,tunerAngle=-.75,afterglow=0,patchStarted=0,patched=false;
   let gain=0,sweep=0,settledGain=0,settledSweep=0,scopeModel=null;
+  let scopePhase=0,scopeTick=0,settledPhase=0;
   const probeRest=[.12,.032,1.13],probeJack=[.689,.252,.568];
   const probe=new Vector3(...probeRest);
   let cableGrip=false,stickerLift=0;
@@ -173,6 +174,7 @@ export function deskLife(stage, getModel, redraw, reduced) {
     },
     'service-flap'(dx,dy){serviceOpened ||= Math.hypot(dx,dy)>.012;},
     letters(dx,dy){peelEnvelope(dx,dy);},
+    'top-envelope'(dx,dy){peelEnvelope(dx,dy);},
     'envelope-flap'(dx,dy){peelEnvelope(dx,dy);},
     wax(dx,dy){peelEnvelope(dx,dy);},
     ribbon(dx){
@@ -472,7 +474,8 @@ export function deskLife(stage, getModel, redraw, reduced) {
     part('wax').visible=!split;part('split-wax').visible=split;
     part('split-wax').position.x=-.04-envelopeLift*.082;
     part('split-wax').rotation.y=envelopeLift*.22;
-    part('envelope-flap').rotation.x=-Math.max(envelopeLift,peek('letters')*.14)*1.65;
+    part('top-envelope').rotation.x=-peek('letters')*.073;
+    part('envelope-flap').rotation.x=-Math.max(0,(envelopeLift-.15)/.85)*1.65;
     const visiting=part('contact-card');
     visiting.visible=envelopeLift>.44;
     visiting.position.z=-.112+Math.max(0,envelopeLift-.40)*.24;
@@ -535,9 +538,13 @@ export function deskLife(stage, getModel, redraw, reduced) {
     if(tuner>=0)part('tuner').rotation.z=tunerAngle;
     part('gain').rotation.z=gain*-1.38;part('sweep').rotation.z=sweep*-1.38;
     const nextGain=Math.round(gain*20),nextSweep=Math.round(sweep*20);
-    if(scopeModel!==model||settledGain!==nextGain||settledSweep!==nextSweep){
-      model.tuneScope(.26+nextGain*.0062,4.5+nextSweep*.118);
-      scopeModel=model;settledGain=nextGain;settledSweep=nextSweep;
+    const scanning=motion&&peek('scope')>.004&&tuner<0&&!Number.isFinite(stripTime);
+    if(scanning)scopePhase=(scopePhase+dt*3.7)%(Math.PI*2);
+    if(scopeModel!==model||settledGain!==nextGain||settledSweep!==nextSweep||
+       (scanning&&time-scopeTick>=1000/30)){
+      if(scanning)settledPhase=scopePhase;
+      model.tuneScope(.26+nextGain*.0062,4.5+nextSweep*.118,settledPhase);
+      scopeModel=model;settledGain=nextGain;settledSweep=nextSweep;scopeTick=time;
     }
     part('scope-strip').visible=Number.isFinite(stripTime);
     if(Number.isFinite(stripTime))part('scope-cursor').position.x=-.357+.714*clamp(stripTime/85,0,1);
@@ -676,7 +683,7 @@ export function deskLife(stage, getModel, redraw, reduced) {
     }
     const warm=warmAt ? clamp((time-warmAt)/750,0,1):1;
     return { drift, warm, active: Boolean(
-      (motion&&planePreview)||Math.abs(planeSpeed)>.025||propTravel>0||(!planeGrab&&lift>.005)||(!planeGrab&&Math.abs(aimOffset)>.01)||Math.hypot(marbleSpeed,marbleDepthSpeed)>.022||(motion&&swing<1)||linerLift!==linerGoal||
+      (motion&&planePreview)||scanning||Math.abs(planeSpeed)>.025||propTravel>0||(!planeGrab&&lift>.005)||(!planeGrab&&Math.abs(aimOffset)>.01)||Math.hypot(marbleSpeed,marbleDepthSpeed)>.022||(motion&&swing<1)||linerLift!==linerGoal||
       afterglow>0||pencilMoving||ribbonFlick>.004||guideLift!==foldGoal||(!folderHeld&&peekFolder>0)||clipGoal!==clipCompression||(inHand==='plant'&&time-plantOpen<15600)||(inHand==='plant'&&dewTilt>0&&dew<1)||freeDrop.visible||ripple.visible||hop>0||leafBends.size||falling<1||cableMoving||resolution<1||stickerLift!==sticker||flying||(lampOn&&warm<1)), wakeAt:lampOn&&!moth.visible ? mothIdle+14000 : 0};
   }
   return {tap,gestures,movePrint,stow,drawerChange,drawerMomentum,pullComplaint,lampChange,brushLeaf,cupAction,pointerMoved,startleMoth,inspect,folderPose,pullSlip,releaseProps,updateInspection,update};

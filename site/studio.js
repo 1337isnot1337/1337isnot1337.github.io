@@ -55,7 +55,7 @@
     if (sceneStarted || !deskIsReadyToMount()) return;
     sceneStarted=true;
     deskProgress.value=2;
-    import("./furniture.js?v=69").then(module => {
+    import("./furniture.js?v=70").then(module => {
       if (!deskIsReadyToMount()) { sceneStarted=false; return; }
       deskProgress.value=3;
       try { module.mountFurniture(stage,showGraphicsFallback,step=>{deskProgress.value=step;}); }
