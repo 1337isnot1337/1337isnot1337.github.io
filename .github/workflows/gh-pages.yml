@@ -3,11 +3,6 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
-    inputs:
-      isolated_runner:
-        description: Use temporary runners registered for this release
-        type: boolean
-        default: false
   schedule:
     # Check for a new source revision every 15 minutes, without cross-repository credentials.
     - cron: '7,22,37,52 * * * *'
@@ -21,7 +16,7 @@ concurrency:
 
 jobs:
   refresh:
-    runs-on: ${{ inputs.isolated_runner && format('itsdavis-pages-{0}', github.run_id) || 'ubuntu-latest' }}
+    runs-on: ubuntu-latest
     outputs:
       needed: ${{ steps.check.outputs.needed }}
     steps:
@@ -66,7 +61,7 @@ jobs:
   build:
     needs: refresh
     if: needs.refresh.outputs.needed == 'true'
-    runs-on: ${{ inputs.isolated_runner && format('itsdavis-pages-{0}', github.run_id) || 'ubuntu-24.04' }}
+    runs-on: ubuntu-24.04
     outputs:
       catalogue_commit: ${{ steps.catalogue.outputs.commit }}
       catalogue_mode: ${{ steps.catalogue.outputs.mode }}
@@ -168,7 +163,7 @@ jobs:
 
   publish:
     needs: build
-    runs-on: ${{ inputs.isolated_runner && format('itsdavis-pages-{0}', github.run_id) || 'ubuntu-latest' }}
+    runs-on: ubuntu-latest
     timeout-minutes: 10
     permissions:
       contents: read
@@ -184,7 +179,7 @@ jobs:
 
   catalogue-freshness:
     needs: [build, publish]
-    runs-on: ${{ inputs.isolated_runner && format('itsdavis-pages-{0}', github.run_id) || 'ubuntu-latest' }}
+    runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
       - name: Verify the live catalogue matches the validated source
