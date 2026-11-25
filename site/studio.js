@@ -51,9 +51,24 @@
   function deskIsReadyToMount() {
     return sceneCanvas?.isConnected && page.dataset.view==='desk' && sceneNearby && !studio.dataset.open && !document.querySelector('.open-project[open]');
   }
+  const openingLayout=matchMedia('(max-width: 660px), (max-aspect-ratio: 6/5)');
+  function loadOpening(){
+    if(!sceneStarted || !stage.classList.contains('is-loading'))return;
+    const layout=openingLayout.matches?'compact':'wide';
+    if(stage.dataset.opening===layout)return;
+    delete stage.dataset.opening;
+    const image=new Image();
+    image.fetchPriority='high';
+    image.onload=()=>{
+      if(stage.classList.contains('is-loading') && layout===(openingLayout.matches?'compact':'wide'))
+        stage.dataset.opening=layout;
+    };
+    image.src='/assets/furniture/opening-'+layout+'.webp';
+  }
   function showFurniture() {
     if (sceneStarted || !deskIsReadyToMount()) return;
     sceneStarted=true;
+    loadOpening();
     deskProgress.value=2;
     // Fetch the engine alongside the furniture module on desk visits.
     for(const file of ['three.module.min.js','three.core.min.js']){
@@ -61,7 +76,7 @@
       preload.rel='modulepreload';preload.href='/vendor/three/'+file;
       if(!document.querySelector('link[href="'+preload.getAttribute('href')+'"]'))document.head.append(preload);
     }
-    import("./furniture.js?v=71").then(module => {
+    import("./furniture.js?v=72").then(module => {
       if (!deskIsReadyToMount()) { sceneStarted=false; return; }
       deskProgress.value=3;
       try { module.mountFurniture(stage,showGraphicsFallback,step=>{deskProgress.value=step;}); }
@@ -69,6 +84,7 @@
     }, () => showGraphicsFallback("The 3D desk couldn’t download. Reload to try again."));
   }
   if (sceneCanvas?.isConnected) {
+    openingLayout.addEventListener("change",loadOpening);
     import("./desk-moths.js?v=1");
     if ("IntersectionObserver" in window) {
       new IntersectionObserver(([entry]) => {

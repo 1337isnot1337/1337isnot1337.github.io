@@ -1,19 +1,20 @@
 import * as T from './vendor/three/three.module.min.js';
-import { furnishRoomObjects } from './room-objects.js?v=10';
-import { buildRoomShell } from './room-shell.js?v=16';
+import { furnishRoomObjects } from './room-objects.js?v=11';
+import { buildRoomShell } from './room-shell.js?v=17';
 import { posterSets } from './room-posters.js?v=3';
 
 const leafColors = [0x72925d, 0x4a7147, 0x538254, 0x688254, 0x8a9b66];
 
-function ivyGeometry() {
+function ivyGeometry(software) {
   const outline = new T.CatmullRomCurve3([
     [0,.022],[-.105,-.012],[-.143,.056],[-.162,.133],[-.201,.221],[-.099,.215],
     [-.073,.289],[.009,.424],[.074,.274],[.103,.217],[.198,.228],[.157,.130],
     [.132,.043],[.094,-.005],
   ].map(([x,y])=>new T.Vector3(x,y,0)),true);
-  const points=outline.getPoints(30).slice(0,-1);
+  const points=outline.getPoints(software?16:30).slice(0,-1);
   const positions=[0,.153,.053],uv=[.5,.39],indices=[];
-  for(const radius of [.38,.73,1]){
+  const rings=software?[.60,1]:[.38,.73,1];
+  for(const radius of rings){
     for(const point of points){
       const x=point.x*radius, y=.153+(point.y-.153)*radius;
       const z=.055*(1-radius**2)+.017*Math.sin(y*16+x*12)-.043*y;
@@ -23,7 +24,7 @@ function ivyGeometry() {
   for(let i=0;i<points.length;i++){
     const j=(i+1)%points.length;
     indices.push(0,j+1,i+1);
-    for(const ring of [0,1]){
+    for(let ring=0;ring<rings.length-1;ring++){
       const a=1+ring*points.length+i,b=1+ring*points.length+j;
       indices.push(a,b,b+points.length,a,b+points.length,a+points.length);
     }
@@ -34,10 +35,10 @@ function ivyGeometry() {
   geometry.setIndex(indices);geometry.computeVertexNormals();
   return geometry;
 }
-const ivyLeaf=ivyGeometry();
 
-export function decorateRoom(world, { desk, narrow, half, group, box, bead, cylinder, wire, finish, photo, tag, detail, drawn, weave, wood, trim, floorMat, night }) {
-  const {walls,coves,readingBulb}=buildRoomShell(world,{group,box,bead,cylinder,wire,finish,photo,drawn,weave,wood,trim,floorMat,night,tag,detail});
+export function decorateRoom(world, { desk, narrow, software, half, group, box, bead, cylinder, wire, finish, photo, tag, detail, drawn, weave, wood, trim, floorMat, night }) {
+  const ivyLeaf=ivyGeometry(software);
+  const {walls,coves,readingBulb,outdoors,windowBounds}=buildRoomShell(world,{group,box,bead,cylinder,wire,finish,photo,drawn,weave,wood,trim,floorMat,night,tag,detail});
   const prints = new Map();
   const paper = new T.MeshStandardMaterial({ color: 0xe8dfce, roughness: .97, side: T.BackSide });
   const stem = finish(0x5e6e43);
@@ -173,5 +174,5 @@ export function decorateRoom(world, { desk, narrow, half, group, box, bead, cyli
     vine(desk, side * (half - .22), 3.41, -1.01, narrow ? .92 : 1.45, side + 1.4,
       [[-side * .03, .081, -.75], [0, .157, -.57], [0, .119, -.22]]);
   }
-  return {coves,walls,showPosters,readingBulb};
+  return {coves,walls,showPosters,readingBulb,outdoors,windowBounds};
 }

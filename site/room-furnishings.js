@@ -59,7 +59,7 @@ export function addBookcase(wall,x,y,length,{group,box,finish,wood,trim,tag,deta
           box(wall,w*.69,.009,.005,brass,center+offset,base+h*spot,b.position.z+.246);
       }
       if((row+col)%2===0){
-        for(const i of [0,1,2]){
+        for(const i of [0,1]){
           const cover=finish(colors[(col+i+3)%colors.length],.88);
           const width=.62-i*.055, pageY=base+.038+i*.092;
           const stackX=center+bay/2-.45+.024*i;
@@ -99,7 +99,7 @@ export function addBookcase(wall,x,y,length,{group,box,finish,wood,trim,tag,deta
 
   function groupPosition(row,column){
     let start=-bay/2+.13;
-    return Array.from({length:6+(row+column)%2},(_,i)=>{
+    return Array.from({length:3+(row+column)%2},(_,i)=>{
       const w=.106+.021*((i*3+column+row*2)%4);
       const h=.365+.043*((i*5+row*2+column)%7);
       const offset=start+w/2;

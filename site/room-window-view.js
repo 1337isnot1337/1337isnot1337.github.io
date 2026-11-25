@@ -24,20 +24,22 @@ export function buildWindowView(outdoors, {photo,cylinder,finish,night}) {
         float abovePhoto=clamp(sky.y-1.0,0.0,1.0);
         highSky=mix(highSky,vec3(.072,.196,.409),abovePhoto*.7);
         diffuseColor.rgb=mix(diffuseColor.rgb,highSky,smoothstep(.87,1.0,sky.y));
-        float luminance=dot(diffuseColor.rgb,vec3(.2126,.7152,.0722));
-        vec3 moonlit=vec3(.009,.017,.036)+vec3(.026,.047,.093)*luminance
-          +diffuseColor.rgb*vec3(.049,.076,.132);
-        float upperSky=smoothstep(.63,.76,sky.y);
-        vec2 starGrid=sky*vec2(123.0,85.0);
-        vec2 cell=floor(starGrid);
-        float grain=fract(sin(dot(cell,vec2(21.19,56.43)))*4373.63);
-        float star=(1.0-smoothstep(.020,.19,length(fract(starGrid)-vec2(.5))))*step(.967,grain);
-        vec2 moon=(sky-vec2(.535,.814))*vec2(1.5,1.0);
-        float moonDistance=length(moon);
-        float disk=1.0-smoothstep(.013,.015,moonDistance);
-        float halo=(1.0-smoothstep(.008,.078,moonDistance))*.055;
-        moonlit+=upperSky*(vec3(.54,.68,.87)*star*.73+vec3(.67,.74,.80)*(disk+halo));
-        diffuseColor.rgb=mix(diffuseColor.rgb,moonlit,windowNight);
+        if(windowNight>0.0){
+          float luminance=dot(diffuseColor.rgb,vec3(.2126,.7152,.0722));
+          vec3 moonlit=vec3(.009,.017,.036)+vec3(.026,.047,.093)*luminance
+            +diffuseColor.rgb*vec3(.049,.076,.132);
+          float upperSky=smoothstep(.63,.76,sky.y);
+          vec2 starGrid=sky*vec2(123.0,85.0);
+          vec2 cell=floor(starGrid);
+          float grain=fract(sin(dot(cell,vec2(21.19,56.43)))*4373.63);
+          float star=(1.0-smoothstep(.020,.19,length(fract(starGrid)-vec2(.5))))*step(.967,grain);
+          vec2 moon=(sky-vec2(.535,.814))*vec2(1.5,1.0);
+          float moonDistance=length(moon);
+          float disk=1.0-smoothstep(.013,.015,moonDistance);
+          float halo=(1.0-smoothstep(.008,.078,moonDistance))*.055;
+          moonlit+=upperSky*(vec3(.54,.68,.87)*star*.73+vec3(.67,.74,.80)*(disk+halo));
+          diffuseColor.rgb=mix(diffuseColor.rgb,moonlit,windowNight);
+        }
       #endif
     `);
   };

@@ -1,5 +1,5 @@
 import * as T from './vendor/three/three.module.min.js';
-import { furnish } from './desk-model.js?v=52';
+import { furnish } from './desk-model.js?v=53';
 import { inspectDeskObjects } from './desk-inspect.js?v=20';
 
 import { attachDeskPointer } from './desk-pointer.js?v=25';
@@ -22,8 +22,31 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress) {
   const gl=engine.getContext();
   const debug=gl.getExtension('WEBGL_debug_renderer_info');
   const software=debug && /swiftshader|llvmpipe/i.test(gl.getParameter(debug.UNMASKED_RENDERER_WEBGL));
+  if(software)engine.setOpaqueSort((a,b)=>a.groupOrder-b.groupOrder || a.renderOrder-b.renderOrder || a.z-b.z || a.id-b.id);
   const pixelGrid=matchMedia('(forced-colors: none) and (prefers-contrast: no-preference)');
-  let movingPixels=false;
+  let movingPixels=false, motionScale=1, previousMotionTime=0, slowFrames=0, fastFrames=0;
+  let settleTimer=0, lastMovement=0;
+  function trackMotion(time,moving){
+    if(!moving){
+      previousMotionTime=0;slowFrames=fastFrames=0;
+      if(movingPixels){
+        const remaining=140-(time-lastMovement);
+        if(remaining<=0)setResolution(false);
+        else if(!settleTimer)settleTimer=setTimeout(()=>{settleTimer=0;redraw();},Math.ceil(remaining));
+      }
+      return;
+    }
+    lastMovement=time;clearTimeout(settleTimer);settleTimer=0;
+    const gap=time-previousMotionTime;
+    if(previousMotionTime){
+      const budget=software ? 1000/30 : 1000/50;
+      slowFrames=gap>budget*1.18 ? slowFrames+1 : 0;
+      fastFrames=gap<budget*.88 ? fastFrames+1 : 0;
+      if(slowFrames>=3){motionScale=Math.max(.52,motionScale-.16);slowFrames=0;}
+      if(fastFrames>=36){motionScale=Math.min(1,motionScale+.16);fastFrames=0;}
+    }
+    previousMotionTime=time;setResolution(true);
+  }
   function setResolution(moving=movingPixels){
     movingPixels=moving;
     // Sample the canvas once, in WebGL. DOM text and hit targets stay at native resolution.
@@ -32,7 +55,9 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress) {
     const motionLimit=software ? .36 : .8;
     const maxPixels=software ? (sampleMotion ? 140000 : 720000) : (sampleMotion ? 1000000 : 2100000);
     const sizeLimit=Math.sqrt(maxPixels/Math.max(1,viewWidth*viewHeight));
-    const ratio=Math.min(devicePixelRatio,sampleMotion?motionLimit:still,sizeLimit);
+    const ceiling=Math.min(devicePixelRatio,sampleMotion?motionLimit:still,sizeLimit);
+    const floor=(software ? 240 : 540)/Math.max(1,viewWidth,viewHeight);
+    const ratio=sampleMotion ? Math.min(ceiling,Math.max(floor,ceiling*motionScale)) : ceiling;
     if(engine.getPixelRatio()!==ratio)engine.setPixelRatio(ratio);
   }
   engine.shadowMap.enabled=!software;
@@ -41,6 +66,7 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress) {
   engine.toneMapping=T.ACESFilmicToneMapping;engine.toneMappingExposure=1.03;
   const scene=new T.Scene();scene.background=new T.Color(0xc7bc9e);
   const camera=new T.PerspectiveCamera(43,1,.10,62);
+  const viewFrustum=new T.Frustum(),projectionView=new T.Matrix4();
   let shadersStarted=false, shadersReady=false;
   const daySky=1.68;
   const sky=new T.HemisphereLight(0xf3f0e5,0xc6ae9d,daySky);scene.add(sky);
@@ -188,7 +214,7 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress) {
     for(const [id,{root,point:local,w,h}] of model.targets) {
       const el=links.get(id);
       if((root.userData.roomPoster&&!root.visible)||(el===posterSwitch&&drawerAmount<.54)){
-        el.hidden=true;
+        if(!el.hidden)el.hidden=true;
         targetStyles.delete(id);
         continue;
       }
@@ -365,8 +391,12 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress) {
     }
     if(!software&&(detailMoved||sunChanged))engine.shadowMap.needsUpdate=true;
     if(camera.zoom!==posture.zoom){camera.zoom=posture.zoom;camera.updateProjectionMatrix();}
-    setResolution(Boolean(posture.move||drawerMotion.moving));
-    camera.lookAt(aim);engine.render(scene,camera);projectTargets();
+    trackMotion(time,Boolean(posture.move||drawerMotion.moving||stage.classList.contains('looking-around')));
+    camera.lookAt(aim);
+    camera.updateMatrixWorld();
+    viewFrustum.setFromProjectionMatrix(projectionView.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse));
+    model.outdoors.visible=viewFrustum.intersectsBox(model.windowBounds);
+    engine.render(scene,camera);projectTargets();
     if(!opened){
       for(const id of model.roomClocks.keys()){
         if(!links.get(id).hidden){scheduleClock();break;}

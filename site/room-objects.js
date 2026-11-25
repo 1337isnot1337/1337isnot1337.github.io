@@ -1,6 +1,6 @@
 import * as T from './vendor/three/three.module.min.js';
 import { paintRoomPrint } from './room-print.js?v=2';
-import { addBookcase, addLowCabinet } from './room-furnishings.js?v=3';
+import { addBookcase, addLowCabinet } from './room-furnishings.js?v=4';
 
 // Independent props grouped by where they live. Dimensions are relative to the desk.
 const collections = {
@@ -741,7 +741,8 @@ export function furnishRoomObjects({walls, world, half, narrow, group, box, bead
     wall.updateWorldMatrix(true,false);
     const local=wall.matrixWorld.clone().invert();
     const clearance=.12,shelfFront=.49;
-    const props=shuffled(rows).map(row=>{
+    // Choose the display before building any geometry or inspection copy.
+    const props=shuffled(rows).slice(0,Math.floor(rows.length/2)).map(row=>{
       const root=piece(wall,row,0,0,0,scale);
       root.rotation.y=(random()-.5)*.14;
       const bounds=new T.Box3().setFromObject(root).applyMatrix4(local);
@@ -799,7 +800,7 @@ export function furnishRoomObjects({walls, world, half, narrow, group, box, bead
     for(const z of [-1.62,-.22])for(const off of [-.51,.51]){
       box(world,.104,1.54,.11,trim,x+off,-2.30,z,.021);
     }
-    shuffled(items).forEach((row,i)=>piece(world,row,x+((i%2)*2-1)*.25,-1.424,-1.48+Math.floor(i/2)*.56,.82,(random()-.5)*.12,true));
+    piece(world,shuffled(items)[0],x,-1.424,-.92,.82,(random()-.5)*.12,true);
   }
   ledge(front,-4.05,3.46,6.42,desk.slice(10,17),1.10);
   for(const [i,row] of desk.slice(17).entries()){

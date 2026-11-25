@@ -1,6 +1,6 @@
 import * as T from './vendor/three/three.module.min.js';
-import { buildWindowView } from './room-window-view.js?v=6';
-import { addRug, furnishReadingCorner, furnishSharedStudy } from './room-furnishings.js?v=3';
+import { buildWindowView } from './room-window-view.js?v=7';
+import { addRug, furnishReadingCorner, furnishSharedStudy } from './room-furnishings.js?v=4';
 
 // The hutch sits against the window wall.
 export function buildRoomShell(world, {group,box,bead,cylinder,wire,finish,photo,drawn,weave,wood,trim,floorMat,night,tag,detail}) {
@@ -209,7 +209,13 @@ export function buildRoomShell(world, {group,box,bead,cylinder,wire,finish,photo
     }
     bead(rear,center+sign*(span/2+.56),top+.24,.317,.074,.050,.047,molding);
   }
-  buildWindowView(group(rear,0,-windowDrop,-.30),{photo,cylinder,finish,night});
+  const outdoors=group(rear,0,-windowDrop,-.30);
+  outdoors.renderOrder=1;
+  buildWindowView(outdoors,{photo,cylinder,finish,night});
+  const windowBounds=new T.Box3(
+    new T.Vector3(opening.left,opening.bottom,backZ-.16),
+    new T.Vector3(opening.right,opening.top,backZ+.16),
+  );
 
   const entry=walls.front, door=finish(0x5b756b,.78);
   const hinge=tag(group(entry,1.05,-.071,-.083),'study-door',[2.49,-.17,.23],.68,.88);
@@ -263,7 +269,7 @@ export function buildRoomShell(world, {group,box,bead,cylinder,wire,finish,photo
   addRug(world,-1.81,floor,8.02,1.50,4.62,[0x647477,0x4e6063,0xb3a892],{box,drawn,finish});
   const readingBulb=furnishReadingCorner(world,floor,{group,box,bead,cylinder,wire,finish,drawn,weave,wood,trim,tag,detail});
   furnishSharedStudy(world,floor,{group,box,bead,cylinder,wire,finish,drawn,weave,wood,trim,tag,detail});
-  return {walls,coves,hinge,sash,readingBulb};
+  return {walls,coves,hinge,sash,readingBulb,outdoors,windowBounds};
 }
 
 // A contour print on the cloth backing of the rear display.

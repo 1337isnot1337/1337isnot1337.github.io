@@ -378,12 +378,15 @@ const server = http.createServer((req,res) => {
    await page.mouse.click(sheetMargin,120);
    await page.locator('.desk-reading').waitFor({state:'hidden'});
    assert.equal(await page.evaluate(()=>document.activeElement.dataset.object),'letters');
-   await page.locator('.object-drawer').focus();
-   await page.keyboard.press('Enter');
+   const deskDrawer=page.locator('.object-drawer');
+   await deskDrawer.waitFor();
+   await deskDrawer.press('Enter');
    assert.equal(await page.evaluate(()=>document.pointerLockElement),null);
    assert.equal(postLookups,0,'the network lookup waits until the postcard is picked up');
-   await page.locator('.postcat').focus();
-   await page.keyboard.press('Enter');
+   const keepsake=page.locator('.postcat');
+   await keepsake.waitFor();
+   await keepsake.press('Enter');
+   await page.locator('.drawer-post[open]').waitFor();
    const postal=await page.locator('.post-hand').boundingBox();
    const px=postal.x+postal.width*.12,py=postal.y+postal.height*.50;
    await page.mouse.move(px,py);await page.mouse.down();
@@ -604,7 +607,17 @@ const server = http.createServer((req,res) => {
   assert.equal(await coldFallback.evaluateAll(elements=>elements.filter(el=>el.getClientRects().length).length),0,'static desk stays hidden before deferred startup');
   releaseStudio();await rendererRequested;
   assert.equal(await progress.getAttribute('value'),'2');
-  assert.equal(await coldFallback.evaluateAll(elements=>elements.filter(el=>el.getClientRects().length).length),0,'renderer download keeps fallback hidden');
+  for(const [width,height,opening] of [[1280,720,'wide'],[390,844,'compact']]){
+    await cold.setViewportSize({width,height});
+    await cold.locator('.is-loading[data-opening="'+opening+'"]').waitFor();
+    assert.equal(await cold.locator('.desk-objects a:visible').count(),7);
+    assert.equal(await cold.locator('.hutch-fallback').isVisible(),false);
+    const files=cold.locator('.object-file');
+    await files.click();
+    await cold.locator('#catalogue:visible').waitFor();
+    await cold.locator('.back-to-desk').click();
+    await files.waitFor();
+  }
   releaseRenderer();
   await cold.locator('.graphics-warning:visible').waitFor();
   await cold.locator('.desk-objects a:visible').first().waitFor();
@@ -752,11 +765,12 @@ const server = http.createServer((req,res) => {
           flapClearsScope=false;break;
         }
       }
-      return {flapClearsScope,overlaps,missingActions};
+      return {propCount:props.length,flapClearsScope,overlaps,missingActions};
     }));
   });
   for(const layout of clearance){
     assert.equal(layout.flapClearsScope,true,'folder clears the entire oscilloscope');
+    assert.equal(layout.propCount,49,'the room displays a limited selection of its small props');
     assert.deepEqual(layout.overlaps,[],'shuffled props have clearance in both layouts');
     assert.deepEqual(layout.missingActions,[],'every shelf prop has a working inspection control');
   }
