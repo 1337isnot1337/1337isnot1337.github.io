@@ -59,7 +59,16 @@ export function deskLife(stage, getModel, redraw, reduced) {
     if(!texture)return;
     const canvas=texture.image;
     const ctx=canvas.getContext('2d');
+    ctx.resetTransform();
     ctx.clearRect(0,0,canvas.width,canvas.height);
+    // The same ruled sheet stays on the blotter after the last mark is erased.
+    ctx.strokeStyle='#8aa2aa80';ctx.lineWidth=Math.max(1,canvas.height/130);
+    ctx.beginPath();
+    for(let row=1;row<=6;row++){
+      const y=canvas.height*(.10+row*.12);
+      ctx.moveTo(canvas.width*.07,y);ctx.lineTo(canvas.width*.93,y);
+    }
+    ctx.stroke();
     wrote=Boolean(event.detail);
     if(wrote)ctx.drawImage(event.detail,0,0,canvas.width,canvas.height);
     texture.needsUpdate=true;redraw();
@@ -488,7 +497,6 @@ export function deskLife(stage, getModel, redraw, reduced) {
       fileSlip.userData.titled=true;drawnFile=token;
     }
     const scratch=part('scratch');
-    scratch.visible=wrote;
     if(!home.has(scratch))home.set(scratch,scratch.position.clone());
     const scrapBase=home.get(scratch);
     scratch.position.set(scrapBase.x+sheetX,scrapBase.y+sheetHeight,scrapBase.z+sheetZ);

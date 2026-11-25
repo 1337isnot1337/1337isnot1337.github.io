@@ -77,7 +77,7 @@
       openingRequest='';
       if(!request3D)stage.classList.remove('is-loading');
     };
-    image.src='/assets/furniture/opening-'+layout+'.webp';
+    image.src='/assets/furniture/opening-'+layout+'.webp?v=2';
   }
   function showFurniture() {
     if (sceneStarted || !deskIsReadyToMount()) return;
@@ -94,7 +94,7 @@
       preload.rel='modulepreload';preload.href='/vendor/three/'+file;
       if(!document.querySelector('link[href="'+preload.getAttribute('href')+'"]'))document.head.append(preload);
     }
-    import("./furniture.js?v=73").then(module => {
+    import("./furniture.js?v=74").then(module => {
       if (!deskIsReadyToMount()) { sceneStarted=false; return; }
       deskProgress.value=3;
       try { module.mountFurniture(stage,showGraphicsFallback,step=>{deskProgress.value=step;}); }

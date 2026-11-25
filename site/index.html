@@ -19,7 +19,7 @@
           const landscape = matchMedia("(pointer: coarse) and (orientation: landscape) and (max-height: 900px)").matches;
           const opening = document.createElement("link");
           opening.rel = "preload"; opening.as = "image"; opening.fetchPriority = "high";
-          opening.href = "/assets/furniture/opening-" + (landscape ? "compact-landscape" : compact ? "compact" : "wide") + ".webp";
+          opening.href = "/assets/furniture/opening-" + (landscape ? "compact-landscape" : compact ? "compact" : "wide") + ".webp?v=2";
           document.head.append(opening);
         }
       })();
@@ -81,13 +81,13 @@
       else restoreReading();
     "></script>
     <script defer src="/rook-graph.js?v=3"></script>
-    <link rel="stylesheet" href="/studio.css?v=27" />
-    <script defer src="/studio.js?v=74" onerror="if (!location.pathname.startsWith('/boring')) delete document.documentElement.dataset.view"></script>
+    <link rel="stylesheet" href="/studio.css?v=28" />
+    <script defer src="/studio.js?v=75" onerror="if (!location.pathname.startsWith('/boring')) delete document.documentElement.dataset.view"></script>
     <script defer src="/paper-turn.js?v=5"></script>
     <script defer src="/desk-keepsakes.js?v=11"></script>
     <script defer src="/internship-card.js?v=1"></script>
     <script defer src="/paper-dismiss.js?v=2"></script>
-    <script defer src="/desk-paper-extras.js?v=13"></script>
+    <script defer src="/desk-paper-extras.js?v=14"></script>
     <script defer src="/project-paper.js?v=2"></script>
     <link rel="stylesheet" href="/desk-extras.css?v=11" />
     <noscript
@@ -125,6 +125,7 @@
         <section class="desk-overview" aria-labelledby="studio-title">
 
           <h1 id="studio-title" class="visually-hidden" tabindex="-1">Cinna Davis — software, mathematics and research</h1>
+          <button class="desk-paper-shortcut" type="button" data-object="scratch-paper" data-keepsake aria-haspopup="dialog" hidden>Scratch paper</button>
           <div class="desktop-picture is-loading">
             <button type="button" class="desk-start-3d" hidden>Explore in 3D</button>
             <div class="desk-load-status">
@@ -246,7 +247,7 @@
               <button type="button" data-object="pencil" data-keepsake aria-haspopup="dialog" hidden><span>Graphite pencil</span></button>
               <button type="button" data-object="rose-pencil" data-keepsake aria-haspopup="dialog" hidden><span>Rose pencil</span></button>
               <button type="button" data-object="cup" data-keepsake aria-haspopup="dialog" hidden><span>Pencil cup</span></button>
-              <button type="button" data-object="blotter" data-keepsake aria-haspopup="dialog" hidden><span>Drawing mat</span></button>
+              <button type="button" data-object="blotter" data-keepsake data-opening-link style="--wide-area:64.573% 50.019% 30.242% 45.231%;--compact-area:58.129% 48.687% 37.564% 42.039%" aria-haspopup="dialog" hidden><span>Scratch paper on the drawing mat</span></button>
               <button type="button" class="object-lamp" data-object="lamp" aria-pressed="false" hidden><span>Desk lamp</span></button>
               <button type="button" class="object-drawer" data-object="drawer" aria-expanded="false" aria-controls="drawer-letter drawer-posters" hidden><span>Desk drawer</span></button>
               <button type="button" id="drawer-posters" data-object="poster-switch" aria-label="Frivolous wall posters" aria-pressed="false" hidden></button>

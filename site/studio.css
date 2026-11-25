@@ -347,14 +347,18 @@ html[data-view] .is-rendered .desk-objects :is(a,button) { cursor:inherit; }
 /* The room fills the window. Its only view control is the little shelf glyph. */
 html[data-view="desk"] .mast { display:none; }
 html[data-view="desk"] .desk-overview, html[data-view="desk"] .desktop-picture { height:100svh; }
-.mode-switch {
+.mode-switch, .desk-paper-shortcut:not([hidden]) {
   position:fixed; z-index:12; top:max(14px,env(safe-area-inset-top)); right:max(16px,env(safe-area-inset-right));
   display:inline-flex; align-items:center; gap:7px; height:44px; padding:0 14px; border:1px solid #806b62; border-radius:24px;
   font:670 15px/1 var(--headline); text-decoration:none; white-space:nowrap;
   color:#4c3945; background:#fff9ef; box-shadow:0 2px 0 #826e63,0 3px 13px #30241c30; touch-action:manipulation;
 }
-.mode-switch:hover,.profile-links a:hover { color:#823955; background:#fff; }
-.mode-switch:focus-visible,.profile-links a:focus-visible { outline:3px solid #76435c; outline-offset:3px; }
+.desk-paper-shortcut:not([hidden]) {
+  position:absolute; top:auto; bottom:max(12px,env(safe-area-inset-bottom)); z-index:2;
+}
+.stationery[data-open] .desk-paper-shortcut, body:has(dialog[open]) .desk-paper-shortcut { visibility:hidden; }
+.mode-switch:hover,.desk-paper-shortcut:hover,.profile-links a:hover { color:#823955; background:#fff; }
+.mode-switch:focus-visible,.desk-paper-shortcut:focus-visible,.profile-links a:focus-visible { outline:3px solid #76435c; outline-offset:3px; }
 html[data-view="shelf"] .mast-inner { padding-right:130px; }
 html[data-view="shelf"] .mode-switch { top:10px; }
 html[data-view="shelf"] .mode-shelf { display:initial; }
@@ -469,19 +473,19 @@ html[data-view="desk"] .is-loading[data-opening] > .desk-objects {
   display:block; inset:50% auto auto 50%; transform:translate(-50%,-50%);
   padding:0; width:auto; max-width:none; background-size:100% 100%;
   height:min(153.846cqh,96.154cqw); aspect-ratio:2;
-  background-image:url("assets/furniture/opening-wide.webp");
+  background-image:url("assets/furniture/opening-wide.webp?v=2");
 }
 html[data-view="desk"] .is-loading[data-opening^="compact"] > .desk-objects {
   aspect-ratio:0.85; height:clamp(104.386cqh,217.582cqw,169.492cqh);
-  background-image:url("assets/furniture/opening-compact.webp");
+  background-image:url("assets/furniture/opening-compact.webp?v=2");
 }
 html[data-view="desk"] .is-loading[data-opening="compact-landscape"] > .desk-objects { background-image:none; }
 .is-loading[data-opening="compact-landscape"] .desk-objects::before {
   content:""; position:absolute; top:0; left:50%; transform:translateX(-50%);
-  height:100%; aspect-ratio:2.2; background:url("assets/furniture/opening-compact-landscape.webp") center/100% 100%;
+  height:100%; aspect-ratio:2.2; background:url("assets/furniture/opening-compact-landscape.webp?v=2") center/100% 100%;
 }
 html[data-view="desk"] .is-loading[data-opening] .desk-objects > :is(a,button) { display:none; }
-html[data-view="desk"] .is-loading[data-opening] .desk-objects > a[data-opening-link] {
+html[data-view="desk"] .is-loading[data-opening] .desk-objects > [data-opening-link]:not([hidden]) {
   display:grid; position:absolute; inset:var(--wide-area); width:auto; height:auto;
   min-height:0; max-width:none; padding:0; transform:none; border:0;
   background:transparent; box-shadow:none; color:var(--ink); cursor:pointer;
@@ -498,6 +502,6 @@ html[data-view="desk"] .is-loading[data-opening] > .desk-load-status {
   width:8.5rem; padding:6px 10px; gap:4px; font-size:12px;
   background:#fff8edee; border-radius:5px;
 }
-html[data-view="desk"] .is-loading[data-opening^="compact"] .desk-objects > a[data-opening-link] {
+html[data-view="desk"] .is-loading[data-opening^="compact"] .desk-objects > [data-opening-link]:not([hidden]) {
   inset:var(--compact-area);
 }

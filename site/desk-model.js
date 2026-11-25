@@ -426,7 +426,7 @@ export async function furnish(scene, narrow, repaint, software=false, posterMode
   });
   // Stitched green leather blotter with a fine inset line.
   const matWidth=width*(narrow ? .75 : .69);
-  const pad=tag(group(world,0,0,0),'blotter',[.12,.043,1.65],.75,.38);
+  const pad=tag(group(world,0,0,0),'blotter',[-.22,.062,1.50],.90,.60);
   const matLeft=-matWidth/2-.04,matRight=matWidth/2-.04;
   const matFar=-.96,matNear=1.88,cornerCut=.28;
   function matStock(parent,corners,height,material,x=0,y=0,z=0){
@@ -990,10 +990,11 @@ export async function furnish(scene, narrow, repaint, software=false, posterMode
     fileFace.material.map.needsUpdate=true;
   }
   filed.visible=false;
-  const deskPaper=detail('scratch',world,narrow?-.10:.18,.054,1.65);
+  const deskPaper=detail('scratch',pad,-.22,.054,1.50);
+  deskPaper.scale.setScalar(1.55);
   box(deskPaper,.58,.012,.39,cream);
   const sketchFace=drawn(deskPaper,.56,.37,()=>{},0,.007,0,true);
-  deskPaper.rotation.y=.14;deskPaper.visible=false;
+  deskPaper.rotation.y=.14;
   const folded=detail('folded-sketch',deskPaper,0,.04,0);
   const foldedGeometry=new T.BufferGeometry();
   // Inverse UVs follow the original sheet through the center crease and wings.

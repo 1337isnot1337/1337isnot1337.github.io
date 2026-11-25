@@ -89,6 +89,19 @@ const server = http.createServer((req,res) => {
     if(await page.locator('.is-rendered').count()){
      assert.equal(await page.locator('.desk-load-progress').getAttribute('value'),'5');
      assert.equal(await page.locator('.desk-load-progress').isVisible(),false);
+     const paper=page.getByRole('dialog',{name:'Scratch paper',exact:true});
+     await page.getByRole('button',{name:'Scratch paper',exact:true}).press('Enter');
+     await paper.getByRole('button',{name:'Stamp a doodle'}).click();
+     await paper.getByRole('button',{name:'Put back'}).click();
+     const sheet=page.locator('[data-object="blotter"]');
+     await sheet.click();
+     assert.equal(await paper.locator('.sketch-paper image').count(),1,'clicking the sheet opens the same drawing in WebGL');
+     await paper.getByRole('button',{name:'Undo'}).click();
+     await paper.getByRole('button',{name:'Put back'}).click();
+     await sheet.click();
+     await paper.waitFor();
+     assert.equal(await paper.locator('.sketch-paper image').count(),0,'the blank sheet can still be picked up');
+     await page.keyboard.press('Escape');
      const stage=page.locator('.desktop-picture'),lamp=page.locator('[data-object="lamp"]');
      const r=await lamp.boundingBox();
      await page.mouse.move(r.x+r.width*.5,r.y+r.height*.95);
@@ -643,6 +656,10 @@ const server = http.createServer((req,res) => {
   await saver.locator('.is-loading[data-opening="compact"]').waitFor();
   await saver.locator('.desk-start-3d').waitFor();
   assert.equal(await saver.locator('.desk-load-status').isVisible(),false);
+  await saver.getByRole('button',{name:'Scratch paper',exact:true}).tap();
+  await saver.getByRole('dialog',{name:'Scratch paper'}).getByRole('button',{name:'Put back'}).tap();
+  await saver.getByRole('button',{name:'Scratch paper on the drawing mat'}).tap();
+  await saver.getByRole('dialog',{name:'Scratch paper'}).getByRole('button',{name:'Put back'}).tap();
   await saver.locator('.object-file').tap();
   await saver.locator('#catalogue:visible').waitFor();
   await saver.locator('.back-to-desk').tap();

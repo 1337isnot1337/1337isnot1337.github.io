@@ -215,7 +215,7 @@
   surface.append(rubbing);
   sketch.before(surface);surface.prepend(sketch);
   const impressions=new Map();
-  let freshLabel='',sketchRevision=0,folds=0,foldGrip=null;
+  let freshLabel='',sketchRevision=0,folds=0,foldGrip=null,paperDirty=false;
   studio.addEventListener('desk-rubbing',event=>{freshLabel=event.detail||'';});
   function graphiteRubbing(path,label){
     const scratch=make('canvas');scratch.width=art.width;scratch.height=art.height;
@@ -230,6 +230,7 @@
     return scratch;
   }
   function renderPaper(){
+    paperDirty=false;
     const ctx=art.getContext('2d');
     const rub=rubbing.getContext('2d');
     const key=++sketchRevision;
@@ -255,6 +256,7 @@
     else deliver();
   }
   new MutationObserver(records=>{
+    const hadRubbing=impressions.size>0;
     for(const change of records){
       for(const node of change.addedNodes){
         if(freshLabel&&node.nodeName.toLowerCase()==='path'&&node.dataset.lead==='graphite')
@@ -262,8 +264,10 @@
       }
     }
     for(const stroke of impressions.keys())if(!stroke.isConnected)impressions.delete(stroke);
-    renderPaper();
+    paperDirty=true;
+    if(!pickup.open || hadRubbing || impressions.size)renderPaper();
   }).observe(sketch,{subtree:true,childList:true,attributes:true,attributeFilter:['d','stroke-width']});
+  pickup.addEventListener('close',()=>{if(paperDirty)renderPaper();});
   studio.addEventListener('desk-sketch-request',renderPaper);
   sketch.addEventListener('pointermove',event=>{
     if(event.buttons && Math.abs(event.movementX)>17)
