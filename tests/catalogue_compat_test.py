@@ -79,10 +79,30 @@ class StatusCompatibility(unittest.TestCase):
                       cell("Complete for the stated theorem"), cell("General conjecture remains outside this result.")]]
         table = {"t": "Table", "c": [None, None, None, None, [[None, None, None, [row]]]]}
         builder = object.__new__(module.Builder)
+        # Newer upstream requires the actual ranked README table; older snapshots
+        # only use the Lean-status document in this isolated check.
+        readme_blocks = []
+        if hasattr(module.Builder, "readme_result_entries"):
+            labels = ("Problem", "Lean verification status") * 2
+            leader = cell("1.")
+            leader[-1][0]["c"] += [
+                {"t": "Space"},
+                {"t": "Link", "c": [["", [], []], [{"t": "Str", "c": "Result"}],
+                                    ["results/hegyvari-floor-doubling/", ""]]},
+            ]
+            ranked_row = [None, [leader, cell("⬜"), cell(""), cell("")]]
+            table["c"][4][0][3].append([None, [cell("Hegyvári’s conjecture"),
+                                              cell("Not formalized"), cell("Fixture result.")]])
+            readme_blocks.append({"t": "Table", "c": [
+                None, None, None, [None, [[None, [cell(label) for label in labels]]]],
+                [[None, None, None, [ranked_row]]],
+            ]})
         builder.documents = {"docs/lean-status.md": SimpleNamespace(ast={"blocks": [table]}),
-                             "README.md": SimpleNamespace(ast={"blocks": []})}
+                             "README.md": SimpleNamespace(ast={"blocks": readme_blocks})}
         result = SimpleNamespace(status="full", scope="partial", checked_scope="")
         results = {"erdos-gyarfas-abelian-covers": result}
+        if readme_blocks:
+            results["hegyvari-floor-doubling"] = SimpleNamespace(status="none", scope="complete", checked_scope="")
         checker(builder, results)
         self.assertEqual(result.scope, "partial")
         self.assertIn("General conjecture remains outside", result.checked_scope)

@@ -117,15 +117,25 @@ for (const [route, label] of pages) {
     links.replaceWith(list);
   }
 
-  const markdown = execFileSync('pandoc', ['--from=html', '--to=gfm-raw_html', '--wrap=none'], {
-    input: source.innerHTML, encoding: 'utf8'
-  }).trim();
-  if (!markdown.startsWith('# ')) throw new Error(`Missing Markdown title: ${canonical}`);
-  const titleEnd = markdown.indexOf('\n');
+  // Snapshot notices and other meaningful markup may precede the authored H1.
+  // Render the H1 independently so its placement in HTML is not a Markdown contract.
+  const heading = source.querySelector('h1');
+  if (!heading?.textContent.trim()) throw new Error(`Missing Markdown title: ${canonical}`);
+  const title = doc.createElement('h1');
+  title.innerHTML = heading.innerHTML;
+  heading.remove();
+  const convert = input => execFileSync('pandoc', [
+    '--from=html', '--to=gfm-raw_html', '--wrap=none'
+  ], { input, encoding: 'utf8' }).trim();
+  const titleMarkdown = convert(title.outerHTML);
+  if (!/^# [^\r\n]+$/.test(titleMarkdown)) {
+    throw new Error(`Invalid Markdown title: ${canonical}: ${JSON.stringify(titleMarkdown.slice(0, 160))}`);
+  }
+  const bodyMarkdown = convert(source.innerHTML);
   const note = route === '/about/' ? null : citation(route);
   const citationMarkdown = note ? `\n\n## Citation and sources\n\n${note.request} ${markdownLink([note.label, note.url])}. ${note.context}\n\n${authorContext(markdownLink, note.url !== `${origin}/`)}` : '';
   fs.mkdirSync(path.dirname(markdownFile), { recursive: true });
-  fs.writeFileSync(markdownFile, `${markdown.slice(0, titleEnd)}\n\n[Source page](${canonical})\n${markdown.slice(titleEnd)}${citationMarkdown}\n`);
+  fs.writeFileSync(markdownFile, `${titleMarkdown}\n\n[Source page](${canonical})${bodyMarkdown ? `\n\n${bodyMarkdown}` : ''}${citationMarkdown}\n`);
   index.push(`- [${label}](${origin}${markdownPath}): ${description}`);
 
   const alternate = `  <link rel="alternate" type="text/markdown" href="${markdownPath}">`;
