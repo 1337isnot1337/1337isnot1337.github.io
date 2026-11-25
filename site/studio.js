@@ -51,24 +51,42 @@
   function deskIsReadyToMount() {
     return sceneCanvas?.isConnected && page.dataset.view==='desk' && sceneNearby && !studio.dataset.open && !document.querySelector('.open-project[open]');
   }
+  const start3D=stage.querySelector('.desk-start-3d');
+  const connection=navigator.connection;
+  let request3D=!(connection?.saveData || ['slow-2g','2g'].includes(connection?.effectiveType) || matchMedia('(prefers-reduced-data: reduce)').matches);
+  let openingRequest='';
   const openingLayout=matchMedia('(max-width: 660px), (max-aspect-ratio: 6/5)');
+  const touchLandscape=matchMedia('(pointer: coarse) and (orientation: landscape) and (max-height: 900px)');
+  function openingName(){
+    return touchLandscape.matches?'compact-landscape':openingLayout.matches?'compact':'wide';
+  }
   function loadOpening(){
-    if(!sceneStarted || !stage.classList.contains('is-loading'))return;
-    const layout=openingLayout.matches?'compact':'wide';
-    if(stage.dataset.opening===layout)return;
+    if(!sceneCanvas?.isConnected || !stage.classList.contains('is-loading'))return;
+    const layout=openingName();
+    if(openingRequest===layout)return;
+    openingRequest=layout;
     delete stage.dataset.opening;
     const image=new Image();
     image.fetchPriority='high';
     image.onload=()=>{
-      if(stage.classList.contains('is-loading') && layout===(openingLayout.matches?'compact':'wide'))
+      if(stage.classList.contains('is-loading') && layout===openingName())
         stage.dataset.opening=layout;
+    };
+    image.onerror=()=>{
+      if(openingRequest!==layout)return;
+      openingRequest='';
+      if(!request3D)stage.classList.remove('is-loading');
     };
     image.src='/assets/furniture/opening-'+layout+'.webp';
   }
   function showFurniture() {
     if (sceneStarted || !deskIsReadyToMount()) return;
-    sceneStarted=true;
     loadOpening();
+    if(!request3D){
+      start3D.hidden=false;
+      return;
+    }
+    sceneStarted=true;
     deskProgress.value=2;
     // Fetch the engine alongside the furniture module on desk visits.
     for(const file of ['three.module.min.js','three.core.min.js']){
@@ -76,7 +94,7 @@
       preload.rel='modulepreload';preload.href='/vendor/three/'+file;
       if(!document.querySelector('link[href="'+preload.getAttribute('href')+'"]'))document.head.append(preload);
     }
-    import("./furniture.js?v=72").then(module => {
+    import("./furniture.js?v=73").then(module => {
       if (!deskIsReadyToMount()) { sceneStarted=false; return; }
       deskProgress.value=3;
       try { module.mountFurniture(stage,showGraphicsFallback,step=>{deskProgress.value=step;}); }
@@ -84,7 +102,15 @@
     }, () => showGraphicsFallback("The 3D desk couldn’t download. Reload to try again."));
   }
   if (sceneCanvas?.isConnected) {
+    start3D.addEventListener('click',()=>{
+      const keyboard=start3D.matches(':focus-visible');
+      request3D=true;start3D.hidden=true;
+      stage.classList.add('is-loading');
+      if(keyboard)stage.querySelector('[data-opening-link]').focus({preventScroll:true});
+      showFurniture();
+    });
     openingLayout.addEventListener("change",loadOpening);
+    touchLandscape.addEventListener("change",loadOpening);
     import("./desk-moths.js?v=1");
     if ("IntersectionObserver" in window) {
       new IntersectionObserver(([entry]) => {

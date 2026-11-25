@@ -1,7 +1,11 @@
 .stationery {
   position:relative; isolation:isolate; display:grid; grid-template-columns:minmax(0,1fr);
-  background:#69452f url(assets/furniture/grain.webp) center/950px auto;
+  background:#69452f var(--grain-image,url(assets/furniture/grain.webp)) center/950px auto;
   scroll-margin:0;
+}
+html[data-view="desk"] .stationery:not([data-open]) { background-image:none; }
+@media (pointer:coarse) {
+  .stationery, .hutch-fallback { --grain-image:url(assets/furniture/grain-small.webp); }
 }
 .desk-overview { position:relative; grid-area:1/1; align-self:start; height:160svh; min-height:780px; }
 .desktop-picture {
@@ -9,6 +13,12 @@
   isolation:isolate; background:linear-gradient(#706a52 0 22%,#543e31 22% 25%,#92705b 25% 55%,#8d6343 55% 80%,#69472f 80%);
 }
 .desk-load-status { display:none; }
+.desk-start-3d:not([hidden]) {
+  position:absolute; z-index:2; top:12px; left:12px; min-height:44px;
+  padding:8px 14px; border:1px solid #705740; border-radius:24px;
+  background:#fff8ed; color:#422c41; font:600 14px var(--headline); cursor:pointer;
+}
+html[data-view="desk"] .desktop-picture > .desk-start-3d:not([hidden]) ~ .desk-load-status { display:none; }
 html[data-view] .desktop-picture.is-loading { background:#c7bcaa; }
 html[data-view] .desktop-picture.is-loading > :is(.hutch-fallback,.desk-objects) { display:none; }
 html[data-view] .is-loading > .desk-load-status {
@@ -29,7 +39,7 @@ html[data-view] .is-loading > .desk-load-status {
 }
 .furniture-canvas { display:block; position:absolute; inset:0; width:100%; height:100%; opacity:0; }
 .desktop-picture.is-rendered .furniture-canvas { opacity:1; }
-.hutch-fallback { position:absolute; inset:24% 0 0; border-block:12px ridge #795737; background:#865d40 url(assets/furniture/grain.webp) center/cover; }
+.hutch-fallback { position:absolute; inset:24% 0 0; border-block:12px ridge #795737; background:#865d40 var(--grain-image,url(assets/furniture/grain.webp)) center/cover; }
 .hutch-fallback::before { content:""; position:absolute; inset:0 0 70%; background:#372b2180; border-bottom:14px ridge #89603e; }
 .is-rendered .hutch-fallback { display:none; }
 .desk-objects { position:absolute; inset:0; pointer-events:none; }
@@ -229,6 +239,7 @@ html[data-view] .is-loading > .desk-load-status {
 .desktop-picture.looking-around,.desktop-picture.looking-around canvas { user-select:none; }
 
 /* The two front doors share ordinary fragment links and browser history. */
+.project-reader:not(.script-unavailable) .project-details,
 html[data-view] #studio:not(.studio-ready) .desk-reading,
 html[data-view="desk"] .shop, html[data-view="shelf"] .desk-overview,
 html[data-view="shelf"] .studio-ready:not([data-open]), .mode-shelf { display:none; }
@@ -460,9 +471,14 @@ html[data-view="desk"] .is-loading[data-opening] > .desk-objects {
   height:min(153.846cqh,96.154cqw); aspect-ratio:2;
   background-image:url("assets/furniture/opening-wide.webp");
 }
-html[data-view="desk"] .is-loading[data-opening="compact"] > .desk-objects {
+html[data-view="desk"] .is-loading[data-opening^="compact"] > .desk-objects {
   aspect-ratio:0.85; height:clamp(104.386cqh,217.582cqw,169.492cqh);
   background-image:url("assets/furniture/opening-compact.webp");
+}
+html[data-view="desk"] .is-loading[data-opening="compact-landscape"] > .desk-objects { background-image:none; }
+.is-loading[data-opening="compact-landscape"] .desk-objects::before {
+  content:""; position:absolute; top:0; left:50%; transform:translateX(-50%);
+  height:100%; aspect-ratio:2.2; background:url("assets/furniture/opening-compact-landscape.webp") center/100% 100%;
 }
 html[data-view="desk"] .is-loading[data-opening] .desk-objects > :is(a,button) { display:none; }
 html[data-view="desk"] .is-loading[data-opening] .desk-objects > a[data-opening-link] {
@@ -482,6 +498,6 @@ html[data-view="desk"] .is-loading[data-opening] > .desk-load-status {
   width:8.5rem; padding:6px 10px; gap:4px; font-size:12px;
   background:#fff8edee; border-radius:5px;
 }
-html[data-view="desk"] .is-loading[data-opening="compact"] .desk-objects > a[data-opening-link] {
+html[data-view="desk"] .is-loading[data-opening^="compact"] .desk-objects > a[data-opening-link] {
   inset:var(--compact-area);
 }

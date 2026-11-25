@@ -3,6 +3,27 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <script>
+      (() => {
+        const shelfView = /^\/boring(?:\/|$)/.test(location.pathname) || /^(#projects|#flyover|#cpu|#schedule|#conjectures|#factoring|#conway)$/.test(location.hash);
+        document.documentElement.dataset.view = shelfView ? "shelf" : "desk";
+        if (window.HTMLDialogElement && typeof HTMLDialogElement.prototype.showModal === "function")
+          document.documentElement.classList.add("project-reader");
+        if (shelfView) {
+          const headline = document.createElement("link");
+          headline.rel = "preload"; headline.as = "font"; headline.type = "font/woff2"; headline.crossOrigin = "anonymous";
+          headline.href = "/assets/fonts/bricolage.woff2";
+          document.head.append(headline);
+        } else if (!location.hash || location.hash === "#studio") {
+          const compact = matchMedia("(max-width: 660px), (max-aspect-ratio: 6/5)").matches;
+          const landscape = matchMedia("(pointer: coarse) and (orientation: landscape) and (max-height: 900px)").matches;
+          const opening = document.createElement("link");
+          opening.rel = "preload"; opening.as = "image"; opening.fetchPriority = "high";
+          opening.href = "/assets/furniture/opening-" + (landscape ? "compact-landscape" : compact ? "compact" : "wide") + ".webp";
+          document.head.append(opening);
+        }
+      })();
+    </script>
     <meta name="google-site-verification" content="h4ySSSK_u3l1oEaAhd7lgn_6gM3ePOdC6Iz_FDDQC1o" />
     <meta name="theme-color" content="#f9f4f0" />
     <title>Cinna Davis | Software, Mathematics & Research</title>
@@ -31,13 +52,6 @@
     <meta name="twitter:title" content="Cinna Davis | Software, Mathematics & Research" />
     <meta name="twitter:description" content="Software, mathematics and research by Cinna Davis, an IMSA senior and incoming Software Engineer Intern on Neuralink's implant team (summer 2027)." />
     <link rel="icon" type="image/png" sizes="48x48" href="/assets/prints/favicon.png" />
-    <link
-      rel="preload"
-      href="/assets/fonts/bricolage.woff2"
-      as="font"
-      type="font/woff2"
-      crossorigin
-    />
     <link rel="stylesheet" href="/pixelation.css?v=6">
     <link rel="stylesheet" href="/vendor/swiper-bundle.min.css" />
     <link rel="stylesheet" href="/shelf.css?v=27" />
@@ -67,9 +81,8 @@
       else restoreReading();
     "></script>
     <script defer src="/rook-graph.js?v=3"></script>
-    <script>document.documentElement.dataset.view = /^\/boring(?:\/|$)/.test(location.pathname) || /^(#projects|#flyover|#cpu|#schedule|#conjectures|#factoring|#conway)$/.test(location.hash) ? "shelf" : "desk";</script>
-    <link rel="stylesheet" href="/studio.css?v=26" />
-    <script defer src="/studio.js?v=73" onerror="if (!location.pathname.startsWith('/boring')) delete document.documentElement.dataset.view"></script>
+    <link rel="stylesheet" href="/studio.css?v=27" />
+    <script defer src="/studio.js?v=74" onerror="if (!location.pathname.startsWith('/boring')) delete document.documentElement.dataset.view"></script>
     <script defer src="/paper-turn.js?v=5"></script>
     <script defer src="/desk-keepsakes.js?v=11"></script>
     <script defer src="/internship-card.js?v=1"></script>
@@ -113,6 +126,7 @@
 
           <h1 id="studio-title" class="visually-hidden" tabindex="-1">Cinna Davis — software, mathematics and research</h1>
           <div class="desktop-picture is-loading">
+            <button type="button" class="desk-start-3d" hidden>Explore in 3D</button>
             <div class="desk-load-status">
               <p id="desk-load-label" role="status">Opening the desk…</p>
               <progress class="desk-load-progress" max="5" value="1" aria-labelledby="desk-load-label"></progress>

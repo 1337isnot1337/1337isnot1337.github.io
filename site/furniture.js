@@ -1,8 +1,8 @@
 import * as T from './vendor/three/three.module.min.js';
-import { furnish } from './desk-model.js?v=53';
+import { furnish } from './desk-model.js?v=54';
 import { inspectDeskObjects } from './desk-inspect.js?v=20';
 
-import { attachDeskPointer } from './desk-pointer.js?v=25';
+import { attachDeskPointer } from './desk-pointer.js?v=26';
 
 import { deskLife } from './desk-life.js?v=18';
 import { deskView } from './desk-view.js?v=14';
@@ -22,6 +22,8 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress) {
   const gl=engine.getContext();
   const debug=gl.getExtension('WEBGL_debug_renderer_info');
   const software=debug && /swiftshader|llvmpipe/i.test(gl.getParameter(debug.UNMASKED_RENDERER_WEBGL));
+  const coarsePointer=matchMedia('(pointer: coarse)').matches;
+  const smallGraphics=software || coarsePointer;
   if(software)engine.setOpaqueSort((a,b)=>a.groupOrder-b.groupOrder || a.renderOrder-b.renderOrder || a.z-b.z || a.id-b.id);
   const pixelGrid=matchMedia('(forced-colors: none) and (prefers-contrast: no-preference)');
   let movingPixels=false, motionScale=1, previousMotionTime=0, slowFrames=0, fastFrames=0;
@@ -56,7 +58,7 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress) {
     const maxPixels=software ? (sampleMotion ? 140000 : 720000) : (sampleMotion ? 1000000 : 2100000);
     const sizeLimit=Math.sqrt(maxPixels/Math.max(1,viewWidth*viewHeight));
     const ceiling=Math.min(devicePixelRatio,sampleMotion?motionLimit:still,sizeLimit);
-    const floor=(software ? 240 : 540)/Math.max(1,viewWidth,viewHeight);
+    const floor=(software ? 240 : coarsePointer ? 360 : 540)/Math.max(1,viewWidth,viewHeight);
     const ratio=sampleMotion ? Math.min(ceiling,Math.max(floor,ceiling*motionScale)) : ceiling;
     if(engine.getPixelRatio()!==ratio)engine.setPixelRatio(ratio);
   }
@@ -72,7 +74,7 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress) {
   const sky=new T.HemisphereLight(0xf3f0e5,0xc6ae9d,daySky);scene.add(sky);
   const sun=new T.DirectionalLight(0xffebd2,2.16);
   sun.position.set(-4.7,7.7,4.6);sun.target.position.set(0,.6,-.3);sun.castShadow=true;
-  sun.shadow.mapSize.setScalar(1024);
+  sun.shadow.mapSize.setScalar(smallGraphics?512:1024);
   Object.assign(sun.shadow.camera,{left:-6.7,right:6.7,top:4.8,bottom:-4.8,near:.3,far:19});
   sun.shadow.bias=-.00025;sun.shadow.normalBias=.012;sun.shadow.radius=2;
   scene.add(sun,sun.target);
@@ -134,7 +136,7 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress) {
   let building=false;
   async function rebuild(compact) {
     const initialPosters=posterMode;
-    const next=await furnish(scene,compact,redraw,software,initialPosters);
+    const next=await furnish(scene,compact,redraw,software,initialPosters,smallGraphics);
     if(initialPosters!==posterMode)next.showPosters(posterMode);
     const firstBuild=!model;
     if(model){
@@ -187,7 +189,7 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress) {
     const w=stage.clientWidth,h=stage.clientHeight;
     // Some browsers briefly collapse a background or captured page to a 1px viewport.
     if(w<2 || h<2 || window.innerHeight<2)return false;
-    const compact=w<=660 || w/h<=1.2;
+    const compact=w<=660 || w/h<=1.2 || (coarsePointer && h<=900);
     if(building)return false;
     if(!model || narrow!==compact){
       building=true;
@@ -261,6 +263,7 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress) {
     if(!visible||contextLost||document.hidden||!dirty)return;
     // A paper dialog keeps the last canvas frame as its backdrop.
     if(document.querySelector('dialog[open]:not(.object-view)'))return;
+    if(opened && !stage.classList.contains('is-rendered'))return;
     if(!layout()||!lightReady)return;
     if(!shadersReady){
       if(!shadersStarted){
@@ -316,6 +319,7 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress) {
     model.scopeScreen.emissiveIntensity=.035+peek('scope')*.46;
     const drawerMotion=travel.step(dt,motion.matches||software);
     drawerAmount=drawerMotion.amount;
+    model.drawerInterior.visible=drawerAmount>0;
     life.drawerMomentum(drawerMotion.impulse);
     const folderGoal=Math.max(life.folderPose(opened==='catalogue'),peek('file')*.23);
     const notebookGoal=Math.max(Number(opened==='about'),peek('book')*.16);

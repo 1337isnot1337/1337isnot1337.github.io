@@ -1,6 +1,6 @@
 import * as T from './vendor/three/three.module.min.js';
 
-export function buildWindowView(outdoors, {photo,cylinder,finish,night}) {
+export function buildWindowView(outdoors, {photo,cylinder,finish,night,smallGraphics}) {
   // Every ray through the window meets this rear arc, even from the side of the desk.
   const landscape=new T.MeshBasicMaterial({color:0xb8c4c5,side:T.BackSide,toneMapped:false});
   const valley=photo('/assets/furniture/window-valley.webp?v=2',()=>{
@@ -68,16 +68,17 @@ export function buildWindowView(outdoors, {photo,cylinder,finish,night}) {
     for(const factor of [.70,.91,1.16])colors.push(shade.r*factor,shade.g*factor,shade.b*factor);
   }
 
+  const layers=smallGraphics?10:15, twigs=smallGraphics?3:5;
   for(const [x,z,height,width] of [
     [-4.8,-4.7,4.1,.88],[-3.5,-6.9,3.0,.68],[-6.1,-8.4,4.6,1.12],
     [4.6,-5.7,3.7,.83],[6.2,-7.8,4.2,1.08],[3.2,-9.6,2.8,.64],
     [-7.2,-11.7,3.9,1.02],[7.8,-11.2,4.3,1.00],
   ]){
     cylinder(outdoors,.019,.083,height,bark,x,height*.5,z,9).castShadow=false;
-    for(let layer=0;layer<15;layer++){
-      const age=layer/14, radius=width*(1-age*.94);
+    for(let layer=0;layer<layers;layer++){
+      const age=layer/(layers-1), radius=width*(1-age*.94);
       const y=height*(.25+age*.73);
-      const count=layer<11?7:5;
+      const count=age<.75?7:5;
       for(let branch=0;branch<count;branch++){
         const angle=(branch/count+layer*.231+random()*.09)*2*Math.PI;
         const dx=Math.cos(angle),dz=Math.sin(angle);
@@ -86,8 +87,8 @@ export function buildWindowView(outdoors, {photo,cylinder,finish,night}) {
         const base=[x,y-height*.033,z];
         const shoulder=[x+dx*reach*.29,y+height*.036,z+dz*reach*.29];
         triangle(base,shoulder,tip,.28+dx*.14+random()*.13);
-        for(let node=0;node<5;node++){
-          const along=(node+1)/6;
+        for(let node=0;node<twigs;node++){
+          const along=(node+1)/(twigs+1);
           const sx=x+dx*reach*along,sz=z+dz*reach*along;
           const sy=y+sweep*along, span=radius*(.23-.15*along);
           for(const side of [-1,1]){

@@ -68,7 +68,7 @@ const collections = {
 
 // Match compact and wide layouts within one visit. A fresh load gets a new order.
 const placementSeed=Math.floor(Math.random()*2**32);
-export function furnishRoomObjects({walls, world, half, narrow, group, box, bead, cylinder, wire, finish, drawn, tag, detail, weave, wood, trim}) {
+export async function furnishRoomObjects({yieldToBrowser,walls, world, half, narrow, group, box, bead, cylinder, wire, finish, drawn, tag, detail, weave, wood, trim}) {
   const line = finish(0x4e3b3e), page = finish(0xece0c7,.92);
   const gilt = finish(0xb4965e,.43,.35), glaze = finish(0x829c9e,.25,.12);
   const shadow = finish(0x51474d,.76);
@@ -774,16 +774,19 @@ export function furnishRoomObjects({walls, world, half, narrow, group, box, bead
   ledge(back,-6.07,3.78,4.32,window.slice(10,15),1.30);
   ledge(back,6.11,3.43,4.22,window.slice(15),1.16);
 
+  await yieldToBrowser();
   const records=collections.records;
   ledge(music,-.18,-2.25,8.35,records.slice(0,10),1.20,'records');
   ledge(music,-1.66,4.27,6.40,records.slice(10,16),1.16);
   ledge(music,5.18,1.32,1.78,records.slice(16),1.07);
 
+  await yieldToBrowser();
   const instruments=collections.instruments;
   ledge(science,.13,-2.04,8.8,instruments.slice(0,10),1.16,'instruments');
   ledge(science,.68,4.35,7.35,instruments.slice(10,16),1.16);
   ledge(science,-4.97,1.91,2.15,instruments.slice(16),1.10);
 
+  await yieldToBrowser();
   const entry=collections.entry;
   ledge(front,-4.12,-1.31,6.33,entry.slice(0,7),1.28,'library');
   ledge(front,-3.90,1.70,6.0,entry.slice(7,13),1.22);

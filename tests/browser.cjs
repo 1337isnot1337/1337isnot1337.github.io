@@ -65,6 +65,7 @@ const server = http.createServer((req,res) => {
    await page.goto(base);
    assert.equal(await page.locator('html').getAttribute('data-view'),'desk');
    assert.equal(await page.locator('.shop').isVisible(),false);
+   assert.deepEqual(mediaRequests,[],'the opening desk leaves the flyover recording and spectrum for their reader');
    assert.equal(await page.locator('.mast').isVisible(),false);
    assert.equal(await page.locator('script[src$="/swiper-bundle.min.js"]').count(),0,
      'the desk does not request the carousel library');
@@ -592,7 +593,7 @@ const server = http.createServer((req,res) => {
    console.log(`${name}: layout and interactions passed`);
   }
   // Hold both stages of a cold start so an early fallback cannot flash between paints.
-  const cold=await browser.newPage();
+  const cold=await browser.newPage({hasTouch:true,viewport:{width:1280,height:960}});
   let releaseStudio,releaseRenderer;
   const gate=new Promise(resolve=>releaseStudio=resolve);
   const renderer=new Promise(resolve=>releaseRenderer=resolve);
@@ -607,7 +608,7 @@ const server = http.createServer((req,res) => {
   assert.equal(await coldFallback.evaluateAll(elements=>elements.filter(el=>el.getClientRects().length).length),0,'static desk stays hidden before deferred startup');
   releaseStudio();await rendererRequested;
   assert.equal(await progress.getAttribute('value'),'2');
-  for(const [width,height,opening] of [[1280,720,'wide'],[390,844,'compact']]){
+  for(const [width,height,opening] of [[1280,960,'wide'],[390,844,'compact'],[844,390,'compact-landscape']]){
     await cold.setViewportSize({width,height});
     await cold.locator('.is-loading[data-opening="'+opening+'"]').waitFor();
     assert.equal(await cold.locator('.desk-objects a:visible').count(),7);
@@ -633,6 +634,24 @@ const server = http.createServer((req,res) => {
     assert.equal(await cold.evaluate(()=>document.activeElement.dataset.object),next);
   }
   await cold.close();
+  const saver=await browser.newPage({hasTouch:true,viewport:{width:390,height:844}});
+  await saver.addInitScript(()=>Object.defineProperty(navigator,'connection',{value:{saveData:true,effectiveType:'4g'}}));
+  const sceneRequests=[];
+  saver.on('request',req=>{if(/\/(?:furniture\.js|vendor\/three\/)/.test(req.url()))sceneRequests.push(req.url());});
+  await saver.route('**/furniture.js?*',route=>route.abort());
+  await saver.goto(base);
+  await saver.locator('.is-loading[data-opening="compact"]').waitFor();
+  await saver.locator('.desk-start-3d').waitFor();
+  assert.equal(await saver.locator('.desk-load-status').isVisible(),false);
+  await saver.locator('.object-file').tap();
+  await saver.locator('#catalogue:visible').waitFor();
+  await saver.locator('.back-to-desk').tap();
+  assert.deepEqual(sceneRequests,[],'the data-saving desk can open projects without downloading WebGL');
+  await saver.locator('.desk-start-3d').press('Enter');
+  await saver.locator('.graphics-warning:visible').waitFor();
+  assert.ok(sceneRequests.some(url=>url.includes('furniture.js')));
+  assert.equal(await saver.locator('.desk-start-3d').isVisible(),false);
+  await saver.close();
   const photos=await browser.newPage();
   let releasePhoto;
   const pending=new Promise(resolve=>releasePhoto=resolve);

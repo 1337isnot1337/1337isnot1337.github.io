@@ -6,8 +6,7 @@ export function attachDeskPointer(stage,{pick,track,hover=()=>{},stopLook=()=>{}
   let press=null, frame=0, x=0, y=0, overControl=false, suppress=false;
   let clickTarget, pointerInside=false, nextCameraPick=0;
   const active=()=>stage.classList.contains('is-rendered') && !stage.closest('.desk-overview').inert;
-  function targetAt(clientX,clientY){
-    const r=canvas.getBoundingClientRect();
+  function targetAt(clientX,clientY,r=canvas.getBoundingClientRect()){
     if(clientX<r.left||clientX>=r.right||clientY<r.top||clientY>=r.bottom)return null;
     const target=targets.get(pick((clientX-r.left)/r.width,(clientY-r.top)/r.height));
     return target && !target.hidden ? target : null;
@@ -52,8 +51,9 @@ export function attachDeskPointer(stage,{pick,track,hover=()=>{},stopLook=()=>{}
     if(!active()||!e.isPrimary||e.button!==0||e.target.closest('.loose-file-slip'))return;
     cancelAnimationFrame(frame);frame=0;stopLook();hover('');
     suppress=false;clickTarget=undefined;
-    const target=targetAt(e.clientX,e.clientY);
-    press={id:e.pointerId,lastX:e.clientX,lastY:e.clientY,mode:null,target,part:part()||target?.dataset.object};
+    const bounds=canvas.getBoundingClientRect();
+    const target=targetAt(e.clientX,e.clientY,bounds);
+    press={width:stage.clientWidth,height:stage.clientHeight,id:e.pointerId,lastX:e.clientX,lastY:e.clientY,mode:null,target,part:part()||target?.dataset.object};
     stage.setPointerCapture(e.pointerId);
   });
   stage.addEventListener('pointermove',e=>{
@@ -64,7 +64,7 @@ export function attachDeskPointer(stage,{pick,track,hover=()=>{},stopLook=()=>{}
         const dx=e.clientX-press.lastX,dy=e.clientY-press.lastY;
         if(!press.mode && Math.hypot(dx,dy)<=7)return;
         const start=press.mode ? null : Math.abs(dx)>=Math.abs(dy) ? 'horizontal' : dy<0 ? 'up' : 'down';
-        const moveX=dx/stage.clientWidth,moveY=dy/stage.clientHeight;
+        const moveX=dx/press.width,moveY=dy/press.height;
         const handled=press.mode!=='orbit' && gesture(press.part,moveX,moveY,e.timeStamp,start);
         if(!press.mode){
           press.mode=handled?'object':'orbit';
@@ -76,9 +76,6 @@ export function attachDeskPointer(stage,{pick,track,hover=()=>{},stopLook=()=>{}
     }
     aim(e);
   });
-  stage.addEventListener('touchmove',e=>{
-    if(press?.mode && e.touches.length===1 && e.cancelable)e.preventDefault();
-  },{passive:false});
   stage.addEventListener('wheel',e=>{
     if(!active() || e.ctrlKey || e.metaKey || !e.deltaY || document.querySelector('dialog[open]'))return;
     e.preventDefault();

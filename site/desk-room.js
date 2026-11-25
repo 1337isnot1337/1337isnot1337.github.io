@@ -1,19 +1,19 @@
 import * as T from './vendor/three/three.module.min.js';
-import { furnishRoomObjects } from './room-objects.js?v=11';
-import { buildRoomShell } from './room-shell.js?v=17';
+import { furnishRoomObjects } from './room-objects.js?v=12';
+import { buildRoomShell } from './room-shell.js?v=18';
 import { posterSets } from './room-posters.js?v=3';
 
 const leafColors = [0x72925d, 0x4a7147, 0x538254, 0x688254, 0x8a9b66];
 
-function ivyGeometry(software) {
+function ivyGeometry(smallGraphics) {
   const outline = new T.CatmullRomCurve3([
     [0,.022],[-.105,-.012],[-.143,.056],[-.162,.133],[-.201,.221],[-.099,.215],
     [-.073,.289],[.009,.424],[.074,.274],[.103,.217],[.198,.228],[.157,.130],
     [.132,.043],[.094,-.005],
   ].map(([x,y])=>new T.Vector3(x,y,0)),true);
-  const points=outline.getPoints(software?16:30).slice(0,-1);
+  const points=outline.getPoints(smallGraphics?16:30).slice(0,-1);
   const positions=[0,.153,.053],uv=[.5,.39],indices=[];
-  const rings=software?[.60,1]:[.38,.73,1];
+  const rings=smallGraphics?[.60,1]:[.38,.73,1];
   for(const radius of rings){
     for(const point of points){
       const x=point.x*radius, y=.153+(point.y-.153)*radius;
@@ -36,9 +36,10 @@ function ivyGeometry(software) {
   return geometry;
 }
 
-export function decorateRoom(world, { desk, narrow, software, half, group, box, bead, cylinder, wire, finish, photo, tag, detail, drawn, weave, wood, trim, floorMat, night }) {
-  const ivyLeaf=ivyGeometry(software);
-  const {walls,coves,readingBulb,outdoors,windowBounds}=buildRoomShell(world,{group,box,bead,cylinder,wire,finish,photo,drawn,weave,wood,trim,floorMat,night,tag,detail});
+export async function decorateRoom(world, { yieldToBrowser, desk, narrow, smallGraphics, half, group, box, bead, cylinder, wire, finish, photo, tag, detail, drawn, weave, wood, trim, floorMat, night }) {
+  const ivyLeaf=ivyGeometry(smallGraphics);
+  const {walls,coves,readingBulb,outdoors,windowBounds}=buildRoomShell(world,{smallGraphics,group,box,bead,cylinder,wire,finish,photo,drawn,weave,wood,trim,floorMat,night,tag,detail});
+  await yieldToBrowser();
   const prints = new Map();
   const paper = new T.MeshStandardMaterial({ color: 0xe8dfce, roughness: .97, side: T.BackSide });
   const stem = finish(0x5e6e43);
@@ -146,7 +147,7 @@ export function decorateRoom(world, { desk, narrow, software, half, group, box, 
     const current = prints.get(name);
     if (!current.requested) {
       current.requested = true;
-      const loaded = photo('/assets/furniture/room-atlas-' + name + '.webp?v=3', () => {
+      const loaded = photo('/assets/furniture/room-atlas-' + name + (smallGraphics ? '-small.webp' : '.webp?v=3'), () => {
         current.atlas.image = loaded.image;
         current.atlas.needsUpdate = true;
       });
@@ -163,7 +164,8 @@ export function decorateRoom(world, { desk, narrow, software, half, group, box, 
     vine(wall, side<0 ? -5.85 : -5.89, 6.45, .125, 4.15, .4 + side);
   }
 
-  furnishRoomObjects({walls,world:desk,half,narrow,group,box,bead,cylinder,wire,finish,drawn,tag,detail,weave,wood,trim});
+  await yieldToBrowser();
+  await furnishRoomObjects({yieldToBrowser,walls,world:desk,half,narrow,group,box,bead,cylinder,wire,finish,drawn,tag,detail,weave,wood,trim});
 
   // Smaller vines on the end of the hutch connect it to the rest of the room.
   for (const side of [-1, 1]) {

@@ -1,9 +1,9 @@
 import * as T from './vendor/three/three.module.min.js';
-import { buildWindowView } from './room-window-view.js?v=7';
+import { buildWindowView } from './room-window-view.js?v=8';
 import { addRug, furnishReadingCorner, furnishSharedStudy } from './room-furnishings.js?v=4';
 
 // The hutch sits against the window wall.
-export function buildRoomShell(world, {group,box,bead,cylinder,wire,finish,photo,drawn,weave,wood,trim,floorMat,night,tag,detail}) {
+export function buildRoomShell(world, {smallGraphics,group,box,bead,cylinder,wire,finish,photo,drawn,weave,wood,trim,floorMat,night,tag,detail}) {
   const width=9.55, backZ=-2.68, frontZ=10.65, floor=-3.07, ceiling=6.65;
   const length=frontZ-backZ, middle=(frontZ+backZ)/2;
   const molding=finish(0xd3c5b2,.83);
@@ -211,7 +211,7 @@ export function buildRoomShell(world, {group,box,bead,cylinder,wire,finish,photo
   }
   const outdoors=group(rear,0,-windowDrop,-.30);
   outdoors.renderOrder=1;
-  buildWindowView(outdoors,{photo,cylinder,finish,night});
+  buildWindowView(outdoors,{photo,cylinder,finish,night,smallGraphics});
   const windowBounds=new T.Box3(
     new T.Vector3(opening.left,opening.bottom,backZ-.16),
     new T.Vector3(opening.right,opening.top,backZ+.16),

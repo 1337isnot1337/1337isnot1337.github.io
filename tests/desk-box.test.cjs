@@ -8,9 +8,11 @@ test('cached desk bevels preserve rounded-box geometry and texture coordinates',
     const expected = new RoundedBoxGeometry(w,h,d,1,r);
     const actual = deskBox(w,h,d,r);
     assert.deepEqual(actual.groups, expected.groups);
+    assert.ok(actual.getAttribute('position').count < expected.getAttribute('position').count/3);
+    const expanded=actual.toNonIndexed();
     for (const name of ['position','normal','uv']) {
       const reference = expected.getAttribute(name).array;
-      const values = actual.getAttribute(name).array;
+      const values = expanded.getAttribute(name).array;
       assert.equal(values.length, reference.length);
       assert.ok(values.every((value,i) => Math.abs(value-reference[i])<1e-6), name);
     }

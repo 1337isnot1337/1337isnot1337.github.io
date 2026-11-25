@@ -4,16 +4,16 @@ import { leafPoint, caterpillarRadii } from './desk-botany.js?v=1';
 import { lampProjection } from './desk-lamp.js?v=1';
 import { paintScope, followProbe } from './desk-scope.js?v=1';
 import { airframeGeometry, wingUnderside } from './model-plane.js?v=2';
-import { mergeGeometries } from './vendor/three/BufferGeometryUtils.js';
-import { decorateRoom } from './desk-room.js?v=26';
+import { batchDeskMeshes } from './desk-batch.js?v=1';
+import { decorateRoom } from './desk-room.js?v=27';
 import { clockHands, setClock } from './shelf-clock.js?v=1';
 import { corkMaterial, curledPrint, scopeScale } from './desk-finishes.js?v=1';
-import { deskBox } from './desk-box.js';
+import { deskBox } from './desk-box.js?v=2';
 
 // Let navigation and input run between the expensive stages of room construction.
 const yieldToBrowser=()=>globalThis.scheduler?.yield?.() ?? new Promise(done=>setTimeout(done,0));
 
-export async function furnish(scene, narrow, repaint, software=false, posterMode='professional') {
+export async function furnish(scene, narrow, repaint, software=false, posterMode='professional', smallGraphics=software) {
   const width = narrow ? 5.6 : 9.6;
   const half = width / 2;
   const room = new T.Group();
@@ -48,27 +48,27 @@ export async function furnish(scene, narrow, repaint, software=false, posterMode
     m.castShadow = true; m.receiveShadow = true; parent.add(m); return m;
   }
   function box(parent,w,h,d,mat,x=0,y=0,z=0,r=0) {
-    // Tiny bevels are subpixel in the software view. Keep rounded silhouettes
+    // Tiny bevels are subpixel on small screens and in the software view. Keep rounded silhouettes
     // on larger pieces such as the drawers, worktop and instrument cases.
-    if(software&&Math.min(w,h,d)<.13)r=0;
+    if(smallGraphics && Math.min(w,h,d)<(software?.13:.09))r=0;
     const key = [w,h,d,r].join(',');
     if (!geometry.has(key)) geometry.set(key,r ? deskBox(w,h,d,Math.min(r,h/2,w/2,d/2)) : new T.BoxGeometry(w,h,d));
     return mesh(parent,geometry.get(key),mat,x,y,z);
   }
   function cylinder(p,top,bottom,h,mat,x,y,z,n=22) {
-    if(software)n=Math.min(n,12);
+    if(smallGraphics)n=Math.min(n,software?12:16);
     const key='cylinder/'+[top,bottom,h,n].join('/');
     if(!geometry.has(key))geometry.set(key,new T.CylinderGeometry(top,bottom,h,n));
     return mesh(p,geometry.get(key),mat,x,y,z);
   }
   function bead(p,x,y,z,rx,ry,rz,mat) {
     const key='sphere';
-    if (!geometry.has(key)) geometry.set(key,new T.SphereGeometry(1,software?8:14,software?6:10));
+    if (!geometry.has(key)) geometry.set(key,new T.SphereGeometry(1,smallGraphics?8:14,smallGraphics?6:10));
     const m=mesh(p,geometry.get(key),mat,x,y,z);m.scale.set(rx,ry,rz);return m;
   }
   function wire(p,points,r,mat) {
     const path=new T.CatmullRomCurve3(points.map(v=>new T.Vector3(...v)));
-    return mesh(p,new T.TubeGeometry(path,Math.max(10,points.length*(software?2:3)),r,software?5:6,false),mat);
+    return mesh(p,new T.TubeGeometry(path,Math.max(10,points.length*(smallGraphics?2:3)),r,smallGraphics?5:6,false),mat);
   }
   const loader = new T.TextureLoader().setCrossOrigin(undefined);
   function photo(uri,onLoad) {
@@ -114,9 +114,9 @@ export async function furnish(scene, narrow, repaint, software=false, posterMode
   function tag(root,id,point,w,h) {
     root.userData.pick=id;targets.set(id,{root,point:new T.Vector3(...point),w,h});return root;
   }
-  const woodMap=photo('assets/furniture/grain.webp',()=>{floorMap.needsUpdate=true;});
+  const woodMap=photo(smallGraphics?'assets/furniture/grain-small.webp':'assets/furniture/grain.webp',()=>{floorMap.needsUpdate=true;});
   woodMap.wrapS=woodMap.wrapT=T.RepeatWrapping;
-  const relief=software?null:loader.load('assets/furniture/grain-relief.webp',repaint);
+  const relief=software?null:loader.load(smallGraphics?'assets/furniture/grain-relief-small.webp':'assets/furniture/grain-relief.webp',repaint);
   if(relief){relief.wrapS=relief.wrapT=T.RepeatWrapping;relief.anisotropy=4;}
   const wood=new T.MeshStandardMaterial({
     map:woodMap,roughnessMap:relief,bumpMap:relief,bumpScale:.011,roughness:.84,color:0xd9beaa
@@ -197,7 +197,8 @@ export async function furnish(scene, narrow, repaint, software=false, posterMode
   fitted.visible=false;
   const handle=detail('handle',drawer,0,.15,.18);
   wire(handle,[[-.31,0,0],[-.29,-.04,.11],[-.18,-.084,.15],[.18,-.084,.15],[.29,-.04,.11],[.31,0,0]],.034,brass);
-  const posterSwitch=tag(group(drawer,dw/2-.074,.203,-.30),'poster-switch',[0,.060,0],.28,.25);
+  const drawerInterior=group(drawer,0,0,0);
+  const posterSwitch=tag(group(drawerInterior,dw/2-.074,.203,-.30),'poster-switch',[0,.060,0],.28,.25);
   posterSwitch.rotation.z=1.02;
   cylinder(posterSwitch,.115,.123,.041,brassDark,0,.008,0,24);
   cylinder(posterSwitch,.092,.097,.023,finish(0x342420,.53),0,.038,0,24);
@@ -209,17 +210,17 @@ export async function furnish(scene, narrow, repaint, software=false, posterMode
   box(drawerNote,.55,.008,.11,paper,.008,.010,-.043).rotation.z=.035;
   const complaint=letter(drawerNote,'i live here too',.52,.108,0,.011,.063,{flat:true,italic:true});
   complaint.rotation.z=.025;
-  const marble=detail('marble',drawer,-.77,.106,-.43);
+  const marble=detail('marble',drawerInterior,-.77,.106,-.43);
   bead(marble,0,0,0,.047,.047,.047,finish(0x8bbeb3,.17,.15));
   bead(marble,0,.020,0,.041,.010,.041,finish(0xf7ce78,.24));
   const marblesLeft=-1.04;
-  box(drawer,.10,.106,.81,wood,marblesLeft-.035,.119,-.70,.005);
-  box(drawer,.19,.091,.068,wood,marblesLeft+.094,.11,-1.075,.004);
-  const liner=detail('liner',drawer,dw*.385,.073,-1.32);
+  box(drawerInterior,.10,.106,.81,wood,marblesLeft-.035,.119,-.70,.005);
+  box(drawerInterior,.19,.091,.068,wood,marblesLeft+.094,.11,-1.075,.004);
+  const liner=detail('liner',drawerInterior,dw*.385,.073,-1.32);
   box(liner,.24,.012,.27,finish(0xaebca5),0,0,.126);
   const curled=box(liner,.093,.012,.063,finish(0xbbc7b0),.069,.012,.241);
   curled.rotation.x=-.25;
-  const crumbPlan=detail('crumb-plan',drawer,dw*.385,.079,-1.20);
+  const crumbPlan=detail('crumb-plan',drawerInterior,dw*.385,.079,-1.20);
   box(crumbPlan,.245,.009,.22,cream);
   drawn(crumbPlan,.239,.216,(c,w,h)=>{
     c.fillStyle='#e4ead6';c.fillRect(0,0,w,h);
@@ -236,7 +237,7 @@ export async function furnish(scene, narrow, repaint, software=false, posterMode
   },0,.006,0,true);
   crumbPlan.visible=false;
   liner.rotation.x=-.06;
-  const screw=detail('screw',drawer,dw*.38,.078,-.52);
+  const screw=detail('screw',drawerInterior,dw*.38,.078,-.52);
   cylinder(screw,.034,.028,.018,brassDark,0,.038,0,16);
   cylinder(screw,.013,.010,.045,brass,0,.009,0,14);
   for(let i=0;i<4;i++){
@@ -245,14 +246,14 @@ export async function furnish(scene, narrow, repaint, software=false, posterMode
   }
   letter(screw,'?',.034,.040,0,.048,0,{flat:true,ink:'#fff3ba',italic:true}).rotation.z=-.11;
   screw.position.y+=.01;screw.rotation.z=.98;
-  const rubberStamp=detail('drawer-stamp',drawer,dw*.31,.081,-.88);
+  const rubberStamp=detail('drawer-stamp',drawerInterior,dw*.31,.081,-.88);
   cylinder(rubberStamp,.063,.071,.026,finish(0x7f3c48,.8),0,.014,0,18);
   cylinder(rubberStamp,.049,.061,.023,wood,0,.038,0,20);
   bead(rubberStamp,0,.100,0,.036,.052,.036,wood);
   rubberStamp.rotation.y=-.35;
-  box(drawer,1.10,.003,.68,finish(0xafbaa3),0,.074,-.65);
+  box(drawerInterior,1.10,.003,.68,finish(0xafbaa3),0,.074,-.65);
   drawerNote.visible=false;
-  const keepsake=tag(group(drawer,0,.087,-.65),'keepsake',[0,.03,0],1.02,.58);
+  const keepsake=tag(group(drawerInterior,0,.087,-.65),'keepsake',[0,.03,0],1.02,.58);
   box(keepsake,1.12,.022,.70,cream);illustration(keepsake,'assets/furniture/prints/night-mail.webp',1.04,.62,0,.013,0,true);
   keepsake.rotation.y=-.10;
   await yieldToBrowser();
@@ -689,7 +690,7 @@ export async function furnish(scene, narrow, repaint, software=false, posterMode
   },.34,.118,-.252,true);
   await yieldToBrowser();
   // One curved blade and a painted vein texture are shared by every leaf on the cutting.
-  const leafShape=new T.PlaneGeometry(1,1,software?6:12,software?10:20);
+  const leafShape=new T.PlaneGeometry(1,1,smallGraphics?6:12,smallGraphics?10:20);
   const vertices=leafShape.attributes.position,leafUV=leafShape.attributes.uv;
   for(let i=0;i<vertices.count;i++){
     vertices.setXYZ(i,...leafPoint(leafUV.getY(i),leafUV.getX(i)*2-1));
@@ -1084,7 +1085,7 @@ export async function furnish(scene, narrow, repaint, software=false, posterMode
   bead(moth,0,0,0,.011,.011,.051,finish(0x685341));
   moth.visible=false;
   await yieldToBrowser();
-  const {coves,walls,showPosters,readingBulb,outdoors,windowBounds}=decorateRoom(room,{desk:world,narrow,software,half,group,box,bead,cylinder,wire,finish,photo,tag,detail,drawn,weave,wood,trim,floorMat,night});
+  const {coves,walls,showPosters,readingBulb,outdoors,windowBounds}=await decorateRoom(room,{yieldToBrowser,desk:world,narrow,smallGraphics,half,group,box,bead,cylinder,wire,finish,photo,tag,detail,drawn,weave,wood,trim,floorMat,night});
   showPosters(posterMode);
   // Small displayed pieces come forward at their existing mounting points.
   const displayPoses=new Map();
@@ -1170,7 +1171,7 @@ export async function furnish(scene, narrow, repaint, software=false, posterMode
   const roomProps=new Map(), roomClocks=new Map(), previewGeometry=new Set();
   // Keep wall batches separate so the camera can cull the geometry behind it.
   const staticRoots=new Set([room,world,...Object.values(walls)]);
-  const rigid=new Set([...staticRoots,outdoors,flap,cover,...details.values()]);
+  const rigid=new Set([...staticRoots,outdoors,drawerInterior,flap,cover,...details.values()]);
   room.updateMatrixWorld(true);
   for(const [id,item] of targets){
     const {root}=item;
@@ -1194,14 +1195,28 @@ export async function furnish(scene, narrow, repaint, software=false, posterMode
     roomProps.set(id,item);
   }
   const batches=new Map(),source=new Set(),solidVariants=new Map(),fastMaterials=new Map();
+  const finishes=new Set(cache.values());
   const occluders=Array.from(roomProps.values(),item=>item.bounds);
   // One draw can paint several solid colors on the same rigid part.
   function batchMaterial(mat) {
     if(mat.isMeshBasicMaterial || mat.map || mat.vertexColors || mat===bulbGlass || mat.transparent)return mat;
-    const key=software && mat!==scopeScreen && !mat.emissive.getHex() ? 'diffuse/'+mat.side : [mat.roughness,mat.metalness,mat.side].join('/');
+    const solidFinish=(software || finishes.has(mat)) && !mat.emissive.getHex();
+    const key=solidFinish ? 'finish/'+mat.side : [mat.roughness,mat.metalness,mat.side].join('/');
     if(!solidVariants.has(key)){
       const tint=mat.clone();tint.color.set(0xffffff);tint.vertexColors=true;
       tint.onBeforeCompile=mat.onBeforeCompile;tint.customProgramCacheKey=mat.customProgramCacheKey;
+      if(solidFinish && !software){
+        // Carry each part's surface finish with its vertex color so paint and brass can share a draw.
+        tint.userData.deskFinish=true;
+        tint.customProgramCacheKey=()=>mat.customProgramCacheKey()+'/finish';
+        tint.onBeforeCompile=(shader,renderer)=>{
+          mat.onBeforeCompile(shader,renderer);
+          shader.vertexShader='attribute vec2 deskFinish; varying vec2 vDeskFinish;\n'+shader.vertexShader
+            .replace('#include <color_vertex>','#include <color_vertex>\n vDeskFinish=deskFinish;');
+          shader.fragmentShader='varying vec2 vDeskFinish;\n'+shader.fragmentShader
+            .replace('#include <metalnessmap_fragment>','#include <metalnessmap_fragment>\n roughnessFactor=vDeskFinish.x; metalnessFactor=vDeskFinish.y;');
+        };
+      }
       solidVariants.set(key,tint);
     }
     return solidVariants.get(key);
@@ -1247,26 +1262,7 @@ export async function furnish(scene, narrow, repaint, software=false, posterMode
       if(!first.geometry.boundingSphere)first.geometry.computeBoundingSphere();
       continue;
     }
-    const inverse=parent.matrixWorld.clone().invert();
-    const indexed=meshes.some(m=>m.geometry.index);
-    const transform=new T.Matrix4();
-    const parts=meshes.map(m=>{
-      const g=m.geometry.clone();
-      if(indexed&&!g.index){
-        const size=g.attributes.position.count;
-        const indices=size>65535?new Uint32Array(size):new Uint16Array(size);
-        for(let i=0;i<size;i++)indices[i]=i;
-        g.setIndex(new T.BufferAttribute(indices,1));
-      }
-      if(mat!==m.material){
-        const color=new T.BufferAttribute(new Float32Array(3*g.attributes.position.count),3);
-        const {r,g:green,b}=m.material.color;
-        for(let i=0;i<color.count;i++)color.setXYZ(i,r,green,b);
-        g.setAttribute('color',color);
-      }
-      return g.applyMatrix4(transform.multiplyMatrices(inverse,m.matrixWorld));
-    });
-    const combined=mergeGeometries(parts);parts.forEach(g=>g.dispose());
+    const combined=batchDeskMeshes(meshes,parent,mat);
     meshes.forEach(m=>m.removeFromParent());
     const done=mesh(parent,combined,surface);done.castShadow=cast;
     combined.computeBoundingBox();combined.computeBoundingSphere();
@@ -1274,5 +1270,5 @@ export async function furnish(scene, narrow, repaint, software=false, posterMode
   source.forEach(g=>{if(!previewGeometry.has(g))g.dispose();});
   const flexCable=followProbe(cableWire.children[0],cableTip,probeRest);
   scene.add(room);
-  return {outdoors,windowBounds,world:room,desk:world,deskScale,targets,roomProps,roomClocks,details,occluders,drawer,flap,cover,lamp,bulbGlass:fastMaterials.get(bulbGlass)||bulbGlass,scopeScreen:fastMaterials.get(scopeScreen)||scopeScreen,tuneScope,contactMap,daylight,night,coves,showPosters,posterCap,poseHover,projectLampShadow,flexCable,titleLooseFile,pencilBounds:{book:book.position.x+(narrow?.24:.43),mat:matRight-.10},sketchTexture:sketchFace.material.map,readingBulb};
+  return {outdoors,windowBounds,world:room,desk:world,deskScale,targets,roomProps,roomClocks,details,occluders,drawer,drawerInterior,flap,cover,lamp,bulbGlass:fastMaterials.get(bulbGlass)||bulbGlass,scopeScreen:fastMaterials.get(scopeScreen)||scopeScreen,tuneScope,contactMap,daylight,night,coves,showPosters,posterCap,poseHover,projectLampShadow,flexCable,titleLooseFile,pencilBounds:{book:book.position.x+(narrow?.24:.43),mat:matRight-.10},sketchTexture:sketchFace.material.map,readingBulb};
 }
