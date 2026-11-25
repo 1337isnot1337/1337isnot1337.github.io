@@ -1,10 +1,6 @@
-/* Treat the rendered scene as an image. The reading layer stays independent. */
+/* Sample the 3D canvas independently of text and controls. */
 @media screen and (forced-colors: none) and (prefers-contrast: no-preference) {
-  .desktop-picture.is-rendered .furniture-canvas[data-pixel-sampling] {
+  .desktop-picture.is-rendered .furniture-canvas {
     image-rendering: pixelated;
-  }
-
-  .desktop-picture.is-rendered .furniture-canvas:not([data-pixel-sampling]) {
-    filter: url("/assets/pixel-grid.svg?v=4#grid");
   }
 }

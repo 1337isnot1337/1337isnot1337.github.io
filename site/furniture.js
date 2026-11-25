@@ -1,5 +1,5 @@
 import * as T from './vendor/three/three.module.min.js';
-import { furnish } from './desk-model.js?v=51';
+import { furnish } from './desk-model.js?v=52';
 import { inspectDeskObjects } from './desk-inspect.js?v=20';
 
 import { attachDeskPointer } from './desk-pointer.js?v=25';
@@ -13,9 +13,8 @@ import { bindRoomActions } from './room-actions.js?v=3';
 export function mountFurniture(stage,showGraphicsFallback,reportProgress) {
   const canvas = stage.querySelector('canvas');
   if (!document.createElement('canvas').getContext('2d'))throw new Error('Canvas drawing unavailable');
-  const options={alpha:false,powerPreference:'default'};
-  const context=canvas.getContext('webgl2',{...options,antialias:true,failIfMajorPerformanceCaveat:true})
-    || canvas.getContext('webgl2',{...options,antialias:false});
+  const options={alpha:false,antialias:false,powerPreference:'default'};
+  const context=canvas.getContext('webgl2',options);
   if(!context)throw new Error('WebGL 2 unavailable');
   const engine = new T.WebGLRenderer({canvas,context,...options});
   const warning=stage.querySelector('.graphics-warning');
@@ -23,24 +22,26 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress) {
   const gl=engine.getContext();
   const debug=gl.getExtension('WEBGL_debug_renderer_info');
   const software=debug && /swiftshader|llvmpipe/i.test(gl.getParameter(debug.UNMASKED_RENDERER_WEBGL));
-  // Use the renderer's own sampling where SVG tiling would run in software.
-  const needsCanvasGrid=software||CSS.supports('-moz-appearance','none');
-  canvas.toggleAttribute('data-pixel-sampling',needsCanvasGrid);
   const pixelGrid=matchMedia('(forced-colors: none) and (prefers-contrast: no-preference)');
   let movingPixels=false;
   function setResolution(moving=movingPixels){
     movingPixels=moving;
-    const still=needsCanvasGrid&&pixelGrid.matches?.79:software?.85:1.4;
-    const ratio=Math.min(devicePixelRatio,moving&&software&&pixelGrid.matches?.49:still);
+    // Sample the canvas once, in WebGL. DOM text and hit targets stay at native resolution.
+    const still=pixelGrid.matches ? (software ? .79 : 1) : (software ? .85 : 1.4);
+    const sampleMotion=moving && pixelGrid.matches;
+    const motionLimit=software ? .36 : .8;
+    const maxPixels=software ? (sampleMotion ? 140000 : 720000) : (sampleMotion ? 1000000 : 2100000);
+    const sizeLimit=Math.sqrt(maxPixels/Math.max(1,viewWidth*viewHeight));
+    const ratio=Math.min(devicePixelRatio,sampleMotion?motionLimit:still,sizeLimit);
     if(engine.getPixelRatio()!==ratio)engine.setPixelRatio(ratio);
   }
-  setResolution();
   engine.shadowMap.enabled=!software;
   engine.shadowMap.type=software ? T.BasicShadowMap : T.PCFSoftShadowMap;
   engine.shadowMap.autoUpdate=false;
   engine.toneMapping=T.ACESFilmicToneMapping;engine.toneMappingExposure=1.03;
   const scene=new T.Scene();scene.background=new T.Color(0xc7bc9e);
   const camera=new T.PerspectiveCamera(43,1,.10,62);
+  let shadersStarted=false, shadersReady=false;
   const daySky=1.68;
   const sky=new T.HemisphereLight(0xf3f0e5,0xc6ae9d,daySky);scene.add(sky);
   const sun=new T.DirectionalLight(0xffebd2,2.16);
@@ -104,7 +105,11 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress) {
     try { paint(time); }
     catch (error) { suspendDesk();console.error("Desk rendering failed",error); }
   }
-  function rebuild() {
+  let building=false;
+  async function rebuild(compact) {
+    const initialPosters=posterMode;
+    const next=await furnish(scene,compact,redraw,software,initialPosters);
+    if(initialPosters!==posterMode)next.showPosters(posterMode);
     const firstBuild=!model;
     if(model){
       scene.remove(model.world);model.contactMap.dispose();
@@ -114,7 +119,7 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress) {
       for(const item of model.roomProps.values())item.preview.traverse(collect);
       textures.forEach(t=>t.dispose());materials.forEach(m=>m.dispose());geometries.forEach(g=>g.dispose());
     }
-    model=furnish(scene,narrow,redraw,software,posterMode);hitGroups.clear();extraMeshes.length=0;
+    viewWidth=0;narrow=compact;model=next;hitGroups.clear();extraMeshes.length=0;
     readingLight.position.copy(model.readingBulb);
     roomActions.mount(model);
     model.posterCap.position.y=posterMode==='frivolous'?.034:.053;
@@ -156,12 +161,19 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress) {
     const w=stage.clientWidth,h=stage.clientHeight;
     // Some browsers briefly collapse a background or captured page to a 1px viewport.
     if(w<2 || h<2 || window.innerHeight<2)return false;
+    const compact=w<=660 || w/h<=1.2;
+    if(building)return false;
+    if(!model || narrow!==compact){
+      building=true;
+      rebuild(compact).catch(error=>{
+        suspendDesk();console.error('Desk construction failed',error);
+      }).finally(()=>{building=false;needsLayout=true;redraw();});
+      return false;
+    }
     needsLayout=false;
     if(w===viewWidth && h===viewHeight)return true;
     viewWidth=w;viewHeight=h;targetStyles.clear();
-    const compact=w<=660 || w/h<=1.2;
-    if(!model || narrow!==compact){narrow=compact;rebuild();}
-    engine.setSize(w,h,false);camera.aspect=w/h;
+    setResolution();engine.setSize(w,h,false);camera.aspect=w/h;
     camera.fov=narrow?Math.min(73,Math.max(49,2*Math.atan(.355/camera.aspect)*180/Math.PI)):
       Math.max(43,2*Math.atan(Math.tan(T.MathUtils.degToRad(21.5))*1.60/camera.aspect)*180/Math.PI);
     camera.updateProjectionMatrix();return true;
@@ -220,7 +232,19 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress) {
   const peek=id=>previews.get(id)||0;
   function paint(time) {
     frame=0;
-    if(!visible||contextLost||document.hidden||!dirty||!layout()||!lightReady)return;
+    if(!visible||contextLost||document.hidden||!dirty)return;
+    // A paper dialog keeps the last canvas frame as its backdrop.
+    if(document.querySelector('dialog[open]:not(.object-view)'))return;
+    if(!layout()||!lightReady)return;
+    if(!shadersReady){
+      if(!shadersStarted){
+        shadersStarted=true;
+        engine.compileAsync(scene,camera).then(()=>{shadersReady=true;redraw();},error=>{
+          suspendDesk();console.error('Desk shader preparation failed',error);
+        });
+      }
+      return;
+    }
     dirty=false;
 
     const elapsed=Math.max(.001,(time-lastTime)/1000);lastTime=time;
@@ -341,12 +365,12 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress) {
     }
     if(!software&&(detailMoved||sunChanged))engine.shadowMap.needsUpdate=true;
     if(camera.zoom!==posture.zoom){camera.zoom=posture.zoom;camera.updateProjectionMatrix();}
-    // Keep fine detail at rest. Only a software-rendered orbit uses a
-    // smaller drawing buffer, with the same CSS size and hit coordinates.
-    if(software)setResolution(Boolean(posture.move||drawerMotion.moving));
+    setResolution(Boolean(posture.move||drawerMotion.moving));
     camera.lookAt(aim);engine.render(scene,camera);projectTargets();
-    for(const id of model.roomClocks.keys()){
-      if(!links.get(id).hidden){scheduleClock();break;}
+    if(!opened){
+      for(const id of model.roomClocks.keys()){
+        if(!links.get(id).hidden){scheduleClock();break;}
+      }
     }
     if(!stage.classList.contains('is-rendered') || prevDrawer!==drawerAmount || prevFile!==fileAngle || prevBook!==bookAngle || model!==boundedModel || events.active || detailMoved || previewMoved){
       detailMoved=false;
@@ -549,9 +573,10 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress) {
   if('ResizeObserver' in window)new ResizeObserver(resized).observe(stage);
   window.addEventListener('resize',resized);
   document.addEventListener('portfolio-view',resized);
+  document.addEventListener('close',redraw,true);
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)redraw();});
   motion.addEventListener('change',redraw);
-  if(needsCanvasGrid) pixelGrid.addEventListener('change',()=>{
+  pixelGrid.addEventListener('change',()=>{
     setResolution();redraw();
   });
   function suspendDesk() {

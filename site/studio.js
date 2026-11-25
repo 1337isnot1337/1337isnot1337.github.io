@@ -55,7 +55,13 @@
     if (sceneStarted || !deskIsReadyToMount()) return;
     sceneStarted=true;
     deskProgress.value=2;
-    import("./furniture.js?v=70").then(module => {
+    // Fetch the engine alongside the furniture module on desk visits.
+    for(const file of ['three.module.min.js','three.core.min.js']){
+      const preload=document.createElement('link');
+      preload.rel='modulepreload';preload.href='/vendor/three/'+file;
+      if(!document.querySelector('link[href="'+preload.getAttribute('href')+'"]'))document.head.append(preload);
+    }
+    import("./furniture.js?v=71").then(module => {
       if (!deskIsReadyToMount()) { sceneStarted=false; return; }
       deskProgress.value=3;
       try { module.mountFurniture(stage,showGraphicsFallback,step=>{deskProgress.value=step;}); }

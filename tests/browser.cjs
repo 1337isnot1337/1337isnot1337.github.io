@@ -732,8 +732,8 @@ const server = http.createServer((req,res) => {
     const T=await import('/vendor/three/three.module.min.js');
     const {furnish}=await import('/desk-model.js');
     const {shelfInspection}=await import('/shelf-inspection.js');
-    return [false,true].map(narrow=>{
-      const model=furnish(new T.Scene(),narrow,()=>{},true);
+    return Promise.all([false,true].map(async narrow=>{
+      const model=await furnish(new T.Scene(),narrow,()=>{},true);
       const props=[...model.roomProps];
       const missingActions=props.filter(([,item])=>!shelfInspection(item.preview.clone(true))?.primary).map(([id])=>id);
       const overlaps=[];
@@ -753,7 +753,7 @@ const server = http.createServer((req,res) => {
         }
       }
       return {flapClearsScope,overlaps,missingActions};
-    });
+    }));
   });
   for(const layout of clearance){
     assert.equal(layout.flapClearsScope,true,'folder clears the entire oscilloscope');

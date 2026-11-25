@@ -145,7 +145,7 @@ export function decorateRoom(world, { desk, narrow, half, group, box, bead, cyli
     const current = prints.get(name);
     if (!current.requested) {
       current.requested = true;
-      const loaded = photo('/assets/furniture/room-atlas-' + name + '.webp?v=2', () => {
+      const loaded = photo('/assets/furniture/room-atlas-' + name + '.webp?v=3', () => {
         current.atlas.image = loaded.image;
         current.atlas.needsUpdate = true;
       });

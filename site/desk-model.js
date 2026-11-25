@@ -5,12 +5,15 @@ import { lampProjection } from './desk-lamp.js?v=1';
 import { paintScope, followProbe } from './desk-scope.js?v=1';
 import { airframeGeometry, wingUnderside } from './model-plane.js?v=2';
 import { mergeGeometries } from './vendor/three/BufferGeometryUtils.js';
-import { decorateRoom } from './desk-room.js?v=24';
+import { decorateRoom } from './desk-room.js?v=25';
 import { clockHands, setClock } from './shelf-clock.js?v=1';
 import { corkMaterial, curledPrint, scopeScale } from './desk-finishes.js?v=1';
 import { RoundedBoxGeometry } from './vendor/three/RoundedBoxGeometry.js';
 
-export function furnish(scene, narrow, repaint, software=false, posterMode='professional') {
+// Let navigation and input run between the expensive stages of room construction.
+const yieldToBrowser=()=>globalThis.scheduler?.yield?.() ?? new Promise(done=>setTimeout(done,0));
+
+export async function furnish(scene, narrow, repaint, software=false, posterMode='professional') {
   const width = narrow ? 5.6 : 9.6;
   const half = width / 2;
   const room = new T.Group();
@@ -21,7 +24,7 @@ export function furnish(scene, narrow, repaint, software=false, posterMode='prof
   world.scale.setScalar(deskScale);
   world.position.set(0,-3.07*(1-deskScale),-1.02);
   const night={value:0};
-  room.add(world);scene.add(room);
+  room.add(world);
   const targets = new Map();
   const details = new Map();
   function detail(name,parent,x=0,y=0,z=0) {
@@ -53,12 +56,14 @@ export function furnish(scene, narrow, repaint, software=false, posterMode='prof
     return mesh(parent,geometry.get(key),mat,x,y,z);
   }
   function cylinder(p,top,bottom,h,mat,x,y,z,n=22) {
-    if(software)n=Math.min(n,16);
-    return mesh(p,new T.CylinderGeometry(top,bottom,h,n),mat,x,y,z);
+    if(software)n=Math.min(n,12);
+    const key='cylinder/'+[top,bottom,h,n].join('/');
+    if(!geometry.has(key))geometry.set(key,new T.CylinderGeometry(top,bottom,h,n));
+    return mesh(p,geometry.get(key),mat,x,y,z);
   }
   function bead(p,x,y,z,rx,ry,rz,mat) {
     const key='sphere';
-    if (!geometry.has(key)) geometry.set(key,new T.SphereGeometry(1,software?10:14,software?8:10));
+    if (!geometry.has(key)) geometry.set(key,new T.SphereGeometry(1,software?8:14,software?6:10));
     const m=mesh(p,geometry.get(key),mat,x,y,z);m.scale.set(rx,ry,rz);return m;
   }
   function wire(p,points,r,mat) {
@@ -67,7 +72,7 @@ export function furnish(scene, narrow, repaint, software=false, posterMode='prof
   }
   const loader = new T.TextureLoader().setCrossOrigin(undefined);
   function photo(uri,onLoad) {
-    const t=loader.load(uri,()=>{onLoad?.();repaint();});t.colorSpace=T.SRGBColorSpace;t.anisotropy=4;return t;
+    const t=loader.load(uri,()=>{onLoad?.();repaint();});t.colorSpace=T.SRGBColorSpace;t.anisotropy=software?1:4;return t;
   }
   // Detail maps add paper fibres and the crossing threads of book cloth.
   let seed=96114;
@@ -250,6 +255,7 @@ export function furnish(scene, narrow, repaint, software=false, posterMode='prof
   const keepsake=tag(group(drawer,0,.087,-.65),'keepsake',[0,.03,0],1.02,.58);
   box(keepsake,1.12,.022,.70,cream);illustration(keepsake,'assets/furniture/prints/night-mail.webp',1.04,.62,0,.013,0,true);
   keepsake.rotation.y=-.10;
+  await yieldToBrowser();
   // Rear hutch, upright shelves, and a pinboard live in the same coordinate system as the desk.
   box(world,width-.16,3.21,.11,darkWood,0,1.59,-2.22);
   box(world,width-.36,2.95,.025,finish(0x6c6855),0,1.57,-2.15);
@@ -456,6 +462,7 @@ export function furnish(scene, narrow, repaint, software=false, posterMode='prof
     c.lineTo(w-.033,h-.253);
     c.moveTo(w-.255,h-.033);c.lineTo(.03,h-.033);c.stroke();
   },-.04,.046,.46,true);
+  await yieldToBrowser();
   // Metal oscilloscope with a glass graticule, waveform, knobs and coiled probe.
   const scope=tag(group(world,narrow?-1.65:-2.84,.054,-1.16),'scope',[0,.53,.32],1.26,.85);
   scope.rotation.y=.13;scope.scale.setScalar(narrow?.70:.83);
@@ -681,6 +688,7 @@ export function furnish(scene, narrow, repaint, software=false, posterMode='prof
     c.strokeStyle='#796c6f';c.lineWidth=.009;c.beginPath();c.arc(.085,h*.50,.077,0,2*Math.PI);c.stroke();
     for(let i=0;i<3;i++){c.beginPath();c.moveTo(.13,.063+i*.04);c.bezierCurveTo(.23,i*.04,.29,.14+i*.04,w,.05+i*.04);c.stroke();}
   },.34,.118,-.252,true);
+  await yieldToBrowser();
   // One curved blade and a painted vein texture are shared by every leaf on the cutting.
   const leafShape=new T.PlaneGeometry(1,1,12,20);
   const vertices=leafShape.attributes.position,leafUV=leafShape.attributes.uv;
@@ -794,6 +802,7 @@ export function furnish(scene, narrow, repaint, software=false, posterMode='prof
   mesh(sprout,leafShape,glazedLeaves[2],.055,.145,.02).scale.setScalar(.20);
   const springtail=detail('springtail',pot,.19,.011,.069);
   bead(springtail,0,0,0,.005,.004,.009,finish(0x533a43));
+  await yieldToBrowser();
   // A jointed task lamp, thumb screws and a domed enamel shade.
   // Leave room behind the shade at the full range of its hinge.
   const lamp=tag(group(world,half-(narrow?.52:.89),.018,-.85),"lamp",[0,.90,.12],.78,1.13);lamp.scale.setScalar(narrow?.71:.94);
@@ -1075,6 +1084,7 @@ export function furnish(scene, narrow, repaint, software=false, posterMode='prof
   }
   bead(moth,0,0,0,.011,.011,.051,finish(0x685341));
   moth.visible=false;
+  await yieldToBrowser();
   const {coves,walls,showPosters,readingBulb}=decorateRoom(room,{desk:world,narrow,half,group,box,bead,cylinder,wire,finish,photo,tag,detail,drawn,weave,wood,trim,floorMat,night});
   showPosters(posterMode);
   // Small displayed pieces come forward at their existing mounting points.
@@ -1156,6 +1166,7 @@ export function furnish(scene, narrow, repaint, software=false, posterMode='prof
         }`:''}`);
     };
   }
+  await yieldToBrowser();
   // Combine rigid geometry between joints; hinges, drawer travel and picking remain independent.
   const roomProps=new Map(), roomClocks=new Map(), previewGeometry=new Set();
   // Keep wall batches separate so the camera can cull the geometry behind it.
@@ -1208,7 +1219,11 @@ export function furnish(scene, narrow, repaint, software=false, posterMode='prof
     if(!batches.has(key))batches.set(key,{parent,mat,cast:m.castShadow,meshes:[]});
     batches.get(key).meshes.push(m);source.add(m.geometry);
   });
+  let sliceStart=performance.now();
   for(const {parent,mat,cast,meshes} of batches.values()){
+    if(performance.now()-sliceStart>12){
+      await yieldToBrowser();sliceStart=performance.now();
+    }
     let surface=mat;
     if(software && parent!==mug && !mat.isMeshBasicMaterial){
       if(!fastMaterials.has(mat))fastMaterials.set(mat,new T.MeshLambertMaterial({
@@ -1254,5 +1269,6 @@ export function furnish(scene, narrow, repaint, software=false, posterMode='prof
   }
   source.forEach(g=>{if(!previewGeometry.has(g))g.dispose();});
   const flexCable=followProbe(cableWire.children[0],cableTip,probeRest);
+  scene.add(room);
   return {world:room,desk:world,deskScale,targets,roomProps,roomClocks,details,occluders,drawer,flap,cover,lamp,bulbGlass:fastMaterials.get(bulbGlass)||bulbGlass,scopeScreen:fastMaterials.get(scopeScreen)||scopeScreen,tuneScope,contactMap,daylight,night,coves,showPosters,posterCap,poseHover,projectLampShadow,flexCable,titleLooseFile,pencilBounds:{book:book.position.x+(narrow?.24:.43),mat:matRight-.10},sketchTexture:sketchFace.material.map,readingBulb};
 }

@@ -635,6 +635,11 @@ if (!document.body.classList.contains('enhanced')) {
 document.addEventListener("click", (event) => {
   if (!projectIndex.contains(event.target)) projectIndex.open = false;
 });
+projectIndex.addEventListener("toggle", () => {
+  if (projectIndex.open && matchMedia("(max-width: 680px)").matches) {
+    projectIndex.querySelector("ul").scrollIntoView({block:"nearest", behavior:"instant"});
+  }
+});
 projectIndex.addEventListener("keydown", (event) => {
   if (event.key === "Escape") {
     projectIndex.open = false;
