@@ -426,3 +426,27 @@ html:not([data-view]):not(:has(#projects:target)) .mast { display:none; }
   html[data-view="shelf"] .byline { display:flex; align-items:center; min-height:56px; width:max-content; }
   html[data-view="shelf"] .mast nav { width:100%; justify-content:start; gap:22px; }
 }
+
+/* The science-wall Neuralink poster opens a personal internship card. */
+.internship-card {
+  box-sizing:border-box; width:min(92vw,510px); max-height:90dvh; overflow:auto;
+  margin:auto; padding:clamp(14px,3vw,26px); border:0;
+  background:transparent; color:#211d25;
+}
+.internship-card::backdrop { background:#211d25c9; }
+.internship-card > form { display:flex; justify-content:flex-end; margin-bottom:10px; }
+.internship-card > form button {
+  font:600 15px/1.25 var(--headline); padding:9px 13px; min-height:40px;
+  border:1px solid #b7a69a; border-radius:3px; background:#faf6e9; color:#553f50;
+}
+.internship-card-paper {
+  box-sizing:border-box; padding:clamp(18px,4vw,28px); background:#faf6e9;
+  border:1px solid #c4b39e; border-radius:3px; box-shadow:2px 3px #c4b39e,0 15px 48px #211a1e70;
+}
+.internship-card-heading { display:flex; align-items:center; gap:14px; margin-bottom:18px; }
+.internship-card-heading img { width:clamp(64px,24%,112px); height:auto; border-radius:2px; }
+.internship-card h2 { font:650 clamp(25px,5vw,34px)/1.1 var(--headline); margin:4px 0 0; }
+.internship-card-paper p { margin:0 0 10px; line-height:1.5; }
+.internship-card-paper .internship-card-date { font-size:12px; color:#625460; margin:0; }
+.internship-card-paper .internship-card-role { font-weight:650; margin-bottom:2px; }
+.internship-card-paper a { display:inline-block; margin-top:4px; color:#553f50; text-underline-offset:3px; }
