@@ -400,7 +400,8 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress,{contex
     if(!shadersReady){
       if(!shadersStarted){
         shadersStarted=true;
-        Promise.all([engine.compileAsync(scene,camera),uploadOpeningTextures()]).then(()=>{shadersReady=true;redraw();},error=>{
+        // Upload first. Some laptop drivers block texture uploads behind queued shader compilation.
+        uploadOpeningTextures().then(()=>engine.compileAsync(scene,camera)).then(()=>{shadersReady=true;redraw();},error=>{
           suspendDesk();console.error('Desk shader preparation failed',error);
         });
       }
