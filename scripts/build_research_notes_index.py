@@ -129,7 +129,7 @@ def render(entries: list[dict]) -> str:
   <meta name="twitter:image" content="{SITE}/assets/share/research-notes-v1.jpg">
   <meta name="twitter:image:alt" content="Research notes, beside the illustrated orbital diagram on the desk’s research volume.">
   <link rel="icon" href="/assets/prints/favicon.png">
-  <link rel="stylesheet" href="/shelf.css?v=27">
+  <link rel="stylesheet" href="/shelf.css?v=28">
   <link rel="stylesheet" href="/projects/project-pages.css?v=2">
   <link rel="stylesheet" href="/research-notes/notes.css?v=3">
   <link rel="stylesheet" href="/desk-extras.css?v=9">

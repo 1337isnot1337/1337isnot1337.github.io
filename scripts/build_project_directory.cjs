@@ -42,7 +42,7 @@ function save(page, title, description, content, kind, parts) {
   <meta name="twitter:image" content="${socialImage}">
   <meta name="twitter:image:alt" content="Project shelf, with a selection of illustrated project prints.">
   <link rel="icon" href="/favicon.ico">
-  <link rel="stylesheet" href="/shelf.css?v=27">
+  <link rel="stylesheet" href="/shelf.css?v=28">
   <link rel="stylesheet" href="/projects/project-pages.css?v=2">
   <script type="application/ld+json">${JSON.stringify(data).replace(/</g, '\\u003c')}</script>
 </head>

@@ -79,6 +79,7 @@ function startShelf() {
   // A wide shelf shows five prints at once. A second run gives Swiper room to
   // move paper around the back without exposing an empty end of the ledge.
   const track = carousel.querySelector(".swiper-wrapper");
+  new Image().src = '/assets/prints/paper-shadow.png';
   for (const slide of [...track.children]) track.append(slide.cloneNode(true));
   for(const project of clipped)syncClip(project,true);
   let blurTimer;
@@ -289,8 +290,7 @@ function startShelf() {
         stopShelfMotion();
         // Free scrolling can move slides around the loop after the wheel
         // module has already chosen a center print. Read its final position.
-        instance.updateActiveIndex();
-        instance.updateSlidesClasses();
+        updateSelection(instance);
         showMotion(70);
       },
       setTransition(instance, duration) {
@@ -330,8 +330,10 @@ function startShelf() {
         }
         for (const [i, slide] of instance.slides.entries()) {
           const selected = i === instance.activeIndex;
-          slide.setAttribute("aria-hidden", String(!selected));
-          slide.querySelector(".print").tabIndex = selected ? 0 : -1;
+          const hidden=String(!selected),tabIndex=selected ? "0" : "-1";
+          if(slide.getAttribute("aria-hidden")!==hidden)slide.setAttribute("aria-hidden",hidden);
+          const link=slide.querySelector(".print");
+          if(link.getAttribute("tabindex")!==tabIndex)link.setAttribute("tabindex",tabIndex);
         }
         shop.dataset.selection = key;
         for (const link of projectIndex.querySelectorAll("a[data-project]")) {
