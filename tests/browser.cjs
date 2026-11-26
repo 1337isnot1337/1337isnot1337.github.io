@@ -640,7 +640,8 @@ async function enterDeskRoom(page) {
   assert.equal(await progress.getAttribute('value'),'2');
   for(const [width,height] of [[1280,960],[390,844],[844,390]]){
     await cold.setViewportSize({width,height});
-    assert.equal(await cold.locator('.desk-objects a:visible').count(),7);
+    assert.deepEqual(await cold.locator('.desk-objects a:visible').evaluateAll(links=>links.map(link=>link.dataset.object)),
+      ['plane','proof','archive','scope','file','epoch','book','letters']);
     const files=cold.locator('.object-file');
     await files.click();
     await cold.locator('#catalogue:visible').waitFor();
