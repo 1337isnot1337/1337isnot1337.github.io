@@ -119,11 +119,11 @@ async function enterDeskRoom(page) {
      const r=await lamp.boundingBox();
      await page.mouse.move(r.x+r.width*.5,r.y+r.height*.95);
      await page.evaluate(()=>new Promise(done=>requestAnimationFrame(()=>requestAnimationFrame(done))));
-     if(await stage.evaluate(el=>el.classList.contains('soft-pan'))){
-      const heldPan=await stage.evaluate(el=>el.style.getPropertyValue('--pan-x'));
-      assert.notEqual(parseFloat(heldPan),0);
+     const heldPan=await stage.locator('canvas').evaluate(el=>getComputedStyle(el).transform);
+     if(heldPan!=='none'){
+      assert.notEqual(await page.evaluate(t=>new DOMMatrix(t).m41,heldPan),0);
       await page.evaluate(()=>document.addEventListener('pointerup',()=>{
-       window.panAtLampRelease=document.querySelector('.desktop-picture').style.getPropertyValue('--pan-x');
+       window.panAtLampRelease=getComputedStyle(document.querySelector('.furniture-canvas')).transform;
       },{once:true}));
       await page.mouse.down();await page.mouse.up();
       assert.equal(await page.evaluate(()=>window.panAtLampRelease),heldPan,'lamp click keeps the current viewing angle');

@@ -3,9 +3,14 @@ import { attachHeldArrows } from './desk-arrows.js?v=1';
 // Keep the browser cursor at its real hotspot. Only an orbit owns the pointer.
 export function attachDeskPointer(stage,{pick,track,hover=()=>{},stopLook=()=>{},orbitBy,endOrbit,part,gesture,tapPart,zoomBy,targets=new Map([...stage.querySelectorAll('[data-object]')].map(el=>[el.dataset.object,el]))}) {
   const canvas=stage.querySelector('canvas');
+  const overview=stage.closest('.desk-overview');
   let press=null, frame=0, x=0, y=0, overControl=false, suppress=false;
   let clickTarget, pointerInside=false, nextCameraPick=0;
-  const active=()=>stage.classList.contains('is-rendered') && !stage.closest('.desk-overview').inert;
+  const active=()=>stage.classList.contains('is-rendered') && !overview.inert;
+  function setAim(target){
+    const aim=target?'object':'desk';
+    if(stage.dataset.aim!==aim)stage.dataset.aim=aim;
+  }
   function targetAt(clientX,clientY,r=canvas.getBoundingClientRect()){
     if(clientX<r.left||clientX>=r.right||clientY<r.top||clientY>=r.bottom)return null;
     const target=targets.get(pick((clientX-r.left)/r.width,(clientY-r.top)/r.height));
@@ -37,7 +42,7 @@ export function attachDeskPointer(stage,{pick,track,hover=()=>{},stopLook=()=>{}
         hover(target?.dataset.object||'');
         track((x-r.left)/r.width*2-1,(y-r.top)/r.height*2-1,overControl||Boolean(target));
       }
-      stage.dataset.aim=target ? 'object':'desk';
+      setAim(target);
     });
   }
   function refreshHover(time){
@@ -45,7 +50,7 @@ export function attachDeskPointer(stage,{pick,track,hover=()=>{},stopLook=()=>{}
     nextCameraPick=time+100;
     const target=targetAt(x,y);
     hover(target?.dataset.object||'');
-    stage.dataset.aim=target?'object':'desk';
+    setAim(target);
   }
   stage.addEventListener('pointerdown',e=>{
     if(!active()||!e.isPrimary||e.button!==0||e.target.closest('.loose-file-slip'))return;

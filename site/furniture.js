@@ -1,9 +1,10 @@
 import * as T from './vendor/three/three.module.min.js';
-import { furnish } from './desk-model.js?v=58';
+import { furnish } from './desk-model.js?v=59';
+import { makeDeskShadow } from './desk-lighting.js?v=1';
 import { posterPickLayer } from './desk-poster-batch.js?v=1';
 import { inspectDeskObjects } from './desk-inspect.js?v=21';
 
-import { attachDeskPointer } from './desk-pointer.js?v=26';
+import { attachDeskPointer } from './desk-pointer.js?v=27';
 
 import { deskLife } from './desk-life.js?v=19';
 import { deskView } from './desk-view.js?v=14';
@@ -11,8 +12,32 @@ import { drawerTravel } from './desk-drawer.js?v=1';
 import { setClock } from './shelf-clock.js?v=1';
 import { bindRoomActions } from './room-actions.js?v=3';
 
+// A 60 Hz display can alternate between 16 and 33 ms frames when overloaded.
+// Measure a short window so a regular missed refresh counts and a lone stall does not.
+export function motionSampler(software){
+  const budget=1000/(software?30:55);
+  let previous=0,frames=0,total=0,fastWindows=0;
+  return {
+    scale:1,
+    pause(){previous=frames=total=fastWindows=0;},
+    frame(time){
+      const gap=time-previous,first=previous===0;
+      previous=time;
+      if(first)return;
+      total+=Math.min(gap,1.75*budget);
+      if(++frames<6)return;
+      const average=total/frames;
+      frames=total=0;
+      fastWindows=average<budget*.95?fastWindows+1:0;
+      if(average>budget*1.14)this.scale=Math.max(.52,this.scale-.16);
+      else if(fastWindows>=6){this.scale=Math.min(1,this.scale+.16);fastWindows=0;}
+    }
+  };
+}
+
 export function mountFurniture(stage,showGraphicsFallback,reportProgress,{context,software,performanceMode}) {
   const canvas = stage.querySelector('canvas');
+  const navigation=stage.querySelector('.desk-objects');
   if (!document.createElement('canvas').getContext('2d'))throw new Error('Canvas drawing unavailable');
   const engine=new T.WebGLRenderer({canvas,context});
   const warning=stage.querySelector('.graphics-warning');
@@ -21,11 +46,12 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress,{contex
   const smallGraphics=software || coarsePointer;
   if(software)engine.setOpaqueSort((a,b)=>a.groupOrder-b.groupOrder || a.renderOrder-b.renderOrder || a.z-b.z || a.id-b.id);
   const pixelGrid=matchMedia('(forced-colors: none) and (prefers-contrast: no-preference)');
-  let resolutionDirty=false, movingPixels=false, motionScale=1, previousMotionTime=0, slowFrames=0, fastFrames=0;
+  const sampling=motionSampler(software);
+  let resolutionDirty=false, movingPixels=false;
   let settleTimer=0, lastMovement=0;
   function trackMotion(time,moving){
     if(!moving){
-      previousMotionTime=0;slowFrames=fastFrames=0;
+      sampling.pause();
       if(movingPixels){
         const remaining=140-(time-lastMovement);
         if(remaining<=0)setResolution(false);
@@ -34,15 +60,7 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress,{contex
       return;
     }
     lastMovement=time;clearTimeout(settleTimer);settleTimer=0;
-    const gap=time-previousMotionTime;
-    if(previousMotionTime){
-      const budget=software ? 1000/30 : 1000/50;
-      slowFrames=gap>budget*1.18 ? slowFrames+1 : 0;
-      fastFrames=gap<budget*.88 ? fastFrames+1 : 0;
-      if(slowFrames>=3){motionScale=Math.max(.52,motionScale-.16);slowFrames=0;}
-      if(fastFrames>=36){motionScale=Math.min(1,motionScale+.16);fastFrames=0;}
-    }
-    previousMotionTime=time;setResolution(true);
+    sampling.frame(time);setResolution(true);
   }
   function setResolution(moving=movingPixels){
     movingPixels=moving;
@@ -56,7 +74,7 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress,{contex
     const sizeLimit=Math.sqrt(maxPixels/Math.max(1,viewWidth*viewHeight));
     const ceiling=Math.min(devicePixelRatio,sampleMotion?motionLimit:still,sizeLimit);
     const floor=(performanceMode ? 200 : software ? 240 : coarsePointer ? 360 : 540)/Math.max(1,viewWidth,viewHeight);
-    const ratio=sampleMotion ? Math.min(ceiling,Math.max(floor,ceiling*motionScale)) : ceiling;
+    const ratio=sampleMotion ? Math.min(ceiling,Math.max(floor,ceiling*sampling.scale)) : ceiling;
     if(engine.getPixelRatio()!==ratio)engine.setPixelRatio(ratio);
   }
   engine.shadowMap.type=software ? T.BasicShadowMap : T.PCFSoftShadowMap;
@@ -80,34 +98,8 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress,{contex
   const readingLight=new T.SpotLight(0xffd19a,0,5.7,.79,.76,1.75);
   readingLight.target.position.set(-7.21,-2.3,7.60);
   scene.add(bulb,beam,beam.target,readingLight,readingLight.target);
-  const localLights=[bulb,beam,readingLight];
-  let daylightPrograms=false,daylightPending=false,lightingCompile=Promise.resolve();
-  function useLocalLights(on){for(const light of localLights)light.visible=on;}
-  function invalidateShaders(){
-    shaderVersion++;shadersReady=false;daylightPrograms=daylightPending=false;
-    useLocalLights(true);
-  }
-  function prepareDaylight(){
-    if(daylightPrograms || daylightPending)return;
-    daylightPending=true;
-    const version=shaderVersion;
-    const warm=()=>{
-      if(version!==shaderVersion)return;
-      if(contextLost || !visible || document.hidden || !shadersReady){daylightPending=false;return;}
-      // Keep the full rig ready for an immediate lamp click. Three collects
-      // the second rig synchronously, then waits for the GPU in the background.
-      let programs;
-      useLocalLights(false);
-      try{programs=engine.compileAsync(scene,camera);}
-      catch{return;}
-      finally{useLocalLights(true);}
-      lightingCompile=programs.then(()=>{
-        if(version===shaderVersion){daylightPrograms=true;redraw();}
-      },()=>{/* The full rig is already available. */});
-    };
-    if(window.requestIdleCallback)requestIdleCallback(warm,{timeout:1500});
-    else setTimeout(warm,64);
-  }
+  const shadowDepth=software?null:makeDeskShadow(sun.shadow);
+  function invalidateShaders(){shaderVersion++;shadersReady=false;}
   const dayColor=sky.color.clone(),nightColor=new T.Color(0xa9bae9);
   const fallbackWash=[];
   if(software)for(const [x,color] of [[-7.8,0xffb283],[7.8,0xc3a9ff]]){
@@ -174,7 +166,7 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress,{contex
   let building=false;
   async function rebuild(compact) {
     const initialPosters=posterMode;
-    const next=await furnish(scene,compact,redraw,software,initialPosters,smallGraphics);
+    const next=await furnish(scene,compact,redraw,software,initialPosters,smallGraphics,shadowDepth);
     if(initialPosters!==posterMode)next.showPosters(posterMode);
     const firstBuild=!model;
     if(model){
@@ -191,7 +183,6 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress,{contex
     readingLight.position.copy(model.readingBulb);
     roomActions.mount(model);
     model.posterCap.position.y=posterMode==='frivolous'?.034:.053;
-    const navigation=stage.querySelector('.desk-objects');
     for(const [id,{root}] of model.roomProps){
       if(links.has(id))continue;
       const button=document.createElement('button');
@@ -321,10 +312,13 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress,{contex
       }
       if(outside)continue;
       const px=lens/depth;
-      const next=[x,y,Math.max(40,state.width*px),Math.max(37,state.height*px)].map(n=>Math.round(n*10)/10);
-      if(!state.rect || next.some((value,i)=>value!==state.rect[i])){
-        placeTarget(el,next,focused===el);state.rect=next;
-      }
+      x=Math.round(x*10)/10;y=Math.round(y*10)/10;
+      const width=Math.round(Math.max(40,state.width*px)*10)/10;
+      const height=Math.round(Math.max(37,state.height*px)*10)/10;
+      const rect=state.rect??=[];
+      if(x===rect[0] && y===rect[1] && width===rect[2] && height===rect[3])continue;
+      rect[0]=x;rect[1]=y;rect[2]=width;rect[3]=height;
+      placeTarget(el,rect,focused===el);
     }
   }
   let boundedModel=null,hovered='',hoverTimer=0;
@@ -334,23 +328,27 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress,{contex
     'pencil','rose-pencil','cup','blotter','pinboard','robot-photo','epoch',
   ]);
   const peek=id=>previews.get(id)||0;
-  async function uploadOpeningTextures(version){
+  async function prepareOpeningFrame(version){
     // Split texture uploads across tasks so the opening frame doesn't do them all at once.
-    const textures=new Set([scene.environment,model.contactMap]);
+    const textures=new Set([scene.environment,model.contactMap]),materials=new Set(),opening=new T.Group();
     scene.traverseVisible(node=>{
-      if(!node.isMesh || (node.frustumCulled && !viewFrustum.intersectsObject(node)))return;
-      textures.add(node.material.map);textures.add(node.material.bumpMap);
+      if(!node.isMesh || !camera.layers.test(node.layers) || (node.frustumCulled && !viewFrustum.intersectsObject(node)))return;
+      if(materials.has(node.material))return;
+      materials.add(node.material);
+      opening.add(new T.Mesh(node.geometry,node.material));
+      textures.add(node.material.map);textures.add(node.material.bumpMap);textures.add(node.material.roughnessMap);
       textures.add(node.material.emissiveMap);
     });
     let start=performance.now();
     for(const texture of textures){
       if(contextLost || version!==shaderVersion)return;
-      if(!texture || !(texture.isCanvasTexture || texture.image?.naturalWidth))continue;
+      if(!texture || !(texture.isCanvasTexture || texture.isDataTexture || texture.image?.naturalWidth))continue;
       engine.initTexture(texture);
       if(performance.now()-start>5){
         await new Promise(resolve=>setTimeout(resolve,0));start=performance.now();
       }
     }
+    if(!contextLost && version===shaderVersion)await engine.compileAsync(opening,camera,scene);
   }
   function paint(time) {
     frame=0;
@@ -433,7 +431,8 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress,{contex
     const lightScale=model.deskScale**2;
     bulb.intensity=(14*warmth+peek('lamp')*.40)*lightScale;
     beam.intensity=16*warmth*lightScale;
-    useLocalLights(!daylightPrograms || bulb.intensity!==0 || beam.intensity!==0 || readingLight.intensity!==0);
+    // CPU rasterizers pay for each light loop even when a lamp emits nothing.
+    if(software)bulb.visible=beam.visible=readingLight.visible=Boolean(bulb.intensity||beam.intensity||readingLight.intensity);
     model.bulbGlass.emissiveIntensity=.08+2.12*warmth+peek('lamp')*.31;
     if(held && movingPixels)setResolution(false);
     if(inspector.paint(time,dt)){
@@ -488,11 +487,7 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress,{contex
     if(!shadersReady){
       const version=shaderVersion;
       // Upload first. Some laptop drivers block texture uploads behind queued shader compilation.
-      const job=lightingCompile.then(async()=>{
-        if(contextLost || version!==shaderVersion)return;
-        await uploadOpeningTextures(version);
-        if(version===shaderVersion && !contextLost)await engine.compileAsync(scene,camera);
-      });
+      const job=prepareOpeningFrame(version);
       shaderJob=job;
       job.then(()=>{
         if(shaderJob!==job)return;
@@ -508,7 +503,6 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress,{contex
     if(resolutionDirty){setResolution();resolutionDirty=false;}
     trackMotion(time,Boolean(posture.move||drawerMotion.moving||stage.classList.contains('looking-around')));
     engine.render(scene,camera);projectTargets();
-    prepareDaylight();
     if(!performanceMode&&!opened){
       for(const id of model.roomClocks.keys()){
         if(!links.get(id).hidden){scheduleClock();break;}
@@ -576,11 +570,8 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress,{contex
       }
       // Small pointer movements shift the last frame and its hit areas together.
       // Edge steering, dragging and zoom still move the 3D camera.
-      stage.classList.toggle('soft-pan',!motion.matches);
-      if(!motion.matches){
-        stage.style.setProperty('--pan-x',(x*.6)+'%');
-        stage.style.setProperty('--pan-y',(y*.6)+'%');
-      }
+      const transform=motion.matches?'':'scale(1.022) translate('+(x*.6)+'%,'+(y*.6)+'%)';
+      canvas.style.transform=navigation.style.transform=transform;
     },
     pick(x,y) {
       refreshBounds();
@@ -723,13 +714,17 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress,{contex
   document.addEventListener('portfolio-view',resized);
   document.addEventListener('close',redraw,true);
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)redraw();});
-  motion.addEventListener('change',redraw);
+  motion.addEventListener('change',()=>{
+    if(motion.matches)canvas.style.transform=navigation.style.transform='';
+    redraw();
+  });
   pixelGrid.addEventListener('change',()=>{
     setResolution();redraw();
   });
   function suspendDesk() {
     contextLost=true;warning.textContent=unavailable;
     showGraphicsFallback();
+    canvas.style.transform=navigation.style.transform='';
     leaveDesk();targetStyles.clear();
     links.forEach(el=>{
       el.removeAttribute('data-outside');el.style.removeProperty('transform');
@@ -740,7 +735,7 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress,{contex
   }
   canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();suspendDesk();});
   canvas.addEventListener('webglcontextrestored',()=>{
-    contextLost=false;shaderJob=null;lightingCompile=Promise.resolve();
+    contextLost=false;shaderJob=null;
     invalidateShaders();engine.shadowMap.needsUpdate=true;redraw();
   });
   configureLighting();
@@ -753,7 +748,7 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress,{contex
     clearTimeout(clockTimer);clockTimer=0;
     clearTimeout(hoverTimer);hovered='';
     if(model)for(const group of model.shelfGardens)group.visible=!enabled;
-    motionScale=1;previousMotionTime=slowFrames=fastFrames=0;
+    sampling.pause();sampling.scale=1;
     resolutionDirty=true;
     redraw();
   };

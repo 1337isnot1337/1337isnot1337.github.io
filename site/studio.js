@@ -80,13 +80,14 @@
     if(!context){showGraphicsFallback();return;}
     qualityButton.hidden=false;
     deskProgress.value=2;
-    // Fetch the engine alongside the furniture module on desk visits.
-    for(const file of ['three.module.min.js','three.core.min.js']){
+    // Start the room's nested imports on the same round trip as the renderer.
+    for(const href of ['/vendor/three/three.module.min.js','/vendor/three/three.core.min.js',
+      '/desk-model.js?v=59','/desk-room.js?v=30','/room-objects.js?v=13','/room-shell.js?v=18']){
       const preload=document.createElement('link');
-      preload.rel='modulepreload';preload.href='/vendor/three/'+file;
+      preload.rel='modulepreload';preload.href=href;
       if(!document.querySelector('link[href="'+preload.getAttribute('href')+'"]'))document.head.append(preload);
     }
-    import("./furniture.js?v=78").then(module => {
+    import("./furniture.js?v=79").then(module => {
       if (!deskIsReadyToMount()) { sceneStarted=false; return; }
       deskProgress.value=3;
       try {

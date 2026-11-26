@@ -11,28 +11,13 @@ import { corkMaterial, curledPrint, scopeScale } from './desk-finishes.js?v=1';
 import { batchWallPosters } from './desk-poster-batch.js?v=1';
 import { deskBox } from './desk-box.js?v=2';
 
-// The room keeps both lamps in the scene so switching one on needs no new
-// shader. Skip the light calculation where its contribution is exactly zero.
-let lightInfo=T.ShaderChunk.lights_pars_begin;
-for(const lamp of ['pointLight','spotLight']){
-  const start='vec3 lVector = '+lamp+'.position';
-  lightInfo=lightInfo.replace(start,`if (${lamp}.color == vec3(0.0)) {
-    light.color = vec3(0.0); light.visible = false; return;
-  }
-  ${start}`);
-}
-const directLight=T.ShaderChunk.lights_fragment_begin.replaceAll('RE_Direct( directLight,',
-  'if (directLight.visible) RE_Direct( directLight,');
-function skipDarkLights(shader){
-  shader.fragmentShader=shader.fragmentShader
-    .replace('#include <lights_pars_begin>',lightInfo)
-    .replace('#include <lights_fragment_begin>',directLight);
-}
+import { prepareDeskLighting, shareDeskSurfacePrograms } from './desk-lighting.js?v=1';
 
 // Let navigation and input run between the expensive stages of room construction.
 const yieldToBrowser=()=>globalThis.scheduler?.yield?.() ?? new Promise(done=>setTimeout(done,0));
 
-export async function furnish(scene, narrow, repaint, software=false, posterMode='professional', smallGraphics=software) {
+export async function furnish(scene, narrow, repaint, software=false, posterMode='professional', smallGraphics=software, shadowDepth=null) {
+  const skipDarkLights=shader=>prepareDeskLighting(shader,shadowDepth);
   const width = narrow ? 5.6 : 9.6;
   const half = width / 2;
   const room = new T.Group();
@@ -1302,6 +1287,7 @@ export async function furnish(scene, narrow, repaint, software=false, posterMode
   scene.add(room);
   room.updateMatrixWorld(true);
   const syncPosters=batchWallPosters(targets);
+  if(!software)shareDeskSurfacePrograms(room,targets);
   function showPosters(name){displayPosters(name);syncPosters();}
   return {syncPosters,outdoors,windowBounds,shelfGardens,world:room,desk:world,deskScale,targets,roomProps,roomClocks,details,occluders,drawer,drawerInterior,flap,cover,lamp,bulbGlass:fastMaterials.get(bulbGlass)||bulbGlass,scopeScreen:fastMaterials.get(scopeScreen)||scopeScreen,tuneScope,contactMap,daylight,night,coves,showPosters,posterCap,poseHover,projectLampShadow,flexCable,titleLooseFile,pencilBounds:{book:book.position.x+(narrow?.24:.43),mat:matRight-.10},sketchTexture:sketchFace.material.map,readingBulb};
 }

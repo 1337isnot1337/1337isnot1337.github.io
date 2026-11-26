@@ -419,9 +419,7 @@ html[data-view="desk"] .studio-ready .desk-reading { margin-top:66px; scroll-mar
 .use-object { position:absolute; left:50%; bottom:4%; transform:translateX(-50%); }
 body:has(.object-view[open],.drawer-post[open]) { overflow:hidden; }
 body:has(.object-view[open]) .mode-switch,.inspecting .graphics-warning { visibility:hidden; }
-.soft-pan:not(.inspecting) :is(.desk-objects,.furniture-canvas) {
-  transform:scale(1.022) translate(var(--pan-x,0%),var(--pan-y,0%));
-}
+.desktop-picture.inspecting :is(.desk-objects,.furniture-canvas) { transform:none !important; }
 @media (max-width:680px) {
   .desk-profiles { bottom:10px; left:10px; }
   .desk-profiles a { padding:10px; }
