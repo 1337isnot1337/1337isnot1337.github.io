@@ -14,13 +14,6 @@
           headline.rel = "preload"; headline.as = "font"; headline.type = "font/woff2"; headline.crossOrigin = "anonymous";
           headline.href = "/assets/fonts/bricolage.woff2";
           document.head.append(headline);
-        } else if (!location.hash || location.hash === "#studio") {
-          const compact = matchMedia("(max-width: 660px), (max-aspect-ratio: 6/5)").matches;
-          const landscape = matchMedia("(pointer: coarse) and (orientation: landscape) and (max-height: 900px)").matches;
-          const opening = document.createElement("link");
-          opening.rel = "preload"; opening.as = "image"; opening.fetchPriority = "high";
-          opening.href = "/assets/furniture/opening-" + (landscape ? "compact-landscape" : compact ? "compact" : "wide") + ".webp?v=2";
-          document.head.append(opening);
         }
       })();
     </script>
@@ -81,8 +74,8 @@
       else restoreReading();
     "></script>
     <script defer src="/rook-graph.js?v=3"></script>
-    <link rel="stylesheet" href="/studio.css?v=29" />
-    <script defer src="/studio.js?v=76" onerror="if (!location.pathname.startsWith('/boring')) delete document.documentElement.dataset.view"></script>
+    <link rel="stylesheet" href="/studio.css?v=30" />
+    <script defer src="/studio.js?v=77" onerror="if (!location.pathname.startsWith('/boring')) delete document.documentElement.dataset.view"></script>
     <script defer src="/paper-turn.js?v=5"></script>
     <script defer src="/desk-keepsakes.js?v=11"></script>
     <script defer src="/internship-card.js?v=1"></script>
@@ -125,7 +118,6 @@
         <section class="desk-overview" aria-labelledby="studio-title">
 
           <h1 id="studio-title" class="visually-hidden" tabindex="-1">Cinna Davis — software, mathematics and research</h1>
-          <button type="button" class="desk-illustrate" hidden>Illustrated desk</button>
           <button class="desk-paper-shortcut" type="button" data-object="scratch-paper" data-keepsake aria-haspopup="dialog" hidden>Scratch paper</button>
           <div class="desktop-picture is-loading">
             <button type="button" class="desk-start-3d" hidden>Explore in 3D</button>
@@ -134,13 +126,12 @@
               <progress class="desk-load-progress" max="5" value="1" aria-labelledby="desk-load-label"></progress>
             </div>
             <canvas class="furniture-canvas" aria-hidden="true"></canvas>
-            <div class="hutch-fallback" aria-hidden="true"></div>
             <nav class="desk-objects" aria-label="Objects on the desk">
-              <a class="object-plane" aria-label="DOPPLERGEIST model airplane" data-object="plane" data-opening-link style="--wide-area:54.764% 51.646% 39.764% 41.988%;--compact-area:51.178% 49.835% 45.364% 40.695%" data-project="flyover" href="#flyover"><span>DOPPLERGEIST</span></a>
-              <a class="object-proof" data-object="proof" data-opening-link style="--wide-area:25.846% 51.397% 64.385% 41.599%;--compact-area:24.633% 49.928% 67.151% 38.788%" data-project="conjectures" href="#conjectures"><span>Solved conjectures</span></a>
-              <a class="object-archive" data-object="archive" data-opening-link style="--wide-area:27.963% 38.507% 63.278% 56.146%;--compact-area:26.917% 37.241% 66.567% 54.848%" href="/research-notes/"><span>Research notes</span></a>
-              <a class="object-scope" data-object="scope" data-opening-link style="--wide-area:46.069% 60.753% 49.385% 35.132%;--compact-area:42.962% 61.48% 53.78% 31.579%" href="#desk"><span>Experiments</span></a>
-              <a class="object-file" data-object="file" data-opening-link style="--wide-area:54.897% 60.132% 38.381% 33.836%;--compact-area:50.908% 61.702% 44.876% 29.407%" href="#catalogue"><span>Project files</span></a>
+              <a class="object-plane" aria-label="DOPPLERGEIST model airplane" data-object="plane" data-project="flyover" href="#flyover"><span>DOPPLERGEIST</span></a>
+              <a class="object-proof" data-object="proof" data-project="conjectures" href="#conjectures"><span>Solved conjectures</span></a>
+              <a class="object-archive" data-object="archive" href="/research-notes/"><span>Research notes</span></a>
+              <a class="object-scope" data-object="scope" href="#desk"><span>Experiments</span></a>
+              <a class="object-file" data-object="file" href="#catalogue"><span>Project files</span></a>
               <button type="button" data-object="flyover-print" data-board-print="flyover" data-keepsake aria-haspopup="dialog" hidden><span>DOPPLERGEIST photograph</span></button>
               <button type="button" data-object="factoring-print" data-board-print="factoring-bead" data-keepsake aria-haspopup="dialog" hidden><span>Integer factoring print</span></button>
               <button type="button" data-object="cpu-print" data-board-print="cpu-switch" data-keepsake aria-haspopup="dialog" hidden><span>Hack CPU print</span></button>
@@ -241,14 +232,14 @@
               <a data-object="room-baby-hollywood" data-room-poster href="https://store.jeremysaffer.com/products/babychaos-old-hollywood-signed-limited-edition-8x12-metallic-print" target="_blank" rel="noopener" hidden><span>Babychaos · Old Hollywood</span></a>
               <a data-object="room-book-672172" data-room-poster href="https://www.penguinrandomhouse.com/books/658457/avatar-the-last-airbender--the-search-omnibus-by-written-by-gene-luen-yang-with-art-by-gurihiru/" target="_blank" rel="noopener" hidden><span>Avatar: The Last Airbender–The Search Omnibus</span></a>
               <a class="object-epoch" data-object="epoch" href="#about-teaching"><span>Epoch computing club</span></a>
-              <a class="object-book" data-object="book" data-opening-link style="--wide-area:52.217% 42.405% 39.33% 53.711%;--compact-area:46.758% 39.85% 48.176% 54.671%" href="#about"><span>My notebook</span></a>
-              <a class="object-letters" data-object="letters" data-opening-link style="--wide-area:65.059% 42.239% 30.172% 52.849%;--compact-area:56.654% 36.221% 40.255% 56.279%" href="#elsewhere"><span>Letters</span></a>
+              <a class="object-book" data-object="book" href="#about"><span>My notebook</span></a>
+              <a class="object-letters" data-object="letters" href="#elsewhere"><span>Letters</span></a>
               <button type="button" data-object="plant" data-keepsake aria-haspopup="dialog" hidden><span>Potted plant</span></button>
               <button type="button" data-object="pinboard" data-keepsake aria-haspopup="dialog" hidden><span>Pinboard photographs</span></button>
               <button type="button" data-object="pencil" data-keepsake aria-haspopup="dialog" hidden><span>Graphite pencil</span></button>
               <button type="button" data-object="rose-pencil" data-keepsake aria-haspopup="dialog" hidden><span>Rose pencil</span></button>
               <button type="button" data-object="cup" data-keepsake aria-haspopup="dialog" hidden><span>Pencil cup</span></button>
-              <button type="button" data-object="blotter" data-keepsake data-opening-link style="--wide-area:64.573% 50.019% 30.242% 45.231%;--compact-area:58.129% 48.687% 37.564% 42.039%" aria-haspopup="dialog" hidden><span>Scratch paper on the drawing mat</span></button>
+              <button type="button" data-object="blotter" data-keepsake aria-haspopup="dialog" hidden><span>Scratch paper on the drawing mat</span></button>
               <button type="button" class="object-lamp" data-object="lamp" aria-pressed="false" hidden><span>Desk lamp</span></button>
               <button type="button" class="object-drawer" data-object="drawer" aria-expanded="false" aria-controls="drawer-letter drawer-posters" hidden><span>Desk drawer</span></button>
               <button type="button" id="drawer-posters" data-object="poster-switch" aria-label="Frivolous wall posters" aria-pressed="false" hidden></button>

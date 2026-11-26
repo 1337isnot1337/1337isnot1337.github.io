@@ -44,7 +44,6 @@
   }
   function showGraphicsFallback(message) {
     stage.classList.remove("is-loading","is-rendered");
-    illustrate.hidden=true;
     const warning=stage.querySelector(".graphics-warning");
     if(message)warning.textContent=message;
     warning.hidden=false;
@@ -53,59 +52,21 @@
     return sceneCanvas?.isConnected && page.dataset.view==='desk' && sceneNearby && !studio.dataset.open && !document.querySelector('.open-project[open]');
   }
   const start3D=stage.querySelector('.desk-start-3d');
-  const illustrate=overview.querySelector('.desk-illustrate');
   const connection=navigator.connection;
-  let preferredView='';
-  try{preferredView=localStorage.getItem('desk-render-mode')||'';}catch{}
   const saveData=connection?.saveData || ['slow-2g','2g'].includes(connection?.effectiveType) || matchMedia('(prefers-reduced-data: reduce)').matches;
-  let request3D=!saveData && preferredView!=='illustrated';
-  let graphics, setRoomActive;
-  let openingRequest='';
-  const openingLayout=matchMedia('(max-width: 660px), (max-aspect-ratio: 6/5)');
-  const touchLandscape=matchMedia('(pointer: coarse) and (orientation: landscape) and (max-height: 900px)');
-  function openingName(){
-    return touchLandscape.matches?'compact-landscape':openingLayout.matches?'compact':'wide';
-  }
-  function loadOpening(){
-    if(!sceneCanvas?.isConnected || !stage.classList.contains('is-loading'))return;
-    const layout=openingName();
-    if(openingRequest===layout)return;
-    openingRequest=layout;
-    delete stage.dataset.opening;
-    const image=new Image();
-    image.fetchPriority='high';
-    image.onload=()=>{
-      if(stage.classList.contains('is-loading') && layout===openingName())
-        stage.dataset.opening=layout;
-    };
-    image.onerror=()=>{
-      if(openingRequest!==layout)return;
-      openingRequest='';
-      if(!request3D)stage.classList.remove('is-loading');
-    };
-    image.src='/assets/furniture/opening-'+layout+'.webp?v=2';
-  }
+  let request3D=!saveData;
   function showFurniture() {
     if (sceneStarted || !deskIsReadyToMount()) return;
-    loadOpening();
-    if(request3D && !graphics){
-      const options={alpha:false,antialias:false,powerPreference:'default'};
-      let context=null, software=false;
-      try{
-        context=sceneCanvas.getContext('webgl2',options);
-        const info=context?.getExtension('WEBGL_debug_renderer_info');
-        const renderer=context?.getParameter(info ? info.UNMASKED_RENDERER_WEBGL : context.RENDERER);
-        software=/swiftshader|llvmpipe|softpipe|software rasterizer|microsoft basic render driver/i.test(renderer||'');
-      }catch{}
-      graphics={context,software};
-      if(software && preferredView!=='3d')request3D=false;
-    }
-    if(!request3D){
-      start3D.hidden=false;
-      return;
-    }
+    if(!request3D){start3D.hidden=false;return;}
     sceneStarted=true;
-    if(!graphics.context){showGraphicsFallback();return;}
+    let context=null, software=false;
+    try{
+      context=sceneCanvas.getContext('webgl2',{alpha:false,antialias:false,powerPreference:'default'});
+      const info=context?.getExtension('WEBGL_debug_renderer_info');
+      const renderer=context?.getParameter(info ? info.UNMASKED_RENDERER_WEBGL : context.RENDERER);
+      software=/swiftshader|llvmpipe|softpipe|software rasterizer|microsoft basic render driver/i.test(renderer||'');
+    }catch{}
+    if(!context){showGraphicsFallback();return;}
     deskProgress.value=2;
     // Fetch the engine alongside the furniture module on desk visits.
     for(const file of ['three.module.min.js','three.core.min.js']){
@@ -113,14 +74,11 @@
       preload.rel='modulepreload';preload.href='/vendor/three/'+file;
       if(!document.querySelector('link[href="'+preload.getAttribute('href')+'"]'))document.head.append(preload);
     }
-    import("./furniture.js?v=75").then(module => {
+    import("./furniture.js?v=76").then(module => {
       if (!deskIsReadyToMount()) { sceneStarted=false; return; }
       deskProgress.value=3;
       try {
-        setRoomActive=module.mountFurniture(stage,showGraphicsFallback,step=>{
-          deskProgress.value=step;
-          if(step===5)illustrate.hidden=false;
-        },graphics);
+        module.mountFurniture(stage,showGraphicsFallback,step=>{deskProgress.value=step;},{context,software});
       }
       catch { showGraphicsFallback(); }
     }, () => showGraphicsFallback("The 3D desk couldn’t download. Reload to try again."));
@@ -128,25 +86,10 @@
   if (sceneCanvas?.isConnected) {
     start3D.addEventListener('click',()=>{
       const keyboard=start3D.matches(':focus-visible');
-      preferredView='3d';request3D=true;start3D.hidden=true;
-      try{localStorage.setItem('desk-render-mode',preferredView);}catch{}
-      stage.classList.add('is-loading');
-      if(keyboard)stage.querySelector('[data-opening-link]').focus({preventScroll:true});
-      if(setRoomActive)setRoomActive(true);
-      else showFurniture();
+      request3D=true;start3D.hidden=true;
+      if(keyboard)stage.querySelector('.desk-objects a').focus({preventScroll:true});
+      showFurniture();
     });
-    illustrate.addEventListener('click',()=>{
-      const keyboard=illustrate.matches(':focus-visible');
-      preferredView='illustrated';request3D=false;illustrate.hidden=true;
-      try{localStorage.setItem('desk-render-mode',preferredView);}catch{}
-      setRoomActive(false);
-      stage.classList.remove('is-rendered','soft-pan');stage.classList.add('is-loading');
-      stage.querySelector('.graphics-warning').hidden=true;
-      start3D.hidden=false;loadOpening();
-      if(keyboard)start3D.focus({preventScroll:true});
-    });
-    openingLayout.addEventListener("change",loadOpening);
-    touchLandscape.addEventListener("change",loadOpening);
     import("./desk-moths.js?v=1");
     if ("IntersectionObserver" in window) {
       new IntersectionObserver(([entry]) => {

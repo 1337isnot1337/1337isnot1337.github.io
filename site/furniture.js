@@ -107,7 +107,7 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress,{contex
   const travel=drawerTravel(drawer.getAttribute('aria-expanded')==='true');
   const hitGroups=new Map(),bounds=new T.Box3(),intersection=new T.Vector3();
   let lastTime=0,lampOn=false;
-  let contextLost=false,enabled=true;
+  let contextLost=false;
   const view=deskView();
   const life=deskLife(stage,()=>model,redraw,motion);
   const inspector=inspectDeskObjects(stage,engine,scene,camera,()=>model,redraw,life,motion);
@@ -120,7 +120,7 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress,{contex
   let lastPart='',pickedUp='',pickupTravel=0,centered='',centerUntil=0;
   function redraw() {
     dirty=true;
-    if (enabled && visible && !contextLost && !document.hidden && !frame) frame=requestAnimationFrame(renderFrame);
+    if (visible && !contextLost && !document.hidden && !frame) frame=requestAnimationFrame(renderFrame);
   }
   function renderFrame(time) {
     try { paint(time); }
@@ -270,7 +270,7 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress,{contex
   }
   function paint(time) {
     frame=0;
-    if(!enabled||!visible||contextLost||document.hidden||!dirty || (shadersStarted&&!shadersReady))return;
+    if(!visible||contextLost||document.hidden||!dirty || (shadersStarted&&!shadersReady))return;
     // A paper dialog keeps the last canvas frame as its backdrop.
     if(document.querySelector('dialog[open]:not(.object-view)'))return;
     if(opened && !stage.classList.contains('is-rendered'))return;
@@ -625,7 +625,9 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress,{contex
   pixelGrid.addEventListener('change',()=>{
     setResolution();redraw();
   });
-  function hideSceneControls() {
+  function suspendDesk() {
+    contextLost=true;warning.textContent=unavailable;
+    showGraphicsFallback();
     leaveDesk();targetStyles.clear();
     links.forEach(el=>{
       el.removeAttribute('data-outside');
@@ -634,25 +636,7 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress,{contex
     inspector.close();lamp.hidden=true;links.get('plant').hidden=true;
     posterSwitch.hidden=true;
   }
-  function suspendDesk() {
-    contextLost=true;warning.textContent=unavailable;
-    if(enabled)showGraphicsFallback();
-    hideSceneControls();
-  }
   canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();suspendDesk();});
   canvas.addEventListener('webglcontextrestored',()=>{contextLost=false;engine.shadowMap.needsUpdate=true;redraw();});
   redraw();
-  return active=>{
-    enabled=active;
-    if(enabled){
-      if(contextLost)showGraphicsFallback();
-      else redraw();
-    }else{
-      cancelAnimationFrame(frame);frame=0;
-      clearTimeout(ambientTimer);ambientTimer=0;
-      clearTimeout(clockTimer);clockTimer=0;
-      clearTimeout(settleTimer);settleTimer=0;
-      hideSceneControls();
-    }
-  };
 }

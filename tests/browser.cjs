@@ -31,9 +31,6 @@ const server = http.createServer((req,res) => {
   fs.createReadStream(file).pipe(res);
 });
 async function enterDeskRoom(page) {
- const start=page.locator('.desk-start-3d');
- await page.locator('.desktop-picture.is-rendered, .graphics-warning:visible, .desk-start-3d:visible').first().waitFor();
- if(await start.isVisible())await start.click();
  await page.locator('.desktop-picture.is-rendered, .graphics-warning:visible').first().waitFor();
 }
 (async () => {
@@ -100,13 +97,6 @@ async function enterDeskRoom(page) {
      await paper.getByRole('button',{name:'Stamp a doodle'}).click();
      await paper.getByRole('button',{name:'Put back'}).click();
      const sheet=page.locator('[data-object="blotter"]');
-     await page.getByRole('button',{name:'Illustrated desk',exact:true}).click();
-     await page.locator('.is-loading[data-opening="wide"]').waitFor();
-     await sheet.click();
-     assert.equal(await paper.locator('.sketch-paper image').count(),1,'switching to the illustrated desk preserves the drawing');
-     await paper.getByRole('button',{name:'Put back'}).click();
-     await page.getByRole('button',{name:'Explore in 3D'}).click();
-     await page.locator('.desktop-picture.is-rendered').waitFor();
      await sheet.click();
      assert.equal(await paper.locator('.sketch-paper image').count(),1,'clicking the sheet opens the same drawing in WebGL');
      await paper.getByRole('button',{name:'Undo'}).click();
@@ -626,40 +616,38 @@ async function enterDeskRoom(page) {
   await cold.route('**/studio.js?*',async route=>{await gate;await route.continue();});
   await cold.route('**/furniture.js?*',async route=>{await renderer;await route.abort();});
   await cold.addInitScript(()=>{
+    localStorage.setItem('desk-render-mode','illustrated');
     const original=HTMLCanvasElement.prototype.getContext;
     HTMLCanvasElement.prototype.getContext=function(type,...args){
       if(type==='webgl2')return {getExtension:()=>({UNMASKED_RENDERER_WEBGL:1}),getParameter:()=>'SwiftShader'};
       return original.call(this,type,...args);
     };
   });
-  const sceneFiles=[];
-  cold.on('request',r=>{if(/\/vendor\/three\/|\/furniture\.js/.test(r.url()))sceneFiles.push(r.url());});
+  const previews=[];
+  cold.on('request',r=>{if(r.url().includes('/assets/furniture/opening-'))previews.push(r.url());});
+  const rendererRequested=cold.waitForRequest('**/furniture.js?*');
   await cold.goto(base,{waitUntil:'commit'});
   await cold.locator('.desk-load-status').waitFor();
   const progress=cold.getByRole('progressbar',{name:'Opening the desk…'});
   assert.equal(await progress.getAttribute('value'),'1');
-  const coldFallback=cold.locator('.hutch-fallback,.desk-objects,.graphics-warning');
+  const coldFallback=cold.locator('.desk-objects,.graphics-warning');
   assert.equal(await coldFallback.evaluateAll(elements=>elements.filter(el=>el.getClientRects().length).length),0,'static desk stays hidden before deferred startup');
-  releaseStudio();
-  await cold.locator('.desk-start-3d').waitFor();
-  await cold.locator('.is-loading[data-opening="wide"]').waitFor();
+  releaseStudio();await rendererRequested;
+  assert.equal(await cold.getByRole('button',{name:'Illustrated desk',exact:true}).count(),0);
+  assert.equal(await cold.locator('.desk-start-3d').isVisible(),false,'a saved illustrated desk preference cannot prevent automatic WebGL startup');
   await cold.getByRole('button',{name:'Scratch paper',exact:true}).tap();
   await cold.locator('.pickup .put-down').tap();
-  assert.deepEqual(sceneFiles,[],'the software-rendered desk opens paper without fetching the 3D engine');
-  const rendererRequested=cold.waitForRequest('**/furniture.js?*');
-  await cold.locator('.desk-start-3d').tap();await rendererRequested;
   assert.equal(await progress.getAttribute('value'),'2');
-  for(const [width,height,opening] of [[1280,960,'wide'],[390,844,'compact'],[844,390,'compact-landscape']]){
+  for(const [width,height] of [[1280,960],[390,844],[844,390]]){
     await cold.setViewportSize({width,height});
-    await cold.locator('.is-loading[data-opening="'+opening+'"]').waitFor();
     assert.equal(await cold.locator('.desk-objects a:visible').count(),7);
-    assert.equal(await cold.locator('.hutch-fallback').isVisible(),false);
     const files=cold.locator('.object-file');
     await files.click();
     await cold.locator('#catalogue:visible').waitFor();
     await cold.locator('.back-to-desk').click();
     await files.waitFor();
   }
+  assert.deepEqual(previews,[]);
   releaseRenderer();
   await cold.locator('.graphics-warning:visible').waitFor();
   await cold.locator('.desk-objects a:visible').first().waitFor();
@@ -681,12 +669,9 @@ async function enterDeskRoom(page) {
   saver.on('request',req=>{if(/\/(?:furniture\.js|vendor\/three\/)/.test(req.url()))sceneRequests.push(req.url());});
   await saver.route('**/furniture.js?*',route=>route.abort());
   await saver.goto(base);
-  await saver.locator('.is-loading[data-opening="compact"]').waitFor();
   await saver.locator('.desk-start-3d').waitFor();
   assert.equal(await saver.locator('.desk-load-status').isVisible(),false);
   await saver.getByRole('button',{name:'Scratch paper',exact:true}).tap();
-  await saver.getByRole('dialog',{name:'Scratch paper'}).getByRole('button',{name:'Put back'}).tap();
-  await saver.getByRole('button',{name:'Scratch paper on the drawing mat'}).tap();
   await saver.getByRole('dialog',{name:'Scratch paper'}).getByRole('button',{name:'Put back'}).tap();
   await saver.locator('.object-file').tap();
   await saver.locator('#catalogue:visible').waitFor();

@@ -5,24 +5,25 @@
 }
 html[data-view="desk"] .stationery:not([data-open]) { background-image:none; }
 @media (pointer:coarse) {
-  .stationery, .hutch-fallback { --grain-image:url(assets/furniture/grain-small.webp); }
+  .stationery { --grain-image:url(assets/furniture/grain-small.webp); }
 }
 .desk-overview { position:relative; grid-area:1/1; align-self:start; height:160svh; min-height:780px; }
 .desktop-picture {
   position:sticky; top:0; width:100%; height:100svh; min-height:420px; overflow:hidden;
-  isolation:isolate; background:linear-gradient(#706a52 0 22%,#543e31 22% 25%,#92705b 25% 55%,#8d6343 55% 80%,#69472f 80%);
+  isolation:isolate; background:var(--paper,#fff8ed);
 }
 .desk-load-status { display:none; }
-:is(.desk-start-3d,.desk-illustrate):not([hidden]) {
+.desk-start-3d:not([hidden]) {
   position:absolute; z-index:2; top:max(12px,env(safe-area-inset-top)); left:max(12px,env(safe-area-inset-left)); min-height:44px;
   padding:8px 14px; border:1px solid #705740; border-radius:24px;
   background:#fff8ed; color:#422c41; font:600 14px var(--headline); cursor:pointer;
 }
 html[data-view="desk"] .desktop-picture > .desk-start-3d:not([hidden]) ~ .desk-load-status { display:none; }
-html[data-view] .desktop-picture.is-loading { background:#c7bcaa; }
-html[data-view] .desktop-picture.is-loading > :is(.hutch-fallback,.desk-objects) { display:none; }
+html[data-view] .desktop-picture.is-loading { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; }
+html[data-view] .stationery:not(.studio-ready) .is-loading > .desk-objects,
+html[data-view] .is-loading .desk-objects > button { display:none; }
 html[data-view] .is-loading > .desk-load-status {
-  position:absolute; inset:0; display:grid; place-content:center; justify-items:center;
+  display:grid; place-content:center; justify-items:center;
   grid-template-columns:minmax(0,15rem); gap:10px; padding:16px;
   color:#493d39; font:550 15px/1.4 var(--headline);
 }
@@ -39,9 +40,6 @@ html[data-view] .is-loading > .desk-load-status {
 }
 .furniture-canvas { display:block; position:absolute; inset:0; width:100%; height:100%; opacity:0; }
 .desktop-picture.is-rendered .furniture-canvas { opacity:1; }
-.hutch-fallback { position:absolute; inset:24% 0 0; border-block:12px ridge #795737; background:#865d40 var(--grain-image,url(assets/furniture/grain.webp)) center/cover; }
-.hutch-fallback::before { content:""; position:absolute; inset:0 0 70%; background:#372b2180; border-bottom:14px ridge #89603e; }
-.is-rendered .hutch-fallback { display:none; }
 .desk-objects { position:absolute; inset:0; pointer-events:none; }
 .desk-objects :is(a,button) {
   pointer-events:auto; position:absolute; display:grid; place-items:center;
@@ -356,7 +354,7 @@ html[data-view="desk"] .desk-overview, html[data-view="desk"] .desktop-picture {
 .desk-paper-shortcut:not([hidden]) {
   position:absolute; top:auto; bottom:max(12px,env(safe-area-inset-bottom)); z-index:2;
 }
-.stationery[data-open] :is(.desk-paper-shortcut,.desk-illustrate), body:has(dialog[open]) :is(.desk-paper-shortcut,.desk-illustrate) { visibility:hidden; }
+.stationery[data-open] .desk-paper-shortcut, body:has(dialog[open]) .desk-paper-shortcut { visibility:hidden; }
 .mode-switch:hover,.desk-paper-shortcut:hover,.profile-links a:hover { color:#823955; background:#fff; }
 .mode-switch:focus-visible,.desk-paper-shortcut:focus-visible,.profile-links a:focus-visible { outline:3px solid #76435c; outline-offset:3px; }
 html[data-view="shelf"] .mast-inner { padding-right:130px; }
@@ -466,42 +464,4 @@ html:not([data-view]):not(:has(#projects:target)) .mast { display:none; }
 .internship-card-paper .internship-card-role { font-weight:650; margin-bottom:2px; }
 .internship-card-paper a { display:inline-block; margin-top:4px; color:#553f50; text-underline-offset:3px; }
 
-/* The opening photographs use the live camera projection. Size the overscan
-   and its link rectangles as one layer, including while rotating a phone. */
-.desktop-picture.is-loading[data-opening] { container-type:size; }
-html[data-view="desk"] .is-loading[data-opening] > .desk-objects {
-  display:block; inset:50% auto auto 50%; transform:translate(-50%,-50%);
-  padding:0; width:auto; max-width:none; background-size:100% 100%;
-  height:min(153.846cqh,96.154cqw); aspect-ratio:2;
-  background-image:url("assets/furniture/opening-wide.webp?v=2");
-}
-html[data-view="desk"] .is-loading[data-opening^="compact"] > .desk-objects {
-  aspect-ratio:0.85; height:clamp(104.386cqh,217.582cqw,169.492cqh);
-  background-image:url("assets/furniture/opening-compact.webp?v=2");
-}
-html[data-view="desk"] .is-loading[data-opening="compact-landscape"] > .desk-objects { background-image:none; }
-.is-loading[data-opening="compact-landscape"] .desk-objects::before {
-  content:""; position:absolute; top:0; left:50%; transform:translateX(-50%);
-  height:100%; aspect-ratio:2.2; background:url("assets/furniture/opening-compact-landscape.webp?v=2") center/100% 100%;
-}
-html[data-view="desk"] .is-loading[data-opening] .desk-objects > :is(a,button) { display:none; }
-html[data-view="desk"] .is-loading[data-opening] .desk-objects > [data-opening-link]:not([hidden]) {
-  display:grid; position:absolute; inset:var(--wide-area); width:auto; height:auto;
-  min-height:0; max-width:none; padding:0; transform:none; border:0;
-  background:transparent; box-shadow:none; color:var(--ink); cursor:pointer;
-}
-.is-loading[data-opening] [data-opening-link] span {
-  position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%);
-}
-.is-loading[data-opening] [data-opening-link]:is(:focus-visible,:hover) span {
-  bottom:0; width:max-content; height:auto; padding:3px 7px; clip-path:none;
-  background:var(--paper); border-radius:3px;
-}
-html[data-view="desk"] .is-loading[data-opening] > .desk-load-status {
-  inset:12px auto auto 12px; z-index:1; pointer-events:none;
-  width:8.5rem; padding:6px 10px; gap:4px; font-size:12px;
-  background:#fff8edee; border-radius:5px;
-}
-html[data-view="desk"] .is-loading[data-opening^="compact"] .desk-objects > [data-opening-link]:not([hidden]) {
-  inset:var(--compact-area);
-}
+.studio-ready .desktop-picture.is-loading .desk-objects { position:relative; inset:auto; width:100%; padding:0 16px; }
