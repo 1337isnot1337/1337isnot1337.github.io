@@ -42,7 +42,18 @@
     const fragment=location.hash==="#projects" ? "" : location.hash;
     history.replaceState(history.state, "", modeAddress("shelf")+fragment);
   }
+  const qualityButton=overview.querySelector('.desk-performance');
+  let performanceMode=false, setPerformanceMode;
+  try{performanceMode=localStorage.getItem('desk-performance-mode')==='on';}catch{}
+  qualityButton.setAttribute('aria-pressed',String(performanceMode));
+  qualityButton.addEventListener('click',()=>{
+    performanceMode=!performanceMode;
+    qualityButton.setAttribute('aria-pressed',String(performanceMode));
+    try{localStorage.setItem('desk-performance-mode',performanceMode?'on':'off');}catch{}
+    setPerformanceMode?.(performanceMode);
+  });
   function showGraphicsFallback(message) {
+    qualityButton.hidden=true;
     stage.classList.remove("is-loading","is-rendered");
     const warning=stage.querySelector(".graphics-warning");
     if(message)warning.textContent=message;
@@ -67,6 +78,7 @@
       software=/swiftshader|llvmpipe|softpipe|software rasterizer|microsoft basic render driver/i.test(renderer||'');
     }catch{}
     if(!context){showGraphicsFallback();return;}
+    qualityButton.hidden=false;
     deskProgress.value=2;
     // Fetch the engine alongside the furniture module on desk visits.
     for(const file of ['three.module.min.js','three.core.min.js']){
@@ -74,11 +86,14 @@
       preload.rel='modulepreload';preload.href='/vendor/three/'+file;
       if(!document.querySelector('link[href="'+preload.getAttribute('href')+'"]'))document.head.append(preload);
     }
-    import("./furniture.js?v=76").then(module => {
+    import("./furniture.js?v=77").then(module => {
       if (!deskIsReadyToMount()) { sceneStarted=false; return; }
       deskProgress.value=3;
       try {
-        module.mountFurniture(stage,showGraphicsFallback,step=>{deskProgress.value=step;},{context,software});
+        setPerformanceMode=module.mountFurniture(stage,showGraphicsFallback,step=>{
+          deskProgress.value=step;
+          if(step===5)qualityButton.hidden=false;
+        },{context,software,performanceMode});
       }
       catch { showGraphicsFallback(); }
     }, () => showGraphicsFallback("The 3D desk couldn’t download. Reload to try again."));

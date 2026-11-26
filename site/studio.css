@@ -342,21 +342,31 @@ html[data-view] .is-rendered .desk-objects :is(a,button) { cursor:inherit; }
 .sketch-tools button[aria-pressed="true"] { box-shadow:inset 0 -2px #886273; }
 .sketch-tools button:disabled { opacity:.5; }
 
-/* The room fills the window. Its only view control is the little shelf glyph. */
+/* The room fills the window, with its controls anchored in the corners. */
 html[data-view="desk"] .mast { display:none; }
 html[data-view="desk"] .desk-overview, html[data-view="desk"] .desktop-picture { height:100svh; }
-.mode-switch, .desk-paper-shortcut:not([hidden]) {
-  position:fixed; z-index:12; top:max(14px,env(safe-area-inset-top)); right:max(16px,env(safe-area-inset-right));
+.mode-switch { position:fixed; z-index:12; top:max(14px,env(safe-area-inset-top)); right:max(16px,env(safe-area-inset-right)); }
+.mode-switch, .desk-corner-tools button:not([hidden]) {
   display:inline-flex; align-items:center; gap:7px; height:44px; padding:0 14px; border:1px solid #806b62; border-radius:24px;
   font:670 15px/1 var(--headline); text-decoration:none; white-space:nowrap;
   color:#4c3945; background:#fff9ef; box-shadow:0 2px 0 #826e63,0 3px 13px #30241c30; touch-action:manipulation;
 }
-.desk-paper-shortcut:not([hidden]) {
-  position:absolute; top:auto; bottom:max(12px,env(safe-area-inset-bottom)); z-index:2;
+.desk-corner-tools {
+  position:absolute; z-index:2; bottom:max(12px,env(safe-area-inset-bottom)); right:max(16px,env(safe-area-inset-right));
+  display:flex; flex-direction:column; align-items:flex-end; gap:6px; pointer-events:none;
 }
-.stationery[data-open] .desk-paper-shortcut, body:has(dialog[open]) .desk-paper-shortcut { visibility:hidden; }
-.mode-switch:hover,.desk-paper-shortcut:hover,.profile-links a:hover { color:#823955; background:#fff; }
-.mode-switch:focus-visible,.desk-paper-shortcut:focus-visible,.profile-links a:focus-visible { outline:3px solid #76435c; outline-offset:3px; }
+.desk-corner-tools button { pointer-events:auto; cursor:pointer; }
+.desk-performance::before { content:""; width:24px; height:14px; border:1px solid currentColor; border-radius:12px;
+  background:radial-gradient(circle at 6px 50%,currentColor 4px,transparent 4.5px); }
+.desk-corner-tools .desk-performance[aria-pressed="true"] { background:#4c3945; color:#fff9ef; }
+.desk-performance[aria-pressed="true"]::before { background-position:12px 0; }
+@media (forced-colors:active) {
+  .desk-performance::before { content:"−"; height:auto; text-align:center; }
+  .desk-performance[aria-pressed="true"]::before { content:"✓"; }
+}
+.stationery[data-open] .desk-corner-tools, body:has(dialog[open]) .desk-corner-tools { visibility:hidden; }
+.mode-switch:hover,.desk-corner-tools button:hover,.profile-links a:hover { color:#823955; background:#fff; }
+.mode-switch:focus-visible,.desk-corner-tools button:focus-visible,.profile-links a:focus-visible { outline:3px solid #76435c; outline-offset:3px; }
 html[data-view="shelf"] .mast-inner { padding-right:130px; }
 html[data-view="shelf"] .mode-switch { top:10px; }
 html[data-view="shelf"] .mode-shelf { display:initial; }
@@ -414,7 +424,7 @@ body:has(.object-view[open]) .mode-switch,.inspecting .graphics-warning { visibi
   html[data-view="shelf"] .mast-inner { padding-right:124px; flex-wrap:wrap; }
   html[data-view="shelf"] .mast nav { width:auto; gap:10px; }
   .use-object { bottom:7%; }
-  .studio-ready .is-rendered .graphics-warning { bottom:60px; }
+  .studio-ready .is-rendered .graphics-warning { bottom:114px; }
 }
 
 @media (max-width:390px) {

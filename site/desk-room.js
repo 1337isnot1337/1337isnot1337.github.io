@@ -155,26 +155,31 @@ export async function decorateRoom(world, { yieldToBrowser, desk, narrow, smallG
     for (const [key, collection] of prints)
       for (const root of collection.roots) root.visible = key === name;
   }
+  const shelfGardens=[];
   for (const [side, wall] of [[-1,walls.music],[1,walls.science]]) {
     const shelfX = side < 0 ? -4.02 : 3.2;
     const shelfY = side < 0 ? -.62 : -.76;
     box(wall, 1.12, .092, .63, trim, shelfX, shelfY, .325, .021);
-    flowers(wall, shelfX, shelfY + .047, side < 0 ? 0x738376 : 0xb78d84);
-    vine(wall, side<0 ? 5.66 : 5.93, 6.45, .125, 5.34, 2 + side);
-    vine(wall, side<0 ? -5.85 : -5.89, 6.45, .125, 4.15, .4 + side);
+    const garden=group(wall,0,0,0);
+    shelfGardens.push(garden);
+    flowers(garden, shelfX, shelfY + .047, side < 0 ? 0x738376 : 0xb78d84);
+    vine(garden, side<0 ? 5.66 : 5.93, 6.45, .125, 5.34, 2 + side);
+    vine(garden, side<0 ? -5.85 : -5.89, 6.45, .125, 4.15, .4 + side);
   }
 
   await yieldToBrowser();
   await furnishRoomObjects({yieldToBrowser,walls,world:desk,half,narrow,group,box,bead,cylinder,wire,finish,drawn,tag,detail,weave,wood,trim});
 
   // Smaller vines on the end of the hutch connect it to the rest of the room.
+  const hutchGarden=group(desk,0,0,0);
+  shelfGardens.push(hutchGarden);
   for (const side of [-1, 1]) {
-    const pot = group(desk, side * (half - .25), 3.25, -1.78);
+    const pot = group(hutchGarden, side * (half - .25), 3.25, -1.78);
     cylinder(pot, .17, .132, .23, finish(0xa86f52), 0, .12, 0, 20);
     cylinder(pot, .155, .155, .003, finish(0x5e4c38), 0, .239, 0, 20);
     // The stem clears the top and rolls over the front edge before it drops.
-    vine(desk, side * (half - .22), 3.41, -1.01, narrow ? .92 : 1.45, side + 1.4,
+    vine(hutchGarden, side * (half - .22), 3.41, -1.01, narrow ? .92 : 1.45, side + 1.4,
       [[-side * .03, .081, -.75], [0, .157, -.57], [0, .119, -.22]]);
   }
-  return {coves,walls,showPosters,readingBulb,outdoors,windowBounds};
+  return {coves,walls,shelfGardens,showPosters,readingBulb,outdoors,windowBounds};
 }

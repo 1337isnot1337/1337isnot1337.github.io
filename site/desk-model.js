@@ -5,7 +5,7 @@ import { lampProjection } from './desk-lamp.js?v=1';
 import { paintScope, followProbe } from './desk-scope.js?v=1';
 import { airframeGeometry, wingUnderside } from './model-plane.js?v=2';
 import { batchDeskMeshes } from './desk-batch.js?v=1';
-import { decorateRoom } from './desk-room.js?v=28';
+import { decorateRoom } from './desk-room.js?v=29';
 import { clockHands, setClock } from './shelf-clock.js?v=1';
 import { corkMaterial, curledPrint, scopeScale } from './desk-finishes.js?v=1';
 import { deskBox } from './desk-box.js?v=2';
@@ -1087,7 +1087,7 @@ export async function furnish(scene, narrow, repaint, software=false, posterMode
   bead(moth,0,0,0,.011,.011,.051,finish(0x685341));
   moth.visible=false;
   await yieldToBrowser();
-  const {coves,walls,showPosters,readingBulb,outdoors,windowBounds}=await decorateRoom(room,{yieldToBrowser,desk:world,narrow,smallGraphics,half,group,box,bead,cylinder,wire,finish,photo,tag,detail,drawn,weave,wood,trim,floorMat,night});
+  const {coves,walls,shelfGardens,showPosters,readingBulb,outdoors,windowBounds}=await decorateRoom(room,{yieldToBrowser,desk:world,narrow,smallGraphics,half,group,box,bead,cylinder,wire,finish,photo,tag,detail,drawn,weave,wood,trim,floorMat,night});
   showPosters(posterMode);
   // Small displayed pieces come forward at their existing mounting points.
   const displayPoses=new Map();
@@ -1173,7 +1173,7 @@ export async function furnish(scene, narrow, repaint, software=false, posterMode
   const roomProps=new Map(), roomClocks=new Map(), previewGeometry=new Set();
   // Keep wall batches separate so the camera can cull the geometry behind it.
   const staticRoots=new Set([room,world,...Object.values(walls)]);
-  const rigid=new Set([...staticRoots,outdoors,drawerInterior,flap,cover,...details.values()]);
+  const rigid=new Set([...staticRoots,...shelfGardens,outdoors,drawerInterior,flap,cover,...details.values()]);
   room.updateMatrixWorld(true);
   for(const [id,item] of targets){
     const {root}=item;
@@ -1272,5 +1272,5 @@ export async function furnish(scene, narrow, repaint, software=false, posterMode
   source.forEach(g=>{if(!previewGeometry.has(g))g.dispose();});
   const flexCable=followProbe(cableWire.children[0],cableTip,probeRest);
   scene.add(room);
-  return {outdoors,windowBounds,world:room,desk:world,deskScale,targets,roomProps,roomClocks,details,occluders,drawer,drawerInterior,flap,cover,lamp,bulbGlass:fastMaterials.get(bulbGlass)||bulbGlass,scopeScreen:fastMaterials.get(scopeScreen)||scopeScreen,tuneScope,contactMap,daylight,night,coves,showPosters,posterCap,poseHover,projectLampShadow,flexCable,titleLooseFile,pencilBounds:{book:book.position.x+(narrow?.24:.43),mat:matRight-.10},sketchTexture:sketchFace.material.map,readingBulb};
+  return {outdoors,windowBounds,shelfGardens,world:room,desk:world,deskScale,targets,roomProps,roomClocks,details,occluders,drawer,drawerInterior,flap,cover,lamp,bulbGlass:fastMaterials.get(bulbGlass)||bulbGlass,scopeScreen:fastMaterials.get(scopeScreen)||scopeScreen,tuneScope,contactMap,daylight,night,coves,showPosters,posterCap,poseHover,projectLampShadow,flexCable,titleLooseFile,pencilBounds:{book:book.position.x+(narrow?.24:.43),mat:matRight-.10},sketchTexture:sketchFace.material.map,readingBulb};
 }

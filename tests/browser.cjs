@@ -96,6 +96,13 @@ async function enterDeskRoom(page) {
      await page.getByRole('button',{name:'Scratch paper',exact:true}).press('Enter');
      await paper.getByRole('button',{name:'Stamp a doodle'}).click();
      await paper.getByRole('button',{name:'Put back'}).click();
+     const quality=page.getByRole('button',{name:'Performance mode',exact:true});
+     const canvas=page.locator('.furniture-canvas');
+     const normalWidth=await canvas.evaluate(el=>el.width);
+     assert.equal(await quality.getAttribute('aria-pressed'),'false');
+     await quality.press('Space');
+     assert.equal(await quality.getAttribute('aria-pressed'),'true');
+     await page.waitForFunction(width=>document.querySelector('.furniture-canvas').width<width,normalWidth);
      const sheet=page.locator('[data-object="blotter"]');
      await sheet.click();
      assert.equal(await paper.locator('.sketch-paper image').count(),1,'clicking the sheet opens the same drawing in WebGL');
@@ -105,6 +112,9 @@ async function enterDeskRoom(page) {
      await paper.waitFor();
      assert.equal(await paper.locator('.sketch-paper image').count(),0,'the blank sheet can still be picked up');
      await page.keyboard.press('Escape');
+     await quality.press('Enter');
+     assert.equal(await quality.getAttribute('aria-pressed'),'false');
+     await page.waitForFunction(width=>document.querySelector('.furniture-canvas').width===width,normalWidth);
      const stage=page.locator('.desktop-picture'),lamp=page.locator('[data-object="lamp"]');
      const r=await lamp.boundingBox();
      await page.mouse.move(r.x+r.width*.5,r.y+r.height*.95);

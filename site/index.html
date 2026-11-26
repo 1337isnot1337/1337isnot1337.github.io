@@ -74,8 +74,8 @@
       else restoreReading();
     "></script>
     <script defer src="/rook-graph.js?v=3"></script>
-    <link rel="stylesheet" href="/studio.css?v=30" />
-    <script defer src="/studio.js?v=77" onerror="if (!location.pathname.startsWith('/boring')) delete document.documentElement.dataset.view"></script>
+    <link rel="stylesheet" href="/studio.css?v=31" />
+    <script defer src="/studio.js?v=78" onerror="if (!location.pathname.startsWith('/boring')) delete document.documentElement.dataset.view"></script>
     <script defer src="/paper-turn.js?v=5"></script>
     <script defer src="/desk-keepsakes.js?v=11"></script>
     <script defer src="/internship-card.js?v=1"></script>
@@ -118,7 +118,10 @@
         <section class="desk-overview" aria-labelledby="studio-title">
 
           <h1 id="studio-title" class="visually-hidden" tabindex="-1">Cinna Davis — software, mathematics and research</h1>
-          <button class="desk-paper-shortcut" type="button" data-object="scratch-paper" data-keepsake aria-haspopup="dialog" hidden>Scratch paper</button>
+          <div class="desk-corner-tools">
+            <button class="desk-performance" type="button" aria-pressed="false" title="Reduce 3D resolution, shadows and decoration" hidden>Performance mode</button>
+            <button class="desk-paper-shortcut" type="button" data-object="scratch-paper" data-keepsake aria-haspopup="dialog" hidden>Scratch paper</button>
+          </div>
           <div class="desktop-picture is-loading">
             <button type="button" class="desk-start-3d" hidden>Explore in 3D</button>
             <div class="desk-load-status">

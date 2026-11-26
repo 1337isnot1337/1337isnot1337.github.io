@@ -1,5 +1,5 @@
 import * as T from './vendor/three/three.module.min.js';
-import { furnish } from './desk-model.js?v=56';
+import { furnish } from './desk-model.js?v=57';
 import { inspectDeskObjects } from './desk-inspect.js?v=20';
 
 import { attachDeskPointer } from './desk-pointer.js?v=26';
@@ -10,7 +10,7 @@ import { drawerTravel } from './desk-drawer.js?v=1';
 import { setClock } from './shelf-clock.js?v=1';
 import { bindRoomActions } from './room-actions.js?v=3';
 
-export function mountFurniture(stage,showGraphicsFallback,reportProgress,{context,software}) {
+export function mountFurniture(stage,showGraphicsFallback,reportProgress,{context,software,performanceMode}) {
   const canvas = stage.querySelector('canvas');
   if (!document.createElement('canvas').getContext('2d'))throw new Error('Canvas drawing unavailable');
   const engine=new T.WebGLRenderer({canvas,context});
@@ -20,7 +20,7 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress,{contex
   const smallGraphics=software || coarsePointer;
   if(software)engine.setOpaqueSort((a,b)=>a.groupOrder-b.groupOrder || a.renderOrder-b.renderOrder || a.z-b.z || a.id-b.id);
   const pixelGrid=matchMedia('(forced-colors: none) and (prefers-contrast: no-preference)');
-  let movingPixels=false, motionScale=1, previousMotionTime=0, slowFrames=0, fastFrames=0;
+  let resolutionDirty=false, movingPixels=false, motionScale=1, previousMotionTime=0, slowFrames=0, fastFrames=0;
   let settleTimer=0, lastMovement=0;
   function trackMotion(time,moving){
     if(!moving){
@@ -46,24 +46,25 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress,{contex
   function setResolution(moving=movingPixels){
     movingPixels=moving;
     // Sample the canvas once, in WebGL. DOM text and hit targets stay at native resolution.
-    const still=pixelGrid.matches ? (software ? .79 : 1) : (software ? .85 : 1.4);
+    const still=performanceMode ? (software ? .62 : .78) : pixelGrid.matches ? (software ? .79 : 1) : (software ? .85 : 1.4);
     const sampleMotion=moving && pixelGrid.matches;
-    const motionLimit=software ? .36 : .8;
-    const maxPixels=software ? (sampleMotion ? 140000 : 720000) : (sampleMotion ? 1000000 : 2100000);
+    const motionLimit=performanceMode ? (software ? .28 : .52) : (software ? .36 : .8);
+    const maxPixels=performanceMode
+      ? (software ? (sampleMotion ? 80000 : 400000) : (sampleMotion ? 260000 : 800000))
+      : software ? (sampleMotion ? 140000 : 720000) : (sampleMotion ? 1000000 : 2100000);
     const sizeLimit=Math.sqrt(maxPixels/Math.max(1,viewWidth*viewHeight));
     const ceiling=Math.min(devicePixelRatio,sampleMotion?motionLimit:still,sizeLimit);
-    const floor=(software ? 240 : coarsePointer ? 360 : 540)/Math.max(1,viewWidth,viewHeight);
+    const floor=(performanceMode ? 200 : software ? 240 : coarsePointer ? 360 : 540)/Math.max(1,viewWidth,viewHeight);
     const ratio=sampleMotion ? Math.min(ceiling,Math.max(floor,ceiling*motionScale)) : ceiling;
     if(engine.getPixelRatio()!==ratio)engine.setPixelRatio(ratio);
   }
-  engine.shadowMap.enabled=!software;
   engine.shadowMap.type=software ? T.BasicShadowMap : T.PCFSoftShadowMap;
   engine.shadowMap.autoUpdate=false;
   engine.toneMapping=T.ACESFilmicToneMapping;engine.toneMappingExposure=1.03;
   const scene=new T.Scene();scene.background=new T.Color(0xc7bc9e);
   const camera=new T.PerspectiveCamera(43,1,.10,62);
   const viewFrustum=new T.Frustum(),projectionView=new T.Matrix4();
-  let shadersStarted=false, shadersReady=false;
+  let shadersStarted=false, shadersReady=false, shaderVersion=0;
   const daySky=1.68;
   const sky=new T.HemisphereLight(0xf3f0e5,0xc6ae9d,daySky);scene.add(sky);
   const sun=new T.DirectionalLight(0xffebd2,2.16);
@@ -87,13 +88,22 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress,{contex
   let nightTravel=0;
   // The workshop panorama is already convolved for each roughness level.
   // The atlas stores linear radiance / 16 encoded as sRGB, with row zero at the bottom.
-  let lightReady=Boolean(software);
-  if(!software)new T.TextureLoader().load('assets/furniture/workshop-light.webp', atlas => {
-    atlas.mapping=T.CubeUVReflectionMapping;atlas.colorSpace=T.SRGBColorSpace;
-    atlas.flipY=false;atlas.generateMipmaps=false;atlas.minFilter=T.LinearFilter;
-    scene.environment=atlas;scene.environmentRotation.y=1.20;scene.environmentIntensity=.40*16;
-    lightReady=true;redraw();
-  },undefined,()=>{lightReady=true;redraw();});
+  let atlasRequested=false, atlasReady=false, reflectionAtlas=null;
+  function configureLighting(){
+    const fullLighting=!software && !performanceMode;
+    engine.shadowMap.enabled=fullLighting;
+    engine.shadowMap.needsUpdate=fullLighting;
+    scene.environment=fullLighting ? reflectionAtlas : null;
+    if(!fullLighting || atlasRequested)return;
+    atlasRequested=true;
+    new T.TextureLoader().load('assets/furniture/workshop-light.webp', atlas=>{
+      atlas.mapping=T.CubeUVReflectionMapping;atlas.colorSpace=T.SRGBColorSpace;
+      atlas.flipY=false;atlas.generateMipmaps=false;atlas.minFilter=T.LinearFilter;
+      reflectionAtlas=atlas;scene.environmentRotation.y=1.20;
+      if(!performanceMode)scene.environment=atlas;
+      atlasReady=true;redraw();
+    },undefined,()=>{atlasReady=true;redraw();});
+  }
   const section=stage.closest('.desk-overview');
   const motion=matchMedia('(prefers-reduced-motion: reduce)');
   let narrow=false,viewWidth=0,viewHeight=0,needsLayout=true;
@@ -141,6 +151,7 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress,{contex
       textures.forEach(t=>t.dispose());materials.forEach(m=>m.dispose());geometries.forEach(g=>g.dispose());
     }
     viewWidth=0;narrow=compact;model=next;hitGroups.clear();extraMeshes.length=0;
+    for(const group of model.shelfGardens)group.visible=!performanceMode;
     readingLight.position.copy(model.readingBulb);
     roomActions.mount(model);
     model.posterCap.position.y=posterMode==='frivolous'?.034:.053;
@@ -274,7 +285,7 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress,{contex
     // A paper dialog keeps the last canvas frame as its backdrop.
     if(document.querySelector('dialog[open]:not(.object-view)'))return;
     if(opened && !stage.classList.contains('is-rendered'))return;
-    if(!layout()||!lightReady)return;
+    if(!layout() || (!performanceMode && !software && !atlasReady))return;
     dirty=false;
 
     const elapsed=Math.max(.001,(time-lastTime)/1000);lastTime=time;
@@ -294,7 +305,7 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress,{contex
     if(!software)scene.environmentIntensity=T.MathUtils.lerp(6.4,2.8,night);
     for(const {lens,color} of model.coves)lens.color.copy(color).multiplyScalar(.58+night*.83);
     for(const reflection of fallbackWash)reflection.intensity=.35+night*4.2;
-    const amount=(motion.matches||software)?1:1-Math.exp(-dt*12);
+    const amount=(motion.matches||software||performanceMode)?1:1-Math.exp(-dt*12);
     const target=(value,goal)=>Math.abs(value-goal)<.004?goal:T.MathUtils.lerp(value,goal,amount);
     const roomMotion=roomActions.paint({time,dt,night,nightGoal,reduced:motion.matches,ease:target});
     readingLight.intensity=roomMotion.readingLevel*25;
@@ -311,7 +322,7 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress,{contex
     let previewMoved=false,previewMoving=false;
     for(const [id,value] of previews){
       const goal=Number(preview===id);
-      const next=(motion.matches||software)?goal:T.MathUtils.clamp(goal,value-dt*7,value+dt*7);
+      const next=(motion.matches||software||performanceMode)?goal:T.MathUtils.clamp(goal,value-dt*7,value+dt*7);
       previewMoved ||= next!==value;
       previewMoving ||= next!==goal;
       previews.set(id,next);
@@ -319,7 +330,7 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress,{contex
     model.details.get('proof-volume').position.z=-1.56+peek('proof')*.102;
     model.details.get('archive-volume').position.z=-1.56+peek('archive')*.102;
     model.scopeScreen.emissiveIntensity=.035+peek('scope')*.46;
-    const drawerMotion=travel.step(dt,motion.matches||software);
+    const drawerMotion=travel.step(dt,motion.matches||software||performanceMode);
     drawerAmount=drawerMotion.amount;
     model.drawerInterior.visible=drawerAmount>0;
     life.drawerMomentum(drawerMotion.impulse);
@@ -352,7 +363,7 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress,{contex
       return;
     }
     // A sun patch and the resting moth can advance without an idle render loop.
-    if(!ambientTimer&&!document.hidden&&!opened){
+    if(!performanceMode&&!ambientTimer&&!document.hidden&&!opened){
       const delay=Math.min(events.wakeAt ? Math.max(90,events.wakeAt-time) : Infinity,motion.matches?Infinity:9000);
       if(Number.isFinite(delay))ambientTimer=setTimeout(()=>{ambientTimer=0;redraw();},delay);
     }
@@ -392,7 +403,6 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress,{contex
     }
     if(!software&&(detailMoved||sunChanged))engine.shadowMap.needsUpdate=true;
     if(camera.zoom!==posture.zoom){camera.zoom=posture.zoom;camera.updateProjectionMatrix();}
-    trackMotion(time,Boolean(posture.move||drawerMotion.moving||stage.classList.contains('looking-around')));
     camera.lookAt(aim);
     camera.updateMatrixWorld();
     viewFrustum.setFromProjectionMatrix(projectionView.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse));
@@ -400,15 +410,20 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress,{contex
     if(!shadersReady){
       if(!shadersStarted){
         shadersStarted=true;
+        const version=shaderVersion;
         // Upload first. Some laptop drivers block texture uploads behind queued shader compilation.
-        uploadOpeningTextures().then(()=>engine.compileAsync(scene,camera)).then(()=>{shadersReady=true;redraw();},error=>{
+        uploadOpeningTextures().then(()=>engine.compileAsync(scene,camera)).then(()=>{
+          shadersStarted=false;shadersReady=version===shaderVersion;redraw();
+        },error=>{
           suspendDesk();console.error('Desk shader preparation failed',error);
         });
       }
       return;
     }
+    if(resolutionDirty){setResolution();resolutionDirty=false;}
+    trackMotion(time,Boolean(posture.move||drawerMotion.moving||stage.classList.contains('looking-around')));
     engine.render(scene,camera);projectTargets();
-    if(!opened){
+    if(!performanceMode&&!opened){
       for(const id of model.roomClocks.keys()){
         if(!links.get(id).hidden){scheduleClock();break;}
       }
@@ -453,6 +468,7 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress,{contex
   const {leave:leaveDesk,refreshHover}=attachDeskPointer(stage,{
     targets:links,
     hover(id){
+      if(performanceMode)return;
       const next=hoverable.has(id)||id.endsWith('-print')||model?.targets.get(id)?.root.userData.roomPoster?id:'';
       clearTimeout(hoverTimer);
       if(next===hovered)return;
@@ -638,5 +654,18 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress,{contex
   }
   canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();suspendDesk();});
   canvas.addEventListener('webglcontextrestored',()=>{contextLost=false;engine.shadowMap.needsUpdate=true;redraw();});
+  configureLighting();
   redraw();
+  return enabled=>{
+    performanceMode=enabled;
+    configureLighting();
+    if(!software){shaderVersion++;shadersReady=false;}
+    clearTimeout(ambientTimer);ambientTimer=0;
+    clearTimeout(clockTimer);clockTimer=0;
+    clearTimeout(hoverTimer);hovered='';
+    if(model)for(const group of model.shelfGardens)group.visible=!enabled;
+    motionScale=1;previousMotionTime=slowFrames=fastFrames=0;
+    resolutionDirty=true;
+    redraw();
+  };
 }
