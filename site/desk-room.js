@@ -11,9 +11,9 @@ function ivyGeometry(smallGraphics) {
     [-.073,.289],[.009,.424],[.074,.274],[.103,.217],[.198,.228],[.157,.130],
     [.132,.043],[.094,-.005],
   ].map(([x,y])=>new T.Vector3(x,y,0)),true);
-  const points=outline.getPoints(smallGraphics?16:30).slice(0,-1);
+  const points=outline.getPoints(smallGraphics?16:22).slice(0,-1);
   const positions=[0,.153,.053],uv=[.5,.39],indices=[];
-  const rings=smallGraphics?[.60,1]:[.38,.73,1];
+  const rings=[.60,1];
   for(const radius of rings){
     for(const point of points){
       const x=point.x*radius, y=.153+(point.y-.153)*radius;

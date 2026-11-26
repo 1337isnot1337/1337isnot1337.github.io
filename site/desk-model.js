@@ -5,7 +5,7 @@ import { lampProjection } from './desk-lamp.js?v=1';
 import { paintScope, followProbe } from './desk-scope.js?v=1';
 import { airframeGeometry, wingUnderside } from './model-plane.js?v=2';
 import { batchDeskMeshes } from './desk-batch.js?v=1';
-import { decorateRoom } from './desk-room.js?v=27';
+import { decorateRoom } from './desk-room.js?v=28';
 import { clockHands, setClock } from './shelf-clock.js?v=1';
 import { corkMaterial, curledPrint, scopeScale } from './desk-finishes.js?v=1';
 import { deskBox } from './desk-box.js?v=2';
@@ -50,7 +50,7 @@ export async function furnish(scene, narrow, repaint, software=false, posterMode
   function box(parent,w,h,d,mat,x=0,y=0,z=0,r=0) {
     // Tiny bevels are subpixel on small screens and in the software view. Keep rounded silhouettes
     // on larger pieces such as the drawers, worktop and instrument cases.
-    if(smallGraphics && Math.min(w,h,d)<(software?.13:.09))r=0;
+    if(Math.min(w,h,d)<(software?.13:smallGraphics?.09:.045) && (smallGraphics || r<.012))r=0;
     const key = [w,h,d,r].join(',');
     if (!geometry.has(key)) geometry.set(key,r ? deskBox(w,h,d,Math.min(r,h/2,w/2,d/2)) : new T.BoxGeometry(w,h,d));
     return mesh(parent,geometry.get(key),mat,x,y,z);
@@ -62,8 +62,9 @@ export async function furnish(scene, narrow, repaint, software=false, posterMode
     return mesh(p,geometry.get(key),mat,x,y,z);
   }
   function bead(p,x,y,z,rx,ry,rz,mat) {
-    const key='sphere';
-    if (!geometry.has(key)) geometry.set(key,new T.SphereGeometry(1,smallGraphics?8:14,smallGraphics?6:10));
+    const fine=!smallGraphics && Math.max(rx,ry,rz)>.16;
+    const key=fine?'sphere-fine':'sphere';
+    if (!geometry.has(key)) geometry.set(key,new T.SphereGeometry(1,fine?14:8,fine?10:6));
     const m=mesh(p,geometry.get(key),mat,x,y,z);m.scale.set(rx,ry,rz);return m;
   }
   function wire(p,points,r,mat) {
@@ -690,7 +691,7 @@ export async function furnish(scene, narrow, repaint, software=false, posterMode
   },.34,.118,-.252,true);
   await yieldToBrowser();
   // One curved blade and a painted vein texture are shared by every leaf on the cutting.
-  const leafShape=new T.PlaneGeometry(1,1,smallGraphics?6:12,smallGraphics?10:20);
+  const leafShape=new T.PlaneGeometry(1,1,smallGraphics?6:8,smallGraphics?10:12);
   const vertices=leafShape.attributes.position,leafUV=leafShape.attributes.uv;
   for(let i=0;i<vertices.count;i++){
     vertices.setXYZ(i,...leafPoint(leafUV.getY(i),leafUV.getX(i)*2-1));

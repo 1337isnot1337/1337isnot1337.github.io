@@ -13,8 +13,8 @@ html[data-view="desk"] .stationery:not([data-open]) { background-image:none; }
   isolation:isolate; background:linear-gradient(#706a52 0 22%,#543e31 22% 25%,#92705b 25% 55%,#8d6343 55% 80%,#69472f 80%);
 }
 .desk-load-status { display:none; }
-.desk-start-3d:not([hidden]) {
-  position:absolute; z-index:2; top:12px; left:12px; min-height:44px;
+:is(.desk-start-3d,.desk-illustrate):not([hidden]) {
+  position:absolute; z-index:2; top:max(12px,env(safe-area-inset-top)); left:max(12px,env(safe-area-inset-left)); min-height:44px;
   padding:8px 14px; border:1px solid #705740; border-radius:24px;
   background:#fff8ed; color:#422c41; font:600 14px var(--headline); cursor:pointer;
 }
@@ -356,7 +356,7 @@ html[data-view="desk"] .desk-overview, html[data-view="desk"] .desktop-picture {
 .desk-paper-shortcut:not([hidden]) {
   position:absolute; top:auto; bottom:max(12px,env(safe-area-inset-bottom)); z-index:2;
 }
-.stationery[data-open] .desk-paper-shortcut, body:has(dialog[open]) .desk-paper-shortcut { visibility:hidden; }
+.stationery[data-open] :is(.desk-paper-shortcut,.desk-illustrate), body:has(dialog[open]) :is(.desk-paper-shortcut,.desk-illustrate) { visibility:hidden; }
 .mode-switch:hover,.desk-paper-shortcut:hover,.profile-links a:hover { color:#823955; background:#fff; }
 .mode-switch:focus-visible,.desk-paper-shortcut:focus-visible,.profile-links a:focus-visible { outline:3px solid #76435c; outline-offset:3px; }
 html[data-view="shelf"] .mast-inner { padding-right:130px; }

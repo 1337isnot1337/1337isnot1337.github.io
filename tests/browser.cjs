@@ -30,6 +30,12 @@ const server = http.createServer((req,res) => {
   res.setHeader('Content-Length',size);
   fs.createReadStream(file).pipe(res);
 });
+async function enterDeskRoom(page) {
+ const start=page.locator('.desk-start-3d');
+ await page.locator('.desktop-picture.is-rendered, .graphics-warning:visible, .desk-start-3d:visible').first().waitFor();
+ if(await start.isVisible())await start.click();
+ await page.locator('.desktop-picture.is-rendered, .graphics-warning:visible').first().waitFor();
+}
 (async () => {
  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
  const base = `http://127.0.0.1:${server.address().port}`;
@@ -63,6 +69,7 @@ const server = http.createServer((req,res) => {
      return route.fulfill({status:name==='tablet' ? 429 : 200,json:routing});
    });
    await page.goto(base);
+   await enterDeskRoom(page);
    assert.equal(await page.locator('html').getAttribute('data-view'),'desk');
    assert.equal(await page.locator('.shop').isVisible(),false);
    assert.deepEqual(mediaRequests,[],'the opening desk leaves the flyover recording and spectrum for their reader');
@@ -77,7 +84,6 @@ const server = http.createServer((req,res) => {
      [['GitHub',''],['LinkedIn',''],['X','']]);
    assert.equal(await page.locator('svg use[href^="#brand-"]').count(),3);
    if(name==='desktop'){
-    await page.waitForFunction(()=>document.querySelector('.desktop-picture').classList.contains('is-rendered') || !document.querySelector('.graphics-warning').hidden);
     if(!await page.locator('.is-rendered').count()){
      const webgl = await page.evaluate(()=>{
       const gl=document.createElement('canvas').getContext('webgl2');
@@ -94,6 +100,13 @@ const server = http.createServer((req,res) => {
      await paper.getByRole('button',{name:'Stamp a doodle'}).click();
      await paper.getByRole('button',{name:'Put back'}).click();
      const sheet=page.locator('[data-object="blotter"]');
+     await page.getByRole('button',{name:'Illustrated desk',exact:true}).click();
+     await page.locator('.is-loading[data-opening="wide"]').waitFor();
+     await sheet.click();
+     assert.equal(await paper.locator('.sketch-paper image').count(),1,'switching to the illustrated desk preserves the drawing');
+     await paper.getByRole('button',{name:'Put back'}).click();
+     await page.getByRole('button',{name:'Explore in 3D'}).click();
+     await page.locator('.desktop-picture.is-rendered').waitFor();
      await sheet.click();
      assert.equal(await paper.locator('.sketch-paper image').count(),1,'clicking the sheet opens the same drawing in WebGL');
      await paper.getByRole('button',{name:'Undo'}).click();
@@ -612,14 +625,29 @@ const server = http.createServer((req,res) => {
   const renderer=new Promise(resolve=>releaseRenderer=resolve);
   await cold.route('**/studio.js?*',async route=>{await gate;await route.continue();});
   await cold.route('**/furniture.js?*',async route=>{await renderer;await route.abort();});
-  const rendererRequested=cold.waitForRequest('**/furniture.js?*');
+  await cold.addInitScript(()=>{
+    const original=HTMLCanvasElement.prototype.getContext;
+    HTMLCanvasElement.prototype.getContext=function(type,...args){
+      if(type==='webgl2')return {getExtension:()=>({UNMASKED_RENDERER_WEBGL:1}),getParameter:()=>'SwiftShader'};
+      return original.call(this,type,...args);
+    };
+  });
+  const sceneFiles=[];
+  cold.on('request',r=>{if(/\/vendor\/three\/|\/furniture\.js/.test(r.url()))sceneFiles.push(r.url());});
   await cold.goto(base,{waitUntil:'commit'});
   await cold.locator('.desk-load-status').waitFor();
   const progress=cold.getByRole('progressbar',{name:'Opening the desk…'});
   assert.equal(await progress.getAttribute('value'),'1');
   const coldFallback=cold.locator('.hutch-fallback,.desk-objects,.graphics-warning');
   assert.equal(await coldFallback.evaluateAll(elements=>elements.filter(el=>el.getClientRects().length).length),0,'static desk stays hidden before deferred startup');
-  releaseStudio();await rendererRequested;
+  releaseStudio();
+  await cold.locator('.desk-start-3d').waitFor();
+  await cold.locator('.is-loading[data-opening="wide"]').waitFor();
+  await cold.getByRole('button',{name:'Scratch paper',exact:true}).tap();
+  await cold.locator('.pickup .put-down').tap();
+  assert.deepEqual(sceneFiles,[],'the software-rendered desk opens paper without fetching the 3D engine');
+  const rendererRequested=cold.waitForRequest('**/furniture.js?*');
+  await cold.locator('.desk-start-3d').tap();await rendererRequested;
   assert.equal(await progress.getAttribute('value'),'2');
   for(const [width,height,opening] of [[1280,960,'wide'],[390,844,'compact'],[844,390,'compact-landscape']]){
     await cold.setViewportSize({width,height});
@@ -666,7 +694,10 @@ const server = http.createServer((req,res) => {
   assert.deepEqual(sceneRequests,[],'the data-saving desk can open projects without downloading WebGL');
   await saver.locator('.desk-start-3d').press('Enter');
   await saver.locator('.graphics-warning:visible').waitFor();
-  assert.ok(sceneRequests.some(url=>url.includes('furniture.js')));
+  if(!sceneRequests.some(url=>url.includes('furniture.js'))){
+    assert.equal(await saver.evaluate(()=>Boolean(document.querySelector('.furniture-canvas').getContext('webgl2'))),false,
+      'a browser without WebGL shows the native desk without downloading the renderer');
+  }
   assert.equal(await saver.locator('.desk-start-3d').isVisible(),false);
   await saver.close();
   const photos=await browser.newPage();
@@ -978,7 +1009,7 @@ const server = http.createServer((req,res) => {
   await touch.locator('#close-dialog').tap();
   await touch.waitForFunction(()=>!document.body.classList.contains('modal-open'));
   await touch.goto(base);
-  await touch.waitForFunction(()=>document.querySelector('.desktop-picture').classList.contains('is-rendered') || !document.querySelector('.graphics-warning').hidden);
+  await enterDeskRoom(touch);
   const pen=await touch.locator('[data-object="pencil"]').boundingBox();
   await touch.touchscreen.tap(pen.x+pen.width/2,pen.y+pen.height/2);
   if(await touch.locator('.object-view').isVisible())await touch.locator('.use-object').tap();

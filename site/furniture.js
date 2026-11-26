@@ -1,5 +1,5 @@
 import * as T from './vendor/three/three.module.min.js';
-import { furnish } from './desk-model.js?v=55';
+import { furnish } from './desk-model.js?v=56';
 import { inspectDeskObjects } from './desk-inspect.js?v=20';
 
 import { attachDeskPointer } from './desk-pointer.js?v=26';
@@ -10,18 +10,12 @@ import { drawerTravel } from './desk-drawer.js?v=1';
 import { setClock } from './shelf-clock.js?v=1';
 import { bindRoomActions } from './room-actions.js?v=3';
 
-export function mountFurniture(stage,showGraphicsFallback,reportProgress) {
+export function mountFurniture(stage,showGraphicsFallback,reportProgress,{context,software}) {
   const canvas = stage.querySelector('canvas');
   if (!document.createElement('canvas').getContext('2d'))throw new Error('Canvas drawing unavailable');
-  const options={alpha:false,antialias:false,powerPreference:'default'};
-  const context=canvas.getContext('webgl2',options);
-  if(!context)throw new Error('WebGL 2 unavailable');
-  const engine = new T.WebGLRenderer({canvas,context,...options});
+  const engine=new T.WebGLRenderer({canvas,context});
   const warning=stage.querySelector('.graphics-warning');
   const unavailable=warning.textContent;
-  const gl=engine.getContext();
-  const debug=gl.getExtension('WEBGL_debug_renderer_info');
-  const software=debug && /swiftshader|llvmpipe/i.test(gl.getParameter(debug.UNMASKED_RENDERER_WEBGL));
   const coarsePointer=matchMedia('(pointer: coarse)').matches;
   const smallGraphics=software || coarsePointer;
   if(software)engine.setOpaqueSort((a,b)=>a.groupOrder-b.groupOrder || a.renderOrder-b.renderOrder || a.z-b.z || a.id-b.id);
@@ -113,9 +107,8 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress) {
   const travel=drawerTravel(drawer.getAttribute('aria-expanded')==='true');
   const hitGroups=new Map(),bounds=new T.Box3(),intersection=new T.Vector3();
   let lastTime=0,lampOn=false;
-  let contextLost=false;
+  let contextLost=false,enabled=true;
   const view=deskView();
-  let gazeX=0, gazeY=0, targetX=0, targetY=0;
   const life=deskLife(stage,()=>model,redraw,motion);
   const inspector=inspectDeskObjects(stage,engine,scene,camera,()=>model,redraw,life,motion);
   let ambientTimer=0,clockTimer=0;
@@ -127,7 +120,7 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress) {
   let lastPart='',pickedUp='',pickupTravel=0,centered='',centerUntil=0;
   function redraw() {
     dirty=true;
-    if (visible && !contextLost && !document.hidden && !frame) frame=requestAnimationFrame(renderFrame);
+    if (enabled && visible && !contextLost && !document.hidden && !frame) frame=requestAnimationFrame(renderFrame);
   }
   function renderFrame(time) {
     try { paint(time); }
@@ -251,29 +244,37 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress) {
       state.rect=next;
     }
   }
-  let boundedModel=null,hovered='';
+  let boundedModel=null,hovered='',hoverTimer=0;
   const previews=new Map();
   const hoverable=new Set([
     'plane','file','proof','archive','scope','book','letters','drawer','lamp','plant',
     'pencil','rose-pencil','cup','blotter','pinboard','robot-photo','epoch',
   ]);
   const peek=id=>previews.get(id)||0;
+  async function uploadOpeningTextures(){
+    // Split texture uploads across tasks so the opening frame doesn't do them all at once.
+    const textures=new Set([scene.environment,model.contactMap]);
+    scene.traverseVisible(node=>{
+      if(!node.isMesh || (node.frustumCulled && !viewFrustum.intersectsObject(node)))return;
+      textures.add(node.material.map);textures.add(node.material.bumpMap);
+      textures.add(node.material.emissiveMap);
+    });
+    let start=performance.now();
+    for(const texture of textures){
+      if(!texture || !(texture.isCanvasTexture || texture.image?.naturalWidth))continue;
+      engine.initTexture(texture);
+      if(performance.now()-start>5){
+        await new Promise(resolve=>setTimeout(resolve,0));start=performance.now();
+      }
+    }
+  }
   function paint(time) {
     frame=0;
-    if(!visible||contextLost||document.hidden||!dirty)return;
+    if(!enabled||!visible||contextLost||document.hidden||!dirty || (shadersStarted&&!shadersReady))return;
     // A paper dialog keeps the last canvas frame as its backdrop.
     if(document.querySelector('dialog[open]:not(.object-view)'))return;
     if(opened && !stage.classList.contains('is-rendered'))return;
     if(!layout()||!lightReady)return;
-    if(!shadersReady){
-      if(!shadersStarted){
-        shadersStarted=true;
-        engine.compileAsync(scene,camera).then(()=>{shadersReady=true;redraw();},error=>{
-          suspendDesk();console.error('Desk shader preparation failed',error);
-        });
-      }
-      return;
-    }
     dirty=false;
 
     const elapsed=Math.max(.001,(time-lastTime)/1000);lastTime=time;
@@ -309,7 +310,8 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress) {
     if(reading)view.look(0,0);
     let previewMoved=false,previewMoving=false;
     for(const [id,value] of previews){
-      const goal=Number(preview===id),next=target(value,goal);
+      const goal=Number(preview===id);
+      const next=(motion.matches||software)?goal:T.MathUtils.clamp(goal,value-dt*7,value+dt*7);
       previewMoved ||= next!==value;
       previewMoving ||= next!==goal;
       previews.set(id,next);
@@ -357,11 +359,6 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress) {
     const phone=narrow;
     camera.position.set(phone?.22:.70, (phone?4.19:4.06)+drawerAmount*.12, (phone?6.13:6.72)+drawerAmount*1.52);
     aim.set(phone?0:.025,(phone?.40:.96)-drawerAmount*.53,.21+drawerAmount*.77);
-    const ease=motion.matches?1:1-Math.exp(-dt*18);
-    gazeX=Math.abs(gazeX-targetX)<.009?targetX:T.MathUtils.lerp(gazeX,targetX,ease);
-    gazeY=Math.abs(gazeY-targetY)<.009?targetY:T.MathUtils.lerp(gazeY,targetY,ease);
-    camera.position.x+=gazeX*.30;camera.position.y-=gazeY*.17;
-    aim.x+=gazeX*.125;aim.y-=gazeY*.065;
     const under=Math.max(0,posture.below),up=Math.max(0,-posture.below);
     const wallView=Math.sin(posture.yaw)**2;
     camera.position.y+=up*.5-under*5.88;
@@ -400,6 +397,15 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress) {
     camera.updateMatrixWorld();
     viewFrustum.setFromProjectionMatrix(projectionView.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse));
     model.outdoors.visible=viewFrustum.intersectsBox(model.windowBounds);
+    if(!shadersReady){
+      if(!shadersStarted){
+        shadersStarted=true;
+        Promise.all([engine.compileAsync(scene,camera),uploadOpeningTextures()]).then(()=>{shadersReady=true;redraw();},error=>{
+          suspendDesk();console.error('Desk shader preparation failed',error);
+        });
+      }
+      return;
+    }
     engine.render(scene,camera);projectTargets();
     if(!opened){
       for(const id of model.roomClocks.keys()){
@@ -419,7 +425,7 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress) {
       lamp.hidden=false;links.get('plant').hidden=false;
     }
     if(posture.move)refreshHover(time);
-    if((events.active && !document.hidden) || (centeredObject && !motion.matches) || posture.move || gazeX!==targetX||gazeY!==targetY||drawerMotion.moving||fileAngle!==folderGoal||bookAngle!==notebookGoal||previewMoving||roomMotion.moving||nightTravel!==nightGoal)redraw();
+    if((events.active && !document.hidden) || (centeredObject && !motion.matches) || posture.move || drawerMotion.moving||fileAngle!==folderGoal||bookAngle!==notebookGoal||previewMoving||roomMotion.moving||nightTravel!==nightGoal)redraw();
   }
   function faceObject(id){
     if(!model?.targets.has(id))return;
@@ -447,11 +453,15 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress) {
     targets:links,
     hover(id){
       const next=hoverable.has(id)||id.endsWith('-print')||model?.targets.get(id)?.root.userData.roomPoster?id:'';
-      if(next!==hovered){
+      clearTimeout(hoverTimer);
+      if(next===hovered)return;
+      if(hovered){hovered='';redraw();}
+      // Keep hit testing immediate. Lift a prop only when the pointer rests on it.
+      if(next)hoverTimer=setTimeout(()=>{
         hovered=next;
-        if(next&&!previews.has(next))previews.set(next,0);
+        if(!previews.has(next))previews.set(next,0);
         redraw();
-      }
+      },120);
     },
     zoomBy(delta){view.wheel(delta);redraw();},
     stopLook(){view.look(0,0);},
@@ -461,12 +471,13 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress) {
         centerUntil=0;
         redraw();
       }
-      if(motion.matches){x=0;y=0;}
-      if(software){
-        stage.style.setProperty('--pan-x',(x*0.6)+'%');
-        stage.style.setProperty('--pan-y',(y*0.6)+'%');
-        stage.classList.toggle('soft-pan',!motion.matches);
-      }else if(x!==targetX||y!==targetY){targetX=x;targetY=y;redraw();}
+      // Small pointer movements shift the last frame and its hit areas together.
+      // Edge steering, dragging and zoom still move the 3D camera.
+      stage.classList.toggle('soft-pan',!motion.matches);
+      if(!motion.matches){
+        stage.style.setProperty('--pan-x',(x*.6)+'%');
+        stage.style.setProperty('--pan-y',(y*.6)+'%');
+      }
     },
     pick(x,y) {
       refreshBounds();
@@ -613,10 +624,8 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress) {
   pixelGrid.addEventListener('change',()=>{
     setResolution();redraw();
   });
-  function suspendDesk() {
-    contextLost=true;leaveDesk();warning.textContent=unavailable;
-    targetStyles.clear();
-    showGraphicsFallback();
+  function hideSceneControls() {
+    leaveDesk();targetStyles.clear();
     links.forEach(el=>{
       el.removeAttribute('data-outside');
       if(el.matches('[data-room-prop],[data-room-poster],[data-room-fixture]'))el.hidden=true;
@@ -624,7 +633,25 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress) {
     inspector.close();lamp.hidden=true;links.get('plant').hidden=true;
     posterSwitch.hidden=true;
   }
+  function suspendDesk() {
+    contextLost=true;warning.textContent=unavailable;
+    if(enabled)showGraphicsFallback();
+    hideSceneControls();
+  }
   canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();suspendDesk();});
   canvas.addEventListener('webglcontextrestored',()=>{contextLost=false;engine.shadowMap.needsUpdate=true;redraw();});
   redraw();
+  return active=>{
+    enabled=active;
+    if(enabled){
+      if(contextLost)showGraphicsFallback();
+      else redraw();
+    }else{
+      cancelAnimationFrame(frame);frame=0;
+      clearTimeout(ambientTimer);ambientTimer=0;
+      clearTimeout(clockTimer);clockTimer=0;
+      clearTimeout(settleTimer);settleTimer=0;
+      hideSceneControls();
+    }
+  };
 }
