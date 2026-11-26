@@ -40,3 +40,34 @@ test('rigid batches preserve indexed and unindexed triangle corners, normals, UV
   assert.equal(corner,merged.attributes.position.count);
   assert.equal(base.getAttribute('color'),undefined);
 });
+
+test('wall sheets keep both print sets and release individual quads for inspection and hover', async () => {
+  const T=await import('../site/vendor/three/three.module.min.js');
+  const {batchWallPosters,posterPickLayer}=await import('../site/desk-poster-batch.js');
+  const wall=new T.Group(),material=new T.MeshStandardMaterial(),targets=new Map();
+  for(const [index,id] of ['first','second','alternate'].entries()){
+    const root=new T.Group(),face=new T.Mesh(new T.PlaneGeometry(2,1),material);
+    root.position.x=index*3;root.userData.roomPoster=true;root.visible=id!=='alternate';
+    root.add(face);wall.add(root);targets.set(id,{root});
+  }
+  wall.updateMatrixWorld(true);
+  const sync=batchWallPosters(targets),sheet=wall.children.find(node=>node.isMesh);
+  const indices=sheet.geometry.index.array;
+  const painted=i=>new Set(indices.slice(i*6,i*6+6)).size>1;
+  const face=targets.get('first').root.children[0];
+  assert.deepEqual([0,1,2].map(painted),[true,true,false]);
+  assert.equal(face.layers.isEnabled(0),false);
+  assert.equal(face.layers.isEnabled(posterPickLayer),true);
+  face.parent.userData.liftedPoster=true;sync(face.parent);
+  assert.equal(painted(0),false);
+  assert.equal(face.layers.isEnabled(0),true);
+  face.parent.userData.liftedPoster=false;sync(face.parent);
+  assert.equal(painted(0),true);
+  for(const [id,{root}] of targets)root.visible=id==='alternate';
+  sync();
+  assert.deepEqual([0,1,2].map(painted),[false,false,true]);
+  const last=targets.get('alternate').root;
+  last.visible=false;sync(last);assert.equal(sheet.visible,false);
+  last.visible=true;sync(last);assert.equal(sheet.visible,true);
+  assert.deepEqual([0,1,2].map(painted),[false,false,true]);
+});

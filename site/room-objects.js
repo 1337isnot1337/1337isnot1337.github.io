@@ -714,10 +714,9 @@ export async function furnishRoomObjects({yieldToBrowser,walls, world, half, nar
     const prop=group(parent,x,y,z);
     if(grounded)prop.rotation.y=angle;else prop.rotation.z=angle;
     prop.scale.setScalar(scale);
-    if(kind==='book' || kind==='fabric'){
-      if(!covers.has(color))covers.set(color,new T.MeshStandardMaterial({
-        color,map:weave,bumpMap:weave,bumpScale:.008,roughness:.88
-      }));
+    if((kind==='book' || kind==='fabric') && !covers.has(color)){
+      const cover=new T.MeshStandardMaterial({color,map:weave,bumpMap:weave,bumpScale:.008,roughness:.88});
+      cover.userData.tintFamily='shelf cloth';covers.set(color,cover);
     }
     const surface=kind==='book'||kind==='fabric' ? covers.get(color) : finish(color,...(finishes[kind]||[.59,0]));
     builders[kind](prop,surface,label,color);

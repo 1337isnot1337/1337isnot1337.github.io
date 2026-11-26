@@ -1,6 +1,7 @@
 import * as T from './vendor/three/three.module.min.js';
-import { furnish } from './desk-model.js?v=57';
-import { inspectDeskObjects } from './desk-inspect.js?v=20';
+import { furnish } from './desk-model.js?v=58';
+import { posterPickLayer } from './desk-poster-batch.js?v=1';
+import { inspectDeskObjects } from './desk-inspect.js?v=21';
 
 import { attachDeskPointer } from './desk-pointer.js?v=26';
 
@@ -61,10 +62,10 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress,{contex
   engine.shadowMap.type=software ? T.BasicShadowMap : T.PCFSoftShadowMap;
   engine.shadowMap.autoUpdate=false;
   engine.toneMapping=T.ACESFilmicToneMapping;engine.toneMappingExposure=1.03;
-  const scene=new T.Scene();scene.background=new T.Color(0xc7bc9e);
+  const scene=new T.Scene();scene.matrixAutoUpdate=false;scene.background=new T.Color(0xc7bc9e);
   const camera=new T.PerspectiveCamera(43,1,.10,62);
   const viewFrustum=new T.Frustum(),projectionView=new T.Matrix4();
-  let shadersStarted=false, shadersReady=false, shaderVersion=0;
+  let shaderJob=null, shadersReady=false, shaderVersion=0;
   const daySky=1.68;
   const sky=new T.HemisphereLight(0xf3f0e5,0xc6ae9d,daySky);scene.add(sky);
   const sun=new T.DirectionalLight(0xffebd2,2.16);
@@ -79,6 +80,34 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress,{contex
   const readingLight=new T.SpotLight(0xffd19a,0,5.7,.79,.76,1.75);
   readingLight.target.position.set(-7.21,-2.3,7.60);
   scene.add(bulb,beam,beam.target,readingLight,readingLight.target);
+  const localLights=[bulb,beam,readingLight];
+  let daylightPrograms=false,daylightPending=false,lightingCompile=Promise.resolve();
+  function useLocalLights(on){for(const light of localLights)light.visible=on;}
+  function invalidateShaders(){
+    shaderVersion++;shadersReady=false;daylightPrograms=daylightPending=false;
+    useLocalLights(true);
+  }
+  function prepareDaylight(){
+    if(daylightPrograms || daylightPending)return;
+    daylightPending=true;
+    const version=shaderVersion;
+    const warm=()=>{
+      if(version!==shaderVersion)return;
+      if(contextLost || !visible || document.hidden || !shadersReady){daylightPending=false;return;}
+      // Keep the full rig ready for an immediate lamp click. Three collects
+      // the second rig synchronously, then waits for the GPU in the background.
+      let programs;
+      useLocalLights(false);
+      try{programs=engine.compileAsync(scene,camera);}
+      catch{return;}
+      finally{useLocalLights(true);}
+      lightingCompile=programs.then(()=>{
+        if(version===shaderVersion){daylightPrograms=true;redraw();}
+      },()=>{/* The full rig is already available. */});
+    };
+    if(window.requestIdleCallback)requestIdleCallback(warm,{timeout:1500});
+    else setTimeout(warm,64);
+  }
   const dayColor=sky.color.clone(),nightColor=new T.Color(0xa9bae9);
   const fallbackWash=[];
   if(software)for(const [x,color] of [[-7.8,0xffb283],[7.8,0xc3a9ff]]){
@@ -115,12 +144,18 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress,{contex
   let posterMode='professional';
   const roomActions=bindRoomActions(links,redraw);
   const travel=drawerTravel(drawer.getAttribute('aria-expanded')==='true');
+  ray.layers.enable(posterPickLayer);
   const hitGroups=new Map(),bounds=new T.Box3(),intersection=new T.Vector3();
-  let lastTime=0,lampOn=false;
+  let lastTime=0,lampOn=false,lastClockSecond=-1;
   let contextLost=false;
   const view=deskView();
   const life=deskLife(stage,()=>model,redraw,motion);
   const inspector=inspectDeskObjects(stage,engine,scene,camera,()=>model,redraw,life,motion);
+  const dialogs=document.getElementsByTagName('dialog');
+  function paperDialogOpen(){
+    for(const dialog of dialogs)if(dialog.open && !dialog.classList.contains('object-view'))return true;
+    return false;
+  }
   let ambientTimer=0,clockTimer=0;
   function scheduleClock() {
     if(!clockTimer)clockTimer=setTimeout(()=>{
@@ -151,6 +186,7 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress,{contex
       textures.forEach(t=>t.dispose());materials.forEach(m=>m.dispose());geometries.forEach(g=>g.dispose());
     }
     viewWidth=0;narrow=compact;model=next;hitGroups.clear();extraMeshes.length=0;
+    cacheRoomTransforms(model.world);lastClockSecond=-1;
     for(const group of model.shelfGardens)group.visible=!performanceMode;
     readingLight.position.copy(model.readingBulb);
     roomActions.mount(model);
@@ -210,13 +246,43 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress,{contex
       Math.max(43,2*Math.atan(Math.tan(T.MathUtils.degToRad(21.5))*1.60/camera.aspect)*180/Math.PI);
     camera.updateProjectionMatrix();return true;
   }
+  // The assembled room keeps its joints for interactions. A camera turn alone
+  // changes none of their local transforms. Three also calls updateMatrix for
+  // localToWorld and picking, so detect edits at that same point.
+  function cacheRoomTransforms(room){
+    room.traverse(node=>{
+      if(!node.matrixAutoUpdate)return;
+      const position=node.position.clone(),rotation=node.quaternion.clone(),scale=node.scale.clone();
+      node.updateMatrix();
+      node.updateMatrix=function(){
+        if(position.equals(this.position) && rotation.equals(this.quaternion) && scale.equals(this.scale))return;
+        position.copy(this.position);rotation.copy(this.quaternion);scale.copy(this.scale);
+        T.Object3D.prototype.updateMatrix.call(this);
+      };
+    });
+  }
   const targetStyles=new Map(),projectedCamera=new T.Matrix4(),projectedLens=new T.Matrix4();
   const targetProperties=['--screen-x','--screen-y','--hit-width','--hit-height'];
   const onScreen=(depth,x,y)=>depth>camera.near&&x>=10&&x<=viewWidth-10&&y>=12&&y<=viewHeight-10;
+  function placeTarget(el,rect,focused){
+    const [x,y,w,h]=rect;
+    if(focused){
+      // Render keyboard labels at their natural font size on the focused target.
+      for(let i=0;i<4;i++)el.style.setProperty(targetProperties[i],rect[i]+'px');
+      el.style.transform='translate(-50%,-50%)';
+    }else{
+      el.style.transform='matrix('+w+',0,0,'+h+','+(x-w/2)+','+(y-h/2)+')';
+    }
+  }
+  for(const type of ['focusin','focusout'])stage.addEventListener(type,event=>{
+    const state=targetStyles.get(event.target.dataset.object);
+    if(state?.rect)placeTarget(event.target,state.rect,type==='focusin');
+  });
   function projectTargets() {
     const lens=viewHeight*camera.zoom/(2*Math.tan(T.MathUtils.degToRad(camera.fov/2)));
     const moved=!projectedCamera.equals(camera.matrixWorld) || !projectedLens.equals(camera.projectionMatrix);
     projectedCamera.copy(camera.matrixWorld);projectedLens.copy(camera.projectionMatrix);
+    const focused=document.activeElement,eye=camera.matrixWorldInverse.elements;
     for(const [id,{root,point:local,w,h}] of model.targets) {
       const el=links.get(id);
       if((root.userData.roomPoster&&!root.visible)||(el===posterSwitch&&drawerAmount<.54)){
@@ -224,35 +290,41 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress,{contex
         targetStyles.delete(id);
         continue;
       }
-      const saved=targetStyles.get(id);
-      if(!moved && saved?.root===root && saved.matrix.equals(root.matrixWorld))continue;
-      point.copy(local).applyMatrix4(root.matrixWorld);
-      let depth=-vector.copy(point).applyMatrix4(camera.matrixWorldInverse).z;
-      vector.copy(point).project(camera);
+      let state=targetStyles.get(id);
+      const changed=!state || !state.matrix.equals(root.matrixWorld);
+      if(!changed && !moved)continue;
+      if(!state){
+        state={matrix:new T.Matrix4(),world:new T.Vector3(),hideOutside:root.userData.roomPoster||root.userData.roomProp||el===posterSwitch||el.hasAttribute('data-room-fixture')};
+        targetStyles.set(id,state);
+      }
+      if(changed){
+        state.world.copy(local).applyMatrix4(root.matrixWorld);state.matrix.copy(root.matrixWorld);
+        vector.setFromMatrixScale(root.matrixWorld);state.width=w*vector.x*.83;state.height=h*vector.y*.68;
+      }
+      point.copy(state.world);
+      let depth=-(eye[2]*point.x+eye[6]*point.y+eye[10]*point.z+eye[14]);
+      vector.copy(point).applyMatrix4(projectionView);
       let x=(vector.x+1)*.5*viewWidth,y=(1-vector.y)*.5*viewHeight;
       if(!onScreen(depth,x,y)&&root.userData.visibleAnchors){
         for(const anchor of root.userData.visibleAnchors){
           point.copy(anchor).applyMatrix4(root.matrixWorld);
-          depth=-vector.copy(point).applyMatrix4(camera.matrixWorldInverse).z;
-          vector.copy(point).project(camera);
+          depth=-(eye[2]*point.x+eye[6]*point.y+eye[10]*point.z+eye[14]);
+          vector.copy(point).applyMatrix4(projectionView);
           x=(vector.x+1)*.5*viewWidth;y=(1-vector.y)*.5*viewHeight;
           if(onScreen(depth,x,y))break;
         }
       }
       const outside=!onScreen(depth,x,y);
-      if((root.userData.roomPoster||root.userData.roomProp||el===posterSwitch||el.hasAttribute('data-room-fixture'))&&el.hidden!==outside)el.hidden=outside;
-      if(el.hasAttribute('data-outside')!==outside)el.toggleAttribute('data-outside',outside);
-      const state=saved||{matrix:new T.Matrix4(),rect:[]};
-      state.root=root;state.matrix.copy(root.matrixWorld);
-      if(!saved)targetStyles.set(id,state);
+      if(state.outside!==outside){
+        if(state.hideOutside)el.hidden=outside;
+        el.toggleAttribute('data-outside',outside);state.outside=outside;
+      }
       if(outside)continue;
       const px=lens/depth;
-      vector.setFromMatrixScale(root.matrixWorld);
-      const next=[x,y,Math.max(40,w*vector.x*px*.83),Math.max(37,h*vector.y*px*.68)].map(value=>Math.round(value*10));
-      for(const [i,property] of targetProperties.entries()){
-        if(state.rect[i]!==next[i])el.style.setProperty(property,(next[i]/10)+'px');
+      const next=[x,y,Math.max(40,state.width*px),Math.max(37,state.height*px)].map(n=>Math.round(n*10)/10);
+      if(!state.rect || next.some((value,i)=>value!==state.rect[i])){
+        placeTarget(el,next,focused===el);state.rect=next;
       }
-      state.rect=next;
     }
   }
   let boundedModel=null,hovered='',hoverTimer=0;
@@ -262,7 +334,7 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress,{contex
     'pencil','rose-pencil','cup','blotter','pinboard','robot-photo','epoch',
   ]);
   const peek=id=>previews.get(id)||0;
-  async function uploadOpeningTextures(){
+  async function uploadOpeningTextures(version){
     // Split texture uploads across tasks so the opening frame doesn't do them all at once.
     const textures=new Set([scene.environment,model.contactMap]);
     scene.traverseVisible(node=>{
@@ -272,6 +344,7 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress,{contex
     });
     let start=performance.now();
     for(const texture of textures){
+      if(contextLost || version!==shaderVersion)return;
       if(!texture || !(texture.isCanvasTexture || texture.image?.naturalWidth))continue;
       engine.initTexture(texture);
       if(performance.now()-start>5){
@@ -281,9 +354,9 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress,{contex
   }
   function paint(time) {
     frame=0;
-    if(!visible||contextLost||document.hidden||!dirty || (shadersStarted&&!shadersReady))return;
+    if(!visible||contextLost||document.hidden||!dirty||shaderJob)return;
     // A paper dialog keeps the last canvas frame as its backdrop.
-    if(document.querySelector('dialog[open]:not(.object-view)'))return;
+    if(paperDialogOpen())return;
     if(opened && !stage.classList.contains('is-rendered'))return;
     if(!layout() || (!performanceMode && !software && !atlasReady))return;
     dirty=false;
@@ -313,10 +386,14 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress,{contex
     detailMoved ||= roomMotion.geometryMoved;
     const prevDrawer=drawerAmount,prevFile=fileAngle,prevBook=bookAngle;
     const held=inspector.active();
-    const currentTime=new Date();
-    for(const hands of model.roomClocks.values())setClock(hands,currentTime);
+    const second=Math.floor(Date.now()/1000);
+    if(second!==lastClockSecond){
+      const currentTime=new Date(second*1000);
+      for(const hands of model.roomClocks.values())setClock(hands,currentTime);
+      lastClockSecond=second;
+    }
     if(model.roomClocks.has(held))scheduleClock();
-    const reading=held||opened||document.querySelector('dialog[open]');
+    const reading=held||opened;
     const preview=reading?'':hovered;
     if(reading)view.look(0,0);
     let previewMoved=false,previewMoving=false;
@@ -356,6 +433,7 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress,{contex
     const lightScale=model.deskScale**2;
     bulb.intensity=(14*warmth+peek('lamp')*.40)*lightScale;
     beam.intensity=16*warmth*lightScale;
+    useLocalLights(!daylightPrograms || bulb.intensity!==0 || beam.intensity!==0 || readingLight.intensity!==0);
     model.bulbGlass.emissiveIntensity=.08+2.12*warmth+peek('lamp')*.31;
     if(held && movingPixels)setResolution(false);
     if(inspector.paint(time,dt)){
@@ -408,21 +486,29 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress,{contex
     viewFrustum.setFromProjectionMatrix(projectionView.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse));
     model.outdoors.visible=viewFrustum.intersectsBox(model.windowBounds);
     if(!shadersReady){
-      if(!shadersStarted){
-        shadersStarted=true;
-        const version=shaderVersion;
-        // Upload first. Some laptop drivers block texture uploads behind queued shader compilation.
-        uploadOpeningTextures().then(()=>engine.compileAsync(scene,camera)).then(()=>{
-          shadersStarted=false;shadersReady=version===shaderVersion;redraw();
-        },error=>{
-          suspendDesk();console.error('Desk shader preparation failed',error);
-        });
-      }
+      const version=shaderVersion;
+      // Upload first. Some laptop drivers block texture uploads behind queued shader compilation.
+      const job=lightingCompile.then(async()=>{
+        if(contextLost || version!==shaderVersion)return;
+        await uploadOpeningTextures(version);
+        if(version===shaderVersion && !contextLost)await engine.compileAsync(scene,camera);
+      });
+      shaderJob=job;
+      job.then(()=>{
+        if(shaderJob!==job)return;
+        shaderJob=null;shadersReady=version===shaderVersion;redraw();
+      },error=>{
+        if(shaderJob!==job)return;
+        shaderJob=null;
+        if(version===shaderVersion && !contextLost){suspendDesk();console.error('Desk shader preparation failed',error);}
+        else redraw();
+      });
       return;
     }
     if(resolutionDirty){setResolution();resolutionDirty=false;}
     trackMotion(time,Boolean(posture.move||drawerMotion.moving||stage.classList.contains('looking-around')));
     engine.render(scene,camera);projectTargets();
+    prepareDaylight();
     if(!performanceMode&&!opened){
       for(const id of model.roomClocks.keys()){
         if(!links.get(id).hidden){scheduleClock();break;}
@@ -646,20 +732,23 @@ export function mountFurniture(stage,showGraphicsFallback,reportProgress,{contex
     showGraphicsFallback();
     leaveDesk();targetStyles.clear();
     links.forEach(el=>{
-      el.removeAttribute('data-outside');
+      el.removeAttribute('data-outside');el.style.removeProperty('transform');
       if(el.matches('[data-room-prop],[data-room-poster],[data-room-fixture]'))el.hidden=true;
     });
     inspector.close();lamp.hidden=true;links.get('plant').hidden=true;
     posterSwitch.hidden=true;
   }
   canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();suspendDesk();});
-  canvas.addEventListener('webglcontextrestored',()=>{contextLost=false;engine.shadowMap.needsUpdate=true;redraw();});
+  canvas.addEventListener('webglcontextrestored',()=>{
+    contextLost=false;shaderJob=null;lightingCompile=Promise.resolve();
+    invalidateShaders();engine.shadowMap.needsUpdate=true;redraw();
+  });
   configureLighting();
   redraw();
   return enabled=>{
     performanceMode=enabled;
     configureLighting();
-    if(!software){shaderVersion++;shadersReady=false;}
+    if(!software)invalidateShaders();
     clearTimeout(ambientTimer);ambientTimer=0;
     clearTimeout(clockTimer);clockTimer=0;
     clearTimeout(hoverTimer);hovered='';

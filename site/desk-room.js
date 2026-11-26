@@ -1,5 +1,5 @@
 import * as T from './vendor/three/three.module.min.js';
-import { furnishRoomObjects } from './room-objects.js?v=12';
+import { furnishRoomObjects } from './room-objects.js?v=13';
 import { buildRoomShell } from './room-shell.js?v=18';
 import { posterSets } from './room-posters.js?v=3';
 
@@ -64,6 +64,8 @@ export async function decorateRoom(world, { yieldToBrowser, desk, narrow, smallG
   const foliage = leafColors.map(color => new T.MeshStandardMaterial({
     color,map:leafGrain,roughness:.57,side:T.DoubleSide,
   }));
+
+  for(const mat of foliage)mat.userData.tintFamily='ivy';
 
   function poster([id, wall, aspect, x, y, w, tilt], index, collection) {
     const { roots, ink, cutout, rows } = collection;

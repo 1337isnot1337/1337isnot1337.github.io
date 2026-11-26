@@ -5,10 +5,29 @@ import { lampProjection } from './desk-lamp.js?v=1';
 import { paintScope, followProbe } from './desk-scope.js?v=1';
 import { airframeGeometry, wingUnderside } from './model-plane.js?v=2';
 import { batchDeskMeshes } from './desk-batch.js?v=1';
-import { decorateRoom } from './desk-room.js?v=29';
+import { decorateRoom } from './desk-room.js?v=30';
 import { clockHands, setClock } from './shelf-clock.js?v=1';
 import { corkMaterial, curledPrint, scopeScale } from './desk-finishes.js?v=1';
+import { batchWallPosters } from './desk-poster-batch.js?v=1';
 import { deskBox } from './desk-box.js?v=2';
+
+// The room keeps both lamps in the scene so switching one on needs no new
+// shader. Skip the light calculation where its contribution is exactly zero.
+let lightInfo=T.ShaderChunk.lights_pars_begin;
+for(const lamp of ['pointLight','spotLight']){
+  const start='vec3 lVector = '+lamp+'.position';
+  lightInfo=lightInfo.replace(start,`if (${lamp}.color == vec3(0.0)) {
+    light.color = vec3(0.0); light.visible = false; return;
+  }
+  ${start}`);
+}
+const directLight=T.ShaderChunk.lights_fragment_begin.replaceAll('RE_Direct( directLight,',
+  'if (directLight.visible) RE_Direct( directLight,');
+function skipDarkLights(shader){
+  shader.fragmentShader=shader.fragmentShader
+    .replace('#include <lights_pars_begin>',lightInfo)
+    .replace('#include <lights_fragment_begin>',directLight);
+}
 
 // Let navigation and input run between the expensive stages of room construction.
 const yieldToBrowser=()=>globalThis.scheduler?.yield?.() ?? new Promise(done=>setTimeout(done,0));
@@ -87,7 +106,10 @@ export async function furnish(scene, narrow, repaint, software=false, posterMode
   fiber.putImageData(pixels,0,0);
   const weave=new T.CanvasTexture(canvas);weave.colorSpace=T.SRGBColorSpace;
   weave.wrapS=weave.wrapT=T.RepeatWrapping;weave.repeat.set(2,2);weave.anisotropy=4;
-  function cloth(color) {const mat=finish(color);mat.map=weave;mat.bumpMap=weave;mat.bumpScale=.012;return mat;}
+  function cloth(color) {
+    const mat=finish(color);mat.map=weave;mat.bumpMap=weave;mat.bumpScale=.012;
+    mat.userData.tintFamily='binding';return mat;
+  }
   function drawn(parent,w,h,paint,x,y,z,flat=false,pixelsPerUnit=220) {
     const c=document.createElement('canvas');c.width=T.MathUtils.clamp(T.MathUtils.ceilPowerOfTwo(pixelsPerUnit*w),96,1024);
     c.height=Math.max(32,Math.round(c.width*h/w));
@@ -125,6 +147,7 @@ export async function furnish(scene, narrow, repaint, software=false, posterMode
   const trim=wood.clone();trim.color.set(0xb39174);
   const darkWood=wood.clone();darkWood.color.set(0x987358);
   const panelWood=wood.clone();panelWood.color.set(0xc0a68d);
+  for(const mat of [trim,darkWood,panelWood])mat.userData.tintFamily='wood trim';
   const floorMap=woodMap.clone();floorMap.repeat.set(5,6);
   const floorMat=new T.MeshStandardMaterial({map:floorMap,color:0x967f72,roughness:.68});
   const brass=finish(0xb68b53,.31,.76), brassDark=finish(0x7d6349,.47,.56);
@@ -1087,8 +1110,8 @@ export async function furnish(scene, narrow, repaint, software=false, posterMode
   bead(moth,0,0,0,.011,.011,.051,finish(0x685341));
   moth.visible=false;
   await yieldToBrowser();
-  const {coves,walls,shelfGardens,showPosters,readingBulb,outdoors,windowBounds}=await decorateRoom(room,{yieldToBrowser,desk:world,narrow,smallGraphics,half,group,box,bead,cylinder,wire,finish,photo,tag,detail,drawn,weave,wood,trim,floorMat,night});
-  showPosters(posterMode);
+  const {coves,walls,shelfGardens,showPosters:displayPosters,readingBulb,outdoors,windowBounds}=await decorateRoom(room,{yieldToBrowser,desk:world,narrow,smallGraphics,half,group,box,bead,cylinder,wire,finish,photo,tag,detail,drawn,weave,wood,trim,floorMat,night});
+  displayPosters(posterMode);
   // Small displayed pieces come forward at their existing mounting points.
   const displayPoses=new Map();
   const lifts={
@@ -1102,6 +1125,9 @@ export async function furnish(scene, narrow, repaint, software=false, posterMode
   function poseHover(id,amount){
     const pose=displayPoses.get(id);
     if(!pose)return;
+    if(pose.root.userData.roomPoster && Boolean(pose.root.userData.liftedPoster)!==(amount>0)){
+      pose.root.userData.liftedPoster=amount>0;syncPosters(pose.root);
+    }
     pose.root.position.y=pose.y+pose.lift[0]*amount;
     pose.root.position.z=pose.z+pose.lift[1]*amount;
     pose.root.rotation.x=pose.tilt+pose.lift[2]*amount;
@@ -1133,6 +1159,7 @@ export async function furnish(scene, narrow, repaint, software=false, posterMode
     const workSurface=mat===wood || mat===blotter;
     mat.customProgramCacheKey=()=>workSurface?'desk-contact':'desk-room';
     mat.onBeforeCompile=shader=>{
+      skipDarkLights(shader);
       if(workSurface)shader.uniforms.deskContact={value:contactMap};
       shader.uniforms.deskDaylight=daylight;
       shader.uniforms.deskNight=night;
@@ -1199,11 +1226,12 @@ export async function furnish(scene, narrow, repaint, software=false, posterMode
   const batches=new Map(),source=new Set(),solidVariants=new Map(),fastMaterials=new Map();
   const finishes=new Set(cache.values());
   const occluders=Array.from(roomProps.values(),item=>item.bounds);
-  // One draw can paint several solid colors on the same rigid part.
+  // Carry tints in vertex colors when parts share a finish or a texture.
   function batchMaterial(mat) {
-    if(mat.isMeshBasicMaterial || mat.map || mat.vertexColors || mat===bulbGlass || mat.transparent)return mat;
-    const solidFinish=(software || finishes.has(mat)) && !mat.emissive.getHex();
-    const key=solidFinish ? 'finish/'+mat.side : [mat.roughness,mat.metalness,mat.side].join('/');
+    const family=mat.userData.tintFamily;
+    if(mat.isMeshBasicMaterial || (mat.map && !family) || mat.vertexColors || mat===bulbGlass || mat.transparent)return mat;
+    const solidFinish=!family && (software || finishes.has(mat)) && !mat.emissive.getHex();
+    const key=family || (solidFinish ? 'finish/'+mat.side : [mat.roughness,mat.metalness,mat.side].join('/'));
     if(!solidVariants.has(key)){
       const tint=mat.clone();tint.color.set(0xffffff);tint.vertexColors=true;
       tint.onBeforeCompile=mat.onBeforeCompile;tint.customProgramCacheKey=mat.customProgramCacheKey;
@@ -1253,7 +1281,7 @@ export async function furnish(scene, narrow, repaint, software=false, posterMode
         polygonOffsetFactor:mat.polygonOffsetFactor,polygonOffsetUnits:mat.polygonOffsetUnits,
         emissive:mat.emissive,emissiveMap:mat.emissiveMap,emissiveIntensity:mat.emissiveIntensity
       }));
-      surface=fastMaterials.get(mat);
+      surface=fastMaterials.get(mat);surface.onBeforeCompile=skipDarkLights;
     }
     const [first]=meshes;
     if(meshes.length===1 && first.parent===parent && first.material===mat){
@@ -1266,11 +1294,14 @@ export async function furnish(scene, narrow, repaint, software=false, posterMode
     }
     const combined=batchDeskMeshes(meshes,parent,mat);
     meshes.forEach(m=>m.removeFromParent());
-    const done=mesh(parent,combined,surface);done.castShadow=cast;
+    const done=mesh(parent,combined,surface);done.castShadow=cast;done.matrixAutoUpdate=false;
     combined.computeBoundingBox();combined.computeBoundingSphere();
   }
   source.forEach(g=>{if(!previewGeometry.has(g))g.dispose();});
   const flexCable=followProbe(cableWire.children[0],cableTip,probeRest);
   scene.add(room);
-  return {outdoors,windowBounds,shelfGardens,world:room,desk:world,deskScale,targets,roomProps,roomClocks,details,occluders,drawer,drawerInterior,flap,cover,lamp,bulbGlass:fastMaterials.get(bulbGlass)||bulbGlass,scopeScreen:fastMaterials.get(scopeScreen)||scopeScreen,tuneScope,contactMap,daylight,night,coves,showPosters,posterCap,poseHover,projectLampShadow,flexCable,titleLooseFile,pencilBounds:{book:book.position.x+(narrow?.24:.43),mat:matRight-.10},sketchTexture:sketchFace.material.map,readingBulb};
+  room.updateMatrixWorld(true);
+  const syncPosters=batchWallPosters(targets);
+  function showPosters(name){displayPosters(name);syncPosters();}
+  return {syncPosters,outdoors,windowBounds,shelfGardens,world:room,desk:world,deskScale,targets,roomProps,roomClocks,details,occluders,drawer,drawerInterior,flap,cover,lamp,bulbGlass:fastMaterials.get(bulbGlass)||bulbGlass,scopeScreen:fastMaterials.get(scopeScreen)||scopeScreen,tuneScope,contactMap,daylight,night,coves,showPosters,posterCap,poseHover,projectLampShadow,flexCable,titleLooseFile,pencilBounds:{book:book.position.x+(narrow?.24:.43),mat:matRight-.10},sketchTexture:sketchFace.material.map,readingBulb};
 }

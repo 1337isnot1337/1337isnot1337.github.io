@@ -239,6 +239,7 @@ export function inspectDeskObjects(stage,engine,room,deskCamera,getModel,redraw,
       const firstPickup=!source;
       aspect=ratio;source=item;releasePrint();stand.clear();
       const copy=item.clone(true);
+      if(item.userData.roomPoster)copy.traverse(node=>node.layers.enable(0));
       copy.position.set(0,0,0);copy.quaternion.identity();copy.scale.setScalar(1);
       const box=new T.Box3().setFromObject(copy,true);
       box.max.y+=copy.userData.inspectionHeadroom||0;
@@ -252,8 +253,12 @@ export function inspectDeskObjects(stage,engine,room,deskCamera,getModel,redraw,
       snapshot.texture.generateMipmaps=true;snapshot.texture.minFilter=T.LinearMipmapLinearFilter;
       const showing=item.visible;
       item.visible=false;
-      engine.setRenderTarget(snapshot);engine.render(room,deskCamera);engine.setRenderTarget(null);
-      item.visible=showing;
+      if(item.userData.roomPoster)model.syncPosters(item);
+      try{engine.setRenderTarget(snapshot);engine.render(room,deskCamera);}
+      finally{
+        engine.setRenderTarget(null);item.visible=showing;
+        if(item.userData.roomPoster)model.syncPosters(item);
+      }
       copy.visible=true;backdrop.uniforms.frame.value=snapshot.texture;
       display.environment=room.environment;display.environmentIntensity=room.environmentIntensity;
       display.environmentRotation.copy(room.environmentRotation);

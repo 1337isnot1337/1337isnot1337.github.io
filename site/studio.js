@@ -86,7 +86,7 @@
       preload.rel='modulepreload';preload.href='/vendor/three/'+file;
       if(!document.querySelector('link[href="'+preload.getAttribute('href')+'"]'))document.head.append(preload);
     }
-    import("./furniture.js?v=77").then(module => {
+    import("./furniture.js?v=78").then(module => {
       if (!deskIsReadyToMount()) { sceneStarted=false; return; }
       deskProgress.value=3;
       try {

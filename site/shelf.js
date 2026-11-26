@@ -93,6 +93,11 @@ function startShelf() {
       !hold&&!coastFrame&&!shelf.animating&&
       !(carousel.contains(focus)&&focus.matches(':focus-visible'));
   }
+  function updateSelection(instance){
+    const previous=instance.activeIndex;
+    instance.updateActiveIndex();
+    if(instance.activeIndex!==previous)instance.updateSlidesClasses();
+  }
   function centerHoveredPrint(now) {
     if(!canHover())return stopHover();
     const position=shelf.slidesGrid[shelf.slides.indexOf(hoverSlide)];
@@ -103,8 +108,7 @@ function startShelf() {
     const step=Math.min(Math.abs(remaining)*(1-Math.exp(-dt/135)),dt*3.2);
     const arrived=Math.abs(remaining)<1.2;
     shelf.setTranslate(arrived?-position:shelf.translate+Math.sign(remaining)*step);
-    shelf.updateActiveIndex();
-    shelf.updateSlidesClasses();
+    updateSelection(shelf);
     if(arrived){
       shelf.loopFix({direction:remaining<0?'next':'prev',byMousewheel:true});
       shelf.updateActiveIndex();
@@ -219,7 +223,7 @@ function startShelf() {
     speed = Math.max(-5, Math.min(5, speed));
     if (Math.abs(speed) < 0.08) return;
     const direction = speed < 0 ? "next" : "prev";
-    let previous = performance.now();
+    let previous = performance.now(), checkedSlide=null;
 
     // Move the same looping track that the finger dragged. A single CSS
     // transition would hit the end of the physical slides during a long fling.
@@ -228,11 +232,13 @@ function startShelf() {
       previous = now;
       instance.setTranslate(instance.translate + speed * 380 * (1 - decay));
       speed *= decay;
-      instance.updateActiveIndex();
-      instance.updateSlidesClasses();
-      instance.loopFix({ direction, byMousewheel: true });
-      instance.updateActiveIndex();
-      instance.updateSlidesClasses();
+      updateSelection(instance);
+      if(instance.slides[instance.activeIndex]!==checkedSlide){
+        instance.loopFix({ direction, byMousewheel: true });
+        instance.updateActiveIndex();
+        instance.updateSlidesClasses();
+        checkedSlide=instance.slides[instance.activeIndex];
+      }
       if (Math.abs(speed) > 0.4) showMotion(75);
       coastFrame = Math.abs(speed) > 0.025 ? requestAnimationFrame(glide) : 0;
     }
