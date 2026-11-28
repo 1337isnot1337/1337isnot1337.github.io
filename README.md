@@ -24,7 +24,18 @@ The same workflow first tries to build the [searchable conjecture catalogue](htt
 
 The website-owned `scripts/build_catalogue.py` adapter accepts explicit plain-text Lean status markers as well as the upstream Markdown format. Qualified declarations use an exact reviewed allowlist, not inferred verification. The source's mathematical scope, independent status-report comparison, and page checks remain unchanged. Unknown declarations stop publication; do not remove qualifications or change the research source to make a website build pass. Run `PYTHONDONTWRITEBYTECODE=1 python3 tests/catalogue_compat_test.py /path/to/solved-conjectures` to check this boundary.
 
-If current catalogue validation fails, `scripts/release_catalogue.py` rebuilds and checks the exact reviewed revision in `scripts/catalogue_snapshot.json`. It stages the two attempts separately and publishes no files from a failed attempt. A snapshot has a visible source date and previous-validation link on every page, dated search/social metadata, SHA-pinned source links, and `catalogue-provenance.json` recording attempted and rendered revisions. Before uploading a snapshot, the workflow reads the live manifest and checks Git ancestry. Publication stops if snapshot validation fails, the live revision cannot be verified, or the snapshot would roll back the published research. This lets independent website fixes deploy without interpreting new research claims or presenting an older catalogue as current. Update the reviewed snapshot only after a successful current-source build; keep its validation run and dates together.
+If current catalogue validation fails, `scripts/release_catalogue.py` rebuilds and checks the exact reviewed revision in `scripts/catalogue_snapshot.json`. It stages the two attempts separately and publishes no files from a failed attempt. A snapshot has a visible source date and previous-validation link on every page, dated search/social metadata, SHA-pinned source links, and `catalogue-provenance.json` recording attempted and rendered revisions. Before uploading any build, the workflow reads the live manifest and checks Git ancestry. Publication stops if validation fails for the selected build, the live revision cannot be verified, or deploying it would roll back the published research. This lets independent website fixes deploy without interpreting new research claims or presenting an older catalogue as current. Update the reviewed snapshot only after a successful current-source build; keep its validation run and dates together.
+
+An independent systemd user timer checks the public homepage’s source link, manifest, and provenance against both repositories’ main branches every 15 minutes. After 15 minutes of observed lag without progress, it requests a refresh if no publication is active. It retries at most hourly. After an hour without verified progress or availability it opens one tracking issue, then closes it when the live checks agree. The monitor uses the host’s existing GitHub CLI login with workflow-dispatch and issue permissions. To install or update it on a persistent host:
+
+```sh
+install -Dm755 scripts/catalogue_watchdog.py ~/.local/libexec/catalogue_watchdog.py
+install -d ~/.config/systemd/user
+install -m644 ops/catalogue-watchdog.service ops/catalogue-watchdog.timer ~/.config/systemd/user/
+systemctl --user daemon-reload
+systemctl --user enable --now catalogue-watchdog.timer
+systemctl --user start catalogue-watchdog.service
+```
 
 The root `robots.txt` points to a sitemap index covering the project shelf, schedule tool, and research catalogue. Keep those files at the domain root, not inside the catalogue's subdirectory.
 

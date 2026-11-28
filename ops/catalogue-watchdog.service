@@ -1,0 +1,8 @@
+[Unit]
+Description=Verify the public Solved Conjectures catalogue and retry delayed updates
+
+[Service]
+Type=oneshot
+StateDirectory=catalogue-watchdog
+ExecStart=/usr/bin/python3 %h/.local/libexec/catalogue_watchdog.py
+TimeoutStartSec=6min
