@@ -129,6 +129,17 @@ jobs:
               out.write("commit=" + sha + "\n")
               out.write("mode=" + p["mode"] + "\n")
           PY
+      - name: Prevent a fallback from rolling back the live catalogue
+        if: steps.catalogue.outputs.mode == 'snapshot'
+        run: |
+          live_manifest="https://itsdavis.com/solved-conjectures/build-manifest.json?guard=${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          live=$(curl --fail --silent --show-error --retry 2 --max-time 30 -H 'Cache-Control: no-cache' "$live_manifest" |
+            jq -er '.source_commit | select(test("^[0-9a-f]{40}$"))')
+          candidate=$(jq -er '.source_commit' site/solved-conjectures/build-manifest.json)
+          if ! git -C _sources/solved-conjectures merge-base --is-ancestor "$live" "$candidate"; then
+            echo "::error::Snapshot $candidate would replace newer or divergent live research $live. Keeping the live site."
+            exit 1
+          fi
       - name: Generate research notes directory from the validated catalogue
         run: |
           PYTHONDONTWRITEBYTECODE=1 python3 scripts/build_research_notes_index.py \

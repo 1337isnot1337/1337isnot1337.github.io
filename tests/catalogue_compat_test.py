@@ -102,7 +102,9 @@ class StatusCompatibility(unittest.TestCase):
         result = SimpleNamespace(status="full", scope="partial", checked_scope="")
         results = {"erdos-gyarfas-abelian-covers": result}
         if readme_blocks:
-            results["hegyvari-floor-doubling"] = SimpleNamespace(status="none", scope="complete", checked_scope="")
+            results["hegyvari-floor-doubling"] = module.Result(
+                slug="hegyvari-floor-doubling", title="Hegyvári’s conjecture",
+                category="Number theory", status="none", summary="Fixture result.")
         checker(builder, results)
         self.assertEqual(result.scope, "partial")
         self.assertIn("General conjecture remains outside", result.checked_scope)
